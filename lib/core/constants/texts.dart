@@ -16,6 +16,7 @@ class AppText {
   static const String popular = 'Hot Komik';
   static const String latest = 'Chapter Terbaru';
   static const String seeAll = 'Lihat Semua';
+  static const String lastRead = 'Terakhir Dibaca';
 
   // Error Text
   static const String error = 'Terjadi Kesalahan';

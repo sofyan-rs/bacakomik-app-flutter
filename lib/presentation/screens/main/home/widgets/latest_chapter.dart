@@ -1,11 +1,10 @@
 import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/presentation/screens/sub/latest_chapter/latest_chapter_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/core/router/app_router.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/latest_chapter_card.dart';
 
 class LatestChapter extends StatelessWidget {
@@ -59,7 +58,11 @@ class LatestChapter extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    context.goNamed(RouteConstants.latestChapter);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LatestChapterScreen(),
+                      ),
+                    );
                   },
                 )
               ],

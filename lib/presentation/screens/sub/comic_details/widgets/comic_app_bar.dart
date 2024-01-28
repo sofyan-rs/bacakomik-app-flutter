@@ -3,14 +3,9 @@ import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:flutter/material.dart';
 
-class ComicAppBar extends StatefulWidget {
+class ComicAppBar extends StatelessWidget {
   const ComicAppBar({super.key});
 
-  @override
-  State<ComicAppBar> createState() => _ComicAppBarState();
-}
-
-class _ComicAppBarState extends State<ComicAppBar> {
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(

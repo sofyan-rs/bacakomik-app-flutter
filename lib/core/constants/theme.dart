@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/constants/colors.dart';
 
 class AppThemes {
   static final darkTheme = ThemeData(
+    useMaterial3: true,
     primaryColor: AppColors.primary,
     brightness: Brightness.dark,
     scaffoldBackgroundColor: AppColors.background,

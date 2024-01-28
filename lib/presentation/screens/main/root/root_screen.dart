@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/home_screen.dart';
 
-class MainTabs extends StatefulWidget {
-  const MainTabs({super.key});
+class RootScreen extends StatefulWidget {
+  const RootScreen({super.key});
 
   @override
-  State<MainTabs> createState() => _MainTabsState();
+  State<RootScreen> createState() => _RootScreenState();
 }
 
-class _MainTabsState extends State<MainTabs> {
+class _RootScreenState extends State<RootScreen> {
   var _selectedIndex = 0;
 
   void _onTap(int index) {

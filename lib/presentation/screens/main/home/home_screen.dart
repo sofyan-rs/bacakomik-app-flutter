@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/presentation/screens/main/home/widgets/last_read_comic.dart';
+import 'package:bacakomik_app/presentation/screens/sub/search/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
@@ -57,16 +59,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 90,
-        elevation: 1,
-        backgroundColor: AppColors.primary.withOpacity(0.2),
+        elevation: 0.8,
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 25,
-              // backgroundImage: NetworkImage(
-              //   '',
-              // ),
-              backgroundColor: Theme.of(context).colorScheme.background,
+            Container(
+              height: 45,
+              width: 45,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(100),
+                color: Theme.of(context).colorScheme.background,
+              ),
+              child: Image.asset(
+                Assets.images.kuruKururin.path,
+                fit: BoxFit.cover,
+              ),
             ),
             const SizedBox(width: 10),
             Column(
@@ -97,7 +104,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const SearchScreen(),
+                  ),
+                );
+              },
               icon: Assets.icons.searchOutline.svg(
                 colorFilter: ColorFilter.mode(
                   Colors.white.withOpacity(0.9),
@@ -135,6 +148,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               physics: const AlwaysScrollableScrollPhysics(),
               children: const [
                 ComicSlider(),
+                LastReadComic(),
                 LatestChapter(),
               ],
             ),

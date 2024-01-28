@@ -1,10 +1,8 @@
 import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/core/router/models/comic_details_extra_model.dart';
+import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
 import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:bacakomik_app/core/router/app_router.dart';
 
 class LatestChapterCard extends StatelessWidget {
   const LatestChapterCard({
@@ -27,24 +25,15 @@ class LatestChapterCard extends StatelessWidget {
   final bool isFromLatestScreen;
 
   void _goToComicDetails(BuildContext context) {
-    if (isFromLatestScreen) {
-      context.goNamed(
-        '${RouteConstants.latestChapter}/${RouteConstants.comicDetails}',
-        pathParameters: {
-          'slug': slug,
-        },
-        extra: ComicDetailsExtraModel(title, cover),
-      );
-      return;
-    } else {
-      context.goNamed(
-        '${RouteConstants.root}/${RouteConstants.comicDetails}',
-        pathParameters: {
-          'slug': slug,
-        },
-        extra: ComicDetailsExtraModel(title, cover),
-      );
-    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ComicDetailsScreen(
+          slug: slug,
+          title: title,
+          cover: cover,
+        ),
+      ),
+    );
   }
 
   @override

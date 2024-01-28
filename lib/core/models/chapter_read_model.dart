@@ -8,7 +8,7 @@ class ChapterReadModel {
   final String seriesSlug;
   final String? previousChapterSlug;
   final String? nextChapterSlug;
-  final List<String> imageChapters;
+  final List<dynamic> imageChapters;
   ChapterReadModel({
     required this.chapterTitle,
     required this.chapterNumber,
@@ -26,7 +26,7 @@ class ChapterReadModel {
     String? seriesSlug,
     String? previousChapterSlug,
     String? nextChapterSlug,
-    List<String>? imageChapters,
+    List<dynamic>? imageChapters,
   }) {
     return ChapterReadModel(
       chapterTitle: chapterTitle ?? this.chapterTitle,
@@ -63,8 +63,8 @@ class ChapterReadModel {
       nextChapterSlug: map['nextChapterSlug'] != null
           ? map['nextChapterSlug'] as String
           : null,
-      imageChapters: List<String>.from(
-        (map['imageChapters'] as List<String>),
+      imageChapters: List<dynamic>.from(
+        (map['imageChapters'] as List<dynamic>),
       ),
     );
   }

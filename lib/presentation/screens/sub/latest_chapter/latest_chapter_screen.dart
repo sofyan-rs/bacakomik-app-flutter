@@ -3,14 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/presentation/screens/sub/latest_chapter/widgets/latest_chapter_more.dart';
 
-class LatestChapterScreen extends StatefulWidget {
+class LatestChapterScreen extends StatelessWidget {
   const LatestChapterScreen({super.key});
 
-  @override
-  State<LatestChapterScreen> createState() => _LatestChapterScreenState();
-}
-
-class _LatestChapterScreenState extends State<LatestChapterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -50,6 +50,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     ));
     try {
       final home = await homeRepository.getHome();
+      Future.delayed(const Duration(seconds: 10));
       emit(HomeLoaded(home: home));
     } catch (e) {
       emit(HomeError(message: e.toString()));

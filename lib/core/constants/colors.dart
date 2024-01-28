@@ -14,5 +14,6 @@ class AppColors {
   // Manhua Color
   static const Color manhuaColor = Color.fromARGB(255, 53, 146, 84);
 
+  // Rating Color
   static const Color rating = Color.fromARGB(255, 189, 167, 57);
 }

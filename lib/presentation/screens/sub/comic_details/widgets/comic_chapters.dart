@@ -1,4 +1,6 @@
+import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/presentation/screens/sub/read_chapter/read_chapter_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:bacakomik_app/core/models/comic_details_model/comic_details_model.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/comic_details.dart';
@@ -18,7 +20,19 @@ class ComicChapters extends StatefulWidget {
 }
 
 class _ComicChaptersState extends State<ComicChapters> {
-  bool _isAscending = true;
+  bool _isAscending = false;
+
+  void _goToChapterRead(BuildContext context, String chapter, String slug) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ReadChapterScreen(
+          slug: slug,
+          comicSlug: widget.slug,
+          comicDetails: widget.comicDetails,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +68,12 @@ class _ComicChaptersState extends State<ComicChapters> {
                   _isAscending = !_isAscending;
                 });
               },
-              icon: const Icon(Icons.sort),
+              icon: Assets.icons.sortOutline.svg(
+                colorFilter: ColorFilter.mode(
+                  Theme.of(context).primaryColor,
+                  BlendMode.srcIn,
+                ),
+              ),
             ),
           ],
         ),
@@ -68,7 +87,13 @@ class _ComicChaptersState extends State<ComicChapters> {
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 25,
             ),
-            onTap: () {},
+            onTap: () {
+              _goToChapterRead(
+                context,
+                chapters[index].number,
+                chapters[index].slug,
+              );
+            },
             title: Text('Chapter ${chapters[index].number}'),
             trailing: Text(chapters[index].date),
           ),

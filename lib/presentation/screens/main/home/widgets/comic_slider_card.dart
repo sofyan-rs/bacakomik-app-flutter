@@ -1,11 +1,9 @@
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
-import 'package:bacakomik_app/core/router/models/comic_details_extra_model.dart';
+import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
 import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/core/router/app_router.dart';
 
 class ComicSliderCard extends StatelessWidget {
   const ComicSliderCard({
@@ -26,12 +24,14 @@ class ComicSliderCard extends StatelessWidget {
   final String slug;
 
   void _goToComicDetails(BuildContext context) {
-    context.goNamed(
-      '${RouteConstants.root}/${RouteConstants.comicDetails}',
-      pathParameters: {
-        'slug': slug,
-      },
-      extra: ComicDetailsExtraModel(title, cover),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ComicDetailsScreen(
+          slug: slug,
+          title: title,
+          cover: cover,
+        ),
+      ),
     );
   }
 
@@ -58,13 +58,6 @@ class ComicSliderCard extends StatelessWidget {
                   child: CachedNetworkImage(
                     fit: BoxFit.cover,
                     imageUrl: cover,
-                    // progressIndicatorBuilder: (context, url, downloadProgress) {
-                    //   return Center(
-                    //     child: CircularProgressIndicator(
-                    //       value: downloadProgress.progress,
-                    //     ),
-                    //   );
-                    // },
                     errorWidget: (context, url, error) {
                       return const Center(
                         child: Text(
