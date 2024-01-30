@@ -7,22 +7,19 @@ final class HomeInitial extends HomeState {}
 
 final class HomeLoading extends HomeState {}
 
-final class HomeRefetching extends HomeState {
-  final HomeModel home;
-  HomeRefetching({
-    required this.home,
-  });
-}
-
 final class HomeLoaded extends HomeState {
   final HomeModel home;
+  final bool isRefetch;
+
   HomeLoaded({
     required this.home,
+    this.isRefetch = false,
   });
 }
 
 final class HomeError extends HomeState {
   final String message;
+  
   HomeError({
     required this.message,
   });

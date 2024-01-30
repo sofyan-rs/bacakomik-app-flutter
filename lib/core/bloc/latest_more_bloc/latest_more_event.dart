@@ -7,6 +7,7 @@ final class GetMoreLatest extends LatestMoreEvent {}
 
 final class GetMoreLatestNext extends LatestMoreEvent {
   final int page;
+
   GetMoreLatestNext({
     required this.page,
   });

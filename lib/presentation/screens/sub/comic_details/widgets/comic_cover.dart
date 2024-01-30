@@ -1,13 +1,12 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
-import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-
-import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:bacakomik_app/core/assets/assets.gen.dart';
+import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
+import 'package:bacakomik_app/core/constants/colors.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
 
 class ComicCover extends StatelessWidget {
   const ComicCover({
@@ -38,16 +37,16 @@ class ComicCover extends StatelessWidget {
                 child: CachedNetworkImage(
                   fit: BoxFit.cover,
                   imageUrl: cover,
-                  errorWidget: (context, url, error) {
-                    return const Center(
-                      child: Text(
-                        'Oops',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  },
+                  // errorWidget: (context, url, error) {
+                  //   return const Center(
+                  //     child: Text(
+                  //       'Oops',
+                  //       style: TextStyle(
+                  //         color: Colors.white,
+                  //       ),
+                  //     ),
+                  //   );
+                  // },
                 ),
               ),
               const SizedBox(height: 10),
@@ -66,7 +65,7 @@ class ComicCover extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  icon: Assets.icons.downloadOutline.svg(
+                  icon: Assets.icons.outline.downloadOutline.svg(
                     colorFilter: const ColorFilter.mode(
                       Colors.white,
                       BlendMode.srcIn,
@@ -95,16 +94,16 @@ class ComicCover extends StatelessWidget {
             child: CachedNetworkImage(
               fit: BoxFit.cover,
               imageUrl: cover,
-              errorWidget: (context, url, error) {
-                return const Center(
-                  child: Text(
-                    'Oops',
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              },
+              // errorWidget: (context, url, error) {
+              //   return const Center(
+              //     child: Text(
+              //       'Oops',
+              //       style: TextStyle(
+              //         color: Colors.white,
+              //       ),
+              //     ),
+              //   );
+              // },
             ),
           ),
         ),
@@ -113,8 +112,8 @@ class ComicCover extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Theme.of(context).colorScheme.background.withOpacity(0.8),
-                  AppColors.background,
+                  Theme.of(context).colorScheme.background.withOpacity(0.2),
+                  Theme.of(context).colorScheme.background,
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -130,9 +129,7 @@ class ComicCover extends StatelessWidget {
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                  ),
+                  child: CircularProgressIndicator(),
                 ),
               );
             }
@@ -172,16 +169,16 @@ class ComicCover extends StatelessWidget {
                             child: CachedNetworkImage(
                               fit: BoxFit.cover,
                               imageUrl: cover,
-                              errorWidget: (context, url, error) {
-                                return const Center(
-                                  child: Text(
-                                    'Oops',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                );
-                              },
+                              // errorWidget: (context, url, error) {
+                              //   return const Center(
+                              //     child: Text(
+                              //       'Oops',
+                              //       style: TextStyle(
+                              //         color: Colors.white,
+                              //       ),
+                              //     ),
+                              //   );
+                              // },
                             ),
                           ),
                           Positioned.fill(
@@ -222,13 +219,16 @@ class ComicCover extends StatelessWidget {
                                     text: status,
                                     backgroundColor: Theme.of(context)
                                         .colorScheme
-                                        .onSecondary,
+                                        .secondaryContainer,
+                                    textColor: Theme.of(context)
+                                        .colorScheme
+                                        .onSecondaryContainer,
                                   ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Assets.icons.starBold.svg(
+                                  Assets.icons.bold.starBold.svg(
                                     colorFilter: const ColorFilter.mode(
                                       AppColors.rating,
                                       BlendMode.srcIn,
@@ -264,8 +264,8 @@ class ComicCover extends StatelessWidget {
                           const SizedBox(height: 5),
                           Text(
                             author,
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
+                            style: const TextStyle(
+                              color: AppColors.primary,
                             ),
                           ),
                         ],

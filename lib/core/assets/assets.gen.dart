@@ -14,144 +14,9 @@ import 'package:flutter/services.dart';
 class $AssetsIconsGen {
   const $AssetsIconsGen();
 
-  /// File path: assets/icons/arrow_left_outline.svg
-  SvgGenImage get arrowLeftOutline =>
-      const SvgGenImage('assets/icons/arrow_left_outline.svg');
-
-  /// File path: assets/icons/bookmark_bold.svg
-  SvgGenImage get bookmarkBold =>
-      const SvgGenImage('assets/icons/bookmark_bold.svg');
-
-  /// File path: assets/icons/bookmark_outline.svg
-  SvgGenImage get bookmarkOutline =>
-      const SvgGenImage('assets/icons/bookmark_outline.svg');
-
-  /// File path: assets/icons/bug_outline.svg
-  SvgGenImage get bugOutline =>
-      const SvgGenImage('assets/icons/bug_outline.svg');
-
-  /// File path: assets/icons/clock_bold.svg
-  SvgGenImage get clockBold => const SvgGenImage('assets/icons/clock_bold.svg');
-
-  /// File path: assets/icons/clock_outline.svg
-  SvgGenImage get clockOutline =>
-      const SvgGenImage('assets/icons/clock_outline.svg');
-
-  /// File path: assets/icons/compass_bold.svg
-  SvgGenImage get compassBold =>
-      const SvgGenImage('assets/icons/compass_bold.svg');
-
-  /// File path: assets/icons/compass_outline.svg
-  SvgGenImage get compassOutline =>
-      const SvgGenImage('assets/icons/compass_outline.svg');
-
-  /// File path: assets/icons/dots_bold.svg
-  SvgGenImage get dotsBold => const SvgGenImage('assets/icons/dots_bold.svg');
-
-  /// File path: assets/icons/dots_outline.svg
-  SvgGenImage get dotsOutline =>
-      const SvgGenImage('assets/icons/dots_outline.svg');
-
-  /// File path: assets/icons/download_outline.svg
-  SvgGenImage get downloadOutline =>
-      const SvgGenImage('assets/icons/download_outline.svg');
-
-  /// File path: assets/icons/filter_outline.svg
-  SvgGenImage get filterOutline =>
-      const SvgGenImage('assets/icons/filter_outline.svg');
-
-  /// File path: assets/icons/fire_outline.svg
-  SvgGenImage get fireOutline =>
-      const SvgGenImage('assets/icons/fire_outline.svg');
-
-  /// File path: assets/icons/heart_bold.svg
-  SvgGenImage get heartBold => const SvgGenImage('assets/icons/heart_bold.svg');
-
-  /// File path: assets/icons/heart_outline.svg
-  SvgGenImage get heartOutline =>
-      const SvgGenImage('assets/icons/heart_outline.svg');
-
-  /// File path: assets/icons/history_bold.svg
-  SvgGenImage get historyBold =>
-      const SvgGenImage('assets/icons/history_bold.svg');
-
-  /// File path: assets/icons/history_outline.svg
-  SvgGenImage get historyOutline =>
-      const SvgGenImage('assets/icons/history_outline.svg');
-
-  /// File path: assets/icons/home_bold.svg
-  SvgGenImage get homeBold => const SvgGenImage('assets/icons/home_bold.svg');
-
-  /// File path: assets/icons/home_outline.svg
-  SvgGenImage get homeOutline =>
-      const SvgGenImage('assets/icons/home_outline.svg');
-
-  /// File path: assets/icons/logout_outline.svg
-  SvgGenImage get logoutOutline =>
-      const SvgGenImage('assets/icons/logout_outline.svg');
-
-  /// File path: assets/icons/notebook_outline.svg
-  SvgGenImage get notebookOutline =>
-      const SvgGenImage('assets/icons/notebook_outline.svg');
-
-  /// File path: assets/icons/search_bold.svg
-  SvgGenImage get searchBold =>
-      const SvgGenImage('assets/icons/search_bold.svg');
-
-  /// File path: assets/icons/search_outline.svg
-  SvgGenImage get searchOutline =>
-      const SvgGenImage('assets/icons/search_outline.svg');
-
-  /// File path: assets/icons/settings_outline.svg
-  SvgGenImage get settingsOutline =>
-      const SvgGenImage('assets/icons/settings_outline.svg');
-
-  /// File path: assets/icons/sort_outline.svg
-  SvgGenImage get sortOutline =>
-      const SvgGenImage('assets/icons/sort_outline.svg');
-
-  /// File path: assets/icons/star_bold.svg
-  SvgGenImage get starBold => const SvgGenImage('assets/icons/star_bold.svg');
-
-  /// File path: assets/icons/star_outline.svg
-  SvgGenImage get starOutline =>
-      const SvgGenImage('assets/icons/star_outline.svg');
-
-  /// File path: assets/icons/user_outline.svg
-  SvgGenImage get userOutline =>
-      const SvgGenImage('assets/icons/user_outline.svg');
-
-  /// List of all assets
-  List<SvgGenImage> get values => [
-        arrowLeftOutline,
-        bookmarkBold,
-        bookmarkOutline,
-        bugOutline,
-        clockBold,
-        clockOutline,
-        compassBold,
-        compassOutline,
-        dotsBold,
-        dotsOutline,
-        downloadOutline,
-        filterOutline,
-        fireOutline,
-        heartBold,
-        heartOutline,
-        historyBold,
-        historyOutline,
-        homeBold,
-        homeOutline,
-        logoutOutline,
-        notebookOutline,
-        searchBold,
-        searchOutline,
-        settingsOutline,
-        sortOutline,
-        starBold,
-        starOutline,
-        userOutline
-      ];
+  $AssetsIconsBoldGen get bold => const $AssetsIconsBoldGen();
+  $AssetsIconsLogoGen get logo => const $AssetsIconsLogoGen();
+  $AssetsIconsOutlineGen get outline => const $AssetsIconsOutlineGen();
 }
 
 class $AssetsImagesGen {
@@ -179,6 +44,167 @@ class $AssetsSoundsGen {
 
   /// List of all assets
   List<String> get values => [kuruKuruRin, kuruKuru];
+}
+
+class $AssetsIconsBoldGen {
+  const $AssetsIconsBoldGen();
+
+  /// File path: assets/icons/bold/bookmark_bold.svg
+  SvgGenImage get bookmarkBold =>
+      const SvgGenImage('assets/icons/bold/bookmark_bold.svg');
+
+  /// File path: assets/icons/bold/compass_bold.svg
+  SvgGenImage get compassBold =>
+      const SvgGenImage('assets/icons/bold/compass_bold.svg');
+
+  /// File path: assets/icons/bold/dots_bold.svg
+  SvgGenImage get dotsBold =>
+      const SvgGenImage('assets/icons/bold/dots_bold.svg');
+
+  /// File path: assets/icons/bold/heart_bold.svg
+  SvgGenImage get heartBold =>
+      const SvgGenImage('assets/icons/bold/heart_bold.svg');
+
+  /// File path: assets/icons/bold/home_bold.svg
+  SvgGenImage get homeBold =>
+      const SvgGenImage('assets/icons/bold/home_bold.svg');
+
+  /// File path: assets/icons/bold/search_bold.svg
+  SvgGenImage get searchBold =>
+      const SvgGenImage('assets/icons/bold/search_bold.svg');
+
+  /// File path: assets/icons/bold/star_bold.svg
+  SvgGenImage get starBold =>
+      const SvgGenImage('assets/icons/bold/star_bold.svg');
+
+  /// List of all assets
+  List<SvgGenImage> get values => [
+        bookmarkBold,
+        compassBold,
+        dotsBold,
+        heartBold,
+        homeBold,
+        searchBold,
+        starBold
+      ];
+}
+
+class $AssetsIconsLogoGen {
+  const $AssetsIconsLogoGen();
+
+  /// File path: assets/icons/logo/google.svg
+  SvgGenImage get google => const SvgGenImage('assets/icons/logo/google.svg');
+
+  /// List of all assets
+  List<SvgGenImage> get values => [google];
+}
+
+class $AssetsIconsOutlineGen {
+  const $AssetsIconsOutlineGen();
+
+  /// File path: assets/icons/outline/arrow_left_outline.svg
+  SvgGenImage get arrowLeftOutline =>
+      const SvgGenImage('assets/icons/outline/arrow_left_outline.svg');
+
+  /// File path: assets/icons/outline/bookmark_outline.svg
+  SvgGenImage get bookmarkOutline =>
+      const SvgGenImage('assets/icons/outline/bookmark_outline.svg');
+
+  /// File path: assets/icons/outline/bug_outline.svg
+  SvgGenImage get bugOutline =>
+      const SvgGenImage('assets/icons/outline/bug_outline.svg');
+
+  /// File path: assets/icons/outline/chevron_left_outline.svg
+  SvgGenImage get chevronLeftOutline =>
+      const SvgGenImage('assets/icons/outline/chevron_left_outline.svg');
+
+  /// File path: assets/icons/outline/chevron_right_outline.svg
+  SvgGenImage get chevronRightOutline =>
+      const SvgGenImage('assets/icons/outline/chevron_right_outline.svg');
+
+  /// File path: assets/icons/outline/compass_outline.svg
+  SvgGenImage get compassOutline =>
+      const SvgGenImage('assets/icons/outline/compass_outline.svg');
+
+  /// File path: assets/icons/outline/dots_outline.svg
+  SvgGenImage get dotsOutline =>
+      const SvgGenImage('assets/icons/outline/dots_outline.svg');
+
+  /// File path: assets/icons/outline/download_outline.svg
+  SvgGenImage get downloadOutline =>
+      const SvgGenImage('assets/icons/outline/download_outline.svg');
+
+  /// File path: assets/icons/outline/filter_outline.svg
+  SvgGenImage get filterOutline =>
+      const SvgGenImage('assets/icons/outline/filter_outline.svg');
+
+  /// File path: assets/icons/outline/fire_outline.svg
+  SvgGenImage get fireOutline =>
+      const SvgGenImage('assets/icons/outline/fire_outline.svg');
+
+  /// File path: assets/icons/outline/heart_outline.svg
+  SvgGenImage get heartOutline =>
+      const SvgGenImage('assets/icons/outline/heart_outline.svg');
+
+  /// File path: assets/icons/outline/history_outline.svg
+  SvgGenImage get historyOutline =>
+      const SvgGenImage('assets/icons/outline/history_outline.svg');
+
+  /// File path: assets/icons/outline/home_outline.svg
+  SvgGenImage get homeOutline =>
+      const SvgGenImage('assets/icons/outline/home_outline.svg');
+
+  /// File path: assets/icons/outline/logout_outline.svg
+  SvgGenImage get logoutOutline =>
+      const SvgGenImage('assets/icons/outline/logout_outline.svg');
+
+  /// File path: assets/icons/outline/notebook_outline.svg
+  SvgGenImage get notebookOutline =>
+      const SvgGenImage('assets/icons/outline/notebook_outline.svg');
+
+  /// File path: assets/icons/outline/search_outline.svg
+  SvgGenImage get searchOutline =>
+      const SvgGenImage('assets/icons/outline/search_outline.svg');
+
+  /// File path: assets/icons/outline/settings_outline.svg
+  SvgGenImage get settingsOutline =>
+      const SvgGenImage('assets/icons/outline/settings_outline.svg');
+
+  /// File path: assets/icons/outline/sort_outline.svg
+  SvgGenImage get sortOutline =>
+      const SvgGenImage('assets/icons/outline/sort_outline.svg');
+
+  /// File path: assets/icons/outline/star_outline.svg
+  SvgGenImage get starOutline =>
+      const SvgGenImage('assets/icons/outline/star_outline.svg');
+
+  /// File path: assets/icons/outline/user_outline.svg
+  SvgGenImage get userOutline =>
+      const SvgGenImage('assets/icons/outline/user_outline.svg');
+
+  /// List of all assets
+  List<SvgGenImage> get values => [
+        arrowLeftOutline,
+        bookmarkOutline,
+        bugOutline,
+        chevronLeftOutline,
+        chevronRightOutline,
+        compassOutline,
+        dotsOutline,
+        downloadOutline,
+        filterOutline,
+        fireOutline,
+        heartOutline,
+        historyOutline,
+        homeOutline,
+        logoutOutline,
+        notebookOutline,
+        searchOutline,
+        settingsOutline,
+        sortOutline,
+        starOutline,
+        userOutline
+      ];
 }
 
 class Assets {

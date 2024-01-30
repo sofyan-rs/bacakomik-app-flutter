@@ -1,8 +1,11 @@
+import 'dart:ui' as ui;
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
 
 class LastReadComic extends StatelessWidget {
   const LastReadComic({super.key});
@@ -27,23 +30,18 @@ class LastReadComic extends StatelessWidget {
                 alignment: Alignment.topCenter,
                 imageUrl:
                     'https://komikcast.lol/wp-content/uploads/2022/02/mfg8383342-e1645095214245.jpg',
-                errorWidget: (context, url, error) {
-                  return const Center(
-                    child: Text(
-                      'Oops',
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                  );
-                },
               ),
             ),
             Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).colorScheme.background.withOpacity(0.8),
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(
+                    sigmaX: 2.0,
+                    sigmaY: 2.0,
+                  ),
+                  child: Container(
+                    color: AppColors.dark.withOpacity(0.2),
+                  ),
                 ),
               ),
             ),
@@ -63,16 +61,16 @@ class LastReadComic extends StatelessWidget {
                         fit: BoxFit.cover,
                         imageUrl:
                             'https://komikcast.lol/wp-content/uploads/2022/02/mfg8383342-e1645095214245.jpg',
-                        errorWidget: (context, url, error) {
-                          return const Center(
-                            child: Text(
-                              'Oops',
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            ),
-                          );
-                        },
+                        // errorWidget: (context, url, error) {
+                        //   return const Center(
+                        //     child: Text(
+                        //       'Oops',
+                        //       style: TextStyle(
+                        //         color: Colors.white,
+                        //       ),
+                        //     ),
+                        //   );
+                        // },
                       ),
                     ),
                   ),
@@ -82,7 +80,10 @@ class LastReadComic extends StatelessWidget {
                     children: [
                       Text(
                         AppText.lastRead,
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                        ),
                       ),
                       Text(
                         'My Fake Girlfriends are Using Me As a Shield',

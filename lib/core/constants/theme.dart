@@ -4,17 +4,38 @@ import 'package:bacakomik_app/core/constants/colors.dart';
 
 class AppThemes {
   static final darkTheme = ThemeData(
-    useMaterial3: true,
-    primaryColor: AppColors.primary,
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: AppColors.background,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.dark,
+    ),
     fontFamily: GoogleFonts.rubik().fontFamily,
     navigationBarTheme: const NavigationBarThemeData(
-      backgroundColor: AppColors.background,
       indicatorColor: AppColors.primary,
+      shadowColor: AppColors.dark,
     ),
     navigationRailTheme: const NavigationRailThemeData(
       indicatorColor: AppColors.primary,
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppColors.primary,
+    ),
+  );
+
+  static final lightTheme = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.light,
+    ),
+    fontFamily: GoogleFonts.rubik().fontFamily,
+    navigationBarTheme: const NavigationBarThemeData(
+      indicatorColor: AppColors.primary,
+      shadowColor: AppColors.dark,
+    ),
+    navigationRailTheme: const NavigationRailThemeData(
+      indicatorColor: AppColors.primary,
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppColors.primary,
     ),
   );
 }

@@ -9,6 +9,7 @@ final class ComicDetailsLoading extends ComicDetailsState {}
 
 final class ComicDetailsLoaded extends ComicDetailsState {
   final ComicDetailsModel comicDetails;
+
   ComicDetailsLoaded({
     required this.comicDetails,
   });
@@ -16,6 +17,7 @@ final class ComicDetailsLoaded extends ComicDetailsState {
 
 final class ComicDetailsError extends ComicDetailsState {
   final String message;
+
   ComicDetailsError({
     required this.message,
   });

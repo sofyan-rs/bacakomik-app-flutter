@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:bacakomik_app/core/models/latest_model.dart';
+import 'package:bacakomik_app/core/models/comic_model.dart';
 import 'package:bacakomik_app/core/models/popular_model.dart';
 
 class HomeModel {
   final List<PopularModel> popular;
-  final List<LatestModel> latest;
+  final List<ComicModel> latest;
   HomeModel({
     required this.popular,
     required this.latest,
@@ -13,7 +13,7 @@ class HomeModel {
 
   HomeModel copyWith({
     List<PopularModel>? popular,
-    List<LatestModel>? latest,
+    List<ComicModel>? latest,
   }) {
     return HomeModel(
       popular: popular ?? this.popular,
@@ -35,9 +35,9 @@ class HomeModel {
           (x) => PopularModel.fromMap(x as Map<String, dynamic>),
         ),
       ),
-      latest: List<LatestModel>.from(
-        (map['latest'] as List<dynamic>).map<LatestModel>(
-          (x) => LatestModel.fromMap(x as Map<String, dynamic>),
+      latest: List<ComicModel>.from(
+        (map['latest'] as List<dynamic>).map<ComicModel>(
+          (x) => ComicModel.fromMap(x as Map<String, dynamic>),
         ),
       ),
     );

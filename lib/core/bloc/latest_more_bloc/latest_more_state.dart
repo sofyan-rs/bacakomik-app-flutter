@@ -8,14 +8,18 @@ final class LatestMoreInitial extends LatestMoreState {}
 final class LatestMoreLoading extends LatestMoreState {}
 
 final class LatestMoreLoaded extends LatestMoreState {
-  final List<LatestModel> latest;
+  final List<ComicModel> latest;
+  final bool isLoadMore;
+
   LatestMoreLoaded({
     required this.latest,
+    this.isLoadMore = false,
   });
 }
 
 final class LatestMoreError extends LatestMoreState {
   final String message;
+
   LatestMoreError({
     required this.message,
   });

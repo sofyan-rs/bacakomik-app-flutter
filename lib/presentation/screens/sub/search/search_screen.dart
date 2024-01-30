@@ -1,6 +1,10 @@
+import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
+import 'package:bacakomik_app/presentation/screens/sub/search/widgets/search_result.dart';
+import 'package:flutter/material.dart';
+
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -11,6 +15,32 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final _searchInputController = TextEditingController();
+
+  Future _getSearchData(int page) async {
+    final String keyword = _searchInputController.text;
+    context.read<SearchComicBloc>().add(
+          GetSearchResult(
+            keyword: keyword,
+            page: page,
+          ),
+        );
+  }
+
+  Future _getSearchDataNext(int page) async {
+    final String keyword = _searchInputController.text;
+    context.read<SearchComicBloc>().add(
+          GetSearchResultNext(
+            keyword: keyword,
+            page: page,
+          ),
+        );
+  }
+
+  @override
+  void dispose() {
+    _searchInputController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +54,11 @@ class _SearchScreenState extends State<SearchScreen> {
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(horizontal: 15),
             hintText: 'Search',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.9)),
+            hintStyle: TextStyle(
+                color: Theme.of(context)
+                    .colorScheme
+                    .onBackground
+                    .withOpacity(0.9)),
             enabledBorder: OutlineInputBorder(
               borderRadius: const BorderRadius.all(
                 Radius.circular(7),
@@ -48,7 +82,7 @@ class _SearchScreenState extends State<SearchScreen> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: Assets.icons.arrowLeftOutline.svg(
+          icon: Assets.icons.outline.arrowLeftOutline.svg(
             colorFilter: ColorFilter.mode(
               Theme.of(context).colorScheme.onBackground,
               BlendMode.srcIn,
@@ -59,8 +93,10 @@ class _SearchScreenState extends State<SearchScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: IconButton(
-              onPressed: () {},
-              icon: Assets.icons.searchOutline.svg(
+              onPressed: () {
+                _getSearchData(1);
+              },
+              icon: Assets.icons.outline.searchOutline.svg(
                 colorFilter: ColorFilter.mode(
                   Colors.white.withOpacity(0.9),
                   BlendMode.srcIn,
@@ -79,8 +115,10 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ],
       ),
-      body: const Center(
-        child: Text('Search Screen'),
+      body: SearchResult(
+        onLoadMore: (page) {
+          _getSearchDataNext(page);
+        },
       ),
     );
   }

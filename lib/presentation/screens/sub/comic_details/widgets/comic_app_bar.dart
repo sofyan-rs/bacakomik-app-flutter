@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
+
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:flutter/material.dart';
 
 class ComicAppBar extends StatelessWidget {
   const ComicAppBar({super.key});
@@ -14,7 +15,7 @@ class ComicAppBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () {},
-            icon: Assets.icons.heartBold.svg(
+            icon: Assets.icons.bold.heartBold.svg(
               colorFilter: const ColorFilter.mode(
                 // Colors.white.withOpacity(0.9),
                 AppColors.primary,
@@ -22,7 +23,7 @@ class ComicAppBar extends StatelessWidget {
               ),
             ),
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.background.withOpacity(0.4),
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(7),
               ),

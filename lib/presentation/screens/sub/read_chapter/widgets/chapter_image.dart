@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
 
@@ -24,10 +25,9 @@ class _ChapterImgState extends State<ChapterImg> {
   }
 
   Future _sendHttpRequest(String imgUrl) async {
-    final url = Uri.parse(imgUrl);
-    final response = await http.get(url, headers: {
-      'Referer': AppVariables.referer,
-    });
+    final dio = Dio();
+    dio.options.headers['Referer'] = AppVariables.referer;
+    final response = await dio.get(imgUrl);
     return response;
   }
 

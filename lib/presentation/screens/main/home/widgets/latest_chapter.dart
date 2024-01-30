@@ -1,11 +1,12 @@
-import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/presentation/screens/sub/latest_chapter/latest_chapter_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
+import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/latest_chapter_card.dart';
+import 'package:bacakomik_app/presentation/screens/sub/latest_chapter/latest_chapter_screen.dart';
 
 class LatestChapter extends StatelessWidget {
   const LatestChapter({super.key});
@@ -26,7 +27,7 @@ class LatestChapter extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Assets.icons.notebookOutline.svg(
+                    Assets.icons.outline.notebookOutline.svg(
                       colorFilter: const ColorFilter.mode(
                         AppColors.primary,
                         BlendMode.srcIn,
@@ -73,29 +74,11 @@ class LatestChapter extends StatelessWidget {
             builder: (context, state) {
               if (state is HomeInitial || state is HomeLoading) {
                 return const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                  ),
+                  child: CircularProgressIndicator(),
                 );
               }
 
               if (state is HomeLoaded) {
-                return Column(
-                  children: [
-                    for (final latest in state.home.latest)
-                      LatestChapterCard(
-                        title: latest.title,
-                        cover: latest.coverImg,
-                        chapter: latest.latestChapter,
-                        type: latest.type,
-                        isCompleted: latest.completed,
-                        slug: latest.slug,
-                      ),
-                  ],
-                );
-              }
-
-              if (state is HomeRefetching) {
                 return Column(
                   children: [
                     for (final latest in state.home.latest)

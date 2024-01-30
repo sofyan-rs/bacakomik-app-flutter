@@ -45,8 +45,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) async {
     final state = this.state as HomeLoaded;
-    emit(HomeRefetching(
+    emit(HomeLoaded(
       home: state.home,
+      isRefetch: true,
     ));
     try {
       final home = await homeRepository.getHome();

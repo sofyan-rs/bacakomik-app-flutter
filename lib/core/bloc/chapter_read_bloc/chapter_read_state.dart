@@ -9,6 +9,7 @@ final class ChapterReadLoading extends ChapterReadState {}
 
 final class ChapterReadLoaded extends ChapterReadState {
   final ChapterReadModel chapterRead;
+
   ChapterReadLoaded({
     required this.chapterRead,
   });
@@ -16,6 +17,7 @@ final class ChapterReadLoaded extends ChapterReadState {
 
 final class ChapterReadError extends ChapterReadState {
   final String message;
+
   ChapterReadError({
     required this.message,
   });

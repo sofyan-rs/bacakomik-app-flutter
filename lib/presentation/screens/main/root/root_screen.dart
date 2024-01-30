@@ -1,6 +1,7 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:flutter/material.dart';
+
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/home_screen.dart';
 
 class RootScreen extends StatefulWidget {
@@ -33,7 +34,7 @@ class _RootScreenState extends State<RootScreen> {
               // elevation: 2,
               destinations: [
                 NavigationRailDestination(
-                  icon: Assets.icons.homeOutline.svg(
+                  icon: Assets.icons.outline.homeOutline.svg(
                     colorFilter: ColorFilter.mode(
                       Theme.of(context)
                           .colorScheme
@@ -42,19 +43,16 @@ class _RootScreenState extends State<RootScreen> {
                       BlendMode.srcIn,
                     ),
                   ),
-                  selectedIcon: Assets.icons.homeBold.svg(
+                  selectedIcon: Assets.icons.bold.homeBold.svg(
                     colorFilter: ColorFilter.mode(
-                      Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.8),
+                      Colors.white.withOpacity(0.8),
                       BlendMode.srcIn,
                     ),
                   ),
                   label: const Text(AppText.home),
                 ),
                 NavigationRailDestination(
-                  icon: Assets.icons.compassOutline.svg(
+                  icon: Assets.icons.outline.compassOutline.svg(
                     colorFilter: ColorFilter.mode(
                       Theme.of(context)
                           .colorScheme
@@ -63,19 +61,16 @@ class _RootScreenState extends State<RootScreen> {
                       BlendMode.srcIn,
                     ),
                   ),
-                  selectedIcon: Assets.icons.compassBold.svg(
+                  selectedIcon: Assets.icons.bold.compassBold.svg(
                     colorFilter: ColorFilter.mode(
-                      Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.8),
+                      Colors.white.withOpacity(0.8),
                       BlendMode.srcIn,
                     ),
                   ),
                   label: const Text(AppText.explore),
                 ),
                 NavigationRailDestination(
-                  icon: Assets.icons.bookmarkOutline.svg(
+                  icon: Assets.icons.outline.bookmarkOutline.svg(
                     colorFilter: ColorFilter.mode(
                       Theme.of(context)
                           .colorScheme
@@ -84,19 +79,16 @@ class _RootScreenState extends State<RootScreen> {
                       BlendMode.srcIn,
                     ),
                   ),
-                  selectedIcon: Assets.icons.bookmarkBold.svg(
+                  selectedIcon: Assets.icons.bold.bookmarkBold.svg(
                     colorFilter: ColorFilter.mode(
-                      Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.8),
+                      Colors.white.withOpacity(0.8),
                       BlendMode.srcIn,
                     ),
                   ),
                   label: const Text(AppText.favorite),
                 ),
                 NavigationRailDestination(
-                  icon: Assets.icons.dotsOutline.svg(
+                  icon: Assets.icons.outline.dotsOutline.svg(
                     colorFilter: ColorFilter.mode(
                       Theme.of(context)
                           .colorScheme
@@ -105,12 +97,9 @@ class _RootScreenState extends State<RootScreen> {
                       BlendMode.srcIn,
                     ),
                   ),
-                  selectedIcon: Assets.icons.dotsBold.svg(
+                  selectedIcon: Assets.icons.bold.dotsBold.svg(
                     colorFilter: ColorFilter.mode(
-                      Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.8),
+                      Colors.white.withOpacity(0.8),
                       BlendMode.srcIn,
                     ),
                   ),
@@ -147,7 +136,7 @@ class _RootScreenState extends State<RootScreen> {
               shadowColor: Colors.black54,
               destinations: [
                 NavigationDestination(
-                  icon: Assets.icons.homeOutline.svg(
+                  icon: Assets.icons.outline.homeOutline.svg(
                     colorFilter: ColorFilter.mode(
                       Theme.of(context)
                           .colorScheme
@@ -156,19 +145,16 @@ class _RootScreenState extends State<RootScreen> {
                       BlendMode.srcIn,
                     ),
                   ),
-                  selectedIcon: Assets.icons.homeBold.svg(
+                  selectedIcon: Assets.icons.bold.homeBold.svg(
                     colorFilter: ColorFilter.mode(
-                      Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.8),
+                      Colors.white.withOpacity(0.8),
                       BlendMode.srcIn,
                     ),
                   ),
                   label: AppText.home,
                 ),
                 NavigationDestination(
-                  icon: Assets.icons.compassOutline.svg(
+                  icon: Assets.icons.outline.compassOutline.svg(
                     colorFilter: ColorFilter.mode(
                       Theme.of(context)
                           .colorScheme
@@ -177,19 +163,16 @@ class _RootScreenState extends State<RootScreen> {
                       BlendMode.srcIn,
                     ),
                   ),
-                  selectedIcon: Assets.icons.compassBold.svg(
+                  selectedIcon: Assets.icons.bold.compassBold.svg(
                     colorFilter: ColorFilter.mode(
-                      Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.8),
+                      Colors.white.withOpacity(0.8),
                       BlendMode.srcIn,
                     ),
                   ),
                   label: AppText.explore,
                 ),
                 NavigationDestination(
-                  icon: Assets.icons.bookmarkOutline.svg(
+                  icon: Assets.icons.outline.bookmarkOutline.svg(
                     colorFilter: ColorFilter.mode(
                       Theme.of(context)
                           .colorScheme
@@ -198,19 +181,16 @@ class _RootScreenState extends State<RootScreen> {
                       BlendMode.srcIn,
                     ),
                   ),
-                  selectedIcon: Assets.icons.bookmarkBold.svg(
+                  selectedIcon: Assets.icons.bold.bookmarkBold.svg(
                     colorFilter: ColorFilter.mode(
-                      Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.8),
+                      Colors.white.withOpacity(0.8),
                       BlendMode.srcIn,
                     ),
                   ),
                   label: AppText.favorite,
                 ),
                 NavigationDestination(
-                  icon: Assets.icons.dotsOutline.svg(
+                  icon: Assets.icons.outline.dotsOutline.svg(
                     colorFilter: ColorFilter.mode(
                       Theme.of(context)
                           .colorScheme
@@ -219,12 +199,9 @@ class _RootScreenState extends State<RootScreen> {
                       BlendMode.srcIn,
                     ),
                   ),
-                  selectedIcon: Assets.icons.dotsBold.svg(
+                  selectedIcon: Assets.icons.bold.dotsBold.svg(
                     colorFilter: ColorFilter.mode(
-                      Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.8),
+                      Colors.white.withOpacity(0.8),
                       BlendMode.srcIn,
                     ),
                   ),

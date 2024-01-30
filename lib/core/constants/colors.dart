@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary Color
-  static const Color primary = Color(0xFFB14159);
+  static const Color primary = Color(0xFF2565c7);
   // Background Color
-  static const Color background = Color(0xFF121212);
+  static const Color dark = Color(0xFF121212);
 
   /// Tipe Manga
   // Manga Color

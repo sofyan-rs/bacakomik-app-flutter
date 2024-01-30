@@ -1,8 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
 import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
 
 class LatestChapterCard extends StatelessWidget {
   const LatestChapterCard({
@@ -13,7 +14,6 @@ class LatestChapterCard extends StatelessWidget {
     required this.type,
     required this.slug,
     required this.isCompleted,
-    this.isFromLatestScreen = false,
   });
 
   final String title;
@@ -22,7 +22,6 @@ class LatestChapterCard extends StatelessWidget {
   final String type;
   final String slug;
   final bool isCompleted;
-  final bool isFromLatestScreen;
 
   void _goToComicDetails(BuildContext context) {
     Navigator.of(context).push(
@@ -51,7 +50,10 @@ class LatestChapterCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.background,
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondaryContainer
+                    .withOpacity(0.2),
                 borderRadius: BorderRadius.circular(5),
                 border: Border.all(
                   color:
@@ -72,26 +74,16 @@ class LatestChapterCard extends StatelessWidget {
                     child: CachedNetworkImage(
                       fit: BoxFit.cover,
                       imageUrl: cover,
-                      // progressIndicatorBuilder: (context, url, downloadProgress) {
-                      //   return Center(
-                      //     child: Padding(
-                      //       padding: const EdgeInsets.all(10),
-                      //       child: CircularProgressIndicator(
-                      //         value: downloadProgress.progress,
+                      // errorWidget: (context, url, error) {
+                      //   return const Center(
+                      //     child: Text(
+                      //       'Oops',
+                      //       style: TextStyle(
+                      //         color: Colors.white,
                       //       ),
                       //     ),
                       //   );
                       // },
-                      errorWidget: (context, url, error) {
-                        return const Center(
-                          child: Text(
-                            'Oops',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                        );
-                      },
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -125,14 +117,18 @@ class LatestChapterCard extends StatelessWidget {
                                 const SizedBox(width: 5),
                                 CustomChip(
                                   text: isCompleted ? 'Selesai' : 'Ongoing',
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.onSecondary,
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .secondaryContainer,
+                                  textColor: Theme.of(context)
+                                      .colorScheme
+                                      .onSecondaryContainer,
                                 ),
                               ],
                             ),
                             CustomChip(
                               text: 'Ch. $chapter',
-                              backgroundColor: Theme.of(context).primaryColor,
+                              backgroundColor: AppColors.primary,
                             ),
                           ],
                         )

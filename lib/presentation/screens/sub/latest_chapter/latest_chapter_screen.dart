@@ -1,6 +1,7 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:flutter/material.dart';
+
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/sub/latest_chapter/widgets/latest_chapter_more.dart';
 
 class LatestChapterScreen extends StatelessWidget {
@@ -15,7 +16,7 @@ class LatestChapterScreen extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: Assets.icons.arrowLeftOutline.svg(
+          icon: Assets.icons.outline.arrowLeftOutline.svg(
             colorFilter: ColorFilter.mode(
               Theme.of(context).colorScheme.onBackground,
               BlendMode.srcIn,

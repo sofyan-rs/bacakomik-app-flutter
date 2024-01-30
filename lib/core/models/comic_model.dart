@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class LatestModel {
+class ComicModel {
   final String title;
   final String coverImg;
   final String slug;
@@ -8,7 +8,7 @@ class LatestModel {
   final bool completed;
   final String rating;
   final String latestChapter;
-  LatestModel({
+  ComicModel({
     required this.title,
     required this.coverImg,
     required this.slug,
@@ -18,7 +18,7 @@ class LatestModel {
     required this.latestChapter,
   });
 
-  LatestModel copyWith({
+  ComicModel copyWith({
     String? title,
     String? coverImg,
     String? slug,
@@ -27,7 +27,7 @@ class LatestModel {
     String? rating,
     String? latestChapter,
   }) {
-    return LatestModel(
+    return ComicModel(
       title: title ?? this.title,
       coverImg: coverImg ?? this.coverImg,
       slug: slug ?? this.slug,
@@ -50,8 +50,8 @@ class LatestModel {
     };
   }
 
-  factory LatestModel.fromMap(Map<String, dynamic> map) {
-    return LatestModel(
+  factory ComicModel.fromMap(Map<String, dynamic> map) {
+    return ComicModel(
       title: map['title'] as String,
       coverImg: map['coverImg'] as String,
       slug: map['slug'] as String,
@@ -64,16 +64,16 @@ class LatestModel {
 
   String toJson() => json.encode(toMap());
 
-  factory LatestModel.fromJson(String source) =>
-      LatestModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory ComicModel.fromJson(String source) =>
+      ComicModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'LatestModel(title: $title, coverImg: $coverImg, slug: $slug, type: $type, completed: $completed, rating: $rating, latestChapter: $latestChapter)';
+    return 'ComicModel(title: $title, coverImg: $coverImg, slug: $slug, type: $type, completed: $completed, rating: $rating, latestChapter: $latestChapter)';
   }
 
   @override
-  bool operator ==(covariant LatestModel other) {
+  bool operator ==(covariant ComicModel other) {
     if (identical(this, other)) return true;
 
     return other.title == title &&

@@ -1,9 +1,10 @@
-import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
+import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/comic_slider_card.dart';
 
 class ComicSlider extends StatelessWidget {
@@ -14,7 +15,7 @@ class ComicSlider extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.background,
+        color: Theme.of(context).colorScheme.secondaryContainer,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,7 +28,7 @@ class ComicSlider extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Assets.icons.fireOutline.svg(
+                Assets.icons.outline.fireOutline.svg(
                   colorFilter: const ColorFilter.mode(
                     AppColors.primary,
                     BlendMode.srcIn,
@@ -53,36 +54,12 @@ class ComicSlider extends StatelessWidget {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(15),
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
+                    child: CircularProgressIndicator(),
                   ),
                 );
               }
 
               if (state is HomeLoaded) {
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      children: [
-                        for (final popular in state.home.popular)
-                          ComicSliderCard(
-                            title: popular.title,
-                            cover: popular.coverImg,
-                            chapter: popular.latestChapter,
-                            type: popular.type,
-                            rating: popular.rating,
-                            slug: popular.slug,
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              if (state is HomeRefetching) {
                 return SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Padding(

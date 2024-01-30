@@ -1,33 +1,33 @@
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/presentation/screens/main/root/root_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
+import 'package:bacakomik_app/core/constants/variables.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Future.delayed(
-      const Duration(milliseconds: 3000),
-      () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const RootScreen(),
-          ),
-        );
-      },
-    );
+    // Future.delayed(
+    //   const Duration(milliseconds: 3000),
+    //   () {
+    //     Navigator.of(context).pushReplacement(
+    //       MaterialPageRoute(
+    //         builder: (context) => const StreamScreen(),
+    //       ),
+    //     );
+    //   },
+    // );
 
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.primary.withOpacity(0.4),
-              AppColors.background,
+              AppColors.primary.withOpacity(0.8),
+              Theme.of(context).colorScheme.background,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,

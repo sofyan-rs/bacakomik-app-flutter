@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
+
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/models/comic_details_model/comic_details_model.dart';
 import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
-import 'package:flutter/material.dart';
 
 class ComicDetails extends StatefulWidget {
   const ComicDetails({
@@ -48,7 +49,10 @@ class _ComicDetailsState extends State<ComicDetails> {
                   widget.altTitle,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey.withOpacity(0.7),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onBackground
+                        .withOpacity(0.5),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -69,7 +73,10 @@ class _ComicDetailsState extends State<ComicDetails> {
                 widget.releaseYear,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey.withOpacity(0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onBackground
+                      .withOpacity(0.5),
                 ),
               ),
             ],
@@ -78,12 +85,15 @@ class _ComicDetailsState extends State<ComicDetails> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 20),
             decoration: BoxDecoration(
-              // color: Colors.grey.withOpacity(0.1),
+              // color: Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
               // borderRadius: BorderRadius.circular(5),
               border: Border.symmetric(
                 horizontal: BorderSide(
                   width: 2,
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onBackground
+                      .withOpacity(0.1),
                 ),
               ),
             ),
@@ -110,7 +120,10 @@ class _ComicDetailsState extends State<ComicDetails> {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey.withOpacity(0.9),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onBackground
+                              .withOpacity(0.5),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -151,8 +164,8 @@ class _ComicDetailsState extends State<ComicDetails> {
                                 text: genre.name,
                                 backgroundColor: Theme.of(context)
                                     .colorScheme
-                                    .onSecondary
-                                    .withOpacity(0.4),
+                                    .secondaryContainer
+                                    .withOpacity(0.3),
                                 textColor: Theme.of(context)
                                     .colorScheme
                                     .onSecondaryContainer

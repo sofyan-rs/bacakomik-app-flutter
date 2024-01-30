@@ -1,9 +1,10 @@
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
-import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
-import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
+import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
+import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
+import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
 
 class ComicSliderCard extends StatelessWidget {
   const ComicSliderCard({
@@ -43,8 +44,15 @@ class ComicSliderCard extends StatelessWidget {
         width: 200,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: Theme.of(context).colorScheme.onSecondary,
           borderRadius: BorderRadius.circular(5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 3,
+            ),
+          ],
         ),
         child: Stack(
           children: [
@@ -58,16 +66,16 @@ class ComicSliderCard extends StatelessWidget {
                   child: CachedNetworkImage(
                     fit: BoxFit.cover,
                     imageUrl: cover,
-                    errorWidget: (context, url, error) {
-                      return const Center(
-                        child: Text(
-                          'Oops',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                      );
-                    },
+                    // errorWidget: (context, url, error) {
+                    //   return const Center(
+                    //     child: Text(
+                    //       'Oops',
+                    //       style: TextStyle(
+                    //         color: Colors.white,
+                    //       ),
+                    //     ),
+                    //   );
+                    // },
                   ),
                 ),
                 Padding(
@@ -93,11 +101,11 @@ class ComicSliderCard extends StatelessWidget {
                         children: [
                           CustomChip(
                             text: 'Ch. $chapter',
-                            backgroundColor: Theme.of(context).primaryColor,
+                            backgroundColor: AppColors.primary,
                           ),
                           Row(
                             children: [
-                              Assets.icons.starBold.svg(
+                              Assets.icons.bold.starBold.svg(
                                 colorFilter: const ColorFilter.mode(
                                   AppColors.rating,
                                   BlendMode.srcIn,
