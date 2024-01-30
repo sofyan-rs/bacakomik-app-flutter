@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/latest_chapter_card.dart';
 import 'package:bacakomik_app/presentation/screens/sub/latest_chapter/latest_chapter_screen.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class LatestChapter extends StatelessWidget {
   const LatestChapter({super.key});
@@ -25,18 +25,14 @@ class LatestChapter extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
-                    Assets.icons.outline.notebookOutline.svg(
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.primary,
-                        BlendMode.srcIn,
-                      ),
-                      width: 20,
-                      height: 20,
+                    Icon(
+                      SolarIconsBold.notebook1,
+                      color: AppColors.primary,
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
+                    SizedBox(width: 8),
+                    Text(
                       AppText.latest,
                       style: TextStyle(
                         fontSize: 18,

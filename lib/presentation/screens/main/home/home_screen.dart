@@ -15,6 +15,7 @@ import 'package:bacakomik_app/presentation/screens/main/home/widgets/comic_slide
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/last_read_comic.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/latest_chapter.dart';
 import 'package:bacakomik_app/presentation/screens/sub/search/search_screen.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -116,13 +117,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 );
               },
-              icon: Assets.icons.outline.searchOutline.svg(
-                colorFilter: ColorFilter.mode(
-                  Colors.white.withOpacity(0.9),
-                  BlendMode.srcIn,
-                ),
-                width: 20,
-                height: 20,
+              icon: const Icon(
+                SolarIconsOutline.magnifier,
+                color: Colors.white,
+                size: 23,
               ),
               style: TextButton.styleFrom(
                 backgroundColor: AppColors.primary,

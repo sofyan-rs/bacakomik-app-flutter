@@ -2,9 +2,9 @@ import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart
 import 'package:bacakomik_app/presentation/screens/sub/search/widgets/search_result.dart';
 import 'package:flutter/material.dart';
 
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -82,11 +82,9 @@ class _SearchScreenState extends State<SearchScreen> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: Assets.icons.outline.arrowLeftOutline.svg(
-            colorFilter: ColorFilter.mode(
-              Theme.of(context).colorScheme.onBackground,
-              BlendMode.srcIn,
-            ),
+          icon: Icon(
+            SolarIconsOutline.arrowLeft,
+            color: Theme.of(context).colorScheme.onBackground,
           ),
         ),
         actions: [
@@ -96,13 +94,10 @@ class _SearchScreenState extends State<SearchScreen> {
               onPressed: () {
                 _getSearchData(1);
               },
-              icon: Assets.icons.outline.searchOutline.svg(
-                colorFilter: ColorFilter.mode(
-                  Colors.white.withOpacity(0.9),
-                  BlendMode.srcIn,
-                ),
-                width: 23,
-                height: 23,
+              icon: const Icon(
+                SolarIconsOutline.magnifier,
+                color: Colors.white,
+                size: 23,
               ),
               style: TextButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -118,6 +113,9 @@ class _SearchScreenState extends State<SearchScreen> {
       body: SearchResult(
         onLoadMore: (page) {
           _getSearchDataNext(page);
+        },
+        onRefresh: () {
+          _getSearchData(1);
         },
       ),
     );

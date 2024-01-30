@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 5),
               ElevatedButton.icon(
-                icon: Assets.icons.logo.google.svg(
+                icon: Assets.icons.google.svg(
                   width: 24,
                   height: 24,
                 ),

@@ -12,9 +12,11 @@ class SearchResult extends StatefulWidget {
   const SearchResult({
     Key? key,
     required this.onLoadMore,
+    required this.onRefresh,
   }) : super(key: key);
 
   final Function(int page) onLoadMore;
+  final Function() onRefresh;
 
   @override
   State<SearchResult> createState() => _SearchResultState();
@@ -62,15 +64,15 @@ class _SearchResultState extends State<SearchResult> {
               RefreshIndicator(
                 color: AppColors.primary,
                 onRefresh: () async {
-                  // _refreshData();
+                  widget.onRefresh();
                 },
                 child: AutoHeightGridView(
                   controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(15),
                   itemCount: state.result.length,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
                   shrinkWrap: true,
                   builder: (context, index) {
                     return ComicCard(

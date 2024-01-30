@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/sub/latest_chapter/widgets/latest_chapter_more.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class LatestChapterScreen extends StatelessWidget {
   const LatestChapterScreen({super.key});
@@ -16,11 +16,9 @@ class LatestChapterScreen extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: Assets.icons.outline.arrowLeftOutline.svg(
-            colorFilter: ColorFilter.mode(
-              Theme.of(context).colorScheme.onBackground,
-              BlendMode.srcIn,
-            ),
+          icon: Icon(
+            SolarIconsOutline.arrowLeft,
+            color: Theme.of(context).colorScheme.onBackground,
           ),
         ),
       ),

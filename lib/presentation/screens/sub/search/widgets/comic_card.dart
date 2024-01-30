@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
 import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class ComicCard extends StatelessWidget {
   const ComicCard({
@@ -104,13 +104,10 @@ class ComicCard extends StatelessWidget {
                         ),
                         Row(
                           children: [
-                            Assets.icons.bold.starBold.svg(
-                              colorFilter: const ColorFilter.mode(
-                                AppColors.rating,
-                                BlendMode.srcIn,
-                              ),
-                              width: 12,
-                              height: 12,
+                            const Icon(
+                              SolarIconsBold.star,
+                              color: AppColors.rating,
+                              size: 12,
                             ),
                             const SizedBox(width: 5),
                             Text(

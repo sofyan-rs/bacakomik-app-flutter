@@ -1,10 +1,11 @@
+import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/models/comic_details_model/comic_details_model.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/comic_details.dart';
 import 'package:bacakomik_app/presentation/screens/sub/read_chapter/read_chapter_screen.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class ComicChapters extends StatefulWidget {
   const ComicChapters({
@@ -69,11 +70,9 @@ class _ComicChaptersState extends State<ComicChapters> {
                   _isAscending = !_isAscending;
                 });
               },
-              icon: Assets.icons.outline.sortOutline.svg(
-                colorFilter: ColorFilter.mode(
-                  Theme.of(context).primaryColor,
-                  BlendMode.srcIn,
-                ),
+              icon: const Icon(
+                SolarIconsOutline.sortVertical,
+                color: AppColors.primary,
               ),
             ),
           ],

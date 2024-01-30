@@ -50,14 +50,22 @@ class SearchComicBloc extends Bloc<SearchComicEvent, SearchComicState> {
     SearchComicEvent event,
     Emitter<SearchComicState> emit,
   ) async {
+    final state = this.state as SearchComicLoaded;
+    emit(SearchComicLoaded(result: state.result, isLoadMore: true));
     try {
-      final keyword = (event as GetSearchResult).keyword;
+      final keyword = (event as GetSearchResultNext).keyword;
       final page = (event).page;
       final result = await searchRepository.getSearchResult(
         keyword,
         page,
       );
-      emit(SearchComicLoaded(result: result));
+
+      emit(
+        SearchComicLoaded(
+          result: [...state.result, ...result],
+          isLoadMore: false,
+        ),
+      );
     } catch (e) {
       emit(SearchComicError(message: e.toString()));
     }

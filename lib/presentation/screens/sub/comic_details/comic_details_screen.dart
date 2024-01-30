@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/comic_app_bar.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/comic_chapters.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/comic_cover.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class ComicDetailsScreen extends StatefulWidget {
   const ComicDetailsScreen({
@@ -62,11 +62,9 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                icon: Assets.icons.outline.arrowLeftOutline.svg(
-                  colorFilter: ColorFilter.mode(
-                    Theme.of(context).colorScheme.onBackground,
-                    BlendMode.srcIn,
-                  ),
+                icon: Icon(
+                  SolarIconsOutline.arrowLeft,
+                  color: Theme.of(context).colorScheme.onBackground,
                 ),
               ),
               expandedHeight: 260,

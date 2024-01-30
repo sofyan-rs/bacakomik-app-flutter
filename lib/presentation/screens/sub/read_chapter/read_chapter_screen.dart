@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/bloc/chapter_read_bloc/chapter_read_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/models/comic_details_model/comic_details_model.dart';
 import 'package:bacakomik_app/presentation/screens/sub/read_chapter/widgets/chapter_image.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class ReadChapterScreen extends StatefulWidget {
   const ReadChapterScreen({
@@ -71,11 +71,9 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                   onPressed: () {
                     _goToChapterRead(context, prevCh, prevChapterSlug);
                   },
-                  icon: Assets.icons.outline.chevronLeftOutline.svg(
-                    colorFilter: ColorFilter.mode(
-                      Colors.white.withOpacity(0.8),
-                      BlendMode.srcIn,
-                    ),
+                  icon: Icon(
+                    SolarIconsOutline.altArrowLeft,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               if (nextChapterSlug != null)
@@ -83,11 +81,9 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                   onPressed: () {
                     _goToChapterRead(context, nextCh, nextChapterSlug);
                   },
-                  icon: Assets.icons.outline.chevronRightOutline.svg(
-                    colorFilter: ColorFilter.mode(
-                      Colors.white.withOpacity(0.8),
-                      BlendMode.srcIn,
-                    ),
+                  icon: Icon(
+                    SolarIconsOutline.altArrowRight,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
             ],
@@ -137,11 +133,9 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                icon: Assets.icons.outline.arrowLeftOutline.svg(
-                  colorFilter: ColorFilter.mode(
-                    Theme.of(context).colorScheme.onBackground,
-                    BlendMode.srcIn,
-                  ),
+                icon: Icon(
+                  SolarIconsOutline.arrowLeft,
+                  color: Theme.of(context).colorScheme.onBackground,
                 ),
               ),
             )

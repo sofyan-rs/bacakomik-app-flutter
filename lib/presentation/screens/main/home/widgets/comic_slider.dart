@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/comic_slider_card.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class ComicSlider extends StatelessWidget {
   const ComicSlider({super.key});
@@ -20,24 +20,20 @@ class ComicSlider extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(
+          const Padding(
+            padding: EdgeInsets.only(
               left: 15,
               right: 15,
               top: 20,
             ),
             child: Row(
               children: [
-                Assets.icons.outline.fireOutline.svg(
-                  colorFilter: const ColorFilter.mode(
-                    AppColors.primary,
-                    BlendMode.srcIn,
-                  ),
-                  width: 20,
-                  height: 20,
+                Icon(
+                  SolarIconsBold.fireMinimalistic,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   AppText.popular,
                   style: TextStyle(
                     fontSize: 18,
