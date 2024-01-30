@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -116,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     builder: (context) => const SearchScreen(),
                   ),
                 );
+                context.read<SearchComicBloc>().add(ResetSearchResult());
               },
               icon: const Icon(
                 SolarIconsOutline.magnifier,

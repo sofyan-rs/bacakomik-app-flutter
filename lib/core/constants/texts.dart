@@ -31,4 +31,12 @@ class AppText {
   static const String synopsis = 'Sinopsis';
   static const String seeMore = 'Lihat Selengkapnya...';
   static const String hide = 'Sembunyikan';
+
+  // Favorites Screen Text
+  static const String favoriteList = 'Daftar Favorit';
+  static const String favoriteEmpty = 'Belum Ada Komik Favorit';
+
+  // Search Screen Text
+  static const String searchComicHere = 'Cari Judul Komik Disini';
+  static const String comicNotFound = 'Komik Tidak Ditemukan';
 }

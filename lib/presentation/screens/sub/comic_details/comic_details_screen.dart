@@ -25,10 +25,19 @@ class ComicDetailsScreen extends StatefulWidget {
 }
 
 class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
+  bool isShowTitle = false;
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     context.read<ComicDetailsBloc>().add(GetComicDetails(widget.slug));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _scrollController.dispose();
   }
 
   @override
@@ -37,12 +46,27 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
       context.read<ComicDetailsBloc>().add(GetComicDetails(widget.slug));
     }
 
+    _scrollController.addListener(() {
+      if (_scrollController.offset >= 100) {
+        setState(() {
+          isShowTitle = true;
+        });
+      } else {
+        setState(() {
+          isShowTitle = false;
+        });
+      }
+    });
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       bottomNavigationBar: BlocBuilder<ComicDetailsBloc, ComicDetailsState>(
         builder: (context, state) {
           if (state is ComicDetailsLoaded) {
-            return const ComicAppBar();
+            return ComicAppBar(
+              comicSlug: widget.slug,
+              comicDetails: state.comicDetails,
+            );
           } else {
             return const SizedBox();
           }
@@ -54,10 +78,11 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
         color: AppColors.primary,
         displacement: 100,
         child: CustomScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar(
-              title: Text(widget.title),
+              title: isShowTitle ? Text(widget.title) : null,
               leading: IconButton(
                 onPressed: () {
                   Navigator.of(context).pop();

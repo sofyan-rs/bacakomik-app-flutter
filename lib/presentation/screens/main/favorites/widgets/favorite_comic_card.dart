@@ -4,26 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
 import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
-import 'package:solar_icons/solar_icons.dart';
 
-class ComicCard extends StatelessWidget {
-  const ComicCard({
+class FavoriteComicCard extends StatelessWidget {
+  const FavoriteComicCard({
     super.key,
     required this.title,
     required this.cover,
-    required this.chapter,
     required this.type,
-    required this.rating,
-    required this.completed,
     required this.slug,
   });
 
   final String title;
   final String cover;
-  final String chapter;
   final String type;
-  final String rating;
-  final bool completed;
   final String slug;
 
   void _goToComicDetails(BuildContext context) {
@@ -93,17 +86,6 @@ class ComicCard extends StatelessWidget {
                               : AppColors.manhuaColor,
                     ),
                   ),
-                  Positioned(
-                    left: 10,
-                    bottom: 10,
-                    child: CustomChip(
-                      text: completed ? "Completed" : "Ongoing",
-                      backgroundColor:
-                          Theme.of(context).colorScheme.secondaryContainer,
-                      textColor:
-                          Theme.of(context).colorScheme.onSecondaryContainer,
-                    ),
-                  ),
                 ],
               ),
               Padding(
@@ -122,32 +104,6 @@ class ComicCard extends StatelessWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 7),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CustomChip(
-                          text: 'Ch. $chapter',
-                          backgroundColor: AppColors.primary,
-                        ),
-                        Row(
-                          children: [
-                            const Icon(
-                              SolarIconsBold.start1,
-                              color: AppColors.rating,
-                              size: 12,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              rating,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
                     ),
                   ],
                 ),

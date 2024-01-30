@@ -14,6 +14,9 @@ class SearchComicBloc extends Bloc<SearchComicEvent, SearchComicState> {
   ) : super(SearchComicInitial()) {
     on<GetSearchResult>(_getSearchResult);
     on<GetSearchResultNext>(_getSearchResultNext);
+    on<ResetSearchResult>((event, emit) {
+      emit(SearchComicInitial());
+    });
   }
 
   @override

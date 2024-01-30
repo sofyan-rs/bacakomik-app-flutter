@@ -22,3 +22,5 @@ final class GetSearchResultNext extends SearchComicEvent {
     required this.page,
   });
 }
+
+final class ResetSearchResult extends SearchComicEvent {}

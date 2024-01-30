@@ -46,7 +46,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 75,
+        toolbarHeight: 70,
         title: TextField(
           controller: _searchInputController,
           cursorColor: AppColors.primary,

@@ -1,18 +1,14 @@
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
+import 'package:bacakomik_app/presentation/screens/main/root/root_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:bacakomik_app/core/auth/auth_methods.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginScreen extends StatelessWidget {
+  LoginScreen({super.key});
 
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
   final AuthMethod _authMethod = AuthMethod();
 
   @override
@@ -53,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (!context.mounted) return;
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
+                        builder: (context) => const RootScreen(),
                       ),
                     );
                   }
