@@ -15,7 +15,7 @@ class LatestRepository {
       final data = jsonDecode(latestData);
 
       return List<ComicModel>.from(
-        data['response']['data'].map(
+        data['data'].map(
           (e) => ComicModel.fromMap(e),
         ),
       );

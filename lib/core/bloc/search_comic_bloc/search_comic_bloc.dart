@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/models/comic_model.dart';
+import 'package:bacakomik_app/core/utils/connectivity_check.dart';
 import 'package:bacakomik_app/data/repository/search_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ part 'search_comic_state.dart';
 
 class SearchComicBloc extends Bloc<SearchComicEvent, SearchComicState> {
   final SearchRepository searchRepository;
+  final _connectivityCheck = ConnectivityCheck();
 
   SearchComicBloc(
     this.searchRepository,
@@ -35,6 +37,11 @@ class SearchComicBloc extends Bloc<SearchComicEvent, SearchComicState> {
     SearchComicEvent event,
     Emitter<SearchComicState> emit,
   ) async {
+    bool isConnected = await _connectivityCheck.checkStatus();
+    if (!isConnected) {
+      emit(NoInternet());
+      return;
+    }
     emit(SearchComicLoading());
     try {
       final keyword = (event as GetSearchResult).keyword;
@@ -53,6 +60,11 @@ class SearchComicBloc extends Bloc<SearchComicEvent, SearchComicState> {
     SearchComicEvent event,
     Emitter<SearchComicState> emit,
   ) async {
+    bool isConnected = await _connectivityCheck.checkStatus();
+    if (!isConnected) {
+      emit(NoInternet());
+      return;
+    }
     final state = this.state as SearchComicLoaded;
     emit(SearchComicLoaded(result: state.result, isLoadMore: true));
     try {

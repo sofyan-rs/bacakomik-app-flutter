@@ -45,7 +45,7 @@ class AuthMethod {
     } on FirebaseAuthException catch (e) {
       res = false;
       if (!context.mounted) return false;
-      showSnackBar(context, e.message!);
+      showSnackBar(context: context, message: e.message!);
     }
 
     return res;
@@ -61,7 +61,7 @@ class AuthMethod {
     } on FirebaseAuthException catch (e) {
       res = false;
       if (!context.mounted) return false;
-      showSnackBar(context, e.message!);
+      showSnackBar(context: context, message: e.message!);
     }
 
     return res;

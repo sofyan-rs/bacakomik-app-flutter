@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/utils/connectivity_check.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bacakomik_app/core/models/chapter_read_model.dart';
@@ -8,6 +9,8 @@ part 'chapter_read_state.dart';
 
 class ChapterReadBloc extends Bloc<ChapterReadEvent, ChapterReadState> {
   final ChapterReadRepository chapterReadRepository;
+  final _connectivityCheck = ConnectivityCheck();
+
   ChapterReadBloc(
     this.chapterReadRepository,
   ) : super(ChapterReadInitial()) {
@@ -30,6 +33,11 @@ class ChapterReadBloc extends Bloc<ChapterReadEvent, ChapterReadState> {
     ChapterReadEvent event,
     Emitter<ChapterReadState> emit,
   ) async {
+    bool isConnected = await _connectivityCheck.checkStatus();
+    if (!isConnected) {
+      emit(NoInternet());
+      return;
+    }
     emit(ChapterReadLoading());
     try {
       final slug = (event as GetChapterRead).slug;

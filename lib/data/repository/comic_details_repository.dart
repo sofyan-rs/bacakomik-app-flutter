@@ -14,7 +14,7 @@ class ComicDetailsRepository {
 
       final data = jsonDecode(latestData);
 
-      return ComicDetailsModel.fromMap(data['response']['data']);
+      return ComicDetailsModel.fromMap(data['data']);
     } catch (e) {
       throw Exception('Error: $e');
     }

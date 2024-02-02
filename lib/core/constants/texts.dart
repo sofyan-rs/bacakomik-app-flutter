@@ -20,6 +20,7 @@ class AppText {
 
   // Error Text
   static const String error = 'Terjadi Kesalahan';
+  static const String noInternet = 'Tidak Ada Koneksi Internet';
 
   // Comic Details Screen Text
   static const String save = 'Simpan';
@@ -31,12 +32,18 @@ class AppText {
   static const String synopsis = 'Sinopsis';
   static const String seeMore = 'Lihat Selengkapnya...';
   static const String hide = 'Sembunyikan';
+  static const String addedToFavorite = 'Ditambahkan ke Favorit';
+  static const String removedFromFavorite = 'Dihapus dari Favorit';
 
   // Favorites Screen Text
   static const String favoriteList = 'Daftar Favorit';
   static const String favoriteEmpty = 'Belum Ada Komik Favorit';
 
   // Search Screen Text
+  static const String searchHint = 'Cari Komik Disini';
   static const String searchComicHere = 'Cari Judul Komik Disini';
   static const String comicNotFound = 'Komik Tidak Ditemukan';
+
+  // Comic List Screen Text
+  static const String comicList = 'Daftar Komik';
 }

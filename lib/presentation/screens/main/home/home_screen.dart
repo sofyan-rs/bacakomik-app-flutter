@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 90,
+        toolbarHeight: 70,
         elevation: 0.8,
         title: Row(
           children: [
@@ -153,7 +153,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               physics: const AlwaysScrollableScrollPhysics(),
               children: const [
                 ComicSlider(),
-                LastReadComic(),
+                Padding(
+                  padding: EdgeInsets.only(left: 17, right: 17, top: 20),
+                  child: LastReadComic(),
+                ),
                 LatestChapter(),
               ],
             ),

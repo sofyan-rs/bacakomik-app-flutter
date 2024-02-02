@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/sub/search/widgets/search_result.dart';
 import 'package:flutter/material.dart';
 
@@ -53,7 +54,7 @@ class _SearchScreenState extends State<SearchScreen> {
           keyboardType: TextInputType.text,
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-            hintText: 'Search',
+            hintText: AppText.searchHint,
             hintStyle: TextStyle(
                 color: Theme.of(context)
                     .colorScheme
@@ -92,7 +93,7 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.only(right: 12),
             child: IconButton(
               onPressed: () {
-                _getSearchData(1);
+                if (_searchInputController.text.isNotEmpty) _getSearchData(1);
               },
               icon: const Icon(
                 SolarIconsOutline.magnifier,

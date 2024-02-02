@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/models/comic_details_model/comic_details_model.dart';
+import 'package:bacakomik_app/core/utils/connectivity_check.dart';
 import 'package:bacakomik_app/data/repository/comic_details_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ part 'comic_details_state.dart';
 
 class ComicDetailsBloc extends Bloc<ComicDetailsEvent, ComicDetailsState> {
   final ComicDetailsRepository comicDetailsRepository;
+  final _connectivityCheck = ConnectivityCheck();
 
   ComicDetailsBloc(
     this.comicDetailsRepository,
@@ -32,6 +34,11 @@ class ComicDetailsBloc extends Bloc<ComicDetailsEvent, ComicDetailsState> {
     ComicDetailsEvent event,
     Emitter<ComicDetailsState> emit,
   ) async {
+    bool isConnected = await _connectivityCheck.checkStatus();
+    if (!isConnected) {
+      emit(NoInternet());
+      return;
+    }
     emit(ComicDetailsLoading());
     try {
       final slug = (event as GetComicDetails).slug;

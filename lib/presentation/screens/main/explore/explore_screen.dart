@@ -1,6 +1,7 @@
 import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/presentation/screens/sub/comic_list/comic_list_screen.dart';
 import 'package:bacakomik_app/presentation/screens/sub/search/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +19,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 70,
         title: const Row(
           children: [
             Icon(
@@ -55,6 +57,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const ComicListScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        child: const Icon(
+          SolarIconsOutline.sortByAlphabet,
+          color: Colors.white,
+          size: 23,
+        ),
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
-import 'package:bacakomik_app/presentation/screens/main/root/root_screen.dart';
+import 'package:bacakomik_app/presentation/screens/root/root_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

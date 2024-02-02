@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/presentation/widgets/placeholder/err_no_internet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,14 +12,14 @@ import 'package:solar_icons/solar_icons.dart';
 class ComicCover extends StatelessWidget {
   const ComicCover({
     Key? key,
-    required this.cover,
+    this.cover,
     required this.slug,
   }) : super(key: key);
 
-  final String cover;
+  final String? cover;
   final String slug;
 
-  void _showCoverImage(BuildContext context) {
+  void _showCoverImage(BuildContext context, String cover) {
     showDialog(
       context: context,
       builder: (context) {
@@ -89,20 +90,22 @@ class ComicCover extends StatelessWidget {
           child: SizedBox(
             width: double.infinity,
             height: 380,
-            child: CachedNetworkImage(
-              fit: BoxFit.cover,
-              imageUrl: cover,
-              // errorWidget: (context, url, error) {
-              //   return const Center(
-              //     child: Text(
-              //       'Oops',
-              //       style: TextStyle(
-              //         color: Colors.white,
-              //       ),
-              //     ),
-              //   );
-              // },
-            ),
+            child: cover != null
+                ? CachedNetworkImage(
+                    fit: BoxFit.cover,
+                    imageUrl: cover!,
+                    // errorWidget: (context, url, error) {
+                    //   return const Center(
+                    //     child: Text(
+                    //       'Oops',
+                    //       style: TextStyle(
+                    //         color: Colors.white,
+                    //       ),
+                    //     ),
+                    //   );
+                    // },
+                  )
+                : Container(),
           ),
         ),
         Positioned.fill(
@@ -184,7 +187,7 @@ class ComicCover extends StatelessWidget {
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: () {
-                                  _showCoverImage(context);
+                                  _showCoverImage(context, cover);
                                 },
                               ),
                             ),
@@ -280,6 +283,10 @@ class ComicCover extends StatelessWidget {
                   child: Text(state.message),
                 ),
               );
+            }
+
+            if (state is NoInternet) {
+              return const ErrNoInternet();
             }
 
             return const Positioned(

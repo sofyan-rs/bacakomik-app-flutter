@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/models/home_model.dart';
+import 'package:bacakomik_app/core/utils/connectivity_check.dart';
 import 'package:bacakomik_app/data/repository/home_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,8 @@ part 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final HomeRepository homeRepository;
+  final _connectivityCheck = ConnectivityCheck();
+
   HomeBloc(
     this.homeRepository,
   ) : super(HomeInitial()) {
@@ -31,6 +34,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     HomeEvent event,
     Emitter<HomeState> emit,
   ) async {
+    bool isConnected = await _connectivityCheck.checkStatus();
+    print(isConnected);
+    if (!isConnected) {
+      emit(NoInternet());
+      return;
+    }
     emit(HomeLoading());
     try {
       final home = await homeRepository.getHome();
@@ -44,6 +53,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     HomeEvent event,
     Emitter<HomeState> emit,
   ) async {
+    // bool isConnected = await _connectivityCheck.checkStatus();
+    // print(isConnected);
+    // if (!isConnected) {
+    //   emit(NoInternet());
+    //   return;
+    // }
     final state = this.state as HomeLoaded;
     emit(HomeLoaded(
       home: state.home,

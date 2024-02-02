@@ -16,7 +16,7 @@ class SearchRepository {
       final data = jsonDecode(searchData);
 
       return List<ComicModel>.from(
-        data['response']['data'].map(
+        data['data'].map(
           (e) => ComicModel.fromMap(e),
         ),
       );

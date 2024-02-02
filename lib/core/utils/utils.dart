@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 
-showSnackBar(BuildContext context, String message) {
+showSnackBar({
+  required BuildContext context,
+  required String message,
+  Icon? icon,
+}) {
+  ScaffoldMessenger.of(context).clearSnackBars();
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(message),
+      content: Row(
+        children: [
+          icon ?? const SizedBox(),
+          icon != null ? const SizedBox(width: 10) : const SizedBox(),
+          Text(message),
+        ],
+      ),
+      duration: const Duration(seconds: 1),
     ),
   );
 }

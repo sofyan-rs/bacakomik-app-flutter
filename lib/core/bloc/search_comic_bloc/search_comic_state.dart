@@ -23,3 +23,5 @@ final class SearchComicError extends SearchComicState {
     required this.message,
   });
 }
+
+final class NoInternet extends SearchComicState {}

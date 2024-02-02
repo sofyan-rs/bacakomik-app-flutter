@@ -2,13 +2,11 @@ import 'package:bacakomik_app/core/models/comic_details_model/comic_details_mode
 import 'package:bacakomik_app/core/models/favorite_model.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 
-class FavoriteCubit extends Cubit<List<FavoriteModel>> with HydratedMixin {
+class FavoriteCubit extends HydratedCubit<List<FavoriteModel>> {
   FavoriteCubit() : super([]);
 
   void addFavorite(ComicDetailsModel comic, String slug) {
-    final newState = state;
-    newState.add(FavoriteModel(slug: slug, comicDetails: comic));
-    emit([...newState]);
+    emit([FavoriteModel(slug: slug, comicDetails: comic), ...state]);
   }
 
   void removeFavorite(slug) {
@@ -27,10 +25,6 @@ class FavoriteCubit extends Cubit<List<FavoriteModel>> with HydratedMixin {
 
   bool isFavorite(String slug) {
     return state.any((element) => element.slug == slug);
-  }
-
-  List<FavoriteModel> getFavorite() {
-    return state;
   }
 
   List<FavoriteModel> searchFavorite(String keyword) {

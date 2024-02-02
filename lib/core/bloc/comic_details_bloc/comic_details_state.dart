@@ -22,3 +22,5 @@ final class ComicDetailsError extends ComicDetailsState {
     required this.message,
   });
 }
+
+final class NoInternet extends ComicDetailsState {}

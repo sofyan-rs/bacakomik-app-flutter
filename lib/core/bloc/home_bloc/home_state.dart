@@ -19,8 +19,10 @@ final class HomeLoaded extends HomeState {
 
 final class HomeError extends HomeState {
   final String message;
-  
+
   HomeError({
     required this.message,
   });
 }
+
+final class NoInternet extends HomeState {}

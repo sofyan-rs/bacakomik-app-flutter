@@ -12,108 +12,105 @@ class LastReadComic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 17, right: 17, top: 20),
-      child: Container(
-        width: double.infinity,
-        height: 100,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: CachedNetworkImage(
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                imageUrl:
-                    'https://komikcast.lol/wp-content/uploads/2022/02/mfg8383342-e1645095214245.jpg',
-              ),
+    return Container(
+      width: double.infinity,
+      height: 100,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: CachedNetworkImage(
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              imageUrl:
+                  'https://komikcast.lol/wp-content/uploads/2022/02/mfg8383342-e1645095214245.jpg',
             ),
-            Positioned.fill(
-              child: ClipRect(
-                child: BackdropFilter(
-                  filter: ui.ImageFilter.blur(
-                    sigmaX: 2.0,
-                    sigmaY: 2.0,
-                  ),
-                  child: Container(
-                    color: AppColors.dark.withOpacity(0.2),
-                  ),
+          ),
+          Positioned.fill(
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(
+                  sigmaX: 2.0,
+                  sigmaY: 2.0,
+                ),
+                child: Container(
+                  color: AppColors.dark.withOpacity(0.2),
                 ),
               ),
             ),
-            Positioned.fill(
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(15),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      width: 70,
-                      height: 70,
-                      child: CachedNetworkImage(
-                        fit: BoxFit.cover,
-                        imageUrl:
-                            'https://komikcast.lol/wp-content/uploads/2022/02/mfg8383342-e1645095214245.jpg',
-                        // errorWidget: (context, url, error) {
-                        //   return const Center(
-                        //     child: Text(
-                        //       'Oops',
-                        //       style: TextStyle(
-                        //         color: Colors.white,
-                        //       ),
-                        //     ),
-                        //   );
-                        // },
-                      ),
+          ),
+          Positioned.fill(
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    width: 70,
+                    height: 70,
+                    child: CachedNetworkImage(
+                      fit: BoxFit.cover,
+                      imageUrl:
+                          'https://komikcast.lol/wp-content/uploads/2022/02/mfg8383342-e1645095214245.jpg',
+                      // errorWidget: (context, url, error) {
+                      //   return const Center(
+                      //     child: Text(
+                      //       'Oops',
+                      //       style: TextStyle(
+                      //         color: Colors.white,
+                      //       ),
+                      //     ),
+                      //   );
+                      // },
                     ),
                   ),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        AppText.lastRead,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                        ),
+                ),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      AppText.lastRead,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
                       ),
-                      Text(
-                        'My Fake Girlfriends are Using Me As a Shield',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'My Fake Girlfriends are Using Me As a Shield',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
                       ),
-                      SizedBox(height: 5),
-                      CustomChip(
-                        text: 'Chapter 45',
-                        backgroundColor: AppColors.primary,
-                      )
-                    ],
-                  )
-                ],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 5),
+                    CustomChip(
+                      text: 'Chapter 45',
+                      backgroundColor: AppColors.primary,
+                    )
+                  ],
+                )
+              ],
+            ),
+          ),
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {},
               ),
             ),
-            Positioned.fill(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {},
-                ),
-              ),
-            )
-          ],
-        ),
+          )
+        ],
       ),
     );
   }

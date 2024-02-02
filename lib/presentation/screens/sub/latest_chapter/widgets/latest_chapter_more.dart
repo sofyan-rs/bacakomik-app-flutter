@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/presentation/widgets/placeholder/err_no_internet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bacakomik_app/core/bloc/latest_more_bloc/latest_more_bloc.dart';
@@ -99,6 +100,10 @@ class _LatestChapterMoreState extends State<LatestChapterMore> {
               child: Text(state.message),
             ),
           );
+        }
+
+        if (state is NoInternet) {
+          return const ErrNoInternet();
         }
 
         return const Center(

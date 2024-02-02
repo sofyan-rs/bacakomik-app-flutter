@@ -24,3 +24,5 @@ final class LatestMoreError extends LatestMoreState {
     required this.message,
   });
 }
+
+final class NoInternet extends LatestMoreState {}

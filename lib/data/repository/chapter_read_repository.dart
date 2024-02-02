@@ -14,7 +14,7 @@ class ChapterReadRepository {
 
       final data = jsonDecode(latestData);
 
-      return ChapterReadModel.fromMap(data['response']['data']);
+      return ChapterReadModel.fromMap(data['data']);
     } catch (e) {
       throw Exception('Error: $e');
     }

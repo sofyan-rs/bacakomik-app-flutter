@@ -14,7 +14,7 @@ class HomeRepository {
 
       final data = jsonDecode(homeData);
 
-      return HomeModel.fromMap(data['response']['data']);
+      return HomeModel.fromMap(data['data']);
     } catch (e) {
       throw Exception('Error: $e');
     }

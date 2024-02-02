@@ -13,12 +13,12 @@ class ComicDetailsScreen extends StatefulWidget {
     super.key,
     required this.title,
     required this.slug,
-    required this.cover,
+    this.cover,
   });
 
   final String title;
   final String slug;
-  final String cover;
+  final String? cover;
 
   @override
   State<ComicDetailsScreen> createState() => _ComicDetailsScreenState();
@@ -27,11 +27,13 @@ class ComicDetailsScreen extends StatefulWidget {
 class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
   bool isShowTitle = false;
   final ScrollController _scrollController = ScrollController();
+  String? coverComic;
 
   @override
   void initState() {
     super.initState();
     context.read<ComicDetailsBloc>().add(GetComicDetails(widget.slug));
+    widget.cover == null ? coverComic = null : coverComic = widget.cover;
   }
 
   @override
@@ -47,7 +49,7 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
     }
 
     _scrollController.addListener(() {
-      if (_scrollController.offset >= 100) {
+      if (_scrollController.offset >= 180) {
         setState(() {
           isShowTitle = true;
         });
@@ -60,7 +62,14 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      bottomNavigationBar: BlocBuilder<ComicDetailsBloc, ComicDetailsState>(
+      bottomNavigationBar: BlocConsumer<ComicDetailsBloc, ComicDetailsState>(
+        listener: (context, state) {
+          if (state is ComicDetailsLoaded) {
+            setState(() {
+              coverComic = state.comicDetails.coverImg;
+            });
+          }
+        },
         builder: (context, state) {
           if (state is ComicDetailsLoaded) {
             return ComicAppBar(
@@ -74,7 +83,6 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: refreshData,
-        backgroundColor: AppColors.dark,
         color: AppColors.primary,
         displacement: 100,
         child: CustomScrollView(
@@ -97,7 +105,7 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
               flexibleSpace: FlexibleSpaceBar(
                 expandedTitleScale: 1,
                 background: ComicCover(
-                  cover: widget.cover,
+                  cover: coverComic,
                   slug: widget.slug,
                 ),
               ),

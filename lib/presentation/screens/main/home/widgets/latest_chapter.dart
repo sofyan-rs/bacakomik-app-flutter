@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/presentation/widgets/placeholder/err_no_internet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -97,6 +98,10 @@ class LatestChapter extends StatelessWidget {
                     child: Text(state.message),
                   ),
                 );
+              }
+
+              if (state is NoInternet) {
+                return const ErrNoInternet();
               }
 
               return const Center(

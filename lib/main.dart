@@ -1,4 +1,7 @@
+import 'package:bacakomik_app/core/bloc/comic_list_bloc/comic_list_bloc.dart';
 import 'package:bacakomik_app/core/bloc/favorite_cubit/favorite_cubit.dart';
+import 'package:bacakomik_app/data/data_provider/comic_list_data_provider.dart';
+import 'package:bacakomik_app/data/repository/comic_list_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -25,9 +28,9 @@ import 'package:bacakomik_app/data/repository/comic_details_repository.dart';
 import 'package:bacakomik_app/data/repository/home_repository.dart';
 import 'package:bacakomik_app/data/repository/latest_repository.dart';
 import 'package:bacakomik_app/data/repository/search_repository.dart';
-import 'package:bacakomik_app/presentation/screens/auth/login_screen.dart';
+import 'package:bacakomik_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:bacakomik_app/presentation/screens/initial/splash/splash_screen.dart';
-import 'package:bacakomik_app/presentation/screens/main/root/root_screen.dart';
+import 'package:bacakomik_app/presentation/screens/root/root_screen.dart';
 
 import 'firebase_options.dart';
 
@@ -83,6 +86,13 @@ class MyApp extends StatelessWidget {
           create: (context) => ChapterReadBloc(
             ChapterReadRepository(
               ChapterReadDataProvider(),
+            ),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => ComicListBloc(
+            ComicListRepository(
+              ComicListDataProvider(),
             ),
           ),
         ),

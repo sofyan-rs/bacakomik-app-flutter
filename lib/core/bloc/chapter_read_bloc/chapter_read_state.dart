@@ -22,3 +22,5 @@ final class ChapterReadError extends ChapterReadState {
     required this.message,
   });
 }
+
+final class NoInternet extends ChapterReadState {}
