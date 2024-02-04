@@ -21,17 +21,17 @@ class SearchComicBloc extends Bloc<SearchComicEvent, SearchComicState> {
     });
   }
 
-  @override
-  void onChange(Change<SearchComicState> change) {
-    print(change);
-    super.onChange(change);
-  }
+  // @override
+  // void onChange(Change<SearchComicState> change) {
+  //   print(change);
+  //   super.onChange(change);
+  // }
 
-  @override
-  void onTransition(Transition<SearchComicEvent, SearchComicState> transition) {
-    print(transition);
-    super.onTransition(transition);
-  }
+  // @override
+  // void onTransition(Transition<SearchComicEvent, SearchComicState> transition) {
+  //   print(transition);
+  //   super.onTransition(transition);
+  // }
 
   void _getSearchResult(
     SearchComicEvent event,

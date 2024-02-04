@@ -19,6 +19,112 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   final _searchInputController = TextEditingController();
   bool _isSearchFavorite = false;
+  final List<String> _selectedFavorites = [];
+
+  void _onSelectedFavorite(String slug) {
+    final isAlreadySelected = _selectedFavorites.contains(slug);
+
+    if (isAlreadySelected) {
+      _selectedFavorites.remove(slug);
+    } else {
+      _selectedFavorites.add(slug);
+    }
+
+    setState(() {});
+  }
+
+  bool _isInSelectedFavorites(String slug) {
+    return _selectedFavorites.contains(slug);
+  }
+
+  void _clearSelectedFavorites() {
+    showModalBottomSheet(
+      useSafeArea: true,
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: 200,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onBackground
+                          .withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: const Text(
+                  AppText.deleteFavorite,
+                  style: TextStyle(fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  children: [
+                    const Text(
+                      AppText.deleteFavoriteDescription,
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text(
+                            AppText.cancel,
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<FavoriteCubit>()
+                                .removeFavoriteList(_selectedFavorites);
+                            _selectedFavorites.clear();
+                            setState(() {});
+                            Navigator.of(context).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            AppText.delete,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -93,14 +199,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   ),
                 ),
               )
-            : const Row(
+            : Row(
                 children: [
                   Icon(
-                    SolarIconsBold.bookmarkSquareMinimalistic,
+                    _selectedFavorites.isNotEmpty
+                        ? SolarIconsBold.checklistMinimalistic
+                        : SolarIconsBold.bookmarkSquareMinimalistic,
                     color: AppColors.primary,
                   ),
-                  SizedBox(width: 10),
-                  Text(AppText.favoriteList),
+                  const SizedBox(width: 10),
+                  Text(_selectedFavorites.isNotEmpty
+                      ? '${_selectedFavorites.length} ${AppText.selected}'
+                      : AppText.favoriteList),
                 ],
               ),
         actions: [
@@ -115,6 +225,25 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 },
                 icon: const Icon(
                   SolarIconsOutline.magnifier,
+                  color: Colors.white,
+                  size: 23,
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  padding: const EdgeInsets.all(12),
+                ),
+              ),
+            ),
+          if (_selectedFavorites.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: IconButton(
+                onPressed: _clearSelectedFavorites,
+                icon: const Icon(
+                  SolarIconsOutline.trashBinMinimalistic,
                   color: Colors.white,
                   size: 23,
                 ),
@@ -184,6 +313,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 cover: comicDetails.coverImg,
                 type: comicDetails.type,
                 slug: comicSlug,
+                isSelected: _isInSelectedFavorites(comicSlug),
+                isHaveSelectedComic: _selectedFavorites.isNotEmpty,
+                onSelected: _onSelectedFavorite,
               );
             },
           );

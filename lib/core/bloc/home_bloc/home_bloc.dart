@@ -18,24 +18,23 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<RefetchHome>(_refetchHome);
   }
 
-  @override
-  void onChange(Change<HomeState> change) {
-    print(change);
-    super.onChange(change);
-  }
+  // @override
+  // void onChange(Change<HomeState> change) {
+  //   print(change);
+  //   super.onChange(change);
+  // }
 
-  @override
-  void onTransition(Transition<HomeEvent, HomeState> transition) {
-    print(transition);
-    super.onTransition(transition);
-  }
+  // @override
+  // void onTransition(Transition<HomeEvent, HomeState> transition) {
+  //   print(transition);
+  //   super.onTransition(transition);
+  // }
 
   void _getHome(
     HomeEvent event,
     Emitter<HomeState> emit,
   ) async {
     bool isConnected = await _connectivityCheck.checkStatus();
-    print(isConnected);
     if (!isConnected) {
       emit(NoInternet());
       return;

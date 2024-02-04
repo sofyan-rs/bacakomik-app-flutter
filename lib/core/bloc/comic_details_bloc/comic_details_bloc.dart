@@ -17,18 +17,18 @@ class ComicDetailsBloc extends Bloc<ComicDetailsEvent, ComicDetailsState> {
     on<GetComicDetails>(_getComicDetails);
   }
 
-  @override
-  void onChange(Change<ComicDetailsState> change) {
-    print(change);
-    super.onChange(change);
-  }
+  // @override
+  // void onChange(Change<ComicDetailsState> change) {
+  //   print(change);
+  //   super.onChange(change);
+  // }
 
-  @override
-  void onTransition(
-      Transition<ComicDetailsEvent, ComicDetailsState> transition) {
-    print(transition);
-    super.onTransition(transition);
-  }
+  // @override
+  // void onTransition(
+  //     Transition<ComicDetailsEvent, ComicDetailsState> transition) {
+  //   print(transition);
+  //   super.onTransition(transition);
+  // }
 
   void _getComicDetails(
     ComicDetailsEvent event,

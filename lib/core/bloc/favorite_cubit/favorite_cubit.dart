@@ -9,9 +9,15 @@ class FavoriteCubit extends HydratedCubit<List<FavoriteModel>> {
     emit([FavoriteModel(slug: slug, comicDetails: comic), ...state]);
   }
 
-  void removeFavorite(slug) {
+  void removeFavorite(String slug) {
     final newState = state;
     newState.removeWhere((element) => element.slug == slug);
+    emit([...newState]);
+  }
+
+  void removeFavoriteList(List<String> slugs) {
+    final newState = state;
+    newState.removeWhere((element) => slugs.contains(element.slug));
     emit([...newState]);
   }
 

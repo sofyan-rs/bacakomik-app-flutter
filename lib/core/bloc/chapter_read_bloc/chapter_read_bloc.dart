@@ -17,17 +17,17 @@ class ChapterReadBloc extends Bloc<ChapterReadEvent, ChapterReadState> {
     on<ChapterReadEvent>(_getChapterRead);
   }
 
-  @override
-  void onChange(Change<ChapterReadState> change) {
-    print(change);
-    super.onChange(change);
-  }
+  // @override
+  // void onChange(Change<ChapterReadState> change) {
+  //   print(change);
+  //   super.onChange(change);
+  // }
 
-  @override
-  void onTransition(Transition<ChapterReadEvent, ChapterReadState> transition) {
-    print(transition);
-    super.onTransition(transition);
-  }
+  // @override
+  // void onTransition(Transition<ChapterReadEvent, ChapterReadState> transition) {
+  //   print(transition);
+  //   super.onTransition(transition);
+  // }
 
   void _getChapterRead(
     ChapterReadEvent event,

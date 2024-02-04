@@ -12,12 +12,18 @@ class FavoriteComicCard extends StatelessWidget {
     required this.cover,
     required this.type,
     required this.slug,
+    required this.isSelected,
+    required this.isHaveSelectedComic,
+    required this.onSelected,
   });
 
   final String title;
   final String cover;
   final String type;
   final String slug;
+  final bool isSelected;
+  final bool isHaveSelectedComic;
+  final void Function(String) onSelected;
 
   void _goToComicDetails(BuildContext context) {
     Navigator.of(context).push(
@@ -39,6 +45,12 @@ class FavoriteComicCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.onSecondary,
+        border: isSelected
+            ? Border.all(
+                color: AppColors.primary,
+                width: 3,
+              )
+            : null,
         borderRadius: BorderRadius.circular(5),
         boxShadow: [
           BoxShadow(
@@ -115,7 +127,12 @@ class FavoriteComicCard extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () {
-                  _goToComicDetails(context);
+                  isHaveSelectedComic
+                      ? onSelected(slug)
+                      : _goToComicDetails(context);
+                },
+                onLongPress: () {
+                  onSelected(slug);
                 },
               ),
             ),

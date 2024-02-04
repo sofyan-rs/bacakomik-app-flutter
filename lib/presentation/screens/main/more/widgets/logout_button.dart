@@ -1,5 +1,6 @@
 import 'package:bacakomik_app/core/auth/auth_methods.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:flutter/material.dart';
 
 class LogoutButton extends StatelessWidget {
@@ -26,8 +27,11 @@ class LogoutButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Log Out',
-                style: TextStyle(fontSize: 16),
+                AppText.logout,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),

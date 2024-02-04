@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,16 +11,16 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Future.delayed(
-    //   const Duration(milliseconds: 3000),
-    //   () {
-    //     Navigator.of(context).pushReplacement(
-    //       MaterialPageRoute(
-    //         builder: (context) => const StreamScreen(),
-    //       ),
-    //     );
-    //   },
-    // );
+    Future.delayed(
+      const Duration(milliseconds: 3000),
+      () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => LoginScreen(),
+          ),
+        );
+      },
+    );
 
     return Scaffold(
       body: Container(

@@ -10,7 +10,6 @@ class AppText {
   static const String explore = 'Jelajahi';
   static const String favorite = 'Favorit';
   static const String more = 'Lainnya';
-  static const String history = 'History';
 
   // Home Screen Text
   static const String popular = 'Hot Komik';
@@ -38,6 +37,12 @@ class AppText {
   // Favorites Screen Text
   static const String favoriteList = 'Daftar Favorit';
   static const String favoriteEmpty = 'Belum Ada Komik Favorit';
+  static const String deleteFavorite = 'Hapus Favorit';
+  static const String deleteFavoriteDescription =
+      'Kamu yakin ingin menghapus komik berikut dari daftar favorit?';
+  static const String selected = 'Dipilih';
+  static const String cancel = 'Batal';
+  static const String delete = 'Hapus';
 
   // Search Screen Text
   static const String searchHint = 'Cari Komik Disini';
@@ -46,4 +51,29 @@ class AppText {
 
   // Comic List Screen Text
   static const String comicList = 'Daftar Komik';
+
+  // More Screen Text
+  static const String history = 'Riwayat Baca';
+  static const String historyDescription = 'Lihat Riwayat Baca Komik';
+  static const String clearCache = 'Bersihkan Cache';
+  static const String clearCacheDescription =
+      'Bersihkan Cache Tanpa Menghapus Data Favorit dan Riwayat Baca';
+  static const String backupData = 'Cadangkan Data';
+  static const String backupDataDescription =
+      'Cadangkan Data Favorit dan Riwayat Baca';
+  static const String restoreData = 'Pulihkan Data';
+  static const String restoreDataDescription =
+      'Pulihkan Data Favorit dan Riwayat Baca';
+  static const String logout = 'Keluar';
+
+  // Settings Text
+  static const String darkMode = 'Aktifkan Mode Gelap';
+  static const String darkModeDescription = 'Ubah tampilan menjadi mode gelap';
+  static const String system = 'Sistem';
+  static const String light = 'Nonaktif';
+  static const String dark = 'Aktif';
+
+  static const String bugReport = 'Lapor Bug atau Saran';
+  static const String aboutApp = 'Tentang Aplikasi';
+  static const String version = 'Versi';
 }
