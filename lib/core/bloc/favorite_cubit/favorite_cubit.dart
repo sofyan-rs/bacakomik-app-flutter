@@ -41,7 +41,8 @@ class FavoriteCubit extends HydratedCubit<List<FavoriteModel>> {
     try {
       for (var i = 0; i < slugs.length; i++) {
         final slug = slugs[i];
-        final oldComicDetails = newState[i].comicDetails;
+        final oldComicDetails =
+            state.where((element) => element.slug == slug).first.comicDetails;
         final comicDetails = await comicDetailsRepository.getComicDetails(slug);
         if (oldComicDetails != comicDetails) {
           newState[i] = newState[i].copyWith(

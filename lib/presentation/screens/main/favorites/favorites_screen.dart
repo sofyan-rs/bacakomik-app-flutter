@@ -100,7 +100,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 .read<FavoriteCubit>()
                                 .removeFavoriteList(_selectedFavorites);
                             _selectedFavorites.clear();
-                            setState(() {});
                             Navigator.of(context).pop();
                           },
                           style: ElevatedButton.styleFrom(

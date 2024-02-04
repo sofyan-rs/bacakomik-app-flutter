@@ -8,6 +8,91 @@ class LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    void logout() {
+      showModalBottomSheet(
+        useSafeArea: true,
+        isScrollControlled: true,
+        context: context,
+        builder: (context) {
+          return SizedBox(
+            height: 185,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onBackground
+                            .withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    AppText.logout,
+                    style: TextStyle(fontSize: 18),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: Column(
+                    children: [
+                      const Text(
+                        AppText.logoutDescription,
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text(
+                              AppText.cancel,
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              AuthMethod().signOut(context);
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text(
+                              AppText.logout,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.all(15),
       child: ElevatedButton(
@@ -18,9 +103,7 @@ class LogoutButton extends StatelessWidget {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
         ),
-        onPressed: () {
-          AuthMethod().signOut(context);
-        },
+        onPressed: logout,
         child: const SizedBox(
           width: double.infinity,
           child: Row(

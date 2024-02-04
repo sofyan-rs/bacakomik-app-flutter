@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/models/settings_model.dart';
 import 'package:bacakomik_app/presentation/screens/main/more/widgets/app_info.dart';
+import 'package:bacakomik_app/presentation/screens/sub/history/history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -25,7 +26,7 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  showAppInfo() {
+  _showAppInfo() {
     showDialog(
       context: context,
       builder: (context) {
@@ -53,6 +54,14 @@ class _SettingsState extends State<Settings> {
     );
   }
 
+  _goToHistoryScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const HistoryScreen(),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -67,7 +76,7 @@ class _SettingsState extends State<Settings> {
               const Icon(SolarIconsOutline.history, color: AppColors.primary),
           title: const Text(AppText.history),
           subtitle: const Text(AppText.historyDescription),
-          onTap: () {},
+          onTap: _goToHistoryScreen,
         ),
         Container(
           height: 15,
@@ -162,7 +171,7 @@ class _SettingsState extends State<Settings> {
         ListTile(
           leading: const Icon(SolarIconsOutline.code, color: AppColors.primary),
           title: const Text(AppText.aboutApp),
-          onTap: showAppInfo,
+          onTap: _showAppInfo,
         ),
         Container(
           height: 15,

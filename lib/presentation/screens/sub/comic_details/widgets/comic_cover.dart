@@ -52,7 +52,7 @@ class ComicCover extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Positioned(
-                top: 10,
+                bottom: 10,
                 right: 10,
                 child: IconButton(
                   color: Colors.white,
@@ -67,7 +67,7 @@ class ComicCover extends StatelessWidget {
                     Navigator.of(context).pop();
                   },
                   icon: const Icon(
-                    SolarIconsOutline.download,
+                    SolarIconsOutline.galleryDownload,
                     color: Colors.white,
                   ),
                 ),

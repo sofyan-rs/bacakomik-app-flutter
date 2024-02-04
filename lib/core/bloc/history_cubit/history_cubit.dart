@@ -52,6 +52,12 @@ class HistoryCubit extends HydratedCubit<List<HistoryModel>> {
     emit([...newState]);
   }
 
+  void removeHistoryBySlug(String comicSlug) {
+    final newState = state;
+    newState.removeWhere((element) => element.comicSlug == comicSlug);
+    emit([...newState]);
+  }
+
   void clearHistory() {
     emit([]);
   }
@@ -92,19 +98,19 @@ class HistoryCubit extends HydratedCubit<List<HistoryModel>> {
     }
   }
 
-  List<ComicLatestHistoryModel> getLatestHistories() {
+  List<ComicLatestHistoryModel> get latestHistories {
     List<ComicLatestHistoryModel> latestHistories = [];
-    final history = state;
+    List<HistoryModel> sortList() {
+      final sortedList = state;
+      sortedList.sort((a, b) => a.readDate.compareTo(b.readDate));
+      return sortedList.reversed.toList();
+    }
+
+    final history = sortList();
     for (var i = 0; i < history.length; i++) {
       final isComicExist = latestHistories
           .indexWhere((element) => element.comicSlug == history[i].comicSlug);
-      if (isComicExist != -1) {
-        latestHistories[isComicExist] = ComicLatestHistoryModel(
-          comicSlug: history[i].comicSlug,
-          comicDetails: history[i].comicDetails,
-          latestHistory: history[i],
-        );
-      } else {
+      if (isComicExist == -1) {
         latestHistories.add(ComicLatestHistoryModel(
           comicSlug: history[i].comicSlug,
           comicDetails: history[i].comicDetails,

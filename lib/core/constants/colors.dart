@@ -16,4 +16,7 @@ class AppColors {
 
   // Rating Color
   static const Color rating = Color.fromARGB(255, 189, 167, 57);
+
+  // Error Color
+  static const Color error = Color.fromARGB(255, 218, 70, 70);
 }

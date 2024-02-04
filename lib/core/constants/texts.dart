@@ -65,6 +65,18 @@ class AppText {
   static const String restoreDataDescription =
       'Pulihkan Data Favorit dan Riwayat Baca';
   static const String logout = 'Keluar';
+  static const String logoutDescription =
+      'Kamu yakin ingin keluar dari akun ini?';
+
+  // History Screen Text
+  static const String historyEmpty = 'Belum Ada Riwayat Baca';
+  static const String clearHistory = 'Hapus Riwayat';
+  static const String clearHistoryDescription =
+      'Kamu yakin ingin menghapus semua riwayat baca yang tersimpan?';
+  static const String clearHistoryComicDescription =
+      'Kamu yakin ingin menghapus riwayat baca komik ini yang tersimpan?';
+  static const String clearHistoryAllChapter =
+      'Hapus Riwayat Baca Semua Chapter';
 
   // Settings Text
   static const String darkMode = 'Aktifkan Mode Gelap';

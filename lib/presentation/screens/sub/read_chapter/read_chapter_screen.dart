@@ -74,6 +74,7 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _transformationController.dispose();
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
