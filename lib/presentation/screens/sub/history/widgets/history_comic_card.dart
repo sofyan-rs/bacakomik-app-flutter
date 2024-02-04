@@ -85,7 +85,7 @@ class _HistoryComicCardState extends State<HistoryComicCard> {
                     const Padding(
                       padding: EdgeInsets.only(top: 15, left: 15, right: 15),
                       child: Text(
-                        AppText.clearHistoryComicDescription,
+                        AppText.clearHistoryComicConfirmation,
                         style: TextStyle(
                           fontSize: 16,
                         ),

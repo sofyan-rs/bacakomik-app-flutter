@@ -43,7 +43,7 @@ class LogoutButton extends StatelessWidget {
                   child: Column(
                     children: [
                       const Text(
-                        AppText.logoutDescription,
+                        AppText.logoutConfirmation,
                         style: TextStyle(
                           fontSize: 16,
                         ),

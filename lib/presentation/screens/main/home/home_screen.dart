@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         listener: (context, state) async {
           if (state is HomeLoaded && state.isRefetch) {
             if (_player.state != PlayerState.playing) {
-              await _player.setSource(AssetSource('sounds/kuru-kuru.mp3'));
+              await _player.setSource(AssetSource('sounds/kuru-kururin.mp3'));
               await _player.resume();
             }
             return;

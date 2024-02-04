@@ -50,7 +50,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Column(
                   children: [
                     const Text(
-                      AppText.clearHistoryDescription,
+                      AppText.clearHistoryComicConfirmation,
                       style: TextStyle(
                         fontSize: 16,
                       ),

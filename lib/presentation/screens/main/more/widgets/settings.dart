@@ -7,6 +7,7 @@ import 'package:bacakomik_app/presentation/screens/main/more/widgets/app_info.da
 import 'package:bacakomik_app/presentation/screens/sub/history/history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -19,6 +20,7 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   final Uri _reportLink = Uri.parse(AppVariables.reportLink);
+  final DefaultCacheManager _cacheManager = DefaultCacheManager();
 
   Future<void> _reportBug() async {
     if (!await launchUrl(_reportLink)) {
@@ -49,6 +51,93 @@ class _SettingsState extends State<Settings> {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _clearCache() {
+    showModalBottomSheet(
+      useSafeArea: true,
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: 200,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onBackground
+                          .withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: const Text(
+                  AppText.clearCache,
+                  style: TextStyle(fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  children: [
+                    const Text(
+                      AppText.clearCacheConfirmation,
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text(
+                            AppText.cancel,
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await _cacheManager.emptyCache();
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            AppText.delete,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -87,7 +176,7 @@ class _SettingsState extends State<Settings> {
               color: AppColors.primary),
           title: const Text(AppText.clearCache),
           subtitle: const Text(AppText.clearCacheDescription),
-          onTap: () {},
+          onTap: _clearCache,
         ),
         Divider(
           height: 1,

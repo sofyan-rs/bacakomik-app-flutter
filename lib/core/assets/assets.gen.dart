@@ -38,14 +38,11 @@ class $AssetsImagesGen {
 class $AssetsSoundsGen {
   const $AssetsSoundsGen();
 
-  /// File path: assets/sounds/kuru-kuru-rin.mp3
-  String get kuruKuruRin => 'assets/sounds/kuru-kuru-rin.mp3';
-
-  /// File path: assets/sounds/kuru-kuru.mp3
-  String get kuruKuru => 'assets/sounds/kuru-kuru.mp3';
+  /// File path: assets/sounds/kuru-kururin.mp3
+  String get kuruKururin => 'assets/sounds/kuru-kururin.mp3';
 
   /// List of all assets
-  List<String> get values => [kuruKuruRin, kuruKuru];
+  List<String> get values => [kuruKururin];
 }
 
 class Assets {

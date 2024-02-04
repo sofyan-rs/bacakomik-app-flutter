@@ -58,6 +58,8 @@ class AppText {
   static const String clearCache = 'Bersihkan Cache';
   static const String clearCacheDescription =
       'Bersihkan Cache Tanpa Menghapus Data Favorit dan Riwayat Baca';
+  static const String clearCacheConfirmation =
+      'Kamu yakin ingin membersihkan semua data cache?';
   static const String backupData = 'Cadangkan Data';
   static const String backupDataDescription =
       'Cadangkan Data Favorit dan Riwayat Baca';
@@ -65,15 +67,15 @@ class AppText {
   static const String restoreDataDescription =
       'Pulihkan Data Favorit dan Riwayat Baca';
   static const String logout = 'Keluar';
-  static const String logoutDescription =
+  static const String logoutConfirmation =
       'Kamu yakin ingin keluar dari akun ini?';
 
   // History Screen Text
   static const String historyEmpty = 'Belum Ada Riwayat Baca';
   static const String clearHistory = 'Hapus Riwayat';
-  static const String clearHistoryDescription =
+  static const String clearHistoryConfirmation =
       'Kamu yakin ingin menghapus semua riwayat baca yang tersimpan?';
-  static const String clearHistoryComicDescription =
+  static const String clearHistoryComicConfirmation =
       'Kamu yakin ingin menghapus riwayat baca komik ini yang tersimpan?';
   static const String clearHistoryAllChapter =
       'Hapus Riwayat Baca Semua Chapter';
