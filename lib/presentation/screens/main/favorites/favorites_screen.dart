@@ -296,28 +296,35 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             return const SearchNotFound();
           }
 
-          return AutoHeightGridView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(15),
-            itemCount: searchFavorites.length,
-            crossAxisCount: MediaQuery.of(context).size.width > 640 ? 4 : 2,
-            crossAxisSpacing: 15,
-            mainAxisSpacing: 15,
-            shrinkWrap: true,
-            builder: (context, index) {
-              final comicDetails = searchFavorites[index].comicDetails;
-              final comicSlug = searchFavorites[index].slug;
-
-              return FavoriteComicCard(
-                title: comicDetails.title,
-                cover: comicDetails.coverImg,
-                type: comicDetails.type,
-                slug: comicSlug,
-                isSelected: _isInSelectedFavorites(comicSlug),
-                isHaveSelectedComic: _selectedFavorites.isNotEmpty,
-                onSelected: _onSelectedFavorite,
-              );
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              await context.read<FavoriteCubit>().updateFavoriteList();
             },
+            child: AutoHeightGridView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(15),
+              itemCount: searchFavorites.length,
+              crossAxisCount: MediaQuery.of(context).size.width > 640 ? 4 : 2,
+              crossAxisSpacing: 15,
+              mainAxisSpacing: 15,
+              shrinkWrap: true,
+              builder: (context, index) {
+                final comicDetails = searchFavorites[index].comicDetails;
+                final comicSlug = searchFavorites[index].slug;
+
+                return FavoriteComicCard(
+                  title: comicDetails.title,
+                  cover: comicDetails.coverImg,
+                  type: comicDetails.type,
+                  slug: comicSlug,
+                  chapterCount: comicDetails.chapters.length,
+                  isSelected: _isInSelectedFavorites(comicSlug),
+                  isHaveSelectedComic: _selectedFavorites.isNotEmpty,
+                  onSelected: _onSelectedFavorite,
+                );
+              },
+            ),
           );
         },
       ),

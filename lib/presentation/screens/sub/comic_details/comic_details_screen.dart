@@ -1,12 +1,13 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/comic_app_bar.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/comic_chapters.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/comic_cover.dart';
-import 'package:solar_icons/solar_icons.dart';
 
 class ComicDetailsScreen extends StatefulWidget {
   const ComicDetailsScreen({
@@ -28,6 +29,39 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
   bool isShowTitle = false;
   final ScrollController _scrollController = ScrollController();
   String? coverComic;
+  List<SelectedChapter> _selectedChapters = [];
+
+  void _onSelectedChapter(SelectedChapter chapter) {
+    final isAlreadySelected =
+        _selectedChapters.any((selected) => selected.slug == chapter.slug);
+
+    if (isAlreadySelected) {
+      setState(() {
+        _selectedChapters
+            .removeWhere((selected) => selected.slug == chapter.slug);
+      });
+    } else {
+      setState(() {
+        _selectedChapters.add(chapter);
+      });
+    }
+  }
+
+  bool _isInSelectedChapters(String slug) {
+    return _selectedChapters.any((chapter) => chapter.slug == slug);
+  }
+
+  void _selectAll(List<SelectedChapter> chapters) {
+    setState(() {
+      _selectedChapters = chapters;
+    });
+  }
+
+  void _unselectAll() {
+    setState(() {
+      _selectedChapters = [];
+    });
+  }
 
   @override
   void initState() {
@@ -75,6 +109,9 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
             return ComicAppBar(
               comicSlug: widget.slug,
               comicDetails: state.comicDetails,
+              selectedChapters: _selectedChapters,
+              selectAllChapter: _selectAll,
+              unselectAllChapter: _unselectAll,
             );
           } else {
             return const SizedBox();
@@ -115,7 +152,10 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
                 if (state is ComicDetailsLoaded) {
                   return ComicChapters(
                     comicDetails: state.comicDetails,
-                    slug: widget.slug,
+                    comicSlug: widget.slug,
+                    onSelectedChapter: _onSelectedChapter,
+                    isInSelectedChapters: _isInSelectedChapters,
+                    isHaveSelectedChapter: _selectedChapters.isNotEmpty,
                   );
                 } else {
                   return const SliverToBoxAdapter(
@@ -129,4 +169,14 @@ class _ComicDetailsScreenState extends State<ComicDetailsScreen> {
       ),
     );
   }
+}
+
+class SelectedChapter {
+  final String slug;
+  final String chapterNumber;
+
+  SelectedChapter({
+    required this.slug,
+    required this.chapterNumber,
+  });
 }

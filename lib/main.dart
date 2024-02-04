@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
 import 'package:bacakomik_app/core/bloc/settings_cubit/settings_cubit.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/models/settings_model.dart';
@@ -103,6 +104,9 @@ class MyApp extends StatelessWidget {
           create: (context) => FavoriteCubit(),
         ),
         BlocProvider(
+          create: (context) => HistoryCubit(),
+        ),
+        BlocProvider(
           create: (context) => SettingsCubit(),
         ),
       ],
@@ -111,7 +115,7 @@ class MyApp extends StatelessWidget {
           final darkMode = state.darkMode;
 
           return MaterialApp(
-            debugShowCheckedModeBanner: false,
+            // debugShowCheckedModeBanner: false,
             title: AppVariables.appName,
             theme: AppThemes.lightTheme,
             darkTheme: AppThemes.darkTheme,

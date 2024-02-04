@@ -48,10 +48,7 @@ class _MoreScreenState extends State<MoreScreen> {
               subtitle: Text('v$_appVersion'),
             ),
             const Profile(),
-            const Padding(
-              padding: EdgeInsets.all(15),
-              child: LastReadComic(),
-            ),
+            const LastReadComic(),
             const Settings(),
             const LogoutButton(),
           ],

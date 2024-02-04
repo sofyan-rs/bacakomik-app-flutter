@@ -6,8 +6,12 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 class HistoryCubit extends HydratedCubit<List<HistoryModel>> {
   HistoryCubit() : super([]);
 
-  void addHistory(String chapterNumber, String slug,
-      ComicDetailsModel comicDetails, String comicSlug) {
+  void addHistory({
+    required String slug,
+    required String chapterNumber,
+    required ComicDetailsModel comicDetails,
+    required String comicSlug,
+  }) {
     final newState = state;
     final history = HistoryModel(
       slug: slug,
@@ -23,9 +27,28 @@ class HistoryCubit extends HydratedCubit<List<HistoryModel>> {
     emit([history, ...newState]);
   }
 
+  addHistoryList(List<HistoryModel> histories) {
+    final newState = state;
+    for (var i = 0; i < histories.length; i++) {
+      final isExist =
+          newState.indexWhere((element) => element.slug == histories[i].slug);
+      if (isExist != -1) {
+        newState.removeAt(isExist);
+      }
+    }
+    newState.addAll(histories);
+    emit([...newState]);
+  }
+
   void removeHistory(String slug) {
     final newState = state;
     newState.removeWhere((element) => element.slug == slug);
+    emit([...newState]);
+  }
+
+  void removeHistoryList(List<String> slugs) {
+    final newState = state;
+    newState.removeWhere((element) => slugs.contains(element.slug));
     emit([...newState]);
   }
 
@@ -41,8 +64,32 @@ class HistoryCubit extends HydratedCubit<List<HistoryModel>> {
     return state.any((element) => element.slug == slug);
   }
 
-  HistoryModel getLatestHistory() {
-    return state.first;
+  HistoryModel get latestHistory {
+    List<HistoryModel> sortList() {
+      final sortedList = state;
+      sortedList.sort((a, b) => a.readDate.compareTo(b.readDate));
+      return sortedList.reversed.toList();
+    }
+
+    return sortList().first;
+  }
+
+  int getHistoryCountBySlug(String comicSlug) {
+    return state.where((element) => element.comicSlug == comicSlug).length;
+  }
+
+  HistoryModel? getLatestHistoryBySlug(String comicSlug) {
+    try {
+      List<HistoryModel> sortList() {
+        final sortedList = state;
+        sortedList.sort((a, b) => a.readDate.compareTo(b.readDate));
+        return sortedList.reversed.toList();
+      }
+
+      return sortList().firstWhere((element) => element.comicSlug == comicSlug);
+    } catch (e) {
+      return null;
+    }
   }
 
   List<ComicLatestHistoryModel> getLatestHistories() {
@@ -68,15 +115,11 @@ class HistoryCubit extends HydratedCubit<List<HistoryModel>> {
     return latestHistories;
   }
 
-  HistoryModel getLatestHistoryBySlug(String slug) {
-    return state.firstWhere((element) => element.slug == slug);
-  }
-
   @override
   List<HistoryModel>? fromJson(Map<String, dynamic> json) {
     if (json['history_read'] != null) {
       return List<HistoryModel>.from(
-          json['favorites_comic'].map((x) => HistoryModel.fromJson(x)));
+          json['history_read'].map((x) => HistoryModel.fromJson(x)));
     }
     return null;
   }

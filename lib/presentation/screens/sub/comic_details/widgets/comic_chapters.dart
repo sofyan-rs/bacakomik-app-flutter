@@ -1,4 +1,6 @@
 import 'package:bacakomik_app/core/constants/colors.dart';
+import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
+import 'package:bacakomik_app/presentation/screens/sub/comic_details/widgets/chapter_tile.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
@@ -11,11 +13,17 @@ class ComicChapters extends StatefulWidget {
   const ComicChapters({
     Key? key,
     required this.comicDetails,
-    required this.slug,
+    required this.comicSlug,
+    required this.onSelectedChapter,
+    required this.isInSelectedChapters,
+    required this.isHaveSelectedChapter,
   }) : super(key: key);
 
   final ComicDetailsModel comicDetails;
-  final String slug;
+  final String comicSlug;
+  final void Function(SelectedChapter) onSelectedChapter;
+  final bool Function(String) isInSelectedChapters;
+  final bool isHaveSelectedChapter;
 
   @override
   State<ComicChapters> createState() => _ComicChaptersState();
@@ -24,12 +32,12 @@ class ComicChapters extends StatefulWidget {
 class _ComicChaptersState extends State<ComicChapters> {
   bool _isAscending = false;
 
-  void _goToChapterRead(BuildContext context, String chapter, String slug) {
+  void _goToChapterRead(BuildContext context, String slug) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ReadChapterScreen(
           slug: slug,
-          comicSlug: widget.slug,
+          comicSlug: widget.comicSlug,
           comicDetails: widget.comicDetails,
         ),
       ),
@@ -81,30 +89,14 @@ class _ComicChaptersState extends State<ComicChapters> {
     ];
 
     Widget buildChapter(int index) {
-      return Column(
-        children: [
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 25,
-            ),
-            onTap: () {
-              _goToChapterRead(
-                context,
-                chapters[index].number,
-                chapters[index].slug,
-              );
-            },
-            title: Text('Chapter ${chapters[index].number}'),
-            trailing: Text(chapters[index].date),
-          ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            indent: 25,
-            endIndent: 25,
-            color: Colors.grey.withOpacity(0.1),
-          ),
-        ],
+      return ChapterTile(
+        chNumber: chapters[index].number,
+        slug: chapters[index].slug,
+        date: chapters[index].date,
+        goToChapterRead: _goToChapterRead,
+        isSelected: widget.isInSelectedChapters(chapters[index].slug),
+        onSelected: widget.onSelectedChapter,
+        isHaveSelectedChapter: widget.isHaveSelectedChapter
       );
     }
 

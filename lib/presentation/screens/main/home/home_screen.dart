@@ -153,10 +153,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               physics: const AlwaysScrollableScrollPhysics(),
               children: const [
                 ComicSlider(),
-                Padding(
-                  padding: EdgeInsets.only(left: 17, right: 17, top: 20),
-                  child: LastReadComic(),
-                ),
+                LastReadComic(withoutPb: true),
                 LatestChapter(),
               ],
             ),

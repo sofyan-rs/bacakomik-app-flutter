@@ -11,7 +11,7 @@ showSnackBar({
       content: Row(
         children: [
           icon ?? const SizedBox(),
-          icon != null ? const SizedBox(width: 10) : const SizedBox(),
+          icon != null ? const SizedBox(width: 8) : const SizedBox(),
           Text(message),
         ],
       ),
