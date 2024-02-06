@@ -52,6 +52,15 @@ class AppText {
   // Comic List Screen Text
   static const String comicList = 'Daftar Komik';
 
+  // Filter Screen Text
+  static const String filter = 'Filter';
+  static const String reset = 'Reset';
+  static const String apply = 'Terapkan';
+  static const String type = 'Tipe';
+  static const String status = 'Status';
+  static const String genre = 'Genre';
+  static const String sortBy = 'Urutkan Berdasarkan';
+
   // More Screen Text
   static const String history = 'Riwayat Baca';
   static const String historyDescription = 'Lihat Riwayat Baca Komik';
@@ -88,6 +97,8 @@ class AppText {
   static const String dark = 'Aktif';
 
   static const String bugReport = 'Lapor Bug atau Saran';
+  static const String privacyPolicy = 'Kebijakan Privasi';
+  static const String dmca = 'DMCA';
   static const String aboutApp = 'Tentang Aplikasi';
   static const String version = 'Versi';
 }

@@ -7,4 +7,7 @@ class AppVariables {
 
   static const String reportLink =
       'https://github.com/sofyan-rs/bacakomik-app-release/issues/new';
+  static const String privacyPolicyLink =
+      'https://bacakomik.koidevz.net/privacy-policy';
+  static const String dmcaLink = 'https://bacakomik.koidevz.net/dmca';
 }

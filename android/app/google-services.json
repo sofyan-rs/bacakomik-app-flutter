@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "334765493163-and47m3qcef9jtsmva81jasf6qrvo7m6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.koidevz.bacakomik",
+            "certificate_hash": "8804c3db94435f7a84b26db7182f04516a3dafe8"
+          }
+        },
+        {
           "client_id": "334765493163-ngoca79kbekpcg35uab8vijh1hn440nq.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "334765493163-03ida5ga7dtul3c5hcqsrsetv1gm1e9m.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "334765493163-b3e1hkbfm43j79fgd21gredfksuad0hd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bacakomikApp"
+              }
             }
           ]
         }

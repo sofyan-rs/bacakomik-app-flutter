@@ -1,6 +1,10 @@
+import 'package:bacakomik_app/core/bloc/explore_bloc/explore_bloc.dart';
+import 'package:bacakomik_app/core/bloc/filter_cubit/filter_cubit.dart';
 import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/presentation/screens/main/explore/widgets/filter_comic.dart';
+import 'package:bacakomik_app/presentation/screens/main/explore/widgets/filter_result.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_list/comic_list_screen.dart';
 import 'package:bacakomik_app/presentation/screens/sub/search/search_screen.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +19,36 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
+  Future _getFilterData(int page) async {
+    context.read<ExploreBloc>().add(
+          GetExploreResult(
+            type: context.read<FilterCubit>().state.type,
+            status: context.read<FilterCubit>().state.status,
+            sortBy: context.read<FilterCubit>().state.sortBy,
+            genres: context.read<FilterCubit>().state.genres,
+            page: page,
+          ),
+        );
+  }
+
+  Future _getFilterDataNext(int page) async {
+    context.read<ExploreBloc>().add(
+          GetExploreResultNext(
+            type: context.read<FilterCubit>().state.type,
+            status: context.read<FilterCubit>().state.status,
+            sortBy: context.read<FilterCubit>().state.sortBy,
+            genres: context.read<FilterCubit>().state.genres,
+            page: page,
+          ),
+        );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getFilterData(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,6 +65,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ],
         ),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ComicListScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(
+                SolarIconsOutline.sortByAlphabet,
+                color: Colors.white,
+                size: 23,
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                padding: const EdgeInsets.all(12),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: IconButton(
@@ -62,16 +120,28 @@ class _ExploreScreenState extends State<ExploreScreen> {
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const ComicListScreen(),
+              builder: (context) => FilterComic(
+                onApply: () {
+                  _getFilterData(1);
+                },
+              ),
             ),
           );
         },
         backgroundColor: AppColors.primary,
         child: const Icon(
-          SolarIconsOutline.sortByAlphabet,
+          SolarIconsOutline.filter,
           color: Colors.white,
           size: 23,
         ),
+      ),
+      body: FilterResult(
+        onLoadMore: (page) {
+          _getFilterDataNext(page);
+        },
+        onRefresh: () {
+          _getFilterData(1);
+        },
       ),
     );
   }

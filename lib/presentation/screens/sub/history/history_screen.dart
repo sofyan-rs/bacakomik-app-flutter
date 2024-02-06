@@ -102,6 +102,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final latestHistory = context.watch<HistoryCubit>().latestHistories;
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
@@ -125,30 +127,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: IconButton(
-              onPressed: _clearAllHistories,
-              icon: const Icon(
-                SolarIconsOutline.trashBinMinimalistic,
-                color: Colors.white,
-                size: 23,
-              ),
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
+          if (latestHistory.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: IconButton(
+                onPressed: _clearAllHistories,
+                icon: const Icon(
+                  SolarIconsOutline.trashBinMinimalistic,
+                  color: Colors.white,
+                  size: 23,
                 ),
-                padding: const EdgeInsets.all(12),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  padding: const EdgeInsets.all(12),
+                ),
               ),
             ),
-          ),
         ],
       ),
       body: BlocBuilder<HistoryCubit, List<HistoryModel>>(
         builder: (context, state) {
           final histories = state;
-          final latestHistory = context.watch<HistoryCubit>().latestHistories;
 
           if (histories.isEmpty) {
             return Center(

@@ -44,7 +44,7 @@ class FavoriteCubit extends HydratedCubit<List<FavoriteModel>> {
         final oldComicDetails =
             state.where((element) => element.slug == slug).first.comicDetails;
         final comicDetails = await comicDetailsRepository.getComicDetails(slug);
-        if (oldComicDetails != comicDetails) {
+        if (oldComicDetails.chapters.length != comicDetails.chapters.length) {
           newState[i] = newState[i].copyWith(
             updatedDate: DateTime.now(),
             comicDetails: comicDetails,

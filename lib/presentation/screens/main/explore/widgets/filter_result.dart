@@ -1,15 +1,15 @@
 import 'package:auto_height_grid_view/auto_height_grid_view.dart';
+import 'package:bacakomik_app/core/bloc/explore_bloc/explore_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/main/explore/widgets/comic_card.dart';
 import 'package:solar_icons/solar_icons.dart';
 
-class SearchResult extends StatefulWidget {
-  const SearchResult({
+class FilterResult extends StatefulWidget {
+  const FilterResult({
     Key? key,
     required this.onLoadMore,
     required this.onRefresh,
@@ -19,10 +19,10 @@ class SearchResult extends StatefulWidget {
   final Function() onRefresh;
 
   @override
-  State<SearchResult> createState() => _SearchResultState();
+  State<FilterResult> createState() => _FilterResultState();
 }
 
-class _SearchResultState extends State<SearchResult> {
+class _FilterResultState extends State<FilterResult> {
   int _page = 1;
   final int _maxPage = 10;
   final _scrollController = ScrollController();
@@ -44,42 +44,15 @@ class _SearchResultState extends State<SearchResult> {
       }
     });
 
-    return BlocBuilder<SearchComicBloc, SearchComicState>(
+    return BlocBuilder<ExploreBloc, ExploreState>(
       builder: (context, state) {
-        if (state is SearchComicInitial) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  SolarIconsOutline.magnifier,
-                  color: AppColors.primary.withOpacity(0.5),
-                  size: 80,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  AppText.searchComicHere,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onBackground
-                        .withOpacity(0.5),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (state is SearchComicLoading) {
+        if (state is ExploreInitial || state is ExploreLoading) {
           return const Center(
             child: CircularProgressIndicator(),
           );
         }
 
-        if (state is SearchComicLoaded) {
+        if (state is ExploreLoaded) {
           if (state.result.isNotEmpty) {
             return Stack(
               children: [
@@ -150,7 +123,7 @@ class _SearchResultState extends State<SearchResult> {
           }
         }
 
-        if (state is SearchComicError) {
+        if (state is ExploreError) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(10),

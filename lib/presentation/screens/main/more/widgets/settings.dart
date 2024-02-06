@@ -19,11 +19,26 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  final Uri _reportLink = Uri.parse(AppVariables.reportLink);
   final DefaultCacheManager _cacheManager = DefaultCacheManager();
+
+  final Uri _reportLink = Uri.parse(AppVariables.reportLink);
+  final Uri _privacyPolicyLink = Uri.parse(AppVariables.privacyPolicyLink);
+  final Uri _dmcaLink = Uri.parse(AppVariables.dmcaLink);
 
   Future<void> _reportBug() async {
     if (!await launchUrl(_reportLink)) {
+      throw Exception('Could not launch $_reportLink');
+    }
+  }
+
+  Future<void> _privacyPolicy() async {
+    if (!await launchUrl(_privacyPolicyLink)) {
+      throw Exception('Could not launch $_reportLink');
+    }
+  }
+
+  Future<void> _dmca() async {
+    if (!await launchUrl(_dmcaLink)) {
       throw Exception('Could not launch $_reportLink');
     }
   }
@@ -252,6 +267,26 @@ class _SettingsState extends State<Settings> {
               color: AppColors.primary),
           title: const Text(AppText.bugReport),
           onTap: _reportBug,
+        ),
+        Divider(
+          height: 1,
+          color: Colors.grey.withOpacity(0.1),
+        ),
+        ListTile(
+          leading: const Icon(SolarIconsOutline.shieldWarning,
+              color: AppColors.primary),
+          title: const Text(AppText.privacyPolicy),
+          onTap: _privacyPolicy,
+        ),
+        Divider(
+          height: 1,
+          color: Colors.grey.withOpacity(0.1),
+        ),
+        ListTile(
+          leading: const Icon(SolarIconsOutline.lockKeyhole,
+              color: AppColors.primary),
+          title: const Text(AppText.dmca),
+          onTap: _dmca,
         ),
         Divider(
           height: 1,

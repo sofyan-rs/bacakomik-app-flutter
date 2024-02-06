@@ -133,6 +133,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final favoriteCount = context.select<FavoriteCubit, int>(
+      (cubit) => cubit.state.length,
+    );
+
     _searchInputController.addListener(() {
       setState(() {
         context.read<FavoriteCubit>().searchFavorite(
@@ -210,6 +214,23 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   Text(_selectedFavorites.isNotEmpty
                       ? '${_selectedFavorites.length} ${AppText.selected}'
                       : AppText.favoriteList),
+                  if (favoriteCount > 0 && _selectedFavorites.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 2, horizontal: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onBackground
+                            .withOpacity(0.1),
+                      ),
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        favoriteCount.toString(),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
                 ],
               ),
         actions: [

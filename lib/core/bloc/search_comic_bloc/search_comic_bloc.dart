@@ -74,7 +74,6 @@ class SearchComicBloc extends Bloc<SearchComicEvent, SearchComicState> {
         keyword,
         page,
       );
-
       emit(
         SearchComicLoaded(
           result: [...state.result, ...result],

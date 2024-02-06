@@ -1,8 +1,7 @@
-import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
-import 'package:bacakomik_app/core/bloc/settings_cubit/settings_cubit.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/models/settings_model.dart';
-import 'package:bacakomik_app/presentation/screens/initial/splash/splash_screen.dart';
+import 'package:bacakomik_app/core/bloc/explore_bloc/explore_bloc.dart';
+import 'package:bacakomik_app/core/bloc/filter_cubit/filter_cubit.dart';
+import 'package:bacakomik_app/data/data_provider/explore_data_provider.dart';
+import 'package:bacakomik_app/data/repository/explore_data_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -16,11 +15,15 @@ import 'package:bacakomik_app/core/bloc/chapter_read_bloc/chapter_read_bloc.dart
 import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/core/bloc/comic_list_bloc/comic_list_bloc.dart';
 import 'package:bacakomik_app/core/bloc/favorite_cubit/favorite_cubit.dart';
+import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
 import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/bloc/latest_more_bloc/latest_more_bloc.dart';
 import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
+import 'package:bacakomik_app/core/bloc/settings_cubit/settings_cubit.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/theme.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
+import 'package:bacakomik_app/core/models/settings_model.dart';
 import 'package:bacakomik_app/data/data_provider/chapter_read_data_provider.dart';
 import 'package:bacakomik_app/data/data_provider/comic_details_data_provider.dart';
 import 'package:bacakomik_app/data/data_provider/comic_list_data_provider.dart';
@@ -33,7 +36,7 @@ import 'package:bacakomik_app/data/repository/comic_list_repository.dart';
 import 'package:bacakomik_app/data/repository/home_repository.dart';
 import 'package:bacakomik_app/data/repository/latest_repository.dart';
 import 'package:bacakomik_app/data/repository/search_repository.dart';
-import 'package:bacakomik_app/presentation/screens/auth/login/login_screen.dart';
+import 'package:bacakomik_app/presentation/screens/initial/splash/splash_screen.dart';
 import 'package:bacakomik_app/presentation/screens/root/root_screen.dart';
 
 import 'firebase_options.dart';
@@ -94,6 +97,13 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider(
+          create: (context) => ExploreBloc(
+            ExploreRepository(
+              ExploreDataProvider(),
+            ),
+          ),
+        ),
+        BlocProvider(
           create: (context) => ComicListBloc(
             ComicListRepository(
               ComicListDataProvider(),
@@ -108,6 +118,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => SettingsCubit(),
+        ),
+        BlocProvider(
+          create: (context) => FilterCubit(),
         ),
       ],
       child: BlocBuilder<SettingsCubit, SettingsModel>(

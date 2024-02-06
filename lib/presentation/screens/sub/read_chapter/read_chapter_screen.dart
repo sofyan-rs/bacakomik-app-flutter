@@ -128,9 +128,8 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
             return Stack(
               children: [
                 GestureDetector(
-                  onTap: _hideAppBar,
-                  onLongPress: () {
-                    _showAppBar();
+                  onTap: () {
+                    _isAppBarShow ? _hideAppBar() : _showAppBar();
                   },
                   onDoubleTapDown: (d) => _doubleTapDetails = d,
                   onDoubleTap: () {
@@ -153,6 +152,8 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                     minScale: 1,
                     maxScale: 3,
                     child: ListView.builder(
+                      shrinkWrap: true,
+                      primary: false,
                       physics: const AlwaysScrollableScrollPhysics(),
                       controller: _scrollController,
                       padding: const EdgeInsets.all(0),
