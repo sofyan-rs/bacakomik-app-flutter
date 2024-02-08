@@ -1,7 +1,5 @@
-import 'package:bacakomik_app/core/bloc/explore_bloc/explore_bloc.dart';
-import 'package:bacakomik_app/core/bloc/filter_cubit/filter_cubit.dart';
-import 'package:bacakomik_app/data/data_provider/explore_data_provider.dart';
-import 'package:bacakomik_app/data/repository/explore_data_repository.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -14,7 +12,9 @@ import 'package:bacakomik_app/core/auth/auth_methods.dart';
 import 'package:bacakomik_app/core/bloc/chapter_read_bloc/chapter_read_bloc.dart';
 import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/core/bloc/comic_list_bloc/comic_list_bloc.dart';
+import 'package:bacakomik_app/core/bloc/explore_bloc/explore_bloc.dart';
 import 'package:bacakomik_app/core/bloc/favorite_cubit/favorite_cubit.dart';
+import 'package:bacakomik_app/core/bloc/filter_cubit/filter_cubit.dart';
 import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
 import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/bloc/latest_more_bloc/latest_more_bloc.dart';
@@ -27,12 +27,14 @@ import 'package:bacakomik_app/core/models/settings_model.dart';
 import 'package:bacakomik_app/data/data_provider/chapter_read_data_provider.dart';
 import 'package:bacakomik_app/data/data_provider/comic_details_data_provider.dart';
 import 'package:bacakomik_app/data/data_provider/comic_list_data_provider.dart';
+import 'package:bacakomik_app/data/data_provider/explore_data_provider.dart';
 import 'package:bacakomik_app/data/data_provider/home_data_provider.dart';
 import 'package:bacakomik_app/data/data_provider/latest_data_provider.dart';
 import 'package:bacakomik_app/data/data_provider/search_data_provider.dart';
 import 'package:bacakomik_app/data/repository/chapter_read_repository.dart';
 import 'package:bacakomik_app/data/repository/comic_details_repository.dart';
 import 'package:bacakomik_app/data/repository/comic_list_repository.dart';
+import 'package:bacakomik_app/data/repository/explore_data_repository.dart';
 import 'package:bacakomik_app/data/repository/home_repository.dart';
 import 'package:bacakomik_app/data/repository/latest_repository.dart';
 import 'package:bacakomik_app/data/repository/search_repository.dart';
@@ -46,6 +48,18 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+  FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
   HydratedBloc.storage = await HydratedStorage.build(
     storageDirectory: kIsWeb
         ? HydratedStorage.webStorageDirectory
@@ -128,7 +142,7 @@ class MyApp extends StatelessWidget {
           final darkMode = state.darkMode;
 
           return MaterialApp(
-            // debugShowCheckedModeBanner: false,
+            debugShowCheckedModeBanner: false,
             title: AppVariables.appName,
             theme: AppThemes.lightTheme,
             darkTheme: AppThemes.darkTheme,

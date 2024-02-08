@@ -63,7 +63,16 @@ class HistoryCubit extends HydratedCubit<List<HistoryModel>> {
   }
 
   void setHistory(List<HistoryModel> histories) {
-    emit([...histories]);
+    final newState = state;
+    for (var i = 0; i < histories.length; i++) {
+      final isExist =
+          state.indexWhere((element) => histories[i].slug == element.slug);
+      if (isExist != -1) {
+        newState.removeAt(isExist);
+      }
+      newState.add(histories[i]);
+    }
+    emit([...newState]);
   }
 
   bool isInHistory(String slug) {

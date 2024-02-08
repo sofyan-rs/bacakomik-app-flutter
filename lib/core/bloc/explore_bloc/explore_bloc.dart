@@ -20,17 +20,17 @@ class ExploreBloc extends Bloc<ExploreEvent, ExploreState> {
     on<GetExploreResultNext>(_getResultNext);
   }
 
-  @override
-  void onChange(Change<ExploreState> change) {
-    print(change);
-    super.onChange(change);
-  }
+  // @override
+  // void onChange(Change<ExploreState> change) {
+  //   print(change);
+  //   super.onChange(change);
+  // }
 
-  @override
-  void onTransition(Transition<ExploreEvent, ExploreState> transition) {
-    print(transition);
-    super.onTransition(transition);
-  }
+  // @override
+  // void onTransition(Transition<ExploreEvent, ExploreState> transition) {
+  //   print(transition);
+  //   super.onTransition(transition);
+  // }
 
   void _getResult(
     ExploreEvent event,

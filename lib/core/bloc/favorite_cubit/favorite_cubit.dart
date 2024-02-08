@@ -62,7 +62,16 @@ class FavoriteCubit extends HydratedCubit<List<FavoriteModel>> {
   }
 
   void setFavorite(List<FavoriteModel> comics) {
-    emit([...comics]);
+    final newState = state;
+    for (var i = 0; i < comics.length; i++) {
+      final isExist =
+          state.indexWhere((element) => comics[i].slug == element.slug);
+      if (isExist != -1) {
+        newState.removeAt(isExist);
+      }
+      newState.add(comics[i]);
+    }
+    emit([...newState]);
   }
 
   bool isFavorite(String slug) {

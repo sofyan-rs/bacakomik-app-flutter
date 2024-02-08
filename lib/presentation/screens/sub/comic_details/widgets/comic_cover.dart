@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/presentation/widgets/placeholder/err_no_internet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -63,8 +64,11 @@ class ComicCover extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.all(10),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
+                  onPressed: () async {
+                    await saveImg(
+                      context: context,
+                      img: cover,
+                    );
                   },
                   icon: const Icon(
                     SolarIconsOutline.galleryDownload,

@@ -3,6 +3,7 @@ import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/models/settings_model.dart';
+import 'package:bacakomik_app/core/utils/backup_restore_data.dart';
 import 'package:bacakomik_app/presentation/screens/main/more/widgets/app_info.dart';
 import 'package:bacakomik_app/presentation/screens/sub/history/history_screen.dart';
 import 'package:flutter/material.dart';
@@ -175,6 +176,10 @@ class _SettingsState extends State<Settings> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        Divider(
+          height: 1,
+          color: Colors.grey.withOpacity(0.1),
+        ),
         ListTile(
           leading:
               const Icon(SolarIconsOutline.history, color: AppColors.primary),
@@ -202,7 +207,9 @@ class _SettingsState extends State<Settings> {
               const Icon(SolarIconsOutline.database, color: AppColors.primary),
           title: const Text(AppText.backupData),
           subtitle: const Text(AppText.backupDataDescription),
-          onTap: () {},
+          onTap: () async {
+            await backupData(context);
+          },
         ),
         Divider(
           height: 1,
@@ -213,7 +220,9 @@ class _SettingsState extends State<Settings> {
               const Icon(SolarIconsOutline.refresh, color: AppColors.primary),
           title: const Text(AppText.restoreData),
           subtitle: const Text(AppText.restoreDataDescription),
-          onTap: () {},
+          onTap: () async {
+            await restoreData(context);
+          },
         ),
         Container(
           height: 15,

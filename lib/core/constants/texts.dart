@@ -33,6 +33,9 @@ class AppText {
   static const String hide = 'Sembunyikan';
   static const String addedToFavorite = 'Ditambahkan ke Favorit';
   static const String removedFromFavorite = 'Dihapus dari Favorit';
+  static const String saveImg = 'Simpan Gambar';
+  static const String successSaveImg = 'Gambar berhasil disimpan di galeri.';
+  static const String failedSaveImg = 'Gagal menyimpan gambar.';
 
   // Favorites Screen Text
   static const String favoriteList = 'Daftar Favorit';
@@ -61,24 +64,6 @@ class AppText {
   static const String genre = 'Genre';
   static const String sortBy = 'Urutkan Berdasarkan';
 
-  // More Screen Text
-  static const String history = 'Riwayat Baca';
-  static const String historyDescription = 'Lihat Riwayat Baca Komik';
-  static const String clearCache = 'Bersihkan Cache';
-  static const String clearCacheDescription =
-      'Bersihkan Cache Tanpa Menghapus Data Favorit dan Riwayat Baca';
-  static const String clearCacheConfirmation =
-      'Kamu yakin ingin membersihkan semua data cache?';
-  static const String backupData = 'Cadangkan Data';
-  static const String backupDataDescription =
-      'Cadangkan Data Favorit dan Riwayat Baca';
-  static const String restoreData = 'Pulihkan Data';
-  static const String restoreDataDescription =
-      'Pulihkan Data Favorit dan Riwayat Baca';
-  static const String logout = 'Keluar';
-  static const String logoutConfirmation =
-      'Kamu yakin ingin keluar dari akun ini?';
-
   // History Screen Text
   static const String historyEmpty = 'Belum Ada Riwayat Baca';
   static const String clearHistory = 'Hapus Riwayat';
@@ -89,16 +74,42 @@ class AppText {
   static const String clearHistoryAllChapter =
       'Hapus Riwayat Baca Semua Chapter';
 
-  // Settings Text
-  static const String darkMode = 'Aktifkan Mode Gelap';
-  static const String darkModeDescription = 'Ubah tampilan menjadi mode gelap';
-  static const String system = 'Sistem';
-  static const String light = 'Nonaktif';
-  static const String dark = 'Aktif';
+  // More Screen Text
+  static const String history = 'Riwayat Baca';
+  static const String historyDescription = 'Lihat Riwayat Baca Komik';
+
+  static const String clearCache = 'Bersihkan Cache';
+  static const String clearCacheDescription =
+      'Bersihkan Cache Tanpa Menghapus Data Favorit dan Riwayat Baca';
+  static const String clearCacheConfirmation =
+      'Kamu yakin ingin membersihkan semua data cache?';
+
+  static const String backupData = 'Cadangkan Data';
+  static const String backupDataDescription =
+      'Cadangkan Data Favorit dan Riwayat Baca';
+  static const String successBackupData = 'Data berhasil dicadangkan';
+  static const String failedBackupData = 'Gagal mencadangkan data';
+
+  static const String restoreData = 'Pulihkan Data';
+  static const String restoreDataDescription =
+      'Pulihkan Data Favorit dan Riwayat Baca';
+  static const String successRestoreData = 'Data berhasil dipulihkan';
+  static const String failedRestoreData = 'Gagal memulihkan data';
+
+  static const String logout = 'Keluar';
+  static const String logoutConfirmation =
+      'Kamu yakin ingin keluar dari akun ini?';
 
   static const String bugReport = 'Lapor Bug atau Saran';
   static const String privacyPolicy = 'Kebijakan Privasi';
   static const String dmca = 'DMCA';
   static const String aboutApp = 'Tentang Aplikasi';
   static const String version = 'Versi';
+
+  // Settings Text
+  static const String darkMode = 'Aktifkan Mode Gelap';
+  static const String darkModeDescription = 'Ubah tampilan menjadi mode gelap';
+  static const String system = 'Sistem';
+  static const String light = 'Nonaktif';
+  static const String dark = 'Aktif';
 }
