@@ -2,3 +2,9 @@ SHA1: 88:04:C3:DB:94:43:5F:7A:84:B2:6D:B7:18:2F:04:51:6A:3D:AF:E8
 SHA-256: F4:BF:F1:7F:83:BA:20:E6:B3:63:0F:4C:53:43:95:0B:6F:17:D0:B8:71:D4:E4:3A:67:F7:FF:D6:FA:38:B8:49
 
 keytool -genkey -v -keystore ./android/upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+keytool -list -v -alias upload -keystore ./android/upload-keystore.jks
+15022001
+
+SHA1: 94:3D:3F:12:36:B3:78:E2:39:16:CF:0B:06:3A:5E:62:49:3E:5F:6C
+SHA256: 58:67:21:08:E0:60:9C:72:DA:C4:DC:F2:C6:4F:2C:59:7E:29:8E:3B:C0:67:30:3E:35:B3:01:26:BF:5A:F8:CF
