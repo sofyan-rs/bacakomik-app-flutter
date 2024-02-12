@@ -6,5 +6,11 @@ class AppChangelogs {
         'Initial Release',
       ],
     },
+    {
+      'version': '1.0.1',
+      'changes': [
+        'Fix search function',
+      ],
+    },
   ];
 }

@@ -8,7 +8,7 @@ class SearchDataProvider {
     try {
       final res = await dio
           .get('${AppVariables.baseUrl}/search/$page', queryParameters: {
-        'keyword': keyword,
+        'search': keyword,
       });
 
       if (res.statusCode == 200) {
