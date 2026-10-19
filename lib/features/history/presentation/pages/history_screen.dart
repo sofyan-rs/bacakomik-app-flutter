@@ -1,197 +1,130 @@
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/widgets/history_comic_card.dart';
+import 'package:bacakomik_app/features/history/presentation/widgets/history_groups.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:solar_icons/solar_icons.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-class HistoryScreen extends StatefulWidget {
+/// Riwayat tab: last read chapter per comic, grouped by day.
+class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
-  @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
-}
-
-class _HistoryScreenState extends State<HistoryScreen> {
-  void _clearAllHistories() {
-    showModalBottomSheet(
-      useSafeArea: true,
-      isScrollControlled: true,
+  Future<void> _confirmClearAll(BuildContext context) async {
+    final cubit = context.read<HistoryCubit>();
+    final confirmed = await showDotSheet<bool>(
       context: context,
       builder: (context) {
-        return SizedBox(
-          height: 200,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.1),
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: const Text(
-                  AppText.clearHistory,
-                  style: TextStyle(fontSize: 18),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(15),
-                child: Column(
-                  children: [
-                    const Text(
-                      AppText.clearHistoryComicConfirmation,
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text(
-                            AppText.cancel,
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<HistoryCubit>().clearHistory();
-                            Navigator.of(context).pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text(
-                            AppText.delete,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        final c = Dotline.of(context);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const ActionSheetHeader(
+              icon: LucideIcons300.trash2,
+              title: AppText.clearHistory,
+            ),
+            const SizedBox(height: DotSpace.s4),
+            Text(
+              AppText.clearHistoryConfirmation,
+              style: DotlineText.body.copyWith(color: c.inkMuted),
+            ),
+            const SizedBox(height: DotSpace.s5),
+            DotButton.destructive(
+              label: AppText.clearHistory,
+              onTap: () => Navigator.of(context).pop(true),
+            ),
+            const SizedBox(height: DotSpace.s3),
+            DotButton.outline(
+              label: AppText.cancel,
+              onTap: () => Navigator.of(context).pop(false),
+            ),
+          ],
         );
       },
     );
+    if (confirmed == true) await cubit.clearHistory();
   }
 
   @override
   Widget build(BuildContext context) {
-    final latestHistory = context.watch<HistoryCubit>().latestHistories;
+    final c = Dotline.of(context);
+    final latest = context.watch<HistoryCubit>().latestHistories;
+    final days = HistoryDay.group(latest, DateTime.now());
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 70,
-        title: const Row(
-          children: [
-            Icon(
-              SolarIconsBold.history,
-              color: AppColors.primary,
-            ),
-            SizedBox(width: 10),
-            Text(AppText.history),
-          ],
-        ),
-        automaticallyImplyLeading: false,
-        actions: [
-          if (latestHistory.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: IconButton(
-                onPressed: _clearAllHistories,
-                icon: const Icon(
-                  SolarIconsOutline.trashBinMinimalistic,
-                  color: Colors.white,
-                  size: 23,
-                ),
-                style: TextButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  padding: const EdgeInsets.all(12),
+      body: SafeArea(
+        bottom: false,
+        child: SlidableAutoCloseBehavior(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: ScreenHeader(
+                  title: AppText.historyTab,
+                  subtitle: latest.isEmpty
+                      ? null
+                      : '${latest.length} ${AppText.comics} · '
+                            '${AppText.swipeToDelete}',
+                  actions: [
+                    if (latest.isNotEmpty)
+                      RoundIconButton(
+                        icon: LucideIcons300.trash2,
+                        semanticLabel: AppText.clearHistory,
+                        iconSize: DotSize.iconSmall,
+                        onTap: () => _confirmClearAll(context),
+                      ),
+                  ],
                 ),
               ),
-            ),
-        ],
-      ),
-      body: BlocBuilder<HistoryCubit, List<ReadHistory>>(
-        builder: (context, state) {
-          final histories = state;
-
-          if (histories.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    SolarIconsOutline.history,
-                    color: AppColors.primary.withValues(alpha: 0.5),
-                    size: 80,
+              if (latest.isEmpty)
+                const SliverToBoxAdapter(
+                  child: EmptyState(
+                    icon: LucideIcons300.history,
+                    title: AppText.historyEmpty,
+                    message: AppText.historyEmptyHint,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    AppText.historyEmpty,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
+                ),
+              for (final day in days)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DotSpace.s4,
+                    0,
+                    DotSpace.s4,
+                    DotSpace.s5,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: DotSpace.s3),
+                          child: Text(
+                            day.label.toUpperCase(),
+                            style: DotlineText.label.copyWith(
+                              color: c.inkFaint,
+                            ),
+                          ),
+                        ),
+                        ListGroup(
+                          children: [
+                            for (final item in day.items)
+                              HistoryComicCard(item: item),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: EdgeInsets.fromLTRB(
-              10,
-              10,
-              10,
-              10 + MediaQuery.paddingOf(context).bottom,
-            ),
-            itemBuilder: (context, index) {
-              final history = latestHistory[index];
-              return HistoryComicCard(
-                title: history.comicDetails.title,
-                cover: history.comicDetails.coverImg,
-                slug: history.comicSlug,
-                chapter: history.latestHistory.chapterNumber,
-                chapterSlug: history.latestHistory.slug,
-                readDate: history.latestHistory.readDate,
-              );
-            },
-            itemCount: latestHistory.length,
-          );
-        },
+                ),
+              SliverPadding(padding: EdgeInsets.only(bottom: bottomInset)),
+            ],
+          ),
+        ),
       ),
     );
   }

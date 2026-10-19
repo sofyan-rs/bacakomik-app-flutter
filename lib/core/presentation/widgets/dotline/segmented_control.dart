@@ -11,7 +11,7 @@ class Segment<T> {
 }
 
 /// Pill container on `surface` with an `ink` pill that slides to the selected
-/// segment. Used for type, favorites filter, theme, reading direction.
+/// segment. Used for type, bookmark filter, theme, reading direction.
 class SegmentedControl<T> extends StatelessWidget {
   const SegmentedControl({
     super.key,

@@ -28,7 +28,7 @@ class _RootScreenState extends State<RootScreen> {
   static const _items = [
     FloatingNavItem(icon: LucideIcons300.house, label: AppText.home),
     FloatingNavItem(icon: LucideIcons300.compass, label: AppText.explore),
-    FloatingNavItem(icon: LucideIcons300.bookmark, label: AppText.favoriteTab),
+    FloatingNavItem(icon: LucideIcons300.bookmark, label: AppText.bookmark),
     FloatingNavItem(icon: LucideIcons300.history, label: AppText.historyTab),
     FloatingNavItem(icon: LucideIcons300.ellipsis, label: AppText.more),
   ];

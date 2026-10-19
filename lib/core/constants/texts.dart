@@ -10,7 +10,6 @@ class AppText {
   static const String explore = 'Jelajah';
   static const String bookmark = 'Bookmark';
   static const String more = 'Lainnya';
-  static const String favoriteTab = 'Favorit';
   static const String historyTab = 'Riwayat';
 
   // Home Screen Text
@@ -45,8 +44,8 @@ class AppText {
   static const String readMore = 'Selengkapnya';
   static const String newLabel = 'Baru';
   static const String startReading = 'Mulai baca';
-  static const String addBookmark = 'Tambah ke favorit';
-  static const String removeBookmark = 'Hapus dari favorit';
+  static const String addBookmark = 'Tambah ke bookmark';
+  static const String removeBookmark = 'Hapus dari bookmark';
   static const String selectAll = 'Pilih semua';
   static const String markRead = 'Tandai sudah dibaca';
   static const String markUnread = 'Tandai belum dibaca';
@@ -60,7 +59,15 @@ class AppText {
 
   // Bookmarks Screen Text
   static const String bookmarkList = 'Daftar Bookmark';
-  static const String bookmarkEmpty = 'Belum Ada Komik di Bookmark';
+  static const String bookmarkEmpty = 'Belum ada bookmark';
+  static const String bookmarkEmptyHint =
+      'Tekan ikon bookmark di halaman komik untuk menyimpannya di sini.';
+  static const String searchBookmarkHint = 'Cari di bookmark';
+  static const String filterAll = 'Semua';
+  static const String filterUpdated = 'Ada update';
+  static const String filterFinished = 'Selesai';
+  static const String comics = 'komik';
+  static const String hasUpdate = 'ada update';
   static const String deleteBookmark = 'Hapus Bookmark';
   static const String deleteBookmarkDescription =
       'Kamu yakin ingin menghapus komik berikut dari daftar bookmark?';
@@ -93,7 +100,14 @@ class AppText {
   static const String exploreSearchHint = 'Cari judul, author…';
 
   // History Screen Text
-  static const String historyEmpty = 'Belum Ada Riwayat Baca';
+  static const String historyEmpty = 'Belum ada riwayat baca';
+  static const String historyEmptyHint =
+      'Chapter yang kamu baca akan muncul di sini.';
+  static const String swipeToDelete = 'geser untuk hapus';
+  static const String today = 'Hari ini';
+  static const String yesterday = 'Kemarin';
+  static const String deleteLastChapter = 'Chapter terakhir saja';
+  static const String deleteAllChapters = 'Semua chapter komik ini';
   static const String clearHistory = 'Hapus Riwayat';
   static const String clearHistoryConfirmation =
       'Kamu yakin ingin menghapus semua riwayat baca yang tersimpan?';

@@ -32,7 +32,6 @@ class ComicSlider extends StatelessWidget {
                   cover: popular[i].coverImg,
                   chapter: popular[i].latestChapter,
                   type: popular[i].type,
-                  rating: popular[i].rating,
                   slug: popular[i].slug,
                 ),
               ],

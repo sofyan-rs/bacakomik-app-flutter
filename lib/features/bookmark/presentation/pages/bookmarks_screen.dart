@@ -1,14 +1,20 @@
-import 'package:auto_height_grid_view/auto_height_grid_view.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
-import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
+import 'package:bacakomik_app/core/presentation/widgets/comic_grid.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_comic_card.dart';
-import 'package:bacakomik_app/core/presentation/widgets/placeholder/search_not_found.dart';
+import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:solar_icons/solar_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
+/// Bookmark tab: filter (all / has update / finished), local title search,
+/// long press to select and delete.
 class BookmarksScreen extends StatefulWidget {
   const BookmarksScreen({super.key});
 
@@ -17,342 +23,258 @@ class BookmarksScreen extends StatefulWidget {
 }
 
 class _BookmarksScreenState extends State<BookmarksScreen> {
-  final _searchInputController = TextEditingController();
-  bool _isSearchBookmark = false;
-  final List<String> _selectedBookmarks = [];
-
-  void _onSelectedBookmark(String slug) {
-    final isAlreadySelected = _selectedBookmarks.contains(slug);
-
-    if (isAlreadySelected) {
-      _selectedBookmarks.remove(slug);
-    } else {
-      _selectedBookmarks.add(slug);
-    }
-
-    setState(() {});
-  }
-
-  bool _isInSelectedBookmarks(String slug) {
-    return _selectedBookmarks.contains(slug);
-  }
-
-  void _clearSelectedBookmarks() {
-    showModalBottomSheet(
-      useSafeArea: true,
-      isScrollControlled: true,
-      context: context,
-      builder: (context) {
-        return SizedBox(
-          height: 200,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.1),
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: const Text(
-                  AppText.deleteBookmark,
-                  style: TextStyle(fontSize: 18),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(15),
-                child: Column(
-                  children: [
-                    const Text(
-                      AppText.deleteBookmarkDescription,
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text(
-                            AppText.cancel,
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                            context
-                                .read<BookmarkCubit>()
-                                .removeBookmarkList(_selectedBookmarks);
-                            _selectedBookmarks.clear();
-                            Navigator.of(context).pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text(
-                            AppText.delete,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  final _query = TextEditingController();
+  var _searching = false;
+  var _filter = BookmarkFilter.all;
+  final _selected = <String>{};
 
   @override
   void dispose() {
+    _query.dispose();
     super.dispose();
-    _searchInputController.dispose();
+  }
+
+  void _toggleSelected(String slug) => setState(
+    () =>
+        _selected.contains(slug) ? _selected.remove(slug) : _selected.add(slug),
+  );
+
+  void _toggleSearch() => setState(() {
+    _searching = !_searching;
+    if (!_searching) _query.clear();
+  });
+
+  Future<void> _confirmDelete() async {
+    final count = _selected.length;
+    final confirmed = await showDotSheet<bool>(
+      context: context,
+      builder: (context) => _DeleteSheet(count: count),
+    );
+    if (confirmed != true || !mounted) return;
+    await context.read<BookmarkCubit>().removeBookmarkList(_selected.toList());
+    setState(_selected.clear);
   }
 
   @override
   Widget build(BuildContext context) {
-    final bookmarkCount = context.select<BookmarkCubit, int>(
-      (cubit) => cubit.state.length,
-    );
+    final bookmarks = context.watch<BookmarkCubit>().state;
+    final history = context.watch<HistoryCubit>().state;
+    final all = BookmarkProgress.of(bookmarks, history);
+    final updated = all.where((i) => i.hasUpdate).length;
+    final query = _query.text.trim().toLowerCase();
+    final shown = [
+      for (final item in all)
+        if (item.matches(_filter) &&
+            item.bookmark.comicDetails.title.toLowerCase().contains(query))
+          item,
+    ];
 
-    _searchInputController.addListener(() {
-      setState(() {
-        context.read<BookmarkCubit>().searchBookmark(
-              _searchInputController.text,
-            );
-      });
-    });
-
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 70,
-        title: _isSearchBookmark
-            ? TextField(
-                controller: _searchInputController,
-                cursorColor: AppColors.primary,
-                keyboardType: TextInputType.text,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(
-                    SolarIconsOutline.magnifier,
-                    color: AppColors.primary,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      SolarIconsOutline.closeCircle,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
-                      size: 20,
+    return PopScope(
+      canPop: _selected.isEmpty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(_selected.clear);
+      },
+      child: Scaffold(
+        body: SafeArea(
+          bottom: false,
+          child: RefreshIndicator(
+            color: Dotline.of(context).ink,
+            backgroundColor: Dotline.of(context).surface,
+            onRefresh: () => context.read<BookmarkCubit>().updateBookmarkList(),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _selected.isEmpty
+                      ? _header(all.length, updated)
+                      : _selectionHeader(),
+                ),
+                if (_searching)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DotSpace.s4,
+                        0,
+                        DotSpace.s4,
+                        DotSpace.s4,
+                      ),
+                      child: SearchField(
+                        hint: AppText.searchBookmarkHint,
+                        controller: _query,
+                        autofocus: true,
+                        onChanged: (_) => setState(() {}),
+                        onClear: () => setState(_query.clear),
+                      ),
                     ),
-                    onPressed: () {
-                      _searchInputController.clear();
-                      setState(() {
-                        _isSearchBookmark = false;
-                      });
+                  ),
+                if (all.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DotSpace.s4,
+                        0,
+                        DotSpace.s4,
+                        DotSpace.s5,
+                      ),
+                      child: SegmentedControl<BookmarkFilter>(
+                        selected: _filter,
+                        onChanged: (f) => setState(() => _filter = f),
+                        segments: const [
+                          Segment(
+                            value: BookmarkFilter.all,
+                            label: AppText.filterAll,
+                          ),
+                          Segment(
+                            value: BookmarkFilter.updated,
+                            label: AppText.filterUpdated,
+                          ),
+                          Segment(
+                            value: BookmarkFilter.finished,
+                            label: AppText.filterFinished,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (shown.isEmpty)
+                  SliverToBoxAdapter(child: _empty(all.isEmpty))
+                else
+                  CoverGridSliver(
+                    itemCount: shown.length,
+                    textHeight: BookmarkComicCard.textHeight,
+                    itemBuilder: (context, index) {
+                      final item = shown[index];
+                      final slug = item.bookmark.slug;
+                      return BookmarkComicCard(
+                        item: item,
+                        isSelected: _selected.contains(slug),
+                        onLongPress: () => _toggleSelected(slug),
+                        onTap: _selected.isNotEmpty
+                            ? () => _toggleSelected(slug)
+                            : () => ComicDetailsScreen.open(
+                                context,
+                                slug: slug,
+                                title: item.bookmark.comicDetails.title,
+                                cover: item.bookmark.comicDetails.coverImg,
+                              ),
+                      );
                     },
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-                  hintText: AppText.searchHint,
-                  hintStyle: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.9)),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(7),
-                    ),
-                    borderSide: BorderSide(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.1),
-                    ),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(7),
-                    ),
-                    borderSide: BorderSide(
-                      color: AppColors.primary,
-                    ),
+                SliverPadding(
+                  padding: EdgeInsets.only(
+                    bottom: DotSpace.s4 + MediaQuery.paddingOf(context).bottom,
                   ),
                 ),
-              )
-            : Row(
-                children: [
-                  Icon(
-                    _selectedBookmarks.isNotEmpty
-                        ? SolarIconsBold.checklistMinimalistic
-                        : SolarIconsBold.bookmarkSquareMinimalistic,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(_selectedBookmarks.isNotEmpty
-                      ? '${_selectedBookmarks.length} ${AppText.selected}'
-                      : AppText.bookmarkList),
-                  if (bookmarkCount > 0 && _selectedBookmarks.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 2, horizontal: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.1),
-                      ),
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text(
-                        bookmarkCount.toString(),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                ],
-              ),
-        actions: [
-          if (!_isSearchBookmark)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    _isSearchBookmark = !_isSearchBookmark;
-                  });
-                },
-                icon: const Icon(
-                  SolarIconsOutline.magnifier,
-                  color: Colors.white,
-                  size: 23,
-                ),
-                style: TextButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  padding: const EdgeInsets.all(12),
-                ),
-              ),
+              ],
             ),
-          if (_selectedBookmarks.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: IconButton(
-                onPressed: _clearSelectedBookmarks,
-                icon: const Icon(
-                  SolarIconsOutline.trashBinMinimalistic,
-                  color: Colors.white,
-                  size: 23,
-                ),
-                style: TextButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  padding: const EdgeInsets.all(12),
-                ),
-              ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _header(int count, int updated) {
+    return ScreenHeader(
+      title: AppText.bookmark,
+      subtitle: count == 0
+          ? null
+          : '$count ${AppText.comics} · $updated ${AppText.hasUpdate}',
+      actions: [
+        if (count > 0)
+          RoundIconButton(
+            icon: _searching ? LucideIcons300.x : LucideIcons300.search,
+            semanticLabel: AppText.searchBookmarkHint,
+            onTap: _toggleSearch,
+          ),
+      ],
+    );
+  }
+
+  Widget _selectionHeader() {
+    final c = Dotline.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DotSpace.s4,
+        DotSpace.s5,
+        DotSpace.s4,
+        DotSpace.s5,
+      ),
+      child: Row(
+        children: [
+          RoundIconButton(
+            icon: LucideIcons300.x,
+            semanticLabel: AppText.cancel,
+            onTap: () => setState(_selected.clear),
+          ),
+          const SizedBox(width: DotSpace.s3),
+          Expanded(
+            child: Text(
+              '${_selected.length} ${AppText.selected}'.toUpperCase(),
+              style: DotlineText.label.copyWith(color: c.ink),
             ),
+          ),
+          RoundIconButton(
+            icon: LucideIcons300.trash2,
+            semanticLabel: AppText.deleteBookmark,
+            background: c.accent,
+            foreground: c.onAccent,
+            onTap: _confirmDelete,
+          ),
         ],
       ),
-      body: BlocBuilder<BookmarkCubit, List<Bookmark>>(
-        builder: (context, state) {
-          final bookmarks = state;
-          final searchBookmarks = context.watch<BookmarkCubit>().searchBookmark(
-                _searchInputController.text,
-              );
+    );
+  }
 
-          if (bookmarks.isEmpty && !_isSearchBookmark) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    SolarIconsOutline.bookmarkSquareMinimalistic,
-                    color: AppColors.primary.withValues(alpha: 0.5),
-                    size: 80,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    AppText.bookmarkEmpty,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
+  Widget _empty(bool noBookmarks) {
+    if (noBookmarks) {
+      return const EmptyState(
+        icon: LucideIcons300.bookmark,
+        title: AppText.bookmarkEmpty,
+        message: AppText.bookmarkEmptyHint,
+      );
+    }
+    return EmptyState(
+      icon: LucideIcons300.searchX,
+      title: AppText.comicNotFound,
+      message: _query.text.isEmpty ? null : AppText.comicNotFoundSearch,
+    );
+  }
+}
 
-          if (searchBookmarks.isEmpty && _isSearchBookmark) {
-            return const SearchNotFound();
-          }
+/// Confirms deleting the selected bookmarks. Pops `true` to delete.
+class _DeleteSheet extends StatelessWidget {
+  const _DeleteSheet({required this.count});
 
-          return RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: () async {
-              await context.read<BookmarkCubit>().updateBookmarkList();
-            },
-            child: AutoHeightGridView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(
-                15,
-                15,
-                15,
-                15 + MediaQuery.paddingOf(context).bottom,
-              ),
-              itemCount: searchBookmarks.length,
-              crossAxisCount: MediaQuery.of(context).size.width > 640 ? 4 : 2,
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-              shrinkWrap: true,
-              builder: (context, index) {
-                final comicDetails = searchBookmarks[index].comicDetails;
-                final comicSlug = searchBookmarks[index].slug;
+  final int count;
 
-                return BookmarkComicCard(
-                  title: comicDetails.title,
-                  cover: comicDetails.coverImg,
-                  type: comicDetails.type,
-                  slug: comicSlug,
-                  chapterCount: comicDetails.chapters.length,
-                  isSelected: _isInSelectedBookmarks(comicSlug),
-                  isHaveSelectedComic: _selectedBookmarks.isNotEmpty,
-                  onSelected: _onSelectedBookmark,
-                );
-              },
-            ),
-          );
-        },
-      ),
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ActionSheetHeader(
+          icon: LucideIcons300.trash2,
+          title: AppText.deleteBookmark,
+          subtitle: '$count ${AppText.comics}',
+        ),
+        const SizedBox(height: DotSpace.s4),
+        Text(
+          AppText.deleteBookmarkDescription,
+          style: DotlineText.body.copyWith(color: c.inkMuted),
+        ),
+        const SizedBox(height: DotSpace.s5),
+        DotButton.destructive(
+          label: AppText.delete,
+          onTap: () => Navigator.of(context).pop(true),
+        ),
+        const SizedBox(height: DotSpace.s3),
+        DotButton.outline(
+          label: AppText.cancel,
+          onTap: () => Navigator.of(context).pop(false),
+        ),
+      ],
     );
   }
 }

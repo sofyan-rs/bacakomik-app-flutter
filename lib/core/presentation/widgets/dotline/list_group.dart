@@ -40,6 +40,7 @@ class ListRow extends StatefulWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.subtitleWidget,
     this.icon,
     this.leading,
     this.value,
@@ -51,6 +52,9 @@ class ListRow extends StatefulWidget {
 
   final String title;
   final String? subtitle;
+
+  /// Replaces [subtitle], e.g. a chapter number with a meter.
+  final Widget? subtitleWidget;
   final IconData? icon;
 
   /// Replaces [icon], e.g. a thumbnail.
@@ -124,7 +128,10 @@ class _ListRowState extends State<ListRow> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (widget.subtitle != null)
+                    if (widget.subtitleWidget != null) ...[
+                      const SizedBox(height: DotSpace.s1),
+                      widget.subtitleWidget!,
+                    ] else if (widget.subtitle != null)
                       Text(
                         widget.subtitle!,
                         style: DotlineText.bodyS.copyWith(color: c.inkMuted),

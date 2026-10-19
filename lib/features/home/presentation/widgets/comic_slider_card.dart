@@ -5,8 +5,8 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:flutter/material.dart';
 
-/// Hot comic card: cover with type label and rank number, title, chapter and
-/// rating.
+/// Hot comic card: cover with type label and rank number, title, latest
+/// chapter.
 class ComicSliderCard extends StatelessWidget {
   const ComicSliderCard({
     super.key,
@@ -15,7 +15,6 @@ class ComicSliderCard extends StatelessWidget {
     required this.cover,
     required this.chapter,
     required this.type,
-    required this.rating,
     required this.slug,
   });
 
@@ -26,7 +25,6 @@ class ComicSliderCard extends StatelessWidget {
   final String cover;
   final String chapter;
   final String type;
-  final String rating;
   final String slug;
 
   @override
@@ -74,7 +72,7 @@ class ComicSliderCard extends StatelessWidget {
             ),
             const SizedBox(height: DotSpace.s1),
             Text(
-              'CH. $chapter · $rating',
+              'CH. $chapter',
               style: DotlineText.data.copyWith(color: c.inkFaint),
               maxLines: 1,
             ),

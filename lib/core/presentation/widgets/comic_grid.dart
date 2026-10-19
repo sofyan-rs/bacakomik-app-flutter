@@ -4,12 +4,20 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
-/// Cover grid used by Jelajah and search: 3 columns on phones, more on wide
-/// screens (cells stay about 150 wide).
-class ComicGridSliver extends StatelessWidget {
-  const ComicGridSliver({super.key, required this.comics});
+/// Cover grid used by Jelajah, search and bookmarks: 3 columns on phones,
+/// more on wide screens (cells stay about 150 wide). Each cell is a 2:3
+/// cover plus [textHeight] of text under it.
+class CoverGridSliver extends StatelessWidget {
+  const CoverGridSliver({
+    super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+    this.textHeight = ComicCard.textHeight,
+  });
 
-  final List<Comic> comics;
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final double textHeight;
 
   static const _maxCellWidth = 150.0;
 
@@ -27,21 +35,39 @@ class ComicGridSliver extends StatelessWidget {
               crossAxisCount: columns,
               crossAxisSpacing: DotSpace.s3,
               mainAxisSpacing: DotSpace.s5,
-              mainAxisExtent: cellWidth * 3 / 2 + ComicCard.textHeight,
+              mainAxisExtent: cellWidth * 3 / 2 + textHeight,
             ),
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final comic = comics[index];
-              return ComicCard(
-                title: comic.title,
-                cover: comic.coverImg,
-                chapter: comic.latestChapter,
-                type: comic.type,
-                slug: comic.slug,
-              );
-            }, childCount: comics.length),
+            delegate: SliverChildBuilderDelegate(
+              itemBuilder,
+              childCount: itemCount,
+            ),
           );
         },
       ),
+    );
+  }
+}
+
+/// [CoverGridSliver] of [ComicCard]s.
+class ComicGridSliver extends StatelessWidget {
+  const ComicGridSliver({super.key, required this.comics});
+
+  final List<Comic> comics;
+
+  @override
+  Widget build(BuildContext context) {
+    return CoverGridSliver(
+      itemCount: comics.length,
+      itemBuilder: (context, index) {
+        final comic = comics[index];
+        return ComicCard(
+          title: comic.title,
+          cover: comic.coverImg,
+          chapter: comic.latestChapter,
+          type: comic.type,
+          slug: comic.slug,
+        );
+      },
     );
   }
 }

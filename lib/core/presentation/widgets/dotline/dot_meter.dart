@@ -3,7 +3,7 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Progress as a row of 4px dots: lit `ink`, unlit `lineStrong`.
-/// [dots] is the precision needed (12 favorites, 10 history, 22 continue
+/// [dots] is the precision needed (12 bookmarks, 10 history, 22 continue
 /// reading, page count in the reader).
 class DotMeter extends StatelessWidget {
   const DotMeter({
