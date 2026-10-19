@@ -197,7 +197,13 @@ The reader fields (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`) wer
 
 ## 5. Theme and UI
 
-The UI follows the Dotline design system in `docs/redesign/DESIGN_SYSTEM.md`. Decisions that differ from it are listed in `docs/REDESIGN_PLAN.md` §8.
+The UI uses **Dotline**, a monochrome, dark-first design system: pure black background in dark mode (`#F2F2F2` in light), flat surfaces with hairlines, pills and dot motifs. Rules worth keeping:
+
+- **Red is a signal, not a colour.** `accent` appears at most once or twice per screen (NEW dot, `+N` badge, delete actions). Selected chips, switches and segments use `ink`.
+- **Doto only for screen titles** (`BERANDA`, `JELAJAH`) and the app name, never below 24 px. Numbers use `DotlineText.stat` / `statS` (Geist 600). Labels and overlines use Geist Mono, uppercase.
+- **No gradients or glass.** The one exception is the bottom fade behind the nav. Depth comes from `bg` → `surface` → `surfaceRaised`; `shadowFloat` is only for menus and the reader's chapter pill (the main nav has none).
+- **Comic types are labels, not colours.** Manga, manhwa and manhua get the same black label pill.
+- Motion: 140 ms presses (scale to 0.97, no ripple), about 320 ms sliding selection indicators. Respect `MediaQuery.disableAnimationsOf`.
 
 - `core/theme/` holds the tokens: `DotlineColors` (a `ThemeExtension`, read with `Dotline.of(context)`), `DotlineText`, `DotSpace` / `DotRadius` / `DotSize` / `DotMotion`, and `dotlineTheme()` for light and dark.
 - Build screens from `core/presentation/widgets/dotline/` (`ScreenHeader`, `ListGroup` + `ListRow`, `SegmentedControl`, `DotButton`, `DotChip`, `DotSwitch`, `showDotSheet`, `DotMeter`, `ComicCover`, `EmptyState`…) instead of raw Material widgets. There is no ripple; taps scale through `Pressable`.

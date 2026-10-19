@@ -19,7 +19,7 @@ class BookmarkProgress {
 
   bool get hasUpdate => newChapters > 0;
 
-  /// Every chapter read (REDESIGN_PLAN D1).
+  /// Every chapter read (not the comic's own Completed status).
   bool get isFinished => progress?.isFinished ?? false;
 
   bool matches(BookmarkFilter filter) => switch (filter) {

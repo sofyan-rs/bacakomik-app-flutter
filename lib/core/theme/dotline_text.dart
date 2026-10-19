@@ -1,7 +1,7 @@
 import 'package:flutter/painting.dart';
 
 /// Dotline type scale. Colors come from the surrounding [DefaultTextStyle] or
-/// `.copyWith(color: ...)`. See `docs/redesign/DESIGN_SYSTEM.md` §3.2.
+/// `.copyWith(color: ...)`. See `docs/ARCHITECTURE.md` §5.
 ///
 /// Doto is only for screen titles and the app name, never below 24px.
 /// Numbers inside a screen use [stat] / [statS]. [label] is always uppercase.

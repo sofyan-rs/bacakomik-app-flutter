@@ -3,7 +3,7 @@ import 'dart:ui' show Brightness;
 import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart';
 
-/// Spacing scale. See `docs/redesign/DESIGN_SYSTEM.md` §3.3.
+/// Spacing scale. See `docs/ARCHITECTURE.md` §5.
 abstract final class DotSpace {
   /// Label to value, meter dot gap.
   static const s1 = 4.0;

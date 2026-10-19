@@ -4,7 +4,7 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Material theme built from Dotline tokens. Flat surfaces, no ripple, no
-/// elevation tint. See `docs/redesign/DESIGN_SYSTEM.md` §4.
+/// elevation tint. See `docs/ARCHITECTURE.md` §5.
 ThemeData dotlineTheme(DotlineColors c, Brightness brightness) {
   final base = ThemeData(
     useMaterial3: true,

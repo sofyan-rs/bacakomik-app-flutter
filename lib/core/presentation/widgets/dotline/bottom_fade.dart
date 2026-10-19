@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 /// Fades scrolled content into `bg` at the bottom of the screen, behind the
 /// floating nav. A deliberate exception to Dotline's no-gradient rule
-/// (REDESIGN_PLAN D7). Does not take touches.
+/// on purpose, so content does not end abruptly at the nav. Does not take
+/// touches.
 class BottomFade extends StatelessWidget {
   const BottomFade({super.key, required this.height});
 

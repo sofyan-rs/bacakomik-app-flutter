@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Five main tabs under a floating pill nav, with content fading into the
-/// background behind it (REDESIGN_PLAN D7).
+/// background behind it.
 ///
 /// Tabs get the nav height as bottom [MediaQuery] padding, so scrollables
 /// that use the default padding clear the nav on their own. Screens with

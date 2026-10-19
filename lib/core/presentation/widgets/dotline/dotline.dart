@@ -1,4 +1,4 @@
-/// Dotline widgets. See `docs/redesign/DESIGN_SYSTEM.md` §5.
+/// Dotline widgets. See `docs/ARCHITECTURE.md` §5.
 library;
 
 export 'badges.dart';

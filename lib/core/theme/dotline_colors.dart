@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Dotline color tokens. Dark is the primary theme (pure black for OLED),
-/// light mirrors it on `#F2F2F2`. See `docs/redesign/DESIGN_SYSTEM.md` §3.1.
+/// light mirrors it on `#F2F2F2`. See `docs/ARCHITECTURE.md` §5.
 @immutable
 class DotlineColors extends ThemeExtension<DotlineColors> {
   const DotlineColors({
