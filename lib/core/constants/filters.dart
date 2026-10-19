@@ -1,76 +1,82 @@
-import 'package:bacakomik_app/core/models/filter_model.dart';
-
 class Filters {
-  static final List<FilterModel> typeList = [
-    FilterModel(id: 'all', name: 'Semua'),
-    FilterModel(id: 'manga', name: 'Manga'),
-    FilterModel(id: 'manhwa', name: 'Manhwa'),
-    FilterModel(id: 'manhua', name: 'Manhua'),
+  static final List<FilterOption> typeList = [
+    FilterOption(id: 'all', name: 'Semua'),
+    FilterOption(id: 'manga', name: 'Manga'),
+    FilterOption(id: 'manhwa', name: 'Manhwa'),
+    FilterOption(id: 'manhua', name: 'Manhua'),
   ];
 
-  static final List<FilterModel> statusList = [
-    FilterModel(id: 'all', name: 'Semua'),
-    FilterModel(id: 'ongoing', name: 'Ongoing'),
-    FilterModel(id: 'completed', name: 'Completed'),
-    FilterModel(id: 'hiatus', name: 'Hiatus'),
+  static final List<FilterOption> statusList = [
+    FilterOption(id: 'all', name: 'Semua'),
+    FilterOption(id: 'ongoing', name: 'Ongoing'),
+    FilterOption(id: 'completed', name: 'Completed'),
+    FilterOption(id: 'hiatus', name: 'Hiatus'),
   ];
 
-  static final List<FilterModel> sortbyList = [
-    FilterModel(id: 'latest', name: 'Terbaru'),
-    FilterModel(id: 'rating', name: 'Rating'),
-    FilterModel(id: 'newseries', name: 'Seri Baru'),
-    FilterModel(id: 'default', name: 'Default'),
+  static final List<FilterOption> sortbyList = [
+    FilterOption(id: 'latest', name: 'Terbaru'),
+    FilterOption(id: 'rating', name: 'Rating'),
+    FilterOption(id: 'newseries', name: 'Seri Baru'),
+    FilterOption(id: 'default', name: 'Default'),
   ];
 
   // Ids from GET /genres.
-  static final List<FilterModel> genreList = [
-    FilterModel(id: '11', name: '4-Koma'),
-    FilterModel(id: '19', name: 'Action'),
-    FilterModel(id: '49', name: 'Adult'),
-    FilterModel(id: '16', name: 'Adventure'),
-    FilterModel(id: '22', name: 'Comedy'),
-    FilterModel(id: '7', name: 'Cooking'),
-    FilterModel(id: '40', name: 'Demons'),
-    FilterModel(id: '29', name: 'Drama'),
-    FilterModel(id: '47', name: 'Ecchi'),
-    FilterModel(id: '28', name: 'Fantasy'),
-    FilterModel(id: '17', name: 'Game'),
-    FilterModel(id: '41', name: 'Gender Bender'),
-    FilterModel(id: '15', name: 'Gore'),
-    FilterModel(id: '34', name: 'Harem'),
-    FilterModel(id: '10', name: 'Historical'),
-    FilterModel(id: '18', name: 'Horror'),
-    FilterModel(id: '6', name: 'Isekai'),
-    FilterModel(id: '23', name: 'Josei'),
-    FilterModel(id: '35', name: 'Magic'),
-    FilterModel(id: '46', name: 'Martial Arts'),
-    FilterModel(id: '37', name: 'Mature'),
-    FilterModel(id: '20', name: 'Mecha'),
-    FilterModel(id: '9', name: 'Medical'),
-    FilterModel(id: '36', name: 'Military'),
-    FilterModel(id: '44', name: 'Music'),
-    FilterModel(id: '39', name: 'Mystery'),
-    FilterModel(id: '33', name: 'One-Shot'),
-    FilterModel(id: '43', name: 'Police'),
-    FilterModel(id: '4', name: 'Psychological'),
-    FilterModel(id: '14', name: 'Reincarnation'),
-    FilterModel(id: '26', name: 'Romance'),
-    FilterModel(id: '42', name: 'School'),
-    FilterModel(id: '2', name: 'School Life'),
-    FilterModel(id: '32', name: 'Sci-Fi'),
-    FilterModel(id: '1', name: 'Seinen'),
-    FilterModel(id: '31', name: 'Shoujo'),
-    FilterModel(id: '27', name: 'Shoujo Ai'),
-    FilterModel(id: '30', name: 'Shounen'),
-    FilterModel(id: '25', name: 'Shounen Ai'),
-    FilterModel(id: '13', name: 'Slice of Life'),
-    FilterModel(id: '12', name: 'Sports'),
-    FilterModel(id: '45', name: 'Super Power'),
-    FilterModel(id: '24', name: 'Supernatural'),
-    FilterModel(id: '5', name: 'Thriller'),
-    FilterModel(id: '38', name: 'Tragedy'),
-    FilterModel(id: '21', name: 'Vampire'),
-    FilterModel(id: '8', name: 'Webtoons'),
-    FilterModel(id: '3', name: 'Yuri'),
+  static final List<FilterOption> genreList = [
+    FilterOption(id: '11', name: '4-Koma'),
+    FilterOption(id: '19', name: 'Action'),
+    FilterOption(id: '49', name: 'Adult'),
+    FilterOption(id: '16', name: 'Adventure'),
+    FilterOption(id: '22', name: 'Comedy'),
+    FilterOption(id: '7', name: 'Cooking'),
+    FilterOption(id: '40', name: 'Demons'),
+    FilterOption(id: '29', name: 'Drama'),
+    FilterOption(id: '47', name: 'Ecchi'),
+    FilterOption(id: '28', name: 'Fantasy'),
+    FilterOption(id: '17', name: 'Game'),
+    FilterOption(id: '41', name: 'Gender Bender'),
+    FilterOption(id: '15', name: 'Gore'),
+    FilterOption(id: '34', name: 'Harem'),
+    FilterOption(id: '10', name: 'Historical'),
+    FilterOption(id: '18', name: 'Horror'),
+    FilterOption(id: '6', name: 'Isekai'),
+    FilterOption(id: '23', name: 'Josei'),
+    FilterOption(id: '35', name: 'Magic'),
+    FilterOption(id: '46', name: 'Martial Arts'),
+    FilterOption(id: '37', name: 'Mature'),
+    FilterOption(id: '20', name: 'Mecha'),
+    FilterOption(id: '9', name: 'Medical'),
+    FilterOption(id: '36', name: 'Military'),
+    FilterOption(id: '44', name: 'Music'),
+    FilterOption(id: '39', name: 'Mystery'),
+    FilterOption(id: '33', name: 'One-Shot'),
+    FilterOption(id: '43', name: 'Police'),
+    FilterOption(id: '4', name: 'Psychological'),
+    FilterOption(id: '14', name: 'Reincarnation'),
+    FilterOption(id: '26', name: 'Romance'),
+    FilterOption(id: '42', name: 'School'),
+    FilterOption(id: '2', name: 'School Life'),
+    FilterOption(id: '32', name: 'Sci-Fi'),
+    FilterOption(id: '1', name: 'Seinen'),
+    FilterOption(id: '31', name: 'Shoujo'),
+    FilterOption(id: '27', name: 'Shoujo Ai'),
+    FilterOption(id: '30', name: 'Shounen'),
+    FilterOption(id: '25', name: 'Shounen Ai'),
+    FilterOption(id: '13', name: 'Slice of Life'),
+    FilterOption(id: '12', name: 'Sports'),
+    FilterOption(id: '45', name: 'Super Power'),
+    FilterOption(id: '24', name: 'Supernatural'),
+    FilterOption(id: '5', name: 'Thriller'),
+    FilterOption(id: '38', name: 'Tragedy'),
+    FilterOption(id: '21', name: 'Vampire'),
+    FilterOption(id: '8', name: 'Webtoons'),
+    FilterOption(id: '3', name: 'Yuri'),
   ];
+}
+
+/// Selectable explore filter value.
+class FilterOption {
+  const FilterOption({required this.id, required this.name});
+
+  final String id;
+  final String name;
 }
