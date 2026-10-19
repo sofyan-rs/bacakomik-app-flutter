@@ -64,34 +64,36 @@ class _LatestChapterMoreState extends State<LatestChapterMore> {
             color: Dotline.of(context).ink,
             backgroundColor: Dotline.of(context).surface,
             onRefresh: _refresh,
-            child: ListView(
+            child: CustomScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(
-                DotSpace.s4,
-                DotSpace.s2,
-                DotSpace.s4,
-                DotSpace.s4 + bottomInset,
-              ),
-              children: [
-                ListGroup(
-                  children: [
-                    for (final comic in comics)
-                      LatestChapterCard(
-                        title: comic.title,
-                        cover: comic.coverImg,
-                        chapter: comic.latestChapter,
-                        type: comic.type,
-                        isCompleted: comic.completed,
-                        slug: comic.slug,
-                      ),
-                  ],
+              slivers: [
+                const SliverPadding(padding: EdgeInsets.only(top: DotSpace.s2)),
+                SliverListGroup(
+                  itemCount: comics.length,
+                  itemBuilder: (context, index) {
+                    final comic = comics[index];
+                    return LatestChapterCard(
+                      title: comic.title,
+                      cover: comic.coverImg,
+                      chapter: comic.latestChapter,
+                      type: comic.type,
+                      isCompleted: comic.completed,
+                      slug: comic.slug,
+                    );
+                  },
                 ),
-                if (isLoadMore)
-                  const Padding(
-                    padding: EdgeInsets.all(DotSpace.s5),
-                    child: Center(child: DotLoader()),
-                  ),
+                SliverToBoxAdapter(
+                  child: isLoadMore
+                      ? const Padding(
+                          padding: EdgeInsets.all(DotSpace.s5),
+                          child: Center(child: DotLoader()),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.only(bottom: DotSpace.s4 + bottomInset),
+                ),
               ],
             ),
           ),

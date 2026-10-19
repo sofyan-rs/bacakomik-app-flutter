@@ -15,8 +15,8 @@ import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image
 import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settings_sheet.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -71,8 +71,9 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   var _controlsVisible = true;
   Timer? _autoHide;
 
-  /// 0-based index of the page on screen; `pages` means the end item.
-  var _page = 0;
+  /// 0-based index of the page on screen; `pages` means the end item. A
+  /// notifier so a page change only rebuilds the page meter.
+  final _page = ValueNotifier(0);
 
   final _itemScroll = ItemScrollController();
   final _itemPositions = ItemPositionsListener.create();
@@ -109,6 +110,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     _pageController?.dispose();
     _zoomAnimation.dispose();
     _zoom.dispose();
+    _page.dispose();
     WakelockPlus.disable();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
@@ -170,11 +172,12 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     setState(() => _loadLimit = end);
     for (var i = start; i < end; i++) {
       final page = i;
-      precacheImage(
-        CachedNetworkImageProvider(_images[page], cacheKey: _images[page]),
-        context,
-        onError: (_, _) {},
-      ).whenComplete(() => _onPageSettled(page));
+      // Download into the disk cache only; decoding happens when the page
+      // is shown, at screen width (see ChapterImg).
+      DefaultCacheManager()
+          .getSingleFile(_images[page], key: _images[page])
+          .then((_) {}, onError: (_) {})
+          .whenComplete(() => _onPageSettled(page));
     }
   }
 
@@ -187,7 +190,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     final batchDone = [
       for (var i = batchStart.clamp(0, _loadLimit); i < _loadLimit; i++) i,
     ].every(_settled.contains);
-    if (batchDone) _loadNextBatch();
+    // Stay about two batches ahead of the reader instead of fetching the
+    // whole chapter.
+    final aheadOfReader = _loadLimit - _page.value;
+    if (batchDone && aheadOfReader < _batch * 2) _loadNextBatch();
   }
 
   /// Reading close to the last opened page opens the next batch early.
@@ -202,8 +208,8 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     final visible = positions.where((p) => p.itemTrailingEdge > 0.33);
     if (visible.isEmpty) return;
     final index = visible.reduce((a, b) => a.index < b.index ? a : b).index;
-    if (index != _page) {
-      setState(() => _page = index);
+    if (index != _page.value) {
+      _page.value = index;
       _onPageReached(index);
     }
   }
@@ -431,7 +437,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   Widget _horizontalPages(ChapterContent chapter, AppSettings settings) {
     final pages = chapter.images;
     final controller = _pageController ??= PageController(
-      initialPage: _page.clamp(0, pages.length),
+      initialPage: _page.value.clamp(0, pages.length),
     );
     return PageView.builder(
       controller: controller,
@@ -439,7 +445,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       itemCount: pages.length + 1,
       physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
       onPageChanged: (page) {
-        setState(() => _page = page);
+        _page.value = page;
         _onPageReached(page);
       },
       itemBuilder: (context, index) {
@@ -521,7 +527,6 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   Widget _bottomPill(ChapterContent chapter, AppSettings settings) {
     final c = Dotline.of(context);
     final pageCount = chapter.images.length;
-    final shown = (_page + 1).clamp(1, pageCount);
     final previous = chapter.previousChapterSlug;
     final next = chapter.nextChapterSlug;
 
@@ -552,26 +557,32 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => _goToPage(
-                    _page + 1,
+                    _page.value + 1,
                     pageCount,
                     settings.readingDirection,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      DotMeter(
-                        value: shown,
-                        total: pageCount,
-                        dots: pageCount.clamp(1, _maxMeterDots),
-                        gap: 2,
-                      ),
-                      const SizedBox(height: DotSpace.s1),
-                      Text(
-                        '${AppText.pageShort} $shown / $pageCount'
-                            .toUpperCase(),
-                        style: DotlineText.data.copyWith(color: c.inkMuted),
-                      ),
-                    ],
+                  child: ValueListenableBuilder(
+                    valueListenable: _page,
+                    builder: (context, page, _) {
+                      final shown = (page + 1).clamp(1, pageCount);
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          DotMeter(
+                            value: shown,
+                            total: pageCount,
+                            dots: pageCount.clamp(1, _maxMeterDots),
+                            gap: 2,
+                          ),
+                          const SizedBox(height: DotSpace.s1),
+                          Text(
+                            '${AppText.pageShort} $shown / $pageCount'
+                                .toUpperCase(),
+                            style: DotlineText.data.copyWith(color: c.inkMuted),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),

@@ -39,7 +39,8 @@ ReadHistory _read(String slug, int chapter) => ReadHistory(
 void main() {
   final items = BookmarkProgress.of(
     [_bookmark('behind', 10), _bookmark('done', 5), _bookmark('new', 7)],
-    [_read('behind', 6), _read('behind', 7), _read('done', 5)],
+    HistoryIndex([_read('behind', 6), _read('behind', 7), _read('done', 5)])
+        .latestOf,
   );
   final behind = items[0];
   final done = items[1];

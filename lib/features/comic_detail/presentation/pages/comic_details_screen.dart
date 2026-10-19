@@ -67,7 +67,8 @@ class _ComicDetailsView extends StatefulWidget {
 }
 
 class _ComicDetailsViewState extends State<_ComicDetailsView> {
-  List<SelectedChapter> _selectedChapters = [];
+  /// Selected chapters by slug, in selection order.
+  final _selected = <String, SelectedChapter>{};
 
   @override
   void initState() {
@@ -81,14 +82,19 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
 
   void _toggleSelected(SelectedChapter chapter) {
     setState(() {
-      final index = _selectedChapters.indexWhere((s) => s.slug == chapter.slug);
-      index >= 0
-          ? _selectedChapters.removeAt(index)
-          : _selectedChapters.add(chapter);
+      if (_selected.remove(chapter.slug) == null) {
+        _selected[chapter.slug] = chapter;
+      }
     });
   }
 
-  bool _isSelected(String slug) => _selectedChapters.any((c) => c.slug == slug);
+  void _setSelected(List<SelectedChapter> chapters) => setState(() {
+    _selected
+      ..clear()
+      ..addEntries(chapters.map((c) => MapEntry(c.slug, c)));
+  });
+
+  bool _isSelected(String slug) => _selected.containsKey(slug);
 
   void _read(ComicDetails details, String chapterSlug) {
     Navigator.of(context).push(
@@ -114,9 +120,9 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
       builder: (context, state) {
         final details = state is ComicDetailsLoaded ? state.comicDetails : null;
         return PopScope(
-          canPop: _selectedChapters.isEmpty,
+          canPop: _selected.isEmpty,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) setState(() => _selectedChapters = []);
+            if (!didPop) _setSelected(const []);
           },
           child: Scaffold(
             bottomNavigationBar: details == null
@@ -124,11 +130,9 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                 : ComicAppBar(
                     comicSlug: widget.slug,
                     comicDetails: details,
-                    selectedChapters: _selectedChapters,
-                    selectAllChapter: (all) =>
-                        setState(() => _selectedChapters = all),
-                    unselectAllChapter: () =>
-                        setState(() => _selectedChapters = []),
+                    selectedChapters: _selected.values.toList(),
+                    selectAllChapter: _setSelected,
+                    unselectAllChapter: () => _setSelected(const []),
                     onRead: (slug) => _read(details, slug),
                   ),
             body: SafeArea(
@@ -187,7 +191,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
         onOpenChapter: (chapter) => _read(comicDetails, chapter.slug),
         onToggleSelected: _toggleSelected,
         isSelected: _isSelected,
-        isSelecting: _selectedChapters.isNotEmpty,
+        isSelecting: _selected.isNotEmpty,
       ),
     ],
     ComicDetailsNoInternet() => [

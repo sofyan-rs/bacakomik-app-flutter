@@ -12,9 +12,11 @@ class ComicInfo extends StatefulWidget {
 
   final ComicDetails details;
 
+  static final _yearPattern = RegExp(r'\d{4}');
+
   /// Year from the API release date (`2018-04-01` → `2018`).
   static String year(String released) {
-    final match = RegExp(r'\d{4}').firstMatch(released);
+    final match = _yearPattern.firstMatch(released);
     return match?.group(0) ?? '-';
   }
 

@@ -28,6 +28,25 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   var _filter = BookmarkFilter.all;
   final _selected = <String>{};
 
+  /// Progress per bookmark, recomputed only when bookmarks or history
+  /// change (not on search keystrokes, filter or selection changes).
+  List<BookmarkProgress> _all = const [];
+  Object? _allBookmarks;
+  Object? _allHistory;
+
+  List<BookmarkProgress> _progress(
+    BookmarkCubit bookmarks,
+    HistoryCubit history,
+  ) {
+    if (!identical(_allBookmarks, bookmarks.state) ||
+        !identical(_allHistory, history.state)) {
+      _allBookmarks = bookmarks.state;
+      _allHistory = history.state;
+      _all = BookmarkProgress.of(bookmarks.state, history.index.latestOf);
+    }
+    return _all;
+  }
+
   @override
   void dispose() {
     _query.dispose();
@@ -57,9 +76,10 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bookmarks = context.watch<BookmarkCubit>().state;
-    final history = context.watch<HistoryCubit>().state;
-    final all = BookmarkProgress.of(bookmarks, history);
+    final all = _progress(
+      context.watch<BookmarkCubit>(),
+      context.watch<HistoryCubit>(),
+    );
     final updated = all.where((i) => i.hasUpdate).length;
     final query = _query.text.trim().toLowerCase();
     final shown = [

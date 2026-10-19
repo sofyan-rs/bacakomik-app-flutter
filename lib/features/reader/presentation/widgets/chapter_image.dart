@@ -82,11 +82,21 @@ class ChapterImg extends StatelessWidget {
 
     if (!load) return placeholder;
 
+    // Decode at screen size instead of the source size; webtoon pages can be
+    // thousands of pixels tall and take tens of MB each at full resolution.
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final image = CachedNetworkImage(
       cacheKey: chapterImage,
       imageUrl: chapterImage,
       width: double.infinity,
       height: fitHeight,
+      memCacheWidth: fit == PageFit.width
+          ? (screenWidth * dpr).round()
+          : null,
+      memCacheHeight: fit == PageFit.height && fitHeight != null
+          ? (fitHeight! * dpr).round()
+          : null,
       fit: fit == PageFit.height ? BoxFit.contain : BoxFit.fitWidth,
       fadeInDuration: DotMotion.press,
       placeholder: (_, _) => placeholder,

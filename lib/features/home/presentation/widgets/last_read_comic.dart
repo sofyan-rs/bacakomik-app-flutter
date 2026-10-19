@@ -4,7 +4,6 @@ import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_progress.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +16,7 @@ class LastReadComic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final histories = context.watch<HistoryCubit>().state;
-    final latest = histories.latest;
+    final latest = context.watch<HistoryCubit>().index.latest;
     if (latest == null) return const SizedBox.shrink();
 
     final c = Dotline.of(context);

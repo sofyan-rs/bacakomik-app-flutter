@@ -34,6 +34,54 @@ class ListGroup extends StatelessWidget {
   }
 }
 
+/// [ListGroup] for long lists: rows are built lazily as a sliver, each row
+/// drawing its own part of the rounded group and the hairline below it.
+class SliverListGroup extends StatelessWidget {
+  const SliverListGroup({
+    super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+    this.background,
+    this.padding = const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+  });
+
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final Color? background;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = background ?? Dotline.of(context).surface;
+    const radius = Radius.circular(DotRadius.m);
+    return SliverPadding(
+      padding: padding,
+      sliver: SliverList.builder(
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          final last = index == itemCount - 1;
+          return ClipRRect(
+            borderRadius: BorderRadius.vertical(
+              top: index == 0 ? radius : Radius.zero,
+              bottom: last ? radius : Radius.zero,
+            ),
+            child: ColoredBox(
+              color: color,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  itemBuilder(context, index),
+                  if (!last) const Divider(),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 /// Row inside a [ListGroup]: icon → title + subtitle → value or chevron.
 class ListRow extends StatefulWidget {
   const ListRow({
@@ -98,8 +146,12 @@ class _ListRowState extends State<ListRow> {
         onTapDown: widget.onTap == null
             ? null
             : (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
+        onTapUp: widget.onTap == null
+            ? null
+            : (_) => setState(() => _pressed = false),
+        onTapCancel: widget.onTap == null
+            ? null
+            : () => setState(() => _pressed = false),
         child: AnimatedContainer(
           duration: DotMotion.press,
           color: _pressed ? c.surfaceRaised : Colors.transparent,

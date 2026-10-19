@@ -28,12 +28,14 @@ class BookmarkProgress {
     BookmarkFilter.finished => isFinished,
   };
 
+  /// [latestOf] returns the newest read chapter of a comic, e.g.
+  /// `HistoryIndex.latestOf`.
   static List<BookmarkProgress> of(
     List<Bookmark> bookmarks,
-    List<ReadHistory> history,
+    ReadHistory? Function(String comicSlug) latestOf,
   ) => [
     for (final bookmark in bookmarks)
-      BookmarkProgress(bookmark, switch (history.latestOf(bookmark.slug)) {
+      BookmarkProgress(bookmark, switch (latestOf(bookmark.slug)) {
         final latest? => ReadProgress.of(
           bookmark.comicDetails,
           latest.chapterNumber,

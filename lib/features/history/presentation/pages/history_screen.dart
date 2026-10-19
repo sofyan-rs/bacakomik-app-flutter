@@ -90,37 +90,30 @@ class HistoryScreen extends StatelessWidget {
                     message: AppText.historyEmptyHint,
                   ),
                 ),
-              for (final day in days)
+              for (final day in days) ...[
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
                     DotSpace.s4,
                     0,
                     DotSpace.s4,
-                    DotSpace.s5,
+                    DotSpace.s3,
                   ),
                   sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: DotSpace.s3),
-                          child: Text(
-                            day.label.toUpperCase(),
-                            style: DotlineText.label.copyWith(
-                              color: c.inkFaint,
-                            ),
-                          ),
-                        ),
-                        ListGroup(
-                          children: [
-                            for (final item in day.items)
-                              HistoryComicCard(item: item),
-                          ],
-                        ),
-                      ],
+                    child: Text(
+                      day.label.toUpperCase(),
+                      style: DotlineText.label.copyWith(color: c.inkFaint),
                     ),
                   ),
                 ),
+                SliverListGroup(
+                  itemCount: day.items.length,
+                  itemBuilder: (context, index) =>
+                      HistoryComicCard(item: day.items[index]),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.only(bottom: DotSpace.s5),
+                ),
+              ],
               SliverPadding(padding: EdgeInsets.only(bottom: bottomInset)),
             ],
           ),

@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+import 'dart:ui' show PointMode;
+
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
@@ -24,6 +27,11 @@ class ComicCover extends StatelessWidget {
   /// Width / height. Pass null to fill the parent instead.
   final double? aspectRatio;
 
+  static int? _decodeWidth(BuildContext context, double width) {
+    if (!width.isFinite) return null;
+    return (width * MediaQuery.devicePixelRatioOf(context)).round();
+  }
+
   @override
   Widget build(BuildContext context) {
     final cover = ClipRRect(
@@ -31,14 +39,20 @@ class ComicCover extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const DotGridPlaceholder(),
-          if (imageUrl.isNotEmpty)
-            CachedNetworkImage(
-              imageUrl: imageUrl,
-              fit: BoxFit.cover,
-              fadeInDuration: DotMotion.press,
-              placeholder: (_, _) => const SizedBox.shrink(),
-              errorWidget: (_, _, _) => const SizedBox.shrink(),
+          if (imageUrl.isEmpty)
+            const DotGridPlaceholder()
+          else
+            LayoutBuilder(
+              // Decode at the size shown, not the source size: list
+              // thumbnails are 44 wide while covers are often 600+.
+              builder: (context, constraints) => CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: _decodeWidth(context, constraints.maxWidth),
+                fadeInDuration: DotMotion.press,
+                placeholder: (_, _) => const DotGridPlaceholder(),
+                errorWidget: (_, _, _) => const DotGridPlaceholder(),
+              ),
             ),
           if (typeLabel != null)
             Positioned(
@@ -89,10 +103,13 @@ class DotGridPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
-    return ColoredBox(
-      color: c.surfaceRaised,
-      child: CustomPaint(
-        painter: DotGridPainter(color: c.ink.withValues(alpha: 0.16)),
+    // Own layer: the image fading in above does not repaint the grid.
+    return RepaintBoundary(
+      child: ColoredBox(
+        color: c.surfaceRaised,
+        child: CustomPaint(
+          painter: DotGridPainter(color: c.ink.withValues(alpha: 0.16)),
+        ),
       ),
     );
   }
@@ -105,13 +122,27 @@ class DotGridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
+    // One draw call for the whole grid; a reader page placeholder has a few
+    // thousand dots.
     const pitch = DotSize.dotPitch;
-    for (var y = pitch / 2; y < size.height; y += pitch) {
-      for (var x = pitch / 2; x < size.width; x += pitch) {
-        canvas.drawCircle(Offset(x, y), 1, paint);
+    final columns = (size.width / pitch).ceil();
+    final rows = (size.height / pitch).ceil();
+    final points = Float32List(columns * rows * 2);
+    var i = 0;
+    for (var row = 0; row < rows; row++) {
+      for (var column = 0; column < columns; column++) {
+        points[i++] = pitch / 2 + column * pitch;
+        points[i++] = pitch / 2 + row * pitch;
       }
     }
+    canvas.drawRawPoints(
+      PointMode.points,
+      points,
+      Paint()
+        ..color = color
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round,
+    );
   }
 
   @override
