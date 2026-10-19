@@ -87,3 +87,13 @@ flutter:
           weight: 700
         - asset: assets/fonts/Doto-Black.ttf
           weight: 900
+
+# Native launch screen: black, matching the Flutter splash. Android 12+ shows
+# the launcher icon on black. Regenerate with `dart run flutter_native_splash:create`.
+flutter_native_splash:
+  color: "#000000"
+  android_12:
+    color: "#000000"
+    icon_background_color: "#000000"
+  ios: false
+  web: false
