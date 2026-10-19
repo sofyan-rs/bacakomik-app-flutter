@@ -1,15 +1,26 @@
+import 'dart:async';
+
+import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/di/injection.dart';
+import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
+import 'package:bacakomik_app/features/reader/presentation/bloc/reader_bloc.dart';
+import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_end.dart';
+import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image.dart';
+import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settings_sheet.dart';
+import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'package:bacakomik_app/features/reader/presentation/bloc/reader_bloc.dart';
-import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image.dart';
-import 'package:solar_icons/solar_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class ReadChapterScreen extends StatelessWidget {
   const ReadChapterScreen({
@@ -52,37 +63,65 @@ class _ReadChapterView extends StatefulWidget {
 }
 
 class _ReadChapterViewState extends State<_ReadChapterView> {
-  bool _isAppBarShow = true;
-  final ScrollController _scrollController = ScrollController();
-  final TransformationController _transformationController =
-      TransformationController();
-  late TapDownDetails _doubleTapDetails;
-  String _chNumber = '';
+  /// Most chapters fit; longer ones scale the meter down.
+  static const _maxMeterDots = 24;
 
-  void _hideAppBar() {
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      setState(() {
-        _isAppBarShow = false;
-      });
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
-    });
+  var _controlsVisible = true;
+  Timer? _autoHide;
+
+  /// 0-based index of the page on screen; `pages` means the end item.
+  var _page = 0;
+
+  final _itemScroll = ItemScrollController();
+  final _itemPositions = ItemPositionsListener.create();
+  PageController? _pageController;
+  final _zoom = TransformationController();
+  TapDownDetails? _doubleTap;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<ReaderBloc>().add(ChapterRequested(widget.slug));
+    _itemPositions.itemPositions.addListener(_onItemPositions);
+    _syncWakelock(context.read<SettingsCubit>().state.keepScreenOn);
   }
 
-  void _showAppBar() {
-    setState(() {
-      _isAppBarShow = true;
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.manual,
-        overlays: SystemUiOverlay.values,
-      );
-    });
+  @override
+  void dispose() {
+    _autoHide?.cancel();
+    _itemPositions.itemPositions.removeListener(_onItemPositions);
+    _pageController?.dispose();
+    _zoom.dispose();
+    WakelockPlus.disable();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
   }
 
-  void _goToChapterRead(BuildContext context, String slug) {
+  void _syncWakelock(bool keepOn) =>
+      keepOn ? WakelockPlus.enable() : WakelockPlus.disable();
+
+  void _setControls(bool visible) {
+    _autoHide?.cancel();
+    setState(() => _controlsVisible = visible);
+    SystemChrome.setEnabledSystemUIMode(
+      visible ? SystemUiMode.edgeToEdge : SystemUiMode.immersiveSticky,
+    );
+  }
+
+  /// The first page whose bottom is below the top third of the screen.
+  void _onItemPositions() {
+    final positions = _itemPositions.itemPositions.value;
+    if (positions.isEmpty) return;
+    final visible = positions.where((p) => p.itemTrailingEdge > 0.33);
+    if (visible.isEmpty) return;
+    final index = visible.reduce((a, b) => a.index < b.index ? a : b).index;
+    if (index != _page) setState(() => _page = index);
+  }
+
+  void _openChapter(String slug) {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => ReadChapterScreen(
+        builder: (_) => ReadChapterScreen(
           slug: slug,
           comicSlug: widget.comicSlug,
           comicDetails: widget.comicDetails,
@@ -91,179 +130,367 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    context.read<ReaderBloc>().add(ChapterRequested(widget.slug));
+  void _goToPage(int page, int pageCount, ReadingDirection direction) {
+    final target = page.clamp(0, pageCount);
+    if (direction == ReadingDirection.vertical) {
+      if (_itemScroll.isAttached) {
+        _itemScroll.scrollTo(
+          index: target,
+          duration: DotMotion.slide,
+          curve: DotMotion.slideCurve,
+        );
+      }
+    } else {
+      _pageController?.animateToPage(
+        target,
+        duration: DotMotion.slide,
+        curve: DotMotion.slideCurve,
+      );
+    }
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    _transformationController.dispose();
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: SystemUiOverlay.values,
-    );
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: _isAppBarShow
-          ? AppBar(
-              title: Text(widget.comicDetails.title),
-              leading: IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: Icon(
-                  SolarIconsOutline.arrowLeft,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+  void _showChapterList(String currentSlug) {
+    final chapters = widget.comicDetails.chapters;
+    final current = chapters.indexWhere((c) => c.slug == currentSlug);
+    showDotSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        final c = Dotline.of(sheetContext);
+        return SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * 0.6,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppText.chapterList,
+                style: DotlineText.title.copyWith(color: c.ink),
               ),
-            )
-          : null,
-      body: BlocConsumer<ReaderBloc, ReaderState>(
-        listener: (context, state) {
-          if (state is ReaderLoaded) {
-            setState(() {
-              _chNumber = state.chapter.chapterNumber;
-            });
-
-            _hideAppBar();
-
-            context.read<HistoryCubit>().addHistory(
-                  slug: widget.slug,
-                  chapterNumber: _chNumber,
-                  comicSlug: widget.comicSlug,
-                  comicDetails: widget.comicDetails,
-                );
-          }
-        },
-        builder: (context, state) {
-          if (state is ReaderLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          if (state is ReaderLoaded) {
-            return Stack(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    _isAppBarShow ? _hideAppBar() : _showAppBar();
-                  },
-                  onDoubleTapDown: (d) => _doubleTapDetails = d,
-                  onDoubleTap: () {
-                    if (_transformationController.value != Matrix4.identity()) {
-                      _transformationController.value = Matrix4.identity();
-                    } else {
-                      final position = _doubleTapDetails.localPosition;
-                      // For a 3x zoom
-                      // _transformationController.value = Matrix4.identity()
-                      //   ..translate(-position.dx * 2, -position.dy * 2)
-                      //   ..scale(3.0);
-                      // Fox a 2x zoom
-                      _transformationController.value = Matrix4.identity()
-                        ..translateByDouble(-position.dx, -position.dy, 0, 1)
-                        ..scaleByDouble(2.0, 2.0, 2.0, 1);
-                    }
-                  },
-                  child: InteractiveViewer(
-                    transformationController: _transformationController,
-                    minScale: 1,
-                    maxScale: 3,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      primary: false,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(0),
-                      itemCount: state.chapter.images.length,
-                      itemBuilder: (context, index) {
-                        final chapterImage =
-                            state.chapter.images[index];
-                        return SizedBox(
-                          key: Key(index.toString()),
-                          width: double.infinity,
-                          child: ChapterImg(
-                            chapterImage: chapterImage,
-                          ),
+              const SizedBox(height: DotSpace.s4),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(DotRadius.m),
+                  child: ColoredBox(
+                    color: c.bg,
+                    child: ScrollablePositionedList.separated(
+                      initialScrollIndex: current < 0 ? 0 : current,
+                      itemCount: chapters.length,
+                      separatorBuilder: (_, _) => const Divider(),
+                      itemBuilder: (_, index) {
+                        final chapter = chapters[index];
+                        final isCurrent = index == current;
+                        return ListRow(
+                          title: '${AppText.chapter} ${chapter.number}',
+                          value: chapter.date,
+                          trailing: isCurrent
+                              ? Icon(
+                                  LucideIcons300.bookOpen,
+                                  size: DotSize.iconSmall,
+                                  color: c.ink,
+                                )
+                              : null,
+                          onTap: () {
+                            Navigator.of(sheetContext).pop();
+                            if (!isCurrent) _openChapter(chapter.slug);
+                          },
                         );
                       },
                     ),
                   ),
                 ),
-                if (_isAppBarShow)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 60,
-                      color: AppColors.dark.withValues(alpha: 0.8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          state.chapter.previousChapterSlug != null
-                              ? IconButton(
-                                  onPressed: () {
-                                    _goToChapterRead(context,
-                                        state.chapter.previousChapterSlug!);
-                                  },
-                                  icon: Icon(
-                                    SolarIconsOutline.altArrowLeft,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                                )
-                              : const SizedBox(width: 50),
-                          Text(
-                            'Chapter $_chNumber',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                            ),
-                          ),
-                          state.chapter.nextChapterSlug != null
-                              ? IconButton(
-                                  onPressed: () {
-                                    _goToChapterRead(context,
-                                        state.chapter.nextChapterSlug!);
-                                  },
-                                  icon: Icon(
-                                    SolarIconsOutline.altArrowRight,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                                )
-                              : const SizedBox(width: 50),
-                        ],
-                      ),
-                    ),
-                  ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSettings() {
+    final settings = context.read<SettingsCubit>();
+    showDotSheet<void>(
+      context: context,
+      builder: (_) => BlocProvider.value(
+        value: settings,
+        child: const ReaderSettingsSheet(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    final settings = context.watch<SettingsCubit>().state;
+
+    return BlocListener<SettingsCubit, AppSettings>(
+      listenWhen: (a, b) => a.keepScreenOn != b.keepScreenOn,
+      listener: (_, s) => _syncWakelock(s.keepScreenOn),
+      child: Scaffold(
+        backgroundColor: c.bg,
+        body: BlocConsumer<ReaderBloc, ReaderState>(
+          listener: (context, state) {
+            if (state is ReaderLoaded) {
+              context.read<HistoryCubit>().addHistory(
+                slug: widget.slug,
+                chapterNumber: state.chapter.chapterNumber,
+                comicSlug: widget.comicSlug,
+                comicDetails: widget.comicDetails,
+              );
+              _autoHide = Timer(const Duration(seconds: 2), () {
+                if (mounted) _setControls(false);
+              });
+            }
+          },
+          builder: (context, state) {
+            final chapter = state is ReaderLoaded ? state.chapter : null;
+            return Stack(
+              children: [
+                Positioned.fill(child: _body(state, settings)),
+                _topBar(chapter),
+                if (chapter != null) _bottomPill(chapter, settings),
               ],
             );
-          }
+          },
+        ),
+      ),
+    );
+  }
 
-          if (state is ReaderError) {
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Text(state.message),
-              ),
-            );
+  Widget _body(ReaderState state, AppSettings settings) {
+    return switch (state) {
+      ReaderLoaded(:final chapter) => GestureDetector(
+        onTap: () => _setControls(!_controlsVisible),
+        onDoubleTapDown: (d) => _doubleTap = d,
+        onDoubleTap: () {
+          if (_zoom.value != Matrix4.identity()) {
+            _zoom.value = Matrix4.identity();
+          } else if (_doubleTap case final tap?) {
+            final p = tap.localPosition;
+            _zoom.value = Matrix4.identity()
+              ..translateByDouble(-p.dx, -p.dy, 0, 1)
+              ..scaleByDouble(2.0, 2.0, 2.0, 1);
           }
-
-          return const Padding(
-            padding: EdgeInsets.all(20),
-            child: Center(
-              child: Text(AppText.error),
-            ),
-          );
         },
+        child: InteractiveViewer(
+          transformationController: _zoom,
+          minScale: 1,
+          maxScale: 3,
+          child: settings.readingDirection == ReadingDirection.vertical
+              ? _verticalPages(chapter, settings)
+              : _horizontalPages(chapter, settings),
+        ),
+      ),
+      ReaderNoInternet() => EmptyState.offline(
+        onAction: () =>
+            context.read<ReaderBloc>().add(ChapterRequested(widget.slug)),
+      ),
+      ReaderError(:final message) => EmptyState(
+        icon: LucideIcons300.bug,
+        title: AppText.error,
+        message: message,
+        actionLabel: AppText.retry,
+        onAction: () =>
+            context.read<ReaderBloc>().add(ChapterRequested(widget.slug)),
+      ),
+      ReaderInitial() || ReaderLoading() => const Center(child: DotLoader()),
+    };
+  }
+
+  Widget _chapterEnd(ChapterContent chapter) {
+    final next = chapter.nextChapterSlug;
+    final nextChapter = next == null
+        ? null
+        : widget.comicDetails.chapters
+                  .where((c) => c.slug == next)
+                  .firstOrNull ??
+              Chapter(number: next.split('/').last, slug: next, date: '-');
+    return ChapterEnd(
+      chapterNumber: chapter.chapterNumber,
+      pageCount: chapter.images.length,
+      cover: widget.comicDetails.coverImg,
+      next: nextChapter,
+      onNext: () => _openChapter(next!),
+      onChapterList: () => _showChapterList(widget.slug),
+      onHome: () => Navigator.of(context).popUntil((r) => r.isFirst),
+    );
+  }
+
+  Widget _verticalPages(ChapterContent chapter, AppSettings settings) {
+    final pages = chapter.images;
+    final height = settings.pageFit == PageFit.height
+        ? MediaQuery.sizeOf(context).height
+        : null;
+    return ScrollablePositionedList.builder(
+      itemScrollController: _itemScroll,
+      itemPositionsListener: _itemPositions,
+      itemCount: pages.length + 1,
+      itemBuilder: (context, index) {
+        if (index == pages.length) return _chapterEnd(chapter);
+        return Padding(
+          padding: EdgeInsets.only(bottom: settings.pageGap ? DotSpace.s2 : 0),
+          child: ChapterImg(
+            key: ValueKey(pages[index]),
+            chapterImage: pages[index],
+            page: index + 1,
+            fit: settings.pageFit,
+            fitHeight: height,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _horizontalPages(ChapterContent chapter, AppSettings settings) {
+    final pages = chapter.images;
+    final controller = _pageController ??= PageController(
+      initialPage: _page.clamp(0, pages.length),
+    );
+    return PageView.builder(
+      controller: controller,
+      reverse: settings.readingDirection == ReadingDirection.rightToLeft,
+      itemCount: pages.length + 1,
+      onPageChanged: (page) => setState(() => _page = page),
+      itemBuilder: (context, index) {
+        if (index == pages.length) {
+          return SingleChildScrollView(child: _chapterEnd(chapter));
+        }
+        return Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: settings.pageGap ? DotSpace.s1 : 0,
+          ),
+          child: Center(
+            child: ChapterImg(
+              key: ValueKey(pages[index]),
+              chapterImage: pages[index],
+              page: index + 1,
+              fit: settings.pageFit,
+              fitHeight: settings.pageFit == PageFit.height
+                  ? MediaQuery.sizeOf(context).height
+                  : null,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _animatedControl({required bool top, required Widget child}) {
+    final animate = !MediaQuery.disableAnimationsOf(context);
+    return AnimatedSlide(
+      duration: animate ? DotMotion.slide : Duration.zero,
+      curve: DotMotion.slideCurve,
+      offset: _controlsVisible ? Offset.zero : Offset(0, top ? -1 : 1),
+      child: AnimatedOpacity(
+        duration: animate ? DotMotion.press : Duration.zero,
+        opacity: _controlsVisible ? 1 : 0,
+        child: IgnorePointer(ignoring: !_controlsVisible, child: child),
+      ),
+    );
+  }
+
+  Widget _topBar(ChapterContent? chapter) {
+    final c = Dotline.of(context);
+    final number = chapter?.chapterNumber;
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: _animatedControl(
+        top: true,
+        child: ColoredBox(
+          color: c.bg,
+          child: SafeArea(
+            bottom: false,
+            child: DotTopBar(
+              title: number == null ? null : '${AppText.chapter} $number',
+              subtitle: widget.comicDetails.title,
+              actions: [
+                RoundIconButton(
+                  icon: LucideIcons300.list,
+                  semanticLabel: AppText.chapterList,
+                  iconSize: DotSize.iconSmall,
+                  onTap: () => _showChapterList(widget.slug),
+                ),
+                RoundIconButton(
+                  icon: LucideIcons300.slidersHorizontal,
+                  semanticLabel: AppText.readerSettings,
+                  iconSize: DotSize.iconSmall,
+                  onTap: _showSettings,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bottomPill(ChapterContent chapter, AppSettings settings) {
+    final c = Dotline.of(context);
+    final pageCount = chapter.images.length;
+    final shown = (_page + 1).clamp(1, pageCount);
+    final previous = chapter.previousChapterSlug;
+    final next = chapter.nextChapterSlug;
+
+    return Positioned(
+      left: DotSpace.s4,
+      right: DotSpace.s4,
+      bottom: MediaQuery.paddingOf(context).bottom + DotSize.navGap,
+      child: _animatedControl(
+        top: false,
+        child: Container(
+          height: DotSize.navHeight,
+          padding: const EdgeInsets.all(DotSize.navPadding),
+          decoration: BoxDecoration(
+            color: c.navBar,
+            borderRadius: BorderRadius.circular(DotRadius.pill),
+            boxShadow: [shadowFloat(Theme.of(context).brightness)],
+          ),
+          child: Row(
+            children: [
+              RoundIconButton(
+                icon: LucideIcons300.chevronLeft,
+                semanticLabel: AppText.previousChapter,
+                size: DotSize.navCircle,
+                background: Colors.transparent,
+                onTap: previous == null ? null : () => _openChapter(previous),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _goToPage(
+                    _page + 1,
+                    pageCount,
+                    settings.readingDirection,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      DotMeter(
+                        value: shown,
+                        total: pageCount,
+                        dots: pageCount.clamp(1, _maxMeterDots),
+                        gap: 2,
+                      ),
+                      const SizedBox(height: DotSpace.s1),
+                      Text(
+                        '${AppText.pageShort} $shown / $pageCount'
+                            .toUpperCase(),
+                        style: DotlineText.data.copyWith(color: c.inkMuted),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              RoundIconButton(
+                icon: LucideIcons300.chevronRight,
+                semanticLabel: AppText.nextChapter,
+                size: DotSize.navCircle,
+                background: c.navSelected,
+                onTap: next == null ? null : () => _openChapter(next),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

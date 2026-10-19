@@ -161,4 +161,29 @@ class AppText {
   static const String system = 'Sistem';
   static const String light = 'Nonaktif';
   static const String dark = 'Aktif';
+
+  // Reader Text
+  static const String readerSettings = 'Pengaturan baca';
+  static const String readingDirection = 'Arah baca';
+  static const String directionVertical = 'Vertikal';
+  static const String directionRtl = 'Kanan-kiri';
+  static const String directionLtr = 'Kiri-kanan';
+  static const String pageSize = 'Ukuran halaman';
+  static const String fitWidth = 'Lebar layar';
+  static const String fitHeight = 'Tinggi layar';
+  static const String keepScreenOn = 'Layar tetap menyala';
+  static const String keepScreenOnHint = 'Selama membaca chapter';
+  static const String pageGap = 'Jarak antar halaman';
+  static const String pageGapHint = 'Garis 8px di antara halaman';
+  static const String pageShort = 'Hal';
+  static const String pages = 'halaman';
+  static const String finished = 'Selesai';
+  static const String finishedLower = 'selesai';
+  static const String nextChapter = 'Berikutnya';
+  static const String previousChapter = 'Chapter sebelumnya';
+  static const String releasedOn = 'Rilis';
+  static const String continueTo = 'Lanjut ke Chapter';
+  static const String latestChapterReached =
+      'Kamu sudah di chapter terbaru. Chapter baru akan muncul di Bookmark.';
+  static const String toHome = 'Ke beranda';
 }
