@@ -10,7 +10,7 @@ import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/models/history_model.dart';
-import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
+import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
 
 class LastReadComic extends StatefulWidget {
   const LastReadComic({

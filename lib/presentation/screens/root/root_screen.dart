@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/presentation/screens/main/explore/explore_screen.dart';
+import 'package:bacakomik_app/features/explore/presentation/pages/explore_screen.dart';
 import 'package:bacakomik_app/presentation/screens/main/bookmarks/bookmarks_screen.dart';
 import 'package:bacakomik_app/presentation/screens/main/more/more_screen.dart';
 import 'package:flutter/material.dart';

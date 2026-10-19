@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/presentation/widgets/placeholder/err_no_internet.dart';
+import 'package:bacakomik_app/core/presentation/widgets/placeholder/err_no_internet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -6,7 +6,7 @@ import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_card.dart';
-import 'package:bacakomik_app/presentation/screens/sub/latest_chapter/latest_chapter_screen.dart';
+import 'package:bacakomik_app/features/latest/presentation/pages/latest_chapter_screen.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 class LatestChapter extends StatelessWidget {

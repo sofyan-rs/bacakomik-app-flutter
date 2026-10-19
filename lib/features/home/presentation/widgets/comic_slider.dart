@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/presentation/widgets/placeholder/err_no_internet.dart';
+import 'package:bacakomik_app/core/presentation/widgets/placeholder/err_no_internet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

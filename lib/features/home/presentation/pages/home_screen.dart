@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +13,7 @@ import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter.dart';
-import 'package:bacakomik_app/presentation/screens/sub/search/search_screen.dart';
+import 'package:bacakomik_app/features/search/presentation/pages/search_screen.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -98,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     builder: (context) => const SearchScreen(),
                   ),
                 );
-                context.read<SearchComicBloc>().add(ResetSearchResult());
               },
               icon: const Icon(
                 SolarIconsOutline.magnifier,

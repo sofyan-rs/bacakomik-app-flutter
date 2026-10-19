@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
-import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
+import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class BookmarkComicCard extends StatefulWidget {

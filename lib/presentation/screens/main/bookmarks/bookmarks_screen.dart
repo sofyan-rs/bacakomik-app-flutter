@@ -4,7 +4,7 @@ import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/models/bookmark_model.dart';
 import 'package:bacakomik_app/presentation/screens/main/bookmarks/widgets/bookmark_comic_card.dart';
-import 'package:bacakomik_app/presentation/widgets/placeholder/search_not_found.dart';
+import 'package:bacakomik_app/core/presentation/widgets/placeholder/search_not_found.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:solar_icons/solar_icons.dart';

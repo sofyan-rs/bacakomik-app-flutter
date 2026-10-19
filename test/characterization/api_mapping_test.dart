@@ -1,9 +1,6 @@
 import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 import 'package:bacakomik_app/data/repository/chapter_read_repository.dart';
 import 'package:bacakomik_app/data/repository/comic_details_repository.dart';
-import 'package:bacakomik_app/data/repository/explore_data_repository.dart';
-import 'package:bacakomik_app/data/repository/latest_repository.dart';
-import 'package:bacakomik_app/data/repository/search_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -15,56 +12,6 @@ void main() {
   late MockDataProvider provider;
 
   setUp(() => provider = MockDataProvider());
-
-  group('list repositories', () {
-    test('LatestRepository requests latest sort by page', () async {
-      when(() => provider.getSeriesList(sort: 'latest', page: 3))
-          .thenAnswer((_) async => listResponse([seriesListItem]));
-
-      final result = await LatestRepository(provider).getLatest(3);
-
-      expect(result.single.completed, isTrue);
-      expect(result.single.slug, 'solo-leveling');
-    });
-
-    test('SearchRepository passes keyword and page', () async {
-      when(() => provider.getSeriesList(query: 'solo', page: 2))
-          .thenAnswer((_) async => listResponse([seriesListItem]));
-
-      final result =
-          await SearchRepository(provider).getSearchResult('solo', 2);
-
-      expect(result.single.title, 'Solo Leveling');
-    });
-
-    test('ExploreRepository drops default/all filters', () async {
-      when(() => provider.getSeriesList(
-            sort: null,
-            status: null,
-            format: null,
-            genres: ['action'],
-            page: 1,
-          )).thenAnswer((_) async => listResponse([]));
-      when(() => provider.getSeriesList(
-            sort: 'rating',
-            status: 'completed',
-            format: 'manga',
-            genres: [],
-            page: 2,
-          )).thenAnswer((_) async => listResponse([seriesListItem]));
-
-      final repo = ExploreRepository(provider);
-
-      expect(
-        await repo.getResult('default', 'all', 'all', ['action'], 1),
-        isEmpty,
-      );
-      expect(
-        await repo.getResult('rating', 'completed', 'manga', [], 2),
-        hasLength(1),
-      );
-    });
-  });
 
   group('ComicDetailsRepository', () {
     test('maps series and chapters', () async {

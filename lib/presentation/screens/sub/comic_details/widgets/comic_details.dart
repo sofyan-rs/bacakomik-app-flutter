@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/models/comic_details_model/comic_details_model.dart';
-import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
+import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
 
 class ComicDetails extends StatefulWidget {
   const ComicDetails({

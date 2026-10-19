@@ -1,5 +1,5 @@
 import 'package:bacakomik_app/core/utils/utils.dart';
-import 'package:bacakomik_app/presentation/widgets/placeholder/err_no_internet.dart';
+import 'package:bacakomik_app/core/presentation/widgets/placeholder/err_no_internet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
+import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 class ComicCover extends StatelessWidget {

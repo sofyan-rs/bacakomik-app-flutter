@@ -5,13 +5,11 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:bacakomik_app/core/bloc/chapter_read_bloc/chapter_read_bloc.dart';
 import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
-import 'package:bacakomik_app/core/bloc/explore_bloc/explore_bloc.dart';
+import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
 import 'package:bacakomik_app/core/bloc/bookmark_cubit/bookmark_cubit.dart';
-import 'package:bacakomik_app/core/bloc/filter_cubit/filter_cubit.dart';
+import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
 import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
 import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
-import 'package:bacakomik_app/core/bloc/latest_more_bloc/latest_more_bloc.dart';
-import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
 import 'package:bacakomik_app/core/bloc/settings_cubit/settings_cubit.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/theme.dart';
@@ -21,9 +19,6 @@ import 'package:bacakomik_app/core/models/settings_model.dart';
 import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 import 'package:bacakomik_app/data/repository/chapter_read_repository.dart';
 import 'package:bacakomik_app/data/repository/comic_details_repository.dart';
-import 'package:bacakomik_app/data/repository/explore_data_repository.dart';
-import 'package:bacakomik_app/data/repository/latest_repository.dart';
-import 'package:bacakomik_app/data/repository/search_repository.dart';
 import 'package:bacakomik_app/presentation/screens/initial/splash/splash_screen.dart';
 
 void main() async {
@@ -50,20 +45,6 @@ class MyApp extends StatelessWidget {
           create: (context) => getIt<HomeBloc>(),
         ),
         BlocProvider(
-          create: (context) => LatestMoreBloc(
-            LatestRepository(
-              dataProvider,
-            ),
-          ),
-        ),
-        BlocProvider(
-          create: (context) => SearchComicBloc(
-            SearchRepository(
-              dataProvider,
-            ),
-          ),
-        ),
-        BlocProvider(
           create: (context) => ComicDetailsBloc(
             ComicDetailsRepository(
               dataProvider,
@@ -78,11 +59,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider(
-          create: (context) => ExploreBloc(
-            ExploreRepository(
-              dataProvider,
-            ),
-          ),
+          create: (context) => getIt<ExploreBloc>(),
         ),
         BlocProvider(
           create: (context) => BookmarkCubit(),
@@ -94,7 +71,7 @@ class MyApp extends StatelessWidget {
           create: (context) => SettingsCubit(),
         ),
         BlocProvider(
-          create: (context) => FilterCubit(),
+          create: (context) => getIt<FilterCubit>(),
         ),
       ],
       child: BlocBuilder<SettingsCubit, SettingsModel>(
