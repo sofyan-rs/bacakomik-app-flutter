@@ -64,9 +64,9 @@ class _SettingsState extends State<Settings> {
       isScrollControlled: true,
       context: context,
       builder: (context) {
-        return SizedBox(
-          height: 200,
+        return SafeArea(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
@@ -91,6 +91,7 @@ class _SettingsState extends State<Settings> {
               Padding(
                 padding: const EdgeInsets.all(15),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
                       AppText.clearCacheConfirmation,
@@ -271,10 +272,6 @@ class _SettingsState extends State<Settings> {
           leading: const Icon(SolarIconsOutline.code, color: AppColors.primary),
           title: const Text(AppText.aboutApp),
           onTap: _showAppInfo,
-        ),
-        Container(
-          height: 15,
-          color: Colors.grey.withValues(alpha: 0.1),
         ),
       ],
     );
