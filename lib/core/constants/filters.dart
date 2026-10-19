@@ -14,14 +14,15 @@ class Filters {
     FilterOption(id: 'cancelled', name: 'Cancelled'),
   ];
 
-  // `sort` values bacakomik-api understands; unknown values silently fall back
-  // to `newseries`. `title` sorts Z→A, so there is no A–Z option.
+  // `sort` enum of GET /series (see /openapi.json). Unknown values are
+  // rejected with 400.
   static final List<FilterOption> sortbyList = [
     FilterOption(id: 'latest', name: 'Terbaru'),
     FilterOption(id: 'newseries', name: 'Seri Baru'),
-    FilterOption(id: 'bookmarks', name: 'Bookmark'),
-    FilterOption(id: 'popularity', name: 'Populer'),
+    FilterOption(id: 'bookmark', name: 'Bookmark'),
+    FilterOption(id: 'popular', name: 'Populer'),
     FilterOption(id: 'rating', name: 'Rating'),
+    FilterOption(id: 'az', name: 'A–Z'),
   ];
 
   // Ids from GET /genres.
