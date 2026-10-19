@@ -1,97 +1,15 @@
+import 'package:bacakomik_app/app/app.dart';
+import 'package:bacakomik_app/app/legacy_storage_migrator.dart';
+import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'package:bacakomik_app/core/bloc/chapter_read_bloc/chapter_read_bloc.dart';
-import 'package:bacakomik_app/core/bloc/comic_details_bloc/comic_details_bloc.dart';
-import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
-import 'package:bacakomik_app/core/bloc/bookmark_cubit/bookmark_cubit.dart';
-import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
-import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
-import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
-import 'package:bacakomik_app/core/bloc/settings_cubit/settings_cubit.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/theme.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/core/models/settings_model.dart';
-import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
-import 'package:bacakomik_app/data/repository/chapter_read_repository.dart';
-import 'package:bacakomik_app/data/repository/comic_details_repository.dart';
-import 'package:bacakomik_app/presentation/screens/initial/splash/splash_screen.dart';
-
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Same directory hydrated_bloc used, so the legacy box can be migrated.
+  Hive.init((await getApplicationDocumentsDirectory()).path);
   await configureDependencies();
-  HydratedBloc.storage = await HydratedStorage.build(
-    storageDirectory: HydratedStorageDirectory(
-      (await getApplicationDocumentsDirectory()).path,
-    ),
-  );
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final dataProvider = BacaKomikDataProvider();
-
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => getIt<HomeBloc>(),
-        ),
-        BlocProvider(
-          create: (context) => ComicDetailsBloc(
-            ComicDetailsRepository(
-              dataProvider,
-            ),
-          ),
-        ),
-        BlocProvider(
-          create: (context) => ChapterReadBloc(
-            ChapterReadRepository(
-              dataProvider,
-            ),
-          ),
-        ),
-        BlocProvider(
-          create: (context) => getIt<ExploreBloc>(),
-        ),
-        BlocProvider(
-          create: (context) => BookmarkCubit(),
-        ),
-        BlocProvider(
-          create: (context) => HistoryCubit(),
-        ),
-        BlocProvider(
-          create: (context) => SettingsCubit(),
-        ),
-        BlocProvider(
-          create: (context) => getIt<FilterCubit>(),
-        ),
-      ],
-      child: BlocBuilder<SettingsCubit, SettingsModel>(
-        builder: (context, state) {
-          final darkMode = state.darkMode;
-
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: AppVariables.appName,
-            theme: AppThemes.lightTheme,
-            darkTheme: AppThemes.darkTheme,
-            themeMode: darkMode == AppText.system
-                ? ThemeMode.system
-                : darkMode == AppText.dark
-                    ? ThemeMode.dark
-                    : ThemeMode.light,
-            home: const SplashScreen(),
-          );
-        },
-      ),
-    );
-  }
+  await getIt<LegacyStorageMigrator>().migrate();
+  runApp(const BacaKomikApp());
 }

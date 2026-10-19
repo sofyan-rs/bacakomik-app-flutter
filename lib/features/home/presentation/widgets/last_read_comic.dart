@@ -1,15 +1,15 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:ui' as ui;
 
-import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
+import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/models/history_model.dart';
+import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
 
 class LastReadComic extends StatefulWidget {
@@ -40,10 +40,10 @@ class _LastReadComicState extends State<LastReadComic> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HistoryCubit, List<HistoryModel>>(
+    return BlocBuilder<HistoryCubit, List<ReadHistory>>(
       builder: (context, state) {
         if (state.isNotEmpty) {
-          HistoryModel latestHistory =
+          ReadHistory latestHistory =
               context.watch<HistoryCubit>().latestHistory;
 
           return Padding(

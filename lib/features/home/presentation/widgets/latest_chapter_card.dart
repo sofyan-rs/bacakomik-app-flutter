@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/presentation/screens/sub/comic_details/comic_details_screen.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
 
 class LatestChapterCard extends StatelessWidget {

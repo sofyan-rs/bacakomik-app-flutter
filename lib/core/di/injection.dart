@@ -4,7 +4,6 @@ import 'package:injectable/injectable.dart';
 
 final getIt = GetIt.instance;
 
+/// Requires `Hive.init` first: Hive boxes are opened while resolving.
 @InjectableInit()
-Future<void> configureDependencies() async {
-  getIt.init();
-}
+Future<void> configureDependencies() => getIt.init();
