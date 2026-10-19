@@ -49,6 +49,8 @@ File TTF statis ini dibuat dari font variabel Geist, Geist Mono dan Doto (SIL Op
 
 ### 2.2 Ikon: Lucide
 
+> **Catatan implementasi:** aplikasi memakai `lucide_icons_flutter` varian weight 300 (`LucideIcons300`, stroke terukur 1.54) alih-alih SVG di bawah. Lihat `docs/REDESIGN_PLAN.md` D6.
+
 Dotline memakai **Lucide** (ISC) dengan stroke **1.5**, ujung dan sambungan bulat. `solar_icons` diganti. Repo sudah punya `flutter_svg`, jadi cara paling akurat:
 
 ```yaml
@@ -316,6 +318,8 @@ Nama di kiri = nama di Dotline; di kanan cara membangunnya di Flutter.
 **Swipe hapus (Riwayat)** — `flutter_slidable` (sudah ada di proyek): aksi 96px isi `accent`, ikon `trash-2` + `label` "HAPUS" putih.
 
 ## 6. Peta layar → kode Flutter
+
+> **Catatan implementasi.** Path di tabel ini memakai struktur lama (`lib/presentation/...`). Path yang benar ada di `docs/REDESIGN_PLAN.md` §3. Ikon diimplementasikan dengan package `lucide_icons_flutter` (`LucideIcons300`), bukan SVG + `DotIcon` (lihat §2.2 dan keputusan D6 di plan).
 
 | PNG | Layar | File yang diubah / dibuat |
 |---|---|---|

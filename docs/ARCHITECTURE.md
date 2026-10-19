@@ -14,7 +14,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 - **Never lose the user's library.** Bookmarks, history and settings survive updates. Data from older app versions is migrated (§7.4), and backup files stay readable across versions (§7.5).
 - **Keep logic testable.** Domain code is plain Dart with no Flutter, Dio, Hive or file-picker imports. Repositories and blocs are tested without a device.
 - **Keep layers clear.** UI talks to blocs, blocs call use cases, use cases call repository interfaces. Only the data layer knows about HTTP and storage.
-- Work on phones and wide screens. Root navigation switches from a bottom bar to a navigation rail at 640 dp.
+- Work on phones and wide screens. A floating pill nav sits at the bottom on every width; cover grids add columns as the screen gets wider.
 
 ### Non-goals
 - User accounts, cloud sync, or a server-side library.
@@ -28,7 +28,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 
 | Concern | Choice | Notes |
 |---|---|---|
-| Language / UI | Dart 3.13, Flutter (stable) | Material 3 widgets, Rubik font via `google_fonts`, Solar icons. |
+| Language / UI | Dart 3.13, Flutter (stable) | Material 3 widgets themed with the Dotline design system (§5). Bundled Geist, Geist Mono and Doto fonts, Lucide icons via `lucide_icons_flutter`. |
 | State | `flutter_bloc` (Bloc and Cubit) | States are freezed sealed unions (§4.3). |
 | Dependency wiring | `get_it` + `injectable` | Generated in `lib/core/di/injection.config.dart` (§10). |
 | Errors | `fpdart` `Either<Failure, T>` | Repositories never throw to callers (§9). |
@@ -57,11 +57,12 @@ lib/
 ├── app/
 │   ├── app.dart                    # BacaKomikApp: app-wide BlocProviders, MaterialApp, theme mode
 │   ├── splash_screen.dart
-│   ├── root_screen.dart            # tabs: Home, Explore, Bookmark, More
+│   ├── root_screen.dart            # tabs: Home, Explore, Bookmark, History, More (floating nav)
 │   └── legacy_storage_migrator.dart  # hydrated_bloc → Hive, runs once (§7.4)
 ├── core/
 │   ├── assets/assets.gen.dart      # flutter_gen output
-│   ├── constants/                  # colors, texts (UI strings), theme, filters, variables
+│   ├── constants/                  # texts (UI strings), filters, variables
+│   ├── theme/                      # Dotline tokens: colors, text styles, spacing, ThemeData
 │   ├── di/                         # injection.dart, register_module.dart (Dio, Connectivity, Hive)
 │   ├── error/                      # exceptions.dart (data layer), failures.dart (domain)
 │   ├── network/                    # ApiClient, NetworkInfo, runRemote()
@@ -73,7 +74,7 @@ lib/
 │   │   └── models/                 # SeriesResponse… (API DTOs), ComicDetailsModel (stored)
 │   ├── presentation/
 │   │   ├── bloc/comic_list_state.dart  # paginated list state + ComicListLoader mixin
-│   │   └── widgets/                # comic card, chips, placeholders
+│   │   └── widgets/                # comic card + grid, dotline/ (Dotline component library)
 │   └── utils/                      # ApiFormat, Clock, snackbar/save-image helpers
 └── features/
     ├── home/          # trending + latest on the home tab
@@ -189,16 +190,22 @@ It must print nothing.
 
 ### 4.4 Settings
 
-`AppSettings` has one field today, `darkMode`, which holds one of `AppText.system`, `AppText.light` or `AppText.dark`. `BacaKomikApp` maps it to `ThemeMode`. The values are the UI strings because earlier versions stored them that way. Keep them unless you also migrate stored settings.
+`AppSettings.darkMode` holds one of `AppText.system`, `AppText.light` or `AppText.dark`. `BacaKomikApp` maps it to `ThemeMode`. The values are old UI strings because earlier versions stored them that way. Keep them unless you also migrate stored settings.
+
+The reader fields (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`) were added later. `SettingsModel` gives each a default, so settings stored by older versions still load (tested in `test/features/settings_model_test.dart`).
 
 ---
 
 ## 5. Theme and UI
 
-- `core/constants/theme.dart` defines `AppThemes.lightTheme` and `AppThemes.darkTheme` with the Rubik font. `core/constants/colors.dart` holds the primary blue `0xFF2565c7` and the format colours (manga, manhwa, manhua).
-- All user-facing text is Indonesian and lives in `AppText` (`core/constants/texts.dart`). No inline strings in widgets.
-- Icons come from `solar_icons`.
-- `RootScreen` shows a `NavigationBar` below 640 dp and a `NavigationRail` from 640 dp. Grids use 2 columns below 640 dp and 4 from 640 dp.
+The UI follows the Dotline design system in `docs/redesign/DESIGN_SYSTEM.md`. Decisions that differ from it are listed in `docs/REDESIGN_PLAN.md` §8.
+
+- `core/theme/` holds the tokens: `DotlineColors` (a `ThemeExtension`, read with `Dotline.of(context)`), `DotlineText`, `DotSpace` / `DotRadius` / `DotSize` / `DotMotion`, and `dotlineTheme()` for light and dark.
+- Build screens from `core/presentation/widgets/dotline/` (`ScreenHeader`, `ListGroup` + `ListRow`, `SegmentedControl`, `DotButton`, `DotChip`, `DotSwitch`, `showDotSheet`, `DotMeter`, `ComicCover`, `EmptyState`…) instead of raw Material widgets. There is no ripple; taps scale through `Pressable`.
+- Icons are Lucide from `lucide_icons_flutter`, weight 300 only (`LucideIcons300`, stroke ≈ 1.5). Do not use Material `Icons`.
+- All user-facing text is Indonesian and lives in `AppText` (`core/constants/texts.dart`). No inline strings in widgets. The library is called "Bookmark" in the UI, never "Favorit".
+- `RootScreen` stacks the five tabs under a floating pill nav and a bottom fade. Tabs get the nav height as bottom `MediaQuery` padding; scrollables add `MediaQuery.paddingOf(context).bottom`.
+- Cover grids (`CoverGridSliver`) use 3 columns on phones and more on wide screens (cells about 150 dp).
 - Pull-to-refresh on Home plays the "kuru kururin" animation and sound (`assets/images`, `assets/sounds`).
 - Assets are typed through `flutter_gen` (`Assets.images.…`).
 

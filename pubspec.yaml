@@ -9,7 +9,6 @@ environment:
 
 dependencies:
   audioplayers: ^6.8.1
-  auto_height_grid_view: ^1.0.0
   cached_network_image: ^4.0.4
   connectivity_plus: ^7.3.2
   custom_refresh_indicator: ^4.0.2
@@ -25,7 +24,6 @@ dependencies:
   freezed_annotation: ^3.1.0
   gal: ^2.3.3
   get_it: ^9.3.0
-  google_fonts: ^9.0.0
   hive_ce: ^2.22.0
   hive_ce_flutter: ^2.5.0
   injectable: ^3.0.0
@@ -35,7 +33,6 @@ dependencies:
   path_provider: ^2.1.2
   scrollable_positioned_list: ^0.3.8
   share_plus: ^13.3.1
-  solar_icons: ^0.2.0
   url_launcher: ^6.2.4
   wakelock_plus: ^1.8.1
 

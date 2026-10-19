@@ -16,23 +16,15 @@ class AppText {
   static const String popular = 'Hot Komik';
   static const String latest = 'Chapter Terbaru';
   static const String seeAll = 'Lihat Semua';
-  static const String lastRead = 'Terakhir Dibaca';
   static const String continueReading = 'Lanjut baca';
   static const String retry = 'Coba lagi';
 
   // Error Text
   static const String error = 'Terjadi Kesalahan';
-  static const String noInternet = 'Tidak Ada Koneksi Internet';
 
   // Comic Details Screen Text
-  static const String save = 'Simpan';
-  static const String readNow = 'Baca Sekarang';
-  static const String continueRead = 'Lanjutkan Membaca';
-  static const String altTitle = 'Judul Alternatif';
-  static const String releaseYear = 'Tahun Rilis';
   static const String chapterList = 'Daftar Chapter';
   static const String synopsis = 'Sinopsis';
-  static const String seeMore = 'Lihat Selengkapnya...';
   static const String hide = 'Sembunyikan';
   static const String addedToBookmark = 'Ditambahkan ke Bookmark';
   static const String removedFromBookmark = 'Dihapus dari Bookmark';
@@ -58,7 +50,6 @@ class AppText {
   static const String failedSaveImg = 'Gagal menyimpan gambar.';
 
   // Bookmarks Screen Text
-  static const String bookmarkList = 'Daftar Bookmark';
   static const String bookmarkEmpty = 'Belum ada bookmark';
   static const String bookmarkEmptyHint =
       'Tekan ikon bookmark di halaman komik untuk menyimpannya di sini.';
@@ -83,16 +74,12 @@ class AppText {
   static const String comicNotFoundSearch = 'Coba kata kunci lain.';
   static const String searchStart = 'Cari judul atau author komik.';
 
-  // Comic List Screen Text
-
   // Filter Screen Text
   static const String filter = 'Filter';
   static const String reset = 'Reset';
-  static const String apply = 'Terapkan';
   static const String type = 'Tipe';
   static const String status = 'Status';
   static const String genre = 'Genre';
-  static const String sortBy = 'Urutkan Berdasarkan';
   static const String sortShort = 'Urut';
   static const String sortShortLong = 'Urutkan';
   static const String showResults = 'Tampilkan hasil';
@@ -111,14 +98,9 @@ class AppText {
   static const String clearHistory = 'Hapus Riwayat';
   static const String clearHistoryConfirmation =
       'Kamu yakin ingin menghapus semua riwayat baca yang tersimpan?';
-  static const String clearHistoryComicConfirmation =
-      'Kamu yakin ingin menghapus riwayat baca komik ini yang tersimpan?';
-  static const String clearHistoryAllChapter =
-      'Hapus Riwayat Baca Semua Chapter';
 
   // More Screen Text
   static const String history = 'Riwayat baca';
-  static const String historyDescription = 'Lihat Riwayat Baca Komik';
 
   static const String clearCache = 'Bersihkan cache';
   static const String clearCacheDescription = 'Bookmark dan riwayat tetap aman';
@@ -156,8 +138,6 @@ class AppText {
   static const String version = 'Versi';
 
   // Settings Text
-  static const String darkMode = 'Aktifkan Mode Gelap';
-  static const String darkModeDescription = 'Ubah tampilan menjadi mode gelap';
   static const String system = 'Sistem';
   static const String light = 'Nonaktif';
   static const String dark = 'Aktif';

@@ -121,14 +121,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.4.1"
-  auto_height_grid_view:
-    dependency: "direct main"
-    description:
-      name: auto_height_grid_view
-      sha256: c6b91f673aa3e1ba8630eb8003111b96a7d20669a29d746d8bd8c617eb3e703d
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   bloc:
     dependency: transitive
     description:
@@ -645,14 +637,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  google_fonts:
-    dependency: "direct main"
-    description:
-      name: google_fonts
-      sha256: fdbbfbbb1a62f376ab29fa9627561d389751fb984da0b630ce3326e272911c8a
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.0.0"
   graphs:
     dependency: transitive
     description:
@@ -1210,14 +1194,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  solar_icons:
-    dependency: "direct main"
-    description:
-      name: solar_icons
-      sha256: "3af180f6a31e5647845734be53f0ceacedd8ee643bbdf0437c901a1738fc062c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.0"
   source_gen:
     dependency: transitive
     description:

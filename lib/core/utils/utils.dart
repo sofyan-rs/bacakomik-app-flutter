@@ -47,7 +47,6 @@ Future saveImg({
     showSnackBar(
       context: context,
       message: AppText.failedSaveImg,
-      icon: const Icon(Icons.error),
     );
   }
 }
