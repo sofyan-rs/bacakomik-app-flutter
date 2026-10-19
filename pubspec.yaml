@@ -30,10 +30,14 @@ dependencies:
   hive_ce_flutter: ^2.5.0
   injectable: ^3.0.0
   json_annotation: ^4.12.0
+  lucide_icons_flutter: ^4.0.0
   package_info_plus: ^10.2.2
   path_provider: ^2.1.2
+  scrollable_positioned_list: ^0.3.8
+  share_plus: ^13.3.1
   solar_icons: ^0.2.0
   url_launcher: ^6.2.4
+  wakelock_plus: ^1.8.1
 
 dev_dependencies:
   bloc_test: ^10.0.0
@@ -41,6 +45,7 @@ dev_dependencies:
   change_app_package_name: ^1.1.0
   flutter_gen_runner: ^5.4.0
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.8
   flutter_test:
     sdk: flutter
   freezed: ">=4.0.0 <4.0.2"
@@ -60,3 +65,25 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/sounds/
+
+  fonts:
+    - family: Geist
+      fonts:
+        - asset: assets/fonts/Geist-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Geist-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Geist-SemiBold.ttf
+          weight: 600
+    - family: GeistMono
+      fonts:
+        - asset: assets/fonts/GeistMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/GeistMono-Medium.ttf
+          weight: 500
+    - family: Doto
+      fonts:
+        - asset: assets/fonts/Doto-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Doto-Black.ttf
+          weight: 900
