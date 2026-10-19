@@ -10,17 +10,17 @@ No release is published yet. Releases will appear on the [Releases](https://gith
 
 ## Screenshots
 
-| Beranda | Jelajah | Filter | Detail |
+| Splash | Beranda | Jelajah | Filter |
 |---|---|---|---|
-| <img src="screenshot/home.png" width="200" alt="Home: continue reading, hot comics, latest chapters"> | <img src="screenshot/explore.png" width="200" alt="Jelajah: title search, type and cover grid"> | <img src="screenshot/filter.png" width="200" alt="Filter sheet: type, status, sort and genres"> | <img src="screenshot/detail.png" width="200" alt="Comic details with stats, synopsis and genres"> |
+| <img src="screenshot/splash.png" width="200" alt="Splash screen"> | <img src="screenshot/home.png" width="200" alt="Home: continue reading, hot comics, latest chapters"> | <img src="screenshot/explore.png" width="200" alt="Jelajah: title search, type and cover grid"> | <img src="screenshot/filter.png" width="200" alt="Filter sheet: type, status, sort and genres"> |
 
-| Pembaca | Bookmark | Riwayat | Lainnya |
+| Detail | Pembaca | Bookmark | Riwayat |
 |---|---|---|---|
-| <img src="screenshot/reader.png" width="200" alt="Reader with chapter bar and page meter"> | <img src="screenshot/bookmark.png" width="200" alt="Bookmarks with new chapter badge and read meter"> | <img src="screenshot/history.png" width="200" alt="Reading history grouped by day"> | <img src="screenshot/more.png" width="200" alt="Stats, backup, cache and theme"> |
+| <img src="screenshot/detail.png" width="200" alt="Comic details with stats, synopsis and genres"> | <img src="screenshot/reader.png" width="200" alt="Reader with chapter bar and page meter"> | <img src="screenshot/bookmark.png" width="200" alt="Bookmarks with new chapter badge and read meter"> | <img src="screenshot/history.png" width="200" alt="Reading history grouped by day"> |
 
-| Splash | Light theme |
+| Lainnya | Light theme |
 |---|---|
-| <img src="screenshot/splash.png" width="200" alt="Splash screen"> | <img src="screenshot/home-light.png" width="200" alt="Home in the light theme"> |
+| <img src="screenshot/more.png" width="200" alt="Stats, backup, cache and theme"> | <img src="screenshot/home-light.png" width="200" alt="Home in the light theme"> |
 
 Screenshots were taken on a real device (Realme RMX5085, Android 16).
 
