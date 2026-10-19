@@ -1,0 +1,103 @@
+name: Release
+
+# Push a tag like v1.2.0 to build signed APKs and publish a GitHub release.
+# The tag must match `version:` in pubspec.yaml (without the build number).
+# Notes come from .github/release-notes/<tag>.md, else GitHub's generated notes.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches pubspec version
+        run: |
+          VERSION=$(grep -E '^version:' pubspec.yaml | sed -E 's/version: *([^+]+).*/\1/')
+          if [ "v$VERSION" != "$TAG" ]; then
+            echo "::error::Tag $TAG does not match pubspec version $VERSION"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Set up signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Secret KEYSTORE_BASE64 is not set"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          cat > android/key.properties <<PROPS
+          storeFile=upload-keystore.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          PROPS
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+      - name: Build APKs
+        run: |
+          flutter build apk --release --split-per-abi
+          flutter build apk --release
+          mkdir dist
+          cd build/app/outputs/flutter-apk
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "app-$abi-release.apk" "../../../../dist/BacaKomik-$VERSION-$abi.apk"
+          done
+          cp app-release.apk "../../../../dist/BacaKomik-$VERSION-universal.apk"
+
+      - name: Write release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES=".github/release-notes/$TAG.md"
+          if [ -f "$NOTES" ]; then
+            cp "$NOTES" notes.md
+          else
+            gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" -f tag_name="$TAG" -q .body > notes.md
+          fi
+          # The app hides everything from this heading on (AppRelease.apkTableHeading).
+          cat >> notes.md <<MD
+
+          ## Which APK?
+
+          | File | For |
+          |---|---|
+          | \`BacaKomik-$VERSION-arm64-v8a.apk\` | Almost all phones from the last years |
+          | \`BacaKomik-$VERSION-armeabi-v7a.apk\` | Older 32-bit phones |
+          | \`BacaKomik-$VERSION-x86_64.apk\` | Emulators and Chromebooks |
+          | \`BacaKomik-$VERSION-universal.apk\` | Any device, if you're unsure (bigger download) |
+
+          Requires Android 7.0 or newer. Installed apps check for this update on start.
+          MD
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" dist/*.apk --title "$TAG" --notes-file notes.md --verify-tag

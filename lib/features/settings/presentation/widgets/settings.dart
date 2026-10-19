@@ -8,6 +8,7 @@ import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dar
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/app_info.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/clear_cache_sheet.dart';
+import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -43,6 +44,9 @@ class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final busy = context.watch<BackupCubit>().state is BackupBusy;
+    final checkingUpdate = context.select<UpdateCubit, bool>(
+      (u) => u.state is UpdateChecking,
+    );
     final themeMode = context.select<SettingsCubit, AppThemeMode>(
       (s) => s.state.themeMode,
     );
@@ -100,6 +104,13 @@ class Settings extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
           child: ListGroup(
             children: [
+              ListRow(
+                icon: LucideIcons300.refreshCw,
+                title: AppText.checkUpdate,
+                onTap: checkingUpdate
+                    ? null
+                    : () => context.read<UpdateCubit>().check(),
+              ),
               ListRow(
                 icon: LucideIcons300.bug,
                 title: AppText.bugReport,

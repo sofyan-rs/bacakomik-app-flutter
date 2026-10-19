@@ -39,6 +39,25 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 
 Before a release, bump `version:` in `pubspec.yaml`. The build number after `+` must increase.
 
+### Publishing a release
+
+Releases are built by `.github/workflows/release.yml` when a `v*` tag is pushed:
+
+1. Bump `version:` in `pubspec.yaml` (for example `1.1.0+2`).
+2. Write the notes in `.github/release-notes/v1.1.0.md` (optional; without it GitHub generates notes from the commits).
+3. Commit, then `git tag v1.1.0 && git push origin v1.1.0`.
+
+The workflow checks that the tag matches the pubspec version, runs analyze and tests, builds signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs, and publishes them as `BacaKomik-<version>-<abi>.apk` with an "Which APK?" table appended to the notes. Installed apps find the release through the GitHub API (ARCHITECTURE §1), so do not rename the assets or that heading.
+
+It needs these repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `KEYSTORE_BASE64` | The keystore file, base64-encoded (`base64 -w0 upload-keystore.jks`) |
+| `KEYSTORE_PASSWORD` | `storePassword` |
+| `KEY_ALIAS` | `keyAlias` |
+| `KEY_PASSWORD` | `keyPassword` |
+
 ---
 
 ## 3. Project structure

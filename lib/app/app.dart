@@ -10,6 +10,7 @@ import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.d
 import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -29,6 +30,7 @@ class BacaKomikApp extends StatelessWidget {
         BlocProvider(create: (_) => getIt<HistoryCubit>()..load()),
         BlocProvider(create: (_) => getIt<SettingsCubit>()..load()),
         BlocProvider(create: (_) => getIt<BackupCubit>()),
+        BlocProvider(create: (_) => getIt<UpdateCubit>()),
       ],
       child: BlocBuilder<SettingsCubit, AppSettings>(
         builder: (context, settings) {

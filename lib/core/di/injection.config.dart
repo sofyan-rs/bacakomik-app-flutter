@@ -101,6 +101,18 @@ import 'package:bacakomik_app/features/settings/domain/usecases/settings_usecase
     as _i1063;
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart'
     as _i625;
+import 'package:bacakomik_app/features/update/data/datasources/apk_installer.dart'
+    as _i984;
+import 'package:bacakomik_app/features/update/data/datasources/update_remote_data_source.dart'
+    as _i714;
+import 'package:bacakomik_app/features/update/data/repositories/update_repository_impl.dart'
+    as _i106;
+import 'package:bacakomik_app/features/update/domain/repositories/update_repository.dart'
+    as _i533;
+import 'package:bacakomik_app/features/update/domain/usecases/update_usecases.dart'
+    as _i607;
+import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart'
+    as _i963;
 import 'package:connectivity_plus/connectivity_plus.dart' as _i895;
 import 'package:dio/dio.dart' as _i361;
 import 'package:get_it/get_it.dart' as _i174;
@@ -160,6 +172,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i738.Box<String>>(instanceName: 'history_comics'),
       ),
     );
+    gh.lazySingleton<_i984.ApkInstaller>(() => _i984.OtaApkInstaller());
     gh.lazySingleton<_i430.ApiClient>(() => _i430.ApiClient(gh<_i361.Dio>()));
     gh.lazySingleton<_i551.SettingsRepository>(
       () => _i314.SettingsRepositoryImpl(gh<_i394.SettingsLocalDataSource>()),
@@ -193,6 +206,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i55.HistoryRepository>(
       () => _i262.HistoryRepositoryImpl(gh<_i793.HistoryLocalDataSource>()),
+    );
+    gh.lazySingleton<_i714.UpdateRemoteDataSource>(
+      () => _i714.UpdateRemoteDataSourceImpl(gh<_i430.ApiClient>()),
     );
     gh.lazySingleton<_i535.SeriesRemoteDataSource>(
       () => _i535.SeriesRemoteDataSourceImpl(gh<_i430.ApiClient>()),
@@ -233,6 +249,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i15.HomeRepository>(
       () => _i899.HomeRepositoryImpl(
         gh<_i535.SeriesRemoteDataSource>(),
+        gh<_i764.NetworkInfo>(),
+      ),
+    );
+    gh.lazySingleton<_i533.UpdateRepository>(
+      () => _i106.UpdateRepositoryImpl(
+        gh<_i714.UpdateRemoteDataSource>(),
+        gh<_i984.ApkInstaller>(),
         gh<_i764.NetworkInfo>(),
       ),
     );
@@ -284,6 +307,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i768.LatestBloc>(
       () => _i768.LatestBloc(gh<_i328.GetLatestComics>()),
     );
+    gh.factory<_i607.CheckForUpdate>(
+      () => _i607.CheckForUpdate(gh<_i533.UpdateRepository>()),
+    );
+    gh.factory<_i607.InstallUpdate>(
+      () => _i607.InstallUpdate(gh<_i533.UpdateRepository>()),
+    );
     gh.factory<_i527.RefreshBookmarks>(
       () => _i527.RefreshBookmarks(
         gh<_i851.BookmarkRepository>(),
@@ -299,6 +328,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i729.RemoveComicHistory>(),
         gh<_i729.ClearHistory>(),
         gh<_i1011.Clock>(),
+      ),
+    );
+    gh.factory<_i963.UpdateCubit>(
+      () => _i963.UpdateCubit(
+        gh<_i607.CheckForUpdate>(),
+        gh<_i607.InstallUpdate>(),
       ),
     );
     gh.factory<_i471.ReaderBloc>(

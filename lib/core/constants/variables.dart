@@ -10,6 +10,8 @@ class AppVariables {
   static const String websiteLink = 'https://kurodev.org';
   static const String websiteLabel = 'kurodev.org';
 
-  static const String reportLink =
-      'https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new';
+  static const String githubRepo = 'sofyan-rs/bacakomik-app-flutter';
+  static const String reportLink = 'https://github.com/$githubRepo/issues/new';
+  static const String latestReleaseApi =
+      'https://api.github.com/repos/$githubRepo/releases/latest';
 }

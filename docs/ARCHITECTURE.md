@@ -20,7 +20,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 - User accounts, cloud sync, or a server-side library.
 - Offline reading or chapter downloads. Reading needs a network connection.
 - Hosting or scraping comics. All content comes from bacakomik-api.
-- An in-app updater. Updates come through the release channel.
+- An app store listing. Releases are APKs on GitHub Releases; the app checks the latest release on start and from Lainnya, downloads the APK for the device's ABI and opens Android's installer (`features/update`, `ota_update`). Asset names and the `## Which APK?` heading are set by the release workflow (CONTRIBUTION §2).
 
 ---
 
@@ -84,7 +84,8 @@ lib/
     ├── bookmark/      # local: bookmarked comics, "check for new chapters"
     ├── history/       # local: read chapters
     ├── settings/      # local: theme; the More tab
-    └── backup/        # export/import the library as a JSON file
+    ├── backup/        # export/import the library as a JSON file
+    └── update/        # in-app updates from GitHub Releases
 ```
 
 Every feature uses the same layout. A layer folder exists only if the feature needs it:

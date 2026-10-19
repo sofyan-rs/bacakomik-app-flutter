@@ -6,7 +6,7 @@ Built with **Flutter** (feature-first clean architecture, BLoC), styled with the
 
 ## Download
 
-No release is published yet. Releases will appear on the [Releases](https://github.com/sofyan-rs/bacakomik-app-flutter/releases) page; until then, [build from source](#build). Android 7.0 or newer.
+Get the APK from the [Releases](https://github.com/sofyan-rs/bacakomik-app-flutter/releases) page; `arm64-v8a` fits almost every phone. Android 7.0 or newer. The app checks for new releases and updates itself.
 
 ## Screenshots
 

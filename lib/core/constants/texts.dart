@@ -135,6 +135,19 @@ class AppText {
   static const String themeDark = 'Gelap';
   static const String version = 'Versi';
 
+  // Update Text
+  static const String checkUpdate = 'Cek pembaruan';
+  static const String updateAvailable = 'Pembaruan tersedia';
+  static const String updateNow = 'Perbarui';
+  static const String updateLater = 'Nanti';
+  static const String updateRetry = 'Coba lagi';
+  static const String updateDownloading = 'Mengunduh';
+  static const String updateInstalling = 'Membuka pemasang';
+  static const String updateFailed = 'Pembaruan gagal. Coba lagi nanti.';
+  static const String upToDate = 'Kamu sudah memakai versi terbaru';
+  static const String checkUpdateFailed = 'Gagal mengecek pembaruan';
+  static const String viewRelease = 'Lihat di GitHub';
+
   // Settings Text
 
   // Reader Text
