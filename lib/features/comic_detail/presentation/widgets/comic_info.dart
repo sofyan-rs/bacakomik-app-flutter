@@ -49,7 +49,8 @@ class _ComicInfoState extends State<ComicInfo> {
           style: DotlineText.title.copyWith(color: c.ink),
           textAlign: TextAlign.center,
         ),
-        if (d.author != '-') ...[
+        // The API sends `?` (or nothing) when the author is unknown.
+        if (!const {'', '-', '?'}.contains(d.author.trim())) ...[
           const SizedBox(height: DotSpace.s2),
           Text(
             d.author,
