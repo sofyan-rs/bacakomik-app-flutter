@@ -1,6 +1,6 @@
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/presentation/screens/main/home/widgets/last_read_comic.dart';
+import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
 import 'package:bacakomik_app/presentation/screens/main/more/widgets/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';

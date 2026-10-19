@@ -4,7 +4,7 @@ import 'package:bacakomik_app/presentation/screens/main/more/more_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/presentation/screens/main/home/home_screen.dart';
+import 'package:bacakomik_app/features/home/presentation/pages/home_screen.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 class RootScreen extends StatefulWidget {

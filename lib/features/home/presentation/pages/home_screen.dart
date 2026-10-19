@@ -7,13 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
-import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
+import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/presentation/screens/main/home/widgets/comic_slider.dart';
-import 'package:bacakomik_app/presentation/screens/main/home/widgets/last_read_comic.dart';
-import 'package:bacakomik_app/presentation/screens/main/home/widgets/latest_chapter.dart';
+import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider.dart';
+import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
+import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter.dart';
 import 'package:bacakomik_app/presentation/screens/sub/search/search_screen.dart';
 import 'package:solar_icons/solar_icons.dart';
 
@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    context.read<HomeBloc>().add(GetHome());
+    context.read<HomeBloc>().add(HomeStarted());
   }
 
   @override
@@ -40,11 +40,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future _refreshData(HomeState state) async {
-    if (state is HomeLoaded) {
-      context.read<HomeBloc>().add(RefetchHome());
-    } else {
-      context.read<HomeBloc>().add(GetHome());
-    }
+    context.read<HomeBloc>().add(
+          state is HomeLoaded ? HomeRefreshed() : HomeStarted(),
+        );
   }
 
   @override

@@ -9,7 +9,7 @@ import 'package:bacakomik_app/core/bloc/explore_bloc/explore_bloc.dart';
 import 'package:bacakomik_app/core/bloc/bookmark_cubit/bookmark_cubit.dart';
 import 'package:bacakomik_app/core/bloc/filter_cubit/filter_cubit.dart';
 import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
-import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
+import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/bloc/latest_more_bloc/latest_more_bloc.dart';
 import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
 import 'package:bacakomik_app/core/bloc/settings_cubit/settings_cubit.dart';
@@ -22,7 +22,6 @@ import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 import 'package:bacakomik_app/data/repository/chapter_read_repository.dart';
 import 'package:bacakomik_app/data/repository/comic_details_repository.dart';
 import 'package:bacakomik_app/data/repository/explore_data_repository.dart';
-import 'package:bacakomik_app/data/repository/home_repository.dart';
 import 'package:bacakomik_app/data/repository/latest_repository.dart';
 import 'package:bacakomik_app/data/repository/search_repository.dart';
 import 'package:bacakomik_app/presentation/screens/initial/splash/splash_screen.dart';
@@ -48,11 +47,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => HomeBloc(
-            HomeRepository(
-              dataProvider,
-            ),
-          ),
+          create: (context) => getIt<HomeBloc>(),
         ),
         BlocProvider(
           create: (context) => LatestMoreBloc(

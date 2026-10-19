@@ -2,10 +2,10 @@ import 'package:bacakomik_app/presentation/widgets/placeholder/err_no_internet.d
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
+import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/presentation/screens/main/home/widgets/comic_slider_card.dart';
+import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider_card.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 class ComicSlider extends StatelessWidget {
@@ -87,7 +87,7 @@ class ComicSlider extends StatelessWidget {
                 );
               }
 
-              if (state is NoInternet) {
+              if (state is HomeNoInternet) {
                 return const ErrNoInternet();
               }
 

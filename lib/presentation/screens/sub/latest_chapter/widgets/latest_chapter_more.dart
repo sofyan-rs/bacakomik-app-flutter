@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bacakomik_app/core/bloc/latest_more_bloc/latest_more_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/presentation/screens/main/home/widgets/latest_chapter_card.dart';
+import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_card.dart';
 
 class LatestChapterMore extends StatefulWidget {
   const LatestChapterMore({super.key});

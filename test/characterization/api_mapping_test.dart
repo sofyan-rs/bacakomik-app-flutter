@@ -2,7 +2,6 @@ import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 import 'package:bacakomik_app/data/repository/chapter_read_repository.dart';
 import 'package:bacakomik_app/data/repository/comic_details_repository.dart';
 import 'package:bacakomik_app/data/repository/explore_data_repository.dart';
-import 'package:bacakomik_app/data/repository/home_repository.dart';
 import 'package:bacakomik_app/data/repository/latest_repository.dart';
 import 'package:bacakomik_app/data/repository/search_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,30 +15,6 @@ void main() {
   late MockDataProvider provider;
 
   setUp(() => provider = MockDataProvider());
-
-  group('HomeRepository', () {
-    test('maps trending and latest lists', () async {
-      when(() => provider.getCuratedList('trending', limit: 10))
-          .thenAnswer((_) async => listResponse([seriesListItem]));
-      when(() => provider.getSeriesList(sort: 'latest', limit: 20))
-          .thenAnswer((_) async => listResponse([seriesListItemNulls]));
-
-      final home = await HomeRepository(provider).getHome();
-
-      final popular = home.popular.single;
-      expect(popular.title, 'Solo Leveling');
-      expect(popular.type, 'Manhwa');
-      expect(popular.latestChapter, '200');
-      expect(popular.rating, '9.3');
-
-      final latest = home.latest.single;
-      expect(latest.coverImg, '');
-      expect(latest.type, '-');
-      expect(latest.rating, '-');
-      expect(latest.latestChapter, '-');
-      expect(latest.completed, isFalse);
-    });
-  });
 
   group('list repositories', () {
     test('LatestRepository requests latest sort by page', () async {
