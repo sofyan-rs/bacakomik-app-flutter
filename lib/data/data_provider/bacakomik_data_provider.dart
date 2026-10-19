@@ -1,10 +1,11 @@
-import 'package:bacakomik_app/data/api/api_client.dart';
+import 'package:bacakomik_app/core/di/injection.dart';
+import 'package:bacakomik_app/core/network/api_client.dart';
 
 /// Remote data source for bacakomik-api. Returns raw decoded JSON;
 /// repositories map it into app models.
 class BacaKomikDataProvider {
   BacaKomikDataProvider({ApiClient? client})
-      : _client = client ?? ApiClient.instance;
+      : _client = client ?? getIt<ApiClient>();
 
   final ApiClient _client;
 

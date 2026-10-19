@@ -16,6 +16,7 @@ import 'package:bacakomik_app/core/bloc/settings_cubit/settings_cubit.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/theme.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
+import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/core/models/settings_model.dart';
 import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 import 'package:bacakomik_app/data/repository/chapter_read_repository.dart';
@@ -28,6 +29,7 @@ import 'package:bacakomik_app/presentation/screens/initial/splash/splash_screen.
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await configureDependencies();
   HydratedBloc.storage = await HydratedStorage.build(
     storageDirectory: HydratedStorageDirectory(
       (await getApplicationDocumentsDirectory()).path,
