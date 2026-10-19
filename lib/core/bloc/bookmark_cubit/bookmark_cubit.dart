@@ -19,31 +19,29 @@ class BookmarkCubit extends HydratedCubit<List<BookmarkModel>> {
         comicDetails: comic,
         updatedDate: DateTime.now(),
       ),
-      ...state
+      ...state,
     ]);
   }
 
   void removeBookmark(String slug) {
-    final newState = state;
-    newState.removeWhere((element) => element.slug == slug);
-    emit([...newState]);
+    emit(state.where((element) => element.slug != slug).toList());
   }
 
   void removeBookmarkList(List<String> slugs) {
-    final newState = state;
-    newState.removeWhere((element) => slugs.contains(element.slug));
-    emit([...newState]);
+    emit(state.where((element) => !slugs.contains(element.slug)).toList());
   }
 
   Future updateBookmarkList() async {
-    final comicDetailsRepository =
-        ComicDetailsRepository(BacaKomikDataProvider());
+    final comicDetailsRepository = ComicDetailsRepository(
+      BacaKomikDataProvider(),
+    );
     final newState = [...state];
 
     for (var i = 0; i < newState.length; i++) {
       try {
-        final comicDetails =
-            await comicDetailsRepository.getComicDetails(newState[i].slug);
+        final comicDetails = await comicDetailsRepository.getComicDetails(
+          newState[i].slug,
+        );
         if (newState[i].comicDetails.chapters.length !=
             comicDetails.chapters.length) {
           newState[i] = newState[i].copyWith(
@@ -63,16 +61,12 @@ class BookmarkCubit extends HydratedCubit<List<BookmarkModel>> {
   }
 
   void setBookmark(List<BookmarkModel> comics) {
-    final newState = state;
-    for (var i = 0; i < comics.length; i++) {
-      final isExist =
-          state.indexWhere((element) => comics[i].slug == element.slug);
-      if (isExist != -1) {
-        newState.removeAt(isExist);
-      }
-      newState.add(comics[i]);
+    final newState = [...state];
+    for (final comic in comics) {
+      newState.removeWhere((element) => element.slug == comic.slug);
+      newState.add(comic);
     }
-    emit([...newState]);
+    emit(newState);
   }
 
   bool isBookmark(String slug) {
@@ -80,31 +74,27 @@ class BookmarkCubit extends HydratedCubit<List<BookmarkModel>> {
   }
 
   List<BookmarkModel> searchBookmark(String keyword) {
-    List<BookmarkModel> sortList() {
-      final sortedList = state
-          .where((element) =>
-              element.comicDetails.title.toLowerCase().contains(keyword))
-          .toList();
-      sortedList.sort((a, b) => a.updatedDate.compareTo(b.updatedDate));
-      return sortedList.reversed.toList();
-    }
-
-    return sortList();
+    return state
+        .where(
+          (element) =>
+              element.comicDetails.title.toLowerCase().contains(keyword),
+        )
+        .toList()
+      ..sort((a, b) => b.updatedDate.compareTo(a.updatedDate));
   }
 
   @override
   List<BookmarkModel>? fromJson(Map<String, dynamic> json) {
     if (json['bookmarks_comic'] != null) {
       return List<BookmarkModel>.from(
-          json['bookmarks_comic'].map((x) => BookmarkModel.fromJson(x)));
+        json['bookmarks_comic'].map((x) => BookmarkModel.fromJson(x)),
+      );
     }
     return null;
   }
 
   @override
   Map<String, dynamic>? toJson(List<BookmarkModel> state) {
-    return {
-      'bookmarks_comic': state.map((e) => e.toJson()).toList(),
-    };
+    return {'bookmarks_comic': state.map((e) => e.toJson()).toList()};
   }
 }
