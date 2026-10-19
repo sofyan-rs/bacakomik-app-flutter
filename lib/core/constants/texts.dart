@@ -136,9 +136,6 @@ class AppText {
   static const String version = 'Versi';
 
   // Settings Text
-  static const String system = 'Sistem';
-  static const String light = 'Nonaktif';
-  static const String dark = 'Aktif';
 
   // Reader Text
   static const String readerSettings = 'Pengaturan baca';

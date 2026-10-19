@@ -4,12 +4,13 @@ import 'package:injectable/injectable.dart';
 /// Hive box names. Every box stores JSON-encoded strings keyed by id.
 abstract final class HiveBoxes {
   static const bookmarks = 'bookmarks';
-  static const history = 'history';
   static const settings = 'settings';
-  static const meta = 'app_meta';
 
-  /// Box written by hydrated_bloc in earlier app versions.
-  static const legacyHydrated = 'hydrated_box';
+  /// Read chapters, keyed by chapter slug.
+  static const historyEntries = 'history_entries';
+
+  /// Details of comics in the history, keyed by series slug.
+  static const historyComics = 'history_comics';
 }
 
 @module
@@ -20,15 +21,17 @@ abstract class StorageModule {
       Hive.openBox<String>(HiveBoxes.bookmarks);
 
   @preResolve
-  @Named(HiveBoxes.history)
-  Future<Box<String>> get historyBox => Hive.openBox<String>(HiveBoxes.history);
+  @Named(HiveBoxes.historyEntries)
+  Future<Box<String>> get historyEntriesBox =>
+      Hive.openBox<String>(HiveBoxes.historyEntries);
+
+  @preResolve
+  @Named(HiveBoxes.historyComics)
+  Future<Box<String>> get historyComicsBox =>
+      Hive.openBox<String>(HiveBoxes.historyComics);
 
   @preResolve
   @Named(HiveBoxes.settings)
   Future<Box<String>> get settingsBox =>
       Hive.openBox<String>(HiveBoxes.settings);
-
-  @preResolve
-  @Named(HiveBoxes.meta)
-  Future<Box<String>> get metaBox => Hive.openBox<String>(HiveBoxes.meta);
 }

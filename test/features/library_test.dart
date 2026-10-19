@@ -1,4 +1,5 @@
-import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
+import 'dart:convert';
+
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
@@ -20,7 +21,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../fixtures/legacy_storage_fixtures.dart';
+import '../fixtures/library_fixtures.dart';
 import '../helpers/hive.dart';
 
 class FixedClock implements Clock {
@@ -34,24 +35,23 @@ class FixedClock implements Clock {
 
 class MockComicDetailRepository extends Mock implements ComicDetailRepository {}
 
-final details = ComicDetailsModel.fromJson(legacyComicDetails).toEntity();
+const details = sampleComicDetails;
 
 DateTime at(int ms) => DateTime.fromMillisecondsSinceEpoch(ms);
 
-ReadHistory history(String slug, String comicSlug, int readDate) =>
-    ReadHistory(
-      slug: slug,
-      chapterNumber: slug.split('/').last,
-      readDate: at(readDate),
-      comicDetails: details,
-      comicSlug: comicSlug,
-    );
+ReadHistory history(String slug, String comicSlug, int readDate) => ReadHistory(
+  slug: slug,
+  chapterNumber: slug.split('/').last,
+  readDate: at(readDate),
+  comicDetails: details,
+  comicSlug: comicSlug,
+);
 
 Bookmark bookmark(String slug, String title, int updatedDate) => Bookmark(
-      slug: slug,
-      comicDetails: details.copyWith(title: title),
-      updatedDate: at(updatedDate),
-    );
+  slug: slug,
+  comicDetails: details.copyWith(title: title),
+  updatedDate: at(updatedDate),
+);
 
 void main() {
   late Future<void> Function() tearDownHive;
@@ -68,9 +68,12 @@ void main() {
     late HistoryCubit cubit;
 
     setUp(() async {
-      final repo = HistoryRepositoryImpl(HistoryLocalDataSourceImpl(
-        await Hive.openBox<String>(HiveBoxes.history),
-      ));
+      final repo = HistoryRepositoryImpl(
+        HistoryLocalDataSourceImpl(
+          await Hive.openBox<String>(HiveBoxes.historyEntries),
+          await Hive.openBox<String>(HiveBoxes.historyComics),
+        ),
+      );
       cubit = HistoryCubit(
         GetHistory(repo),
         SaveHistory(repo),
@@ -88,6 +91,32 @@ void main() {
 
     test('state is newest first', () {
       expect(cubit.state.map((h) => h.slug), ['b/1', 'a/2', 'a/1']);
+    });
+
+    test("stores each comic's details once, not per chapter", () {
+      final entries = Hive.box<String>(HiveBoxes.historyEntries);
+      final comics = Hive.box<String>(HiveBoxes.historyComics);
+
+      expect(entries.length, 3);
+      expect(comics.keys, unorderedEquals(['a', 'b']));
+      final entry = jsonDecode(entries.get('a/1')!) as Map<String, dynamic>;
+      expect(
+        entry.keys,
+        unorderedEquals(['slug', 'chapterNumber', 'readDate', 'comicSlug']),
+      );
+    });
+
+    test("drops a comic's details with its last chapter", () async {
+      final comics = Hive.box<String>(HiveBoxes.historyComics);
+
+      await cubit.removeHistory('b/1');
+      expect(comics.keys, ['a']);
+
+      await cubit.removeHistoryList(['a/1']);
+      expect(comics.keys, ['a']);
+
+      await cubit.removeHistoryBySlug('a');
+      expect(comics.isEmpty, isTrue);
     });
 
     test('addHistory stamps now and replaces the same chapter', () async {
@@ -109,10 +138,10 @@ void main() {
       expect(cubit.getLatestHistoryBySlug('z'), isNull);
       expect(cubit.getHistoryCountBySlug('a'), 2);
       expect(cubit.isInHistory('a/1'), isTrue);
-      expect(
-        cubit.latestHistories.map((h) => h.latestHistory.slug),
-        ['b/1', 'a/2'],
-      );
+      expect(cubit.latestHistories.map((h) => h.latestHistory.slug), [
+        'b/1',
+        'a/2',
+      ]);
     });
 
     test('remove variants and clear', () async {
@@ -128,9 +157,12 @@ void main() {
     });
 
     test('persists across cubit instances', () async {
-      final repo = HistoryRepositoryImpl(HistoryLocalDataSourceImpl(
-        Hive.box<String>(HiveBoxes.history),
-      ));
+      final repo = HistoryRepositoryImpl(
+        HistoryLocalDataSourceImpl(
+          Hive.box<String>(HiveBoxes.historyEntries),
+          Hive.box<String>(HiveBoxes.historyComics),
+        ),
+      );
       final fresh = HistoryCubit(
         GetHistory(repo),
         SaveHistory(repo),
@@ -152,9 +184,11 @@ void main() {
     late BookmarkCubit cubit;
 
     setUp(() async {
-      repo = BookmarkRepositoryImpl(BookmarkLocalDataSourceImpl(
-        await Hive.openBox<String>(HiveBoxes.bookmarks),
-      ));
+      repo = BookmarkRepositoryImpl(
+        BookmarkLocalDataSourceImpl(
+          await Hive.openBox<String>(HiveBoxes.bookmarks),
+        ),
+      );
       comicDetails = MockComicDetailRepository();
       cubit = BookmarkCubit(
         GetBookmarks(repo),
@@ -194,10 +228,12 @@ void main() {
     });
 
     test('refresh updates only comics with new chapters', () async {
-      final moreChapters = details.copyWith(chapters: [
-        ...details.chapters,
-        const Chapter(number: '3', slug: 'x/3', date: '-'),
-      ]);
+      final moreChapters = details.copyWith(
+        chapters: [
+          ...details.chapters,
+          const Chapter(number: '3', slug: 'x/3', date: '-'),
+        ],
+      );
       when(() => comicDetails.getComicDetails('a'))
           .thenAnswer((_) async => right(moreChapters));
       when(() => comicDetails.getComicDetails('b'))

@@ -32,7 +32,7 @@ Screenshots were taken on a real device (Realme RMX5085, Android 16).
 - **Reader:** vertical strip or page by page (right-to-left or left-to-right), fit to width or height, keep the screen on, optional gap between pages. Double-tap to zoom, page meter, previous/next chapter, and a "chapter finished" card. Pages load in order, five at a time. Long press a page to save it.
 - **Bookmark:** new-chapter badge (`+N`), read progress, filters for all / has update / finished, and search by title.
 - **Riwayat:** last read chapter per comic, grouped by day; swipe to delete.
-- **Data:** back up and restore bookmarks and history to a file, clear the image cache, and choose the system, light or dark theme. Library data from older app versions is migrated on first launch.
+- **Data:** back up and restore bookmarks and history to a file, clear the image cache, and choose the system, light or dark theme.
 
 ## Requirements
 

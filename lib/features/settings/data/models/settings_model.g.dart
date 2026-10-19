@@ -8,7 +8,13 @@ part of 'settings_model.dart';
 
 SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
     SettingsModel(
-      darkMode: json['darkMode'] as String,
+      themeMode:
+          $enumDecodeNullable(
+            _$AppThemeModeEnumMap,
+            json['themeMode'],
+            unknownValue: AppThemeMode.system,
+          ) ??
+          AppThemeMode.system,
       readingDirection:
           $enumDecodeNullable(
             _$ReadingDirectionEnumMap,
@@ -29,12 +35,18 @@ SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
     <String, dynamic>{
-      'darkMode': instance.darkMode,
+      'themeMode': _$AppThemeModeEnumMap[instance.themeMode]!,
       'readingDirection': _$ReadingDirectionEnumMap[instance.readingDirection]!,
       'pageFit': _$PageFitEnumMap[instance.pageFit]!,
       'keepScreenOn': instance.keepScreenOn,
       'pageGap': instance.pageGap,
     };
+
+const _$AppThemeModeEnumMap = {
+  AppThemeMode.system: 'system',
+  AppThemeMode.light: 'light',
+  AppThemeMode.dark: 'dark',
+};
 
 const _$ReadingDirectionEnumMap = {
   ReadingDirection.vertical: 'vertical',

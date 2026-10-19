@@ -11,7 +11,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 ## 1. Goals and non-goals
 
 ### Goals
-- **Never lose the user's library.** Bookmarks, history and settings survive updates. Data from older app versions is migrated (§7.4), and backup files stay readable across versions (§7.5).
+- **Never lose the user's library.** Bookmarks, history and settings survive updates, and backup files (§7.4) restore them. Storage starts fresh from this version: data from the pre-2026 app is not migrated, and its backup files are not read.
 - **Keep logic testable.** Domain code is plain Dart with no Flutter, Dio, Hive or file-picker imports. Repositories and blocs are tested without a device.
 - **Keep layers clear.** UI talks to blocs, blocs call use cases, use cases call repository interfaces. Only the data layer knows about HTTP and storage.
 - Work on phones and wide screens. A floating pill nav sits at the bottom on every width; cover grids add columns as the screen gets wider.
@@ -37,7 +37,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 | Connectivity | `connectivity_plus` behind `NetworkInfo` | Checked before every remote call (§8.2). |
 | Local storage | `hive_ce` | Boxes of JSON strings, no type adapters (§7). |
 | Images | `cached_network_image`, `flutter_cache_manager` | "Clear cache" in settings empties the image cache. |
-| Backup files | `file_picker` + `dart:io` | Behind `BackupFileDataSource` (§7.5). |
+| Backup files | `file_picker` + `dart:io` | Behind `BackupFileDataSource` (§7.4). |
 | Saving pages | `gal` | Saves a reader image to the gallery. |
 | Tests | `flutter_test`, `bloc_test`, `mocktail` | Hive tests use a temp directory (CONTRIBUTION §5). |
 
@@ -53,12 +53,11 @@ Exact versions live in `pubspec.yaml` and `pubspec.lock`. Read §10.1 before you
 
 ```
 lib/
-├── main.dart                       # Hive.init → DI → legacy migration → runApp
+├── main.dart                       # Hive.init → DI → runApp
 ├── app/
 │   ├── app.dart                    # BacaKomikApp: app-wide BlocProviders, MaterialApp, theme mode
 │   ├── splash_screen.dart
 │   ├── root_screen.dart            # tabs: Home, Explore, Bookmark, History, More (floating nav)
-│   └── legacy_storage_migrator.dart  # hydrated_bloc → Hive, runs once (§7.4)
 ├── core/
 │   ├── assets/assets.gen.dart      # flutter_gen output
 │   ├── constants/                  # texts (UI strings), filters, variables
@@ -115,7 +114,7 @@ presentation ──▶ domain ◀── data
 - **domain** imports nothing from `data`, `presentation`, Flutter, Dio, Hive or file_picker. It may import `fpdart`, `freezed_annotation`, `injectable` and other features' **domain** code.
 - **data** implements domain interfaces. It may import other features' data models when a format is shared (for example `backup` reads `BookmarkModel`).
 - **presentation** calls use cases through blocs. Widgets may read cubits from other features (for example `comic_detail` reads `BookmarkCubit` and `HistoryCubit`).
-- **core** never imports from `features/`. Code that has to know several features (the migrator, the app shell) lives in `lib/app/`.
+- **core** never imports from `features/`. Code that has to know several features (the app shell, root tabs) lives in `lib/app/`.
 
 Check the domain rule with:
 
@@ -153,7 +152,6 @@ It must print nothing.
 ```
    main() ── Hive.init(app documents dir)
           ── configureDependencies()      # opens Hive boxes (preResolve)
-          ── LegacyStorageMigrator.migrate()
           ── runApp(BacaKomikApp)
 
    BacaKomikApp ─ MultiBlocProvider (app scope)
@@ -170,10 +168,9 @@ It must print nothing.
 
 ### 4.1 Startup
 
-1. `Hive.init` points Hive at the application documents directory. hydrated_bloc used the same directory, which is what makes §7.4 work.
+1. `Hive.init` points Hive at the application documents directory.
 2. `configureDependencies()` registers everything and opens the four Hive boxes before returning (`@preResolve` in `StorageModule`).
-3. `LegacyStorageMigrator.migrate()` copies old hydrated_bloc data once.
-4. `runApp`. `BookmarkCubit`, `HistoryCubit` and `SettingsCubit` call `load()` when they are first created.
+3. `runApp`. `BookmarkCubit`, `HistoryCubit` and `SettingsCubit` call `load()` when they are first created.
 
 ### 4.2 Bloc scope
 
@@ -189,9 +186,7 @@ It must print nothing.
 
 ### 4.4 Settings
 
-`AppSettings.darkMode` holds one of `AppText.system`, `AppText.light` or `AppText.dark`. `BacaKomikApp` maps it to `ThemeMode`. The values are old UI strings because earlier versions stored them that way. Keep them unless you also migrate stored settings.
-
-The reader fields (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`) were added later. `SettingsModel` gives each a default, so settings stored by older versions still load (tested in `test/features/settings_model_test.dart`).
+`AppSettings` holds `themeMode` (`AppThemeMode.system | light | dark`, mapped to Flutter's `ThemeMode` in `BacaKomikApp`) and the reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`). `SettingsModel` gives every field a default and falls back on unknown enum values, so a field added later never breaks loading.
 
 ---
 
@@ -228,7 +223,7 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 | bookmark | Bookmark tab | `BookmarkCubit` | Search by title. Pull-to-refresh runs `RefreshBookmarks` (§6.1). |
 | history | More → History | `HistoryCubit` | Shows the newest chapter per comic. Remove one chapter, one comic, or everything. |
 | settings | More tab | `SettingsCubit` | Theme, clear image cache, bug report link, app info. |
-| backup | More → Backup / Restore | `BackupCubit` | §7.5. |
+| backup | Lainnya → Cadangkan / Pulihkan | `BackupCubit` | §7.4. |
 
 ### 6.1 Checking bookmarks for new chapters
 
@@ -242,18 +237,16 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 
 | Box | Key | Value |
 |---|---|---|
-| `bookmarks` | series slug | `BookmarkModel` JSON |
-| `history` | chapter slug (`series/number`) | `ReadHistoryModel` JSON |
+| `bookmarks` | series slug | `BookmarkModel` JSON (includes the comic's details) |
+| `history_entries` | chapter slug (`series/number`) | `ReadHistoryModel` JSON |
+| `history_comics` | series slug | `HistoryComicModel` JSON (the comic's details) |
 | `settings` | `settings` | `SettingsModel` JSON |
-| `app_meta` | flags | e.g. `hydrated_migrated_v1 = "true"` |
 
 Every box is a `Box<String>` that holds JSON. There are no Hive type adapters, so stored data never depends on adapter type ids, and the backup format can reuse the same JSON. `JsonBox<T>` (`core/storage/json_box.dart`) gives typed `values()`, `get`, `put`, `putAll`, `deleteAll` and `clear`. An entry that fails to parse is skipped and logged, so one bad record cannot hide the rest.
 
 Hive keys must be ASCII and at most 255 characters. API slugs meet this.
 
-### 7.2 Stored JSON shape (compatibility contract)
-
-The field names are the ones earlier versions wrote. Do not rename them:
+### 7.2 Stored JSON shape
 
 ```jsonc
 // bookmark
@@ -262,48 +255,39 @@ The field names are the ones earlier versions wrote. Do not rename them:
                     "totalChapter", "author", "type", "rating", "synopsis",
                     "genres": [{ "name", "slug" }],
                     "chapters": [{ "number", "slug", "date" }] } }
-// history
+// history entry (one per read chapter)
 { "slug": "solo-leveling/2", "chapterNumber": "2", "readDate": 1700000100000,
-  "comicDetails": { … }, "comicSlug": "solo-leveling" }
+  "comicSlug": "solo-leveling" }
+// history comic (one per comic that has history entries)
+{ "slug": "solo-leveling", "comicDetails": { … } }
 // settings
-{ "darkMode": "Sistem" }
+{ "themeMode": "system", "readingDirection": "vertical", "pageFit": "width",
+  "keepScreenOn": true, "pageGap": false }
 ```
 
-Stored models (`ComicDetailsModel`, `BookmarkModel`, `ReadHistoryModel`, `SettingsModel`) map to and from entities with `fromEntity` and `toEntity`. Entities never carry JSON code.
+A history entry does not carry the comic's details: they are stored once per comic in `history_comics`, so marking a whole comic as read writes one copy of its chapter list instead of one per chapter. `HistoryRepositoryImpl` joins the two when it reads (entries whose comic record is missing are skipped), writes the latest details it is given, and deletes a comic record once its last entry is removed.
+
+Stored models (`ComicDetailsModel`, `BookmarkModel`, `ReadHistoryModel`, `HistoryComicModel`, `SettingsModel`) map to and from entities with `fromEntity` and `toEntity`. Entities never carry JSON code. The `ReadHistory` entity still includes `comicDetails`, so the UI does not know about the split.
 
 ### 7.3 Ordering
 
 Boxes have no order. Repositories sort when they read: bookmarks by `updatedDate` and history by `readDate`, newest first. Because writes are keyed by slug, saving an entry that already exists replaces it.
 
-### 7.4 Migration from hydrated_bloc
-
-Up to v1.0.1 the library lived in hydrated_bloc's `hydrated_box` (`hive` v2 format, which `hive_ce` reads). On startup, `LegacyStorageMigrator` does this:
-
-1. Return at once if `app_meta[hydrated_migrated_v1] == "true"`.
-2. If `hydrated_box` exists, read these keys:
-   - `FavoriteCubit` → `{ bookmarks_comic: [entry, …] }`
-   - `HistoryCubit` → `{ history_read: [entry, …] }`
-   - `SettingsCubit` → `{ value: entry }`
-
-   An entry is an encoded JSON string. The migrator also accepts a map.
-3. Write the entries to the new boxes, skipping any that fail to parse.
-4. Set the flag. If something throws, the flag is not set and the next launch tries again.
-
-The old box stays on disk. Deleting it is a possible clean-up for a later release (§12). The fixtures in `test/fixtures/legacy_storage_fixtures.dart` are hand-written copies of the old format. Do not regenerate them from current code.
-
-### 7.5 Backup files
+### 7.4 Backup files
 
 `bacakomik-backup-<y>-<m>-<d>-<h><min><s>.json`, written to a folder the user picks:
 
 ```jsonc
-{ "bookmarks": ["<bookmark JSON as a string>", …],
-  "history":   ["<history JSON as a string>", …] }
+{ "version": 2,
+  "bookmarks":     [ <bookmark JSON>, … ],
+  "history":       [ <history entry JSON>, … ],
+  "historyComics": [ <history comic JSON>, … ] }
 ```
 
-Each entry is an **encoded JSON string**, not an object. That is how older versions wrote it, and it lets older versions restore new backups. When reading a backup, the app also accepts plain objects, the old `favorites` key in place of `bookmarks`, and a missing `history`.
+Entries are plain JSON objects, in the same shapes as §7.2. A file with another `version` (including files from the pre-2026 app, which had none) is rejected with a `FileFailure`. When you change the format, bump `BackupRepositoryImpl.formatVersion` and decide whether to keep reading the previous version.
 
 - **Backup:** if the library is empty, nothing happens and the folder picker does not open. Cancelling the picker does nothing.
-- **Restore:** merges into the library. Entries with the same slug are replaced. After a restore, the More screen reloads `BookmarkCubit` and `HistoryCubit`.
+- **Restore:** merges into the library. Entries with the same slug are replaced. After a restore, the Lainnya screen reloads `BookmarkCubit` and `HistoryCubit`.
 
 ---
 
@@ -376,12 +360,10 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 | History | Done |
 | Theme setting (system/light/dark) | Done |
 | Backup / restore | Done |
-| Migration from hydrated_bloc storage | Done (§7.4) |
 | Offline reading | Not planned |
 
 ---
 
 ## 12. Open questions
 
-- **Old storage:** when should `hydrated_box.hive` be deleted? Not before most users run a version with the migrator.
 - **Formatting:** the code base predates the current `dart format` style. Reformatting everything in one commit would be a large, noisy diff. Decide whether to do it once.

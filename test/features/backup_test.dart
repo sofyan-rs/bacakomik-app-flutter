@@ -8,13 +8,15 @@ import 'package:bacakomik_app/features/backup/data/repositories/backup_repositor
 import 'package:bacakomik_app/features/backup/domain/entities/library_backup.dart';
 import 'package:bacakomik_app/features/backup/domain/repositories/backup_repository.dart';
 import 'package:bacakomik_app/features/backup/domain/usecases/backup_library.dart';
+import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../fixtures/legacy_storage_fixtures.dart';
+import '../fixtures/library_fixtures.dart';
 
 class MockFiles extends Mock implements BackupFileDataSource {}
 
@@ -29,33 +31,55 @@ class FixedClock implements Clock {
   DateTime now() => DateTime(2026, 3, 4, 5, 6, 7);
 }
 
+DateTime at(int ms) => DateTime.fromMillisecondsSinceEpoch(ms);
+
+ReadHistory read(int chapter) => ReadHistory(
+  slug: 'solo-leveling/$chapter',
+  chapterNumber: '$chapter',
+  readDate: at(1700000000000 + chapter),
+  comicDetails: sampleComicDetails,
+  comicSlug: 'solo-leveling',
+);
+
+final sampleBackup = LibraryBackup(
+  bookmarks: [
+    Bookmark(
+      slug: 'solo-leveling',
+      comicDetails: sampleComicDetails,
+      updatedDate: at(1700000000000),
+    ),
+  ],
+  history: [read(2), read(1)],
+);
+
 void main() {
   setUpAll(() {
     registerFallbackValue(const LibraryBackup());
   });
 
   group('backup file format', () {
-    test('reads files written by earlier versions', () {
-      final backup = BackupRepositoryImpl.decode(legacyBackupFile());
-
-      expect(backup.bookmarks.single.slug, 'solo-leveling');
-      expect(backup.history, hasLength(2));
-    });
-
-    test('reads the legacy favorites key', () {
-      final backup = BackupRepositoryImpl.decode(
-        legacyBackupFile(bookmarkKey: 'favorites'),
-      );
-
-      expect(backup.bookmarks.single.slug, 'solo-leveling');
-    });
-
-    test('writes the same shape earlier versions wrote', () {
-      final backup = BackupRepositoryImpl.decode(legacyBackupFile());
-
+    test('round-trips bookmarks and history', () {
       expect(
-        jsonDecode(BackupRepositoryImpl.encode(backup)),
-        jsonDecode(legacyBackupFile()),
+        BackupRepositoryImpl.decode(BackupRepositoryImpl.encode(sampleBackup)),
+        sampleBackup,
+      );
+    });
+
+    test('writes each history comic once', () {
+      final json = jsonDecode(
+        BackupRepositoryImpl.encode(sampleBackup),
+      ) as Map<String, dynamic>;
+
+      expect(json['version'], BackupRepositoryImpl.formatVersion);
+      expect(json['history'], hasLength(2));
+      expect(json['historyComics'], hasLength(1));
+      expect((json['history'] as List).first, isNot(contains('comicDetails')));
+    });
+
+    test('rejects files without the current version', () {
+      expect(
+        () => BackupRepositoryImpl.decode(jsonEncode({'bookmarks': []})),
+        throwsFormatException,
       );
     });
 
@@ -79,13 +103,15 @@ void main() {
     test('export writes into the chosen folder', () async {
       when(() => files.pickDirectory()).thenAnswer((_) async => '/backups');
       when(() => files.writeFile(any(), any())).thenAnswer((_) async {});
-      final backup = BackupRepositoryImpl.decode(legacyBackupFile());
+      final backup = sampleBackup;
 
       expect(await repo.exportBackup(backup), right(true));
-      verify(() => files.writeFile(
-            '/backups/bacakomik-backup-2026-3-4-567.json',
-            BackupRepositoryImpl.encode(backup),
-          )).called(1);
+      verify(
+        () => files.writeFile(
+          '/backups/bacakomik-backup-2026-3-4-567.json',
+          BackupRepositoryImpl.encode(backup),
+        ),
+      ).called(1);
     });
 
     test('export cancelled', () async {
@@ -108,7 +134,7 @@ void main() {
     late MockBackupRepository backupRepo;
     late MockBookmarkRepository bookmarks;
     late MockHistoryRepository history;
-    final backup = BackupRepositoryImpl.decode(legacyBackupFile());
+    final backup = sampleBackup;
 
     setUp(() {
       backupRepo = MockBackupRepository();
@@ -120,8 +146,9 @@ void main() {
       when(() => bookmarks.getBookmarks()).thenAnswer((_) async => right([]));
       when(() => history.getHistory()).thenAnswer((_) async => right([]));
 
-      final result =
-          await BackupLibrary(backupRepo, bookmarks, history)(const NoParams());
+      final result = await BackupLibrary(backupRepo, bookmarks, history)(
+        const NoParams(),
+      );
 
       expect(result, right(BackupResult.nothingToSave));
       verifyNever(() => backupRepo.exportBackup(any()));
@@ -135,8 +162,9 @@ void main() {
       when(() => backupRepo.exportBackup(any()))
           .thenAnswer((_) async => right(true));
 
-      final result =
-          await BackupLibrary(backupRepo, bookmarks, history)(const NoParams());
+      final result = await BackupLibrary(backupRepo, bookmarks, history)(
+        const NoParams(),
+      );
 
       expect(result, right(BackupResult.saved));
       verify(() => backupRepo.exportBackup(backup)).called(1);
@@ -150,8 +178,9 @@ void main() {
       when(() => history.saveHistory(any()))
           .thenAnswer((_) async => right(unit));
 
-      final result =
-          await RestoreLibrary(backupRepo, bookmarks, history)(const NoParams());
+      final result = await RestoreLibrary(backupRepo, bookmarks, history)(
+        const NoParams(),
+      );
 
       expect(result, right(RestoreResult.restored));
       verify(() => bookmarks.saveBookmarks(backup.bookmarks)).called(1);
@@ -162,8 +191,9 @@ void main() {
       when(() => backupRepo.importBackup())
           .thenAnswer((_) async => right(null));
 
-      final result =
-          await RestoreLibrary(backupRepo, bookmarks, history)(const NoParams());
+      final result = await RestoreLibrary(backupRepo, bookmarks, history)(
+        const NoParams(),
+      );
 
       expect(result, right(RestoreResult.cancelled));
     });

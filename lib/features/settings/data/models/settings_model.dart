@@ -3,13 +3,11 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'settings_model.g.dart';
 
-/// Stored settings. Same JSON shape as earlier app versions; the reader
-/// fields were added later and fall back to defaults when missing, so old
-/// stored settings still load.
+/// Stored settings. Missing or unknown values fall back to the defaults.
 @JsonSerializable()
 class SettingsModel {
   const SettingsModel({
-    required this.darkMode,
+    this.themeMode = AppThemeMode.system,
     this.readingDirection = ReadingDirection.vertical,
     this.pageFit = PageFit.width,
     this.keepScreenOn = true,
@@ -17,7 +15,7 @@ class SettingsModel {
   });
 
   factory SettingsModel.fromEntity(AppSettings e) => SettingsModel(
-    darkMode: e.darkMode,
+    themeMode: e.themeMode,
     readingDirection: e.readingDirection,
     pageFit: e.pageFit,
     keepScreenOn: e.keepScreenOn,
@@ -27,7 +25,8 @@ class SettingsModel {
   factory SettingsModel.fromJson(Map<String, dynamic> json) =>
       _$SettingsModelFromJson(json);
 
-  final String darkMode;
+  @JsonKey(unknownEnumValue: AppThemeMode.system)
+  final AppThemeMode themeMode;
 
   @JsonKey(unknownEnumValue: ReadingDirection.vertical)
   final ReadingDirection readingDirection;
@@ -41,7 +40,7 @@ class SettingsModel {
   Map<String, dynamic> toJson() => _$SettingsModelToJson(this);
 
   AppSettings toEntity() => AppSettings(
-    darkMode: darkMode,
+    themeMode: themeMode,
     readingDirection: readingDirection,
     pageFit: pageFit,
     keepScreenOn: keepScreenOn,

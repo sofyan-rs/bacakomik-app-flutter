@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/backup/data/datasources/backup_file_data_source.dart';
@@ -23,7 +24,10 @@ class BackupRepositoryImpl implements BackupRepository {
       final directory = await _files.pickDirectory();
       if (directory == null) return right(false);
 
-      await _files.writeFile('$directory/${fileName(_clock.now())}', encode(backup));
+      await _files.writeFile(
+        '$directory/${fileName(_clock.now())}',
+        encode(backup),
+      );
       return right(true);
     } catch (e) {
       return left(FileFailure(e.toString()));
@@ -45,35 +49,50 @@ class BackupRepositoryImpl implements BackupRepository {
       'bacakomik-backup-${now.year}-${now.month}-${now.day}-'
       '${now.hour}${now.minute}${now.second}.json';
 
-  /// Backup file format shared with earlier app versions: every entry is an
-  /// encoded JSON string, so older builds can still restore new backups.
-  static String encode(LibraryBackup backup) => jsonEncode({
-        'bookmarks': [
-          for (final b in backup.bookmarks)
-            jsonEncode(BookmarkModel.fromEntity(b).toJson()),
-        ],
-        'history': [
-          for (final h in backup.history)
-            jsonEncode(ReadHistoryModel.fromEntity(h).toJson()),
-        ],
-      });
+  /// Current backup file format. Files with another version are rejected.
+  static const formatVersion = 2;
 
-  /// Accepts entries as encoded strings or plain objects, and the
-  /// `favorites` key used by older backups.
+  /// `{version, bookmarks, history, historyComics}` as plain JSON objects.
+  /// History entries refer to their comic by slug; each comic's details are
+  /// written once in `historyComics`.
+  static String encode(LibraryBackup backup) => jsonEncode({
+    'version': formatVersion,
+    'bookmarks': [
+      for (final b in backup.bookmarks) BookmarkModel.fromEntity(b).toJson(),
+    ],
+    'history': [
+      for (final h in backup.history) ReadHistoryModel.fromEntity(h).toJson(),
+    ],
+    'historyComics': [
+      for (final h in {for (final h in backup.history) h.comicSlug: h}.values)
+        HistoryComicModel(
+          slug: h.comicSlug,
+          comicDetails: ComicDetailsModel.fromEntity(h.comicDetails),
+        ).toJson(),
+    ],
+  });
+
   static LibraryBackup decode(String content) {
     final json = jsonDecode(content) as Map<String, dynamic>;
-    final bookmarks = (json['bookmarks'] ?? json['favorites']) as List? ?? [];
-    final history = json['history'] as List? ?? [];
+    if (json['version'] != formatVersion) {
+      throw FormatException('Unsupported backup version: ${json['version']}');
+    }
+    List<Map<String, dynamic>> list(String key) =>
+        (json[key] as List? ?? []).cast<Map<String, dynamic>>();
+
+    final comics = {
+      for (final c in list('historyComics').map(HistoryComicModel.fromJson))
+        c.slug: c.comicDetails.toEntity(),
+    };
     return LibraryBackup(
       bookmarks: [
-        for (final e in bookmarks) BookmarkModel.fromJson(_entry(e)).toEntity(),
+        for (final b in list('bookmarks')) BookmarkModel.fromJson(b).toEntity(),
       ],
       history: [
-        for (final e in history) ReadHistoryModel.fromJson(_entry(e)).toEntity(),
+        for (final entry in list('history').map(ReadHistoryModel.fromJson))
+          if (comics[entry.comicSlug] case final details?)
+            entry.toEntity(details),
       ],
     );
   }
-
-  static Map<String, dynamic> _entry(Object? e) =>
-      (e is String ? jsonDecode(e) : e) as Map<String, dynamic>;
 }

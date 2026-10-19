@@ -10,7 +10,6 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
-import 'package:bacakomik_app/app/legacy_storage_migrator.dart' as _i458;
 import 'package:bacakomik_app/core/data/datasources/series_remote_data_source.dart'
     as _i535;
 import 'package:bacakomik_app/core/di/register_module.dart' as _i600;
@@ -126,6 +125,16 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i713.BackupFileDataSourceImpl(),
     );
     await gh.factoryAsync<_i738.Box<String>>(
+      () => storageModule.historyComicsBox,
+      instanceName: 'history_comics',
+      preResolve: true,
+    );
+    await gh.factoryAsync<_i738.Box<String>>(
+      () => storageModule.historyEntriesBox,
+      instanceName: 'history_entries',
+      preResolve: true,
+    );
+    await gh.factoryAsync<_i738.Box<String>>(
       () => storageModule.bookmarksBox,
       instanceName: 'bookmarks',
       preResolve: true,
@@ -145,17 +154,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i738.Box<String>>(instanceName: 'settings'),
       ),
     );
-    await gh.factoryAsync<_i738.Box<String>>(
-      () => storageModule.historyBox,
-      instanceName: 'history',
-      preResolve: true,
+    gh.lazySingleton<_i793.HistoryLocalDataSource>(
+      () => _i793.HistoryLocalDataSourceImpl(
+        gh<_i738.Box<String>>(instanceName: 'history_entries'),
+        gh<_i738.Box<String>>(instanceName: 'history_comics'),
+      ),
     );
     gh.lazySingleton<_i430.ApiClient>(() => _i430.ApiClient(gh<_i361.Dio>()));
-    await gh.factoryAsync<_i738.Box<String>>(
-      () => storageModule.metaBox,
-      instanceName: 'app_meta',
-      preResolve: true,
-    );
     gh.lazySingleton<_i551.SettingsRepository>(
       () => _i314.SettingsRepositoryImpl(gh<_i394.SettingsLocalDataSource>()),
     );
@@ -170,11 +175,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i1063.SaveSettings>(
       () => _i1063.SaveSettings(gh<_i551.SettingsRepository>()),
-    );
-    gh.lazySingleton<_i793.HistoryLocalDataSource>(
-      () => _i793.HistoryLocalDataSourceImpl(
-        gh<_i738.Box<String>>(instanceName: 'history'),
-      ),
     );
     gh.factory<_i501.GetBookmarks>(
       () => _i501.GetBookmarks(gh<_i851.BookmarkRepository>()),
@@ -196,15 +196,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i535.SeriesRemoteDataSource>(
       () => _i535.SeriesRemoteDataSourceImpl(gh<_i430.ApiClient>()),
-    );
-    gh.lazySingleton<_i458.LegacyStorageMigrator>(
-      () => _i458.LegacyStorageMigrator(
-        gh<_i738.HiveInterface>(),
-        gh<_i738.Box<String>>(instanceName: 'app_meta'),
-        gh<_i676.BookmarkLocalDataSource>(),
-        gh<_i793.HistoryLocalDataSource>(),
-        gh<_i394.SettingsLocalDataSource>(),
-      ),
     );
     gh.factory<_i625.SettingsCubit>(
       () => _i625.SettingsCubit(

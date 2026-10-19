@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
+import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/app_info.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/clear_cache_sheet.dart';
@@ -42,8 +43,8 @@ class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final busy = context.watch<BackupCubit>().state is BackupBusy;
-    final darkMode = context.select<SettingsCubit, String>(
-      (s) => s.state.darkMode,
+    final themeMode = context.select<SettingsCubit, AppThemeMode>(
+      (s) => s.state.themeMode,
     );
 
     return Column(
@@ -82,15 +83,14 @@ class Settings extends StatelessWidget {
         const SectionLabel(label: AppText.theme),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
-          child: SegmentedControl<String>(
-            selected: darkMode,
+          child: SegmentedControl<AppThemeMode>(
+            selected: themeMode,
             onChanged: (mode) =>
-                context.read<SettingsCubit>().changeDarkMode(mode),
-            // Stored values stay the old dropdown labels (AppSettings).
+                context.read<SettingsCubit>().changeThemeMode(mode),
             segments: const [
-              Segment(value: AppText.system, label: AppText.themeSystem),
-              Segment(value: AppText.light, label: AppText.themeLight),
-              Segment(value: AppText.dark, label: AppText.themeDark),
+              Segment(value: AppThemeMode.system, label: AppText.themeSystem),
+              Segment(value: AppThemeMode.light, label: AppText.themeLight),
+              Segment(value: AppThemeMode.dark, label: AppText.themeDark),
             ],
           ),
         ),

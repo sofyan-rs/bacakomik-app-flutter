@@ -15,8 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AppSettings {
 
-/// One of [AppText.system], [AppText.light] or [AppText.dark].
- String get darkMode; ReadingDirection get readingDirection; PageFit get pageFit;/// Keep the screen awake while a chapter is open.
+ AppThemeMode get themeMode; ReadingDirection get readingDirection; PageFit get pageFit;/// Keep the screen awake while a chapter is open.
  bool get keepScreenOn;/// 8px gap between pages.
  bool get pageGap;
 /// Create a copy of AppSettings
@@ -30,20 +29,20 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 @override
 bool operator ==(Object other) {
   final _this = this as AppSettings;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.darkMode, _this.darkMode) || other.darkMode == _this.darkMode)&&(identical(other.readingDirection, _this.readingDirection) || other.readingDirection == _this.readingDirection)&&(identical(other.pageFit, _this.pageFit) || other.pageFit == _this.pageFit)&&(identical(other.keepScreenOn, _this.keepScreenOn) || other.keepScreenOn == _this.keepScreenOn)&&(identical(other.pageGap, _this.pageGap) || other.pageGap == _this.pageGap));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.readingDirection, _this.readingDirection) || other.readingDirection == _this.readingDirection)&&(identical(other.pageFit, _this.pageFit) || other.pageFit == _this.pageFit)&&(identical(other.keepScreenOn, _this.keepScreenOn) || other.keepScreenOn == _this.keepScreenOn)&&(identical(other.pageGap, _this.pageGap) || other.pageGap == _this.pageGap));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppSettings;
-  return Object.hash(runtimeType,_this.darkMode,_this.readingDirection,_this.pageFit,_this.keepScreenOn,_this.pageGap);
+  return Object.hash(runtimeType,_this.themeMode,_this.readingDirection,_this.pageFit,_this.keepScreenOn,_this.pageGap);
 }
 
 @override
 String toString() {
   final _this = this as AppSettings;
-  return 'AppSettings(darkMode: ${_this.darkMode}, readingDirection: ${_this.readingDirection}, pageFit: ${_this.pageFit}, keepScreenOn: ${_this.keepScreenOn}, pageGap: ${_this.pageGap})';
+  return 'AppSettings(themeMode: ${_this.themeMode}, readingDirection: ${_this.readingDirection}, pageFit: ${_this.pageFit}, keepScreenOn: ${_this.keepScreenOn}, pageGap: ${_this.pageGap})';
 }
 
 
@@ -54,7 +53,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- String darkMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap
+ AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap
 });
 
 
@@ -71,10 +70,10 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? darkMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,}) {
   return _then(AppSettings(
-darkMode: null == darkMode ? _self.darkMode : darkMode // ignore: cast_nullable_to_non_nullable
-as String,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
+themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
+as AppThemeMode,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
 as ReadingDirection,pageFit: null == pageFit ? _self.pageFit : pageFit // ignore: cast_nullable_to_non_nullable
 as PageFit,keepScreenOn: null == keepScreenOn ? _self.keepScreenOn : keepScreenOn // ignore: cast_nullable_to_non_nullable
 as bool,pageGap: null == pageGap ? _self.pageGap : pageGap // ignore: cast_nullable_to_non_nullable
@@ -163,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String darkMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.darkMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
   return orElse();
 
 }
@@ -184,10 +183,10 @@ return $default(_that.darkMode,_that.readingDirection,_that.pageFit,_that.keepSc
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String darkMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.darkMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +203,10 @@ return $default(_that.darkMode,_that.readingDirection,_that.pageFit,_that.keepSc
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String darkMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.darkMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
   return null;
 
 }
@@ -219,11 +218,10 @@ return $default(_that.darkMode,_that.readingDirection,_that.pageFit,_that.keepSc
 
 
 class _AppSettings implements AppSettings {
-  const _AppSettings({this.darkMode = AppText.system, this.readingDirection = ReadingDirection.vertical, this.pageFit = PageFit.width, this.keepScreenOn = true, this.pageGap = false});
+  const _AppSettings({this.themeMode = AppThemeMode.system, this.readingDirection = ReadingDirection.vertical, this.pageFit = PageFit.width, this.keepScreenOn = true, this.pageGap = false});
   
 
-/// One of [AppText.system], [AppText.light] or [AppText.dark].
-@override@JsonKey() final  String darkMode;
+@override@JsonKey() final  AppThemeMode themeMode;
 @override@JsonKey() final  ReadingDirection readingDirection;
 @override@JsonKey() final  PageFit pageFit;
 /// Keep the screen awake while a chapter is open.
@@ -241,18 +239,18 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.darkMode, darkMode) || other.darkMode == darkMode)&&(identical(other.readingDirection, readingDirection) || other.readingDirection == readingDirection)&&(identical(other.pageFit, pageFit) || other.pageFit == pageFit)&&(identical(other.keepScreenOn, keepScreenOn) || other.keepScreenOn == keepScreenOn)&&(identical(other.pageGap, pageGap) || other.pageGap == pageGap));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.readingDirection, readingDirection) || other.readingDirection == readingDirection)&&(identical(other.pageFit, pageFit) || other.pageFit == pageFit)&&(identical(other.keepScreenOn, keepScreenOn) || other.keepScreenOn == keepScreenOn)&&(identical(other.pageGap, pageGap) || other.pageGap == pageGap));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,darkMode,readingDirection,pageFit,keepScreenOn,pageGap);
+    return Object.hash(runtimeType,themeMode,readingDirection,pageFit,keepScreenOn,pageGap);
 }
 
 @override
 String toString() {
-    return 'AppSettings(darkMode: $darkMode, readingDirection: $readingDirection, pageFit: $pageFit, keepScreenOn: $keepScreenOn, pageGap: $pageGap)';
+    return 'AppSettings(themeMode: $themeMode, readingDirection: $readingDirection, pageFit: $pageFit, keepScreenOn: $keepScreenOn, pageGap: $pageGap)';
 }
 
 
@@ -263,7 +261,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- String darkMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap
+ AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap
 });
 
 
@@ -280,10 +278,10 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? darkMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,}) {
   return _then(_AppSettings(
-darkMode: null == darkMode ? _self.darkMode : darkMode // ignore: cast_nullable_to_non_nullable
-as String,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
+themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
+as AppThemeMode,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
 as ReadingDirection,pageFit: null == pageFit ? _self.pageFit : pageFit // ignore: cast_nullable_to_non_nullable
 as PageFit,keepScreenOn: null == keepScreenOn ? _self.keepScreenOn : keepScreenOn // ignore: cast_nullable_to_non_nullable
 as bool,pageGap: null == pageGap ? _self.pageGap : pageGap // ignore: cast_nullable_to_non_nullable

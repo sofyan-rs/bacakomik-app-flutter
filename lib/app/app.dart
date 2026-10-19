@@ -1,5 +1,4 @@
 import 'package:bacakomik_app/app/splash_screen.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/theme/dotline_theme.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
@@ -38,10 +37,10 @@ class BacaKomikApp extends StatelessWidget {
             title: AppVariables.appName,
             theme: DotlineThemes.light,
             darkTheme: DotlineThemes.dark,
-            themeMode: switch (settings.darkMode) {
-              AppText.dark => ThemeMode.dark,
-              AppText.light => ThemeMode.light,
-              _ => ThemeMode.system,
+            themeMode: switch (settings.themeMode) {
+              AppThemeMode.dark => ThemeMode.dark,
+              AppThemeMode.light => ThemeMode.light,
+              AppThemeMode.system => ThemeMode.system,
             },
             home: const SplashScreen(),
           );

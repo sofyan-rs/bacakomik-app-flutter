@@ -4,7 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'bookmark_model.g.dart';
 
-/// Stored bookmark. Same JSON shape as earlier app versions and backups.
+/// Stored bookmark, also used in backup files.
 @JsonSerializable()
 class BookmarkModel {
   const BookmarkModel({

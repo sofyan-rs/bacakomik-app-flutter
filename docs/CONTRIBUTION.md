@@ -45,7 +45,7 @@ Before a release, bump `version:` in `pubspec.yaml`. The build number after `+` 
 
 See ARCHITECTURE §3. In short:
 
-- `lib/app/`: app shell, root tabs, the legacy storage migrator.
+- `lib/app/`: app shell, splash, root tabs (`RootTabs`).
 - `lib/core/`: DI, errors, network, Hive storage, shared entities/DTOs/widgets, constants.
 - `lib/features/<name>/{domain,data,presentation}`: one folder per feature.
 - `test/`: mirrors `lib/`. Shared fakes are in `test/helpers/` and sample data in `test/fixtures/`.
@@ -57,7 +57,7 @@ See ARCHITECTURE §3. In short:
 2. ARCHITECTURE.md §3–§4.
 3. `features/home/` end to end: entity → repository → use case → `HomeBloc` → `HomeScreen`. Every remote feature follows this pattern.
 4. `core/presentation/bloc/comic_list_state.dart` and one of the paginated features (`latest`).
-5. `features/bookmark/` and `core/storage/` for local data, then ARCHITECTURE §7 and `app/legacy_storage_migrator.dart`.
+5. `features/bookmark/` and `core/storage/` for local data, then ARCHITECTURE §7.
 
 ---
 
@@ -85,10 +85,9 @@ See ARCHITECTURE §3. In short:
 - Keep long-running work in blocs or use cases, never in `build()`.
 
 ### Data safety (non-negotiable)
-- **Never rename or remove a stored JSON field** (ARCHITECTURE §7.2). Adding a field is fine if it is nullable or has a default, so older data still parses.
-- **Never change the backup file format** in a way older versions can't read (ARCHITECTURE §7.5). Entries stay encoded JSON strings.
-- Do not regenerate `test/fixtures/legacy_storage_fixtures.dart` from current code. It is a hand-written copy of what real installs have on disk.
-- Any change to storage, migration or backup needs a manual upgrade test: install the previous release, add bookmarks and history, install the new build over it, and check that nothing was lost.
+- **Never rename or remove a stored JSON field** (ARCHITECTURE §7.2) without a migration. Adding a field is fine if it is nullable or has a default, so data already on the device still parses.
+- **Backup format changes bump `BackupRepositoryImpl.formatVersion`** (ARCHITECTURE §7.4), and the PR says whether files of the previous version can still be restored.
+- Any change to storage or backup needs a manual upgrade test: install the current release, add bookmarks and history, install the new build over it, and check that nothing was lost.
 
 ---
 
@@ -100,7 +99,7 @@ See ARCHITECTURE §3. In short:
 | Repositories (local) | Real Hive in a temp directory via `setUpTempHive()` (`test/helpers/hive.dart`). |
 | Use cases | Mock the repository interfaces. |
 | Blocs / cubits | `bloc_test`, with mocked use cases or real ones over temp Hive. |
-| Migration / backup | Legacy fixtures must keep loading. See `test/app/legacy_storage_migrator_test.dart` and `test/features/backup_test.dart`. |
+| Storage / backup | History storage and the backup format are covered in `test/features/library_test.dart` and `test/features/backup_test.dart` (sample data in `test/fixtures/library_fixtures.dart`). |
 | Manual | Every tab and screen on a recent Android before each release, plus the upgrade test above when storage changed. |
 
 Every bug fix gets a regression test where it can be tested without a device.

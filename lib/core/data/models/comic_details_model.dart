@@ -4,7 +4,6 @@ import 'package:json_annotation/json_annotation.dart';
 part 'comic_details_model.g.dart';
 
 /// Stored copy of [ComicDetails] inside bookmarks, history and backup files.
-/// Field names match the format written by earlier app versions.
 @JsonSerializable()
 class ComicDetailsModel {
   const ComicDetailsModel({

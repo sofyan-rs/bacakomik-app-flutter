@@ -18,8 +18,8 @@ class SettingsCubit extends Cubit<AppSettings> {
     result.fold((f) => debugPrint('SettingsCubit: $f'), emit);
   }
 
-  Future<void> changeDarkMode(String darkMode) =>
-      update((s) => s.copyWith(darkMode: darkMode));
+  Future<void> changeThemeMode(AppThemeMode themeMode) =>
+      update((s) => s.copyWith(themeMode: themeMode));
 
   /// Applies [change] and saves the result (reader settings sheet).
   Future<void> update(AppSettings Function(AppSettings) change) async {
