@@ -1,5 +1,3 @@
-import 'package:bacakomik_app/core/constants/variables.dart';
-
 import 'dart:async';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
@@ -177,11 +175,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       // Download into the disk cache only; decoding happens when the page
       // is shown, at screen width (see ChapterImg).
       DefaultCacheManager()
-          .getSingleFile(
-            _images[page],
-            key: _images[page],
-            headers: AppVariables.imageHeaders,
-          )
+          .getSingleFile(_images[page], key: _images[page])
           .then((_) {}, onError: (_) {})
           .whenComplete(() => _onPageSettled(page));
     }

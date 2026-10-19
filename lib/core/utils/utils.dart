@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
@@ -26,22 +25,28 @@ void showSnackBar({
   );
 }
 
-Future saveImg({required BuildContext context, required String img}) async {
+Future saveImg({
+  required BuildContext context,
+  required String img,
+}) async {
   final dio = Dio();
   try {
     final response = await dio.get(
       img,
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: AppVariables.imageHeaders,
-      ),
+      options: Options(responseType: ResponseType.bytes),
     );
     await Gal.putImageBytes(Uint8List.fromList(response.data));
 
     if (!context.mounted) return;
-    showSnackBar(context: context, message: AppText.successSaveImg);
+    showSnackBar(
+      context: context,
+      message: AppText.successSaveImg,
+    );
   } catch (e) {
     if (!context.mounted) return;
-    showSnackBar(context: context, message: AppText.failedSaveImg);
+    showSnackBar(
+      context: context,
+      message: AppText.failedSaveImg,
+    );
   }
 }
