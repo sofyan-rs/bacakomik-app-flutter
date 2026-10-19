@@ -55,7 +55,6 @@ class FloatingNavBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: c.navBar,
           borderRadius: BorderRadius.circular(DotRadius.pill),
-          boxShadow: [shadowFloat(Theme.of(context).brightness)],
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {

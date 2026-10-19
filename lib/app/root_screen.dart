@@ -79,7 +79,9 @@ class _RootScreenState extends State<RootScreen> {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: BottomFade(height: navInset + DotSpace.s5),
+                child: BottomFade(
+                  height: systemBottom + DotSize.navGap + DotSize.navHeight,
+                ),
               ),
               Positioned(
                 left: DotSpace.s4,

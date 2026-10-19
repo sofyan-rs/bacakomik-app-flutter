@@ -21,3 +21,4 @@ export 'search_field.dart';
 export 'section_label.dart';
 export 'segmented_control.dart';
 export 'stat_tile.dart';
+export 'top_bar.dart';

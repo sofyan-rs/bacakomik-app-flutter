@@ -22,6 +22,20 @@ class ComicDetailsScreen extends StatelessWidget {
   final String slug;
   final String? cover;
 
+  static Future<void> open(
+    BuildContext context, {
+    required String slug,
+    required String title,
+    String? cover,
+  }) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            ComicDetailsScreen(slug: slug, title: title, cover: cover),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -53,13 +67,15 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   List<SelectedChapter> _selectedChapters = [];
 
   void _onSelectedChapter(SelectedChapter chapter) {
-    final isAlreadySelected =
-        _selectedChapters.any((selected) => selected.slug == chapter.slug);
+    final isAlreadySelected = _selectedChapters.any(
+      (selected) => selected.slug == chapter.slug,
+    );
 
     if (isAlreadySelected) {
       setState(() {
-        _selectedChapters
-            .removeWhere((selected) => selected.slug == chapter.slug);
+        _selectedChapters.removeWhere(
+          (selected) => selected.slug == chapter.slug,
+        );
       });
     } else {
       setState(() {
@@ -162,10 +178,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
               pinned: true,
               flexibleSpace: FlexibleSpaceBar(
                 expandedTitleScale: 1,
-                background: ComicCover(
-                  cover: coverComic,
-                  slug: widget.slug,
-                ),
+                background: ComicCover(cover: coverComic, slug: widget.slug),
               ),
             ),
             BlocBuilder<ComicDetailsBloc, ComicDetailsState>(
@@ -179,9 +192,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                     isHaveSelectedChapter: _selectedChapters.isNotEmpty,
                   );
                 } else {
-                  return const SliverToBoxAdapter(
-                    child: SizedBox(),
-                  );
+                  return const SliverToBoxAdapter(child: SizedBox());
                 }
               },
             ),
@@ -196,8 +207,5 @@ class SelectedChapter {
   final String slug;
   final String chapterNumber;
 
-  SelectedChapter({
-    required this.slug,
-    required this.chapterNumber,
-  });
+  SelectedChapter({required this.slug, required this.chapterNumber});
 }

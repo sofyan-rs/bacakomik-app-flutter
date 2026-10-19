@@ -18,6 +18,8 @@ class AppText {
   static const String latest = 'Chapter Terbaru';
   static const String seeAll = 'Lihat Semua';
   static const String lastRead = 'Terakhir Dibaca';
+  static const String continueReading = 'Lanjut baca';
+  static const String retry = 'Coba lagi';
 
   // Error Text
   static const String error = 'Terjadi Kesalahan';
