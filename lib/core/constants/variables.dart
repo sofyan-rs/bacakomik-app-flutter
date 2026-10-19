@@ -11,5 +11,5 @@ class AppVariables {
   static const String websiteLabel = 'kurodev.org';
 
   static const String reportLink =
-      'https://github.com/sofyan-rs/bacakomik-app-release/issues/new';
+      'https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new';
 }
