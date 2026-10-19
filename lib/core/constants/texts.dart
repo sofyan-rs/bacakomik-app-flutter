@@ -117,29 +117,42 @@ class AppText {
       'Hapus Riwayat Baca Semua Chapter';
 
   // More Screen Text
-  static const String history = 'Riwayat Baca';
+  static const String history = 'Riwayat baca';
   static const String historyDescription = 'Lihat Riwayat Baca Komik';
 
-  static const String clearCache = 'Bersihkan Cache';
-  static const String clearCacheDescription =
-      'Bersihkan Cache Tanpa Menghapus Data Bookmark dan Riwayat Baca';
+  static const String clearCache = 'Bersihkan cache';
+  static const String clearCacheDescription = 'Bookmark dan riwayat tetap aman';
+  static const String clearCacheScope =
+      'Cover · halaman chapter · data sementara';
+  static const String cacheImages = 'Cover & halaman chapter';
+  static const String cacheCleared = 'Cache dibersihkan';
+  static const String removed = 'Dihapus';
+  static const String kept = 'Tetap';
   static const String clearCacheConfirmation =
-      'Kamu yakin ingin membersihkan semua data cache?';
+      'Gambar yang tersimpan dihapus dan diunduh lagi saat kamu membukanya. '
+      'Bookmark dan riwayat baca tidak ikut terhapus.';
 
-  static const String backupData = 'Cadangkan Data';
-  static const String backupDataDescription =
-      'Cadangkan Data Bookmark dan Riwayat Baca';
+  static const String backupData = 'Cadangkan data';
+  static const String backupDataDescription = 'Bookmark dan riwayat baca';
   static const String successBackupData = 'Data berhasil dicadangkan';
   static const String failedBackupData = 'Gagal mencadangkan data';
 
-  static const String restoreData = 'Pulihkan Data';
-  static const String restoreDataDescription =
-      'Pulihkan Data Bookmark dan Riwayat Baca';
+  static const String restoreData = 'Pulihkan data';
+  static const String restoreDataDescription = 'Dari file cadangan';
   static const String successRestoreData = 'Data berhasil dipulihkan';
   static const String failedRestoreData = 'Gagal memulihkan data';
 
-  static const String bugReport = 'Lapor Bug atau Saran';
-  static const String aboutApp = 'Tentang Aplikasi';
+  static const String bugReport = 'Lapor bug atau saran';
+  static const String aboutApp = 'Tentang aplikasi';
+  static const String website = 'Situs Kurodev';
+  static const String linkFailed = 'Tautan tidak bisa dibuka';
+  static const String chaptersRead = 'Chapter dibaca';
+  static const String data = 'Data';
+  static const String theme = 'Tema';
+  static const String about = 'Tentang';
+  static const String themeSystem = 'Sistem';
+  static const String themeLight = 'Terang';
+  static const String themeDark = 'Gelap';
   static const String version = 'Versi';
 
   // Settings Text
