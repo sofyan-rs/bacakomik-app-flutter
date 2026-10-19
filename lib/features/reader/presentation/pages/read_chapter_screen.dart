@@ -81,6 +81,11 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   final _zoom = TransformationController();
   TapDownDetails? _doubleTap;
   var _zoomed = false;
+
+  /// Fingers on the reader. With two or more, the page list stops scrolling
+  /// so its drag recognizer leaves the gesture arena and the pinch wins.
+  var _pointers = 0;
+  var _pinching = false;
   late final _zoomAnimation = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 260),
@@ -130,6 +135,18 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   void _onZoomChanged() {
     final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
     if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+  }
+
+  void _onPointerDown(PointerDownEvent _) {
+    _pointers++;
+    if (_pointers >= 2 && !_pinching) setState(() => _pinching = true);
+  }
+
+  /// Scrolling comes back only once every finger is up, so lifting one
+  /// finger after a pinch does not turn the other into a scroll.
+  void _onPointerUp(PointerEvent _) {
+    _pointers = (_pointers - 1).clamp(0, _pointers);
+    if (_pointers == 0 && _pinching) setState(() => _pinching = false);
   }
 
   /// Double tap: zoom 2.5x into the tapped point, or back out.
@@ -354,23 +371,28 @@ class _ReadChapterViewState extends State<_ReadChapterView>
 
   Widget _body(ReaderState state, AppSettings settings) {
     return switch (state) {
-      ReaderLoaded(:final chapter) => GestureDetector(
-        onTap: () => _setControls(!_controlsVisible),
-        onDoubleTapDown: (d) => _doubleTap = d,
-        onDoubleTap: _toggleZoom,
-        child: InteractiveViewer(
-          transformationController: _zoom,
-          minScale: 1,
-          maxScale: 4,
-          // Unzoomed, drags scroll the pages. Zoomed in the vertical
-          // reader, the list keeps scrolling and the viewer pans sideways.
-          panEnabled: _zoomed,
-          panAxis: settings.readingDirection == ReadingDirection.vertical
-              ? PanAxis.horizontal
-              : PanAxis.free,
-          child: settings.readingDirection == ReadingDirection.vertical
-              ? _verticalPages(chapter, settings)
-              : _horizontalPages(chapter, settings),
+      ReaderLoaded(:final chapter) => Listener(
+        onPointerDown: _onPointerDown,
+        onPointerUp: _onPointerUp,
+        onPointerCancel: _onPointerUp,
+        child: GestureDetector(
+          onTap: () => _setControls(!_controlsVisible),
+          onDoubleTapDown: (d) => _doubleTap = d,
+          onDoubleTap: _toggleZoom,
+          child: InteractiveViewer(
+            transformationController: _zoom,
+            minScale: 1,
+            maxScale: 4,
+            // Unzoomed, drags scroll the pages. Zoomed in the vertical
+            // reader, the list keeps scrolling and the viewer pans sideways.
+            panEnabled: _zoomed,
+            panAxis: settings.readingDirection == ReadingDirection.vertical
+                ? PanAxis.horizontal
+                : PanAxis.free,
+            child: settings.readingDirection == ReadingDirection.vertical
+                ? _verticalPages(chapter, settings)
+                : _horizontalPages(chapter, settings),
+          ),
         ),
       ),
       ReaderNoInternet() => EmptyState.offline(
@@ -416,6 +438,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     return ScrollablePositionedList.builder(
       itemScrollController: _itemScroll,
       itemPositionsListener: _itemPositions,
+      physics: _pinching ? const NeverScrollableScrollPhysics() : null,
       itemCount: pages.length + 1,
       itemBuilder: (context, index) {
         if (index == pages.length) return _chapterEnd(chapter);
@@ -443,7 +466,9 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       controller: controller,
       reverse: settings.readingDirection == ReadingDirection.rightToLeft,
       itemCount: pages.length + 1,
-      physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+      physics: _zoomed || _pinching
+          ? const NeverScrollableScrollPhysics()
+          : null,
       onPageChanged: (page) {
         _page.value = page;
         _onPageReached(page);
