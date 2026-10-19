@@ -70,7 +70,7 @@ class SplashScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             Text(
-              'KoiDevz',
+              'Kurodev',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20,
