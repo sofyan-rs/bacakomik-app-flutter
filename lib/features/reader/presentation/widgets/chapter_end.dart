@@ -41,7 +41,11 @@ class ChapterEnd extends StatelessWidget {
         DotSpace.s4,
         DotSpace.s6,
         DotSpace.s4,
-        DotSpace.s7 + MediaQuery.paddingOf(context).bottom,
+        // Clears the floating chapter pill when the controls are shown.
+        DotSize.navHeight +
+            DotSize.navGap +
+            DotSpace.s5 +
+            MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
