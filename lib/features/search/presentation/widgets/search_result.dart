@@ -1,32 +1,50 @@
-import 'package:auto_height_grid_view/auto_height_grid_view.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
+import 'package:bacakomik_app/core/presentation/widgets/comic_grid.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/features/search/presentation/bloc/search_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-import 'package:bacakomik_app/features/search/presentation/bloc/search_bloc.dart';
-import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
-import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/comic_card.dart';
-import 'package:solar_icons/solar_icons.dart';
-
+/// Search results in the Jelajah cover grid, with next-page loading.
 class SearchResult extends StatefulWidget {
   const SearchResult({
     super.key,
-    required this.onLoadMore,
+    required this.keyword,
     required this.onRefresh,
   });
 
-  final Function(int page) onLoadMore;
-  final Function() onRefresh;
+  /// Current keyword, read when the next page is requested.
+  final String Function() keyword;
+  final VoidCallback onRefresh;
 
   @override
-  State<SearchResult> createState() => _SearchResultState();
+  State<SearchResult> createState() => SearchResultState();
 }
 
-class _SearchResultState extends State<SearchResult> {
-  int _page = 1;
-  final int _maxPage = 10;
+class SearchResultState extends State<SearchResult> {
   final _scrollController = ScrollController();
+  late final _nextPage = NextPageTrigger(
+    controller: _scrollController,
+    isLoading: () {
+      final state = context.read<SearchBloc>().state;
+      return state is! ComicListLoaded || state.isLoadMore;
+    },
+    onNextPage: (page) => context.read<SearchBloc>().add(
+      SearchNextPageRequested(keyword: widget.keyword(), page: page),
+    ),
+  );
+
+  void resetPaging() => _nextPage.reset();
+
+  @override
+  void initState() {
+    super.initState();
+    // Creating the trigger attaches its scroll listener.
+    _nextPage;
+  }
 
   @override
   void dispose() {
@@ -36,136 +54,48 @@ class _SearchResultState extends State<SearchResult> {
 
   @override
   Widget build(BuildContext context) {
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-              _scrollController.position.maxScrollExtent &&
-          _page < _maxPage) {
-        _page++;
-        widget.onLoadMore(_page);
-      }
-    });
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return BlocBuilder<SearchBloc, ComicListState>(
       builder: (context, state) {
-        if (state is ComicListInitial) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  SolarIconsOutline.magnifier,
-                  color: AppColors.primary.withValues(alpha: 0.5),
-                  size: 80,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  AppText.searchComicHere,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (state is ComicListLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        if (state is ComicListLoaded) {
-          if (state.comics.isNotEmpty) {
-            return Stack(
-              children: [
-                RefreshIndicator(
-                  color: AppColors.primary,
-                  onRefresh: () async {
-                    widget.onRefresh();
-                  },
-                  child: AutoHeightGridView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(15),
-                    itemCount: state.comics.length,
-                    crossAxisCount:
-                        MediaQuery.of(context).size.width > 640 ? 4 : 2,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                    shrinkWrap: true,
-                    builder: (context, index) {
-                      return ComicCard(
-                        title: state.comics[index].title,
-                        cover: state.comics[index].coverImg,
-                        chapter: state.comics[index].latestChapter,
-                        type: state.comics[index].type,
-                        rating: state.comics[index].rating,
-                        completed: state.comics[index].completed,
-                        slug: state.comics[index].slug,
-                      );
-                    },
-                  ),
-                ),
-                if (state.isLoadMore)
-                  const Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: LinearProgressIndicator(
-                      minHeight: 5,
-                    ),
-                  )
-              ],
-            );
-          } else {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    SolarIconsOutline.magnifier,
-                    color: AppColors.primary.withValues(alpha: 0.5),
-                    size: 80,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    AppText.comicNotFound,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
-
-        if (state is ComicListError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Text(state.message),
-            ),
-          );
-        }
-
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(10),
-            child: Text(AppText.error),
+        return switch (state) {
+          ComicListInitial() => const EmptyState(
+            icon: LucideIcons300.search,
+            title: AppText.searchComicHere,
+            message: AppText.searchStart,
           ),
-        );
+          ComicListLoading() => const Center(child: DotLoader()),
+          ComicListLoaded(:final comics) when comics.isEmpty =>
+            const EmptyState(
+              icon: LucideIcons300.searchX,
+              title: AppText.comicNotFound,
+              message: AppText.comicNotFoundSearch,
+            ),
+          ComicListLoaded(:final comics, :final isLoadMore) => RefreshIndicator(
+            color: Dotline.of(context).ink,
+            backgroundColor: Dotline.of(context).surface,
+            onRefresh: () async => widget.onRefresh(),
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                ComicGridSliver(comics: comics),
+                LoadMoreSliver(visible: isLoadMore),
+                SliverPadding(padding: EdgeInsets.only(bottom: bottomInset)),
+              ],
+            ),
+          ),
+          ComicListNoInternet() => EmptyState.offline(
+            onAction: widget.onRefresh,
+          ),
+          ComicListError(:final message) => EmptyState(
+            icon: LucideIcons300.bug,
+            title: AppText.error,
+            message: message,
+            actionLabel: AppText.retry,
+            onAction: widget.onRefresh,
+          ),
+        };
       },
     );
   }

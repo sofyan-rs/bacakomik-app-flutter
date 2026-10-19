@@ -7,7 +7,7 @@ class AppText {
 
   // Navigation Bar Text
   static const String home = 'Beranda';
-  static const String explore = 'Jelajahi';
+  static const String explore = 'Jelajah';
   static const String bookmark = 'Bookmark';
   static const String more = 'Lainnya';
   static const String favoriteTab = 'Favorit';
@@ -55,6 +55,9 @@ class AppText {
   static const String searchHint = 'Cari Komik Disini';
   static const String searchComicHere = 'Cari Judul Komik Disini';
   static const String comicNotFound = 'Komik Tidak Ditemukan';
+  static const String comicNotFoundFilter = 'Coba ubah atau reset filter.';
+  static const String comicNotFoundSearch = 'Coba kata kunci lain.';
+  static const String searchStart = 'Cari judul atau author komik.';
 
   // Comic List Screen Text
 
@@ -66,6 +69,11 @@ class AppText {
   static const String status = 'Status';
   static const String genre = 'Genre';
   static const String sortBy = 'Urutkan Berdasarkan';
+  static const String sortShort = 'Urut';
+  static const String sortShortLong = 'Urutkan';
+  static const String showResults = 'Tampilkan hasil';
+  static const String close = 'Tutup';
+  static const String exploreSearchHint = 'Cari judul, author…';
 
   // History Screen Text
   static const String historyEmpty = 'Belum Ada Riwayat Baca';

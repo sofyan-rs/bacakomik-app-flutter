@@ -65,7 +65,8 @@ class CountBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     return Container(
-      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+      height: 20,
+      constraints: const BoxConstraints(minWidth: 20),
       padding: const EdgeInsets.symmetric(horizontal: 6),
       alignment: Alignment.center,
       decoration: BoxDecoration(

@@ -1,13 +1,15 @@
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/features/search/presentation/bloc/search_bloc.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/di/injection.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/search/presentation/bloc/search_bloc.dart';
 import 'package:bacakomik_app/features/search/presentation/widgets/search_result.dart';
 import 'package:flutter/material.dart';
-
-import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:solar_icons/solar_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
+/// Search, laid out like Jelajah: back button + search pill, then the same
+/// cover grid.
 class SearchScreen extends StatelessWidget {
   const SearchScreen({super.key});
 
@@ -28,109 +30,65 @@ class _SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<_SearchView> {
-  final _searchInputController = TextEditingController();
-
-  Future _getSearchData(int page) async {
-    final String keyword = _searchInputController.text;
-    context.read<SearchBloc>().add(
-          SearchRequested(
-            keyword: keyword,
-            page: page,
-          ),
-        );
-  }
-
-  Future _getSearchDataNext(int page) async {
-    final String keyword = _searchInputController.text;
-    context.read<SearchBloc>().add(
-          SearchNextPageRequested(
-            keyword: keyword,
-            page: page,
-          ),
-        );
-  }
+  final _input = TextEditingController();
+  final _resultKey = GlobalKey<SearchResultState>();
 
   @override
   void dispose() {
-    _searchInputController.dispose();
+    _input.dispose();
     super.dispose();
+  }
+
+  void _search() {
+    final keyword = _input.text.trim();
+    if (keyword.isEmpty) return;
+    _resultKey.currentState?.resetPaging();
+    context.read<SearchBloc>().add(SearchRequested(keyword: keyword));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 70,
-        title: TextField(
-          controller: _searchInputController,
-          cursorColor: AppColors.primary,
-          keyboardType: TextInputType.text,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-            hintText: AppText.searchHint,
-            hintStyle: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.9)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: const BorderRadius.all(
-                Radius.circular(7),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DotSpace.s4,
+                DotSpace.s2,
+                DotSpace.s4,
+                DotSpace.s4,
               ),
-              borderSide: BorderSide(
-                color:
-                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+              child: Row(
+                children: [
+                  RoundIconButton(
+                    icon: LucideIcons300.chevronLeft,
+                    semanticLabel: 'Kembali',
+                    onTap: () => Navigator.of(context).maybePop(),
+                  ),
+                  const SizedBox(width: DotSpace.s3),
+                  Expanded(
+                    child: SearchField(
+                      hint: AppText.exploreSearchHint,
+                      controller: _input,
+                      autofocus: true,
+                      onSubmitted: (_) => _search(),
+                      onClear: _input.clear,
+                    ),
+                  ),
+                ],
               ),
             ),
-            focusedBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(7),
-              ),
-              borderSide: BorderSide(
-                color: AppColors.primary,
+            Expanded(
+              child: SearchResult(
+                key: _resultKey,
+                keyword: () => _input.text.trim(),
+                onRefresh: _search,
               ),
             ),
-          ),
+          ],
         ),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: Icon(
-            SolarIconsOutline.arrowLeft,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: IconButton(
-              onPressed: () {
-                if (_searchInputController.text.isNotEmpty) _getSearchData(1);
-              },
-              icon: const Icon(
-                SolarIconsOutline.magnifier,
-                color: Colors.white,
-                size: 23,
-              ),
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                padding: const EdgeInsets.all(12),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SearchResult(
-        onLoadMore: (page) {
-          _getSearchDataNext(page);
-        },
-        onRefresh: () {
-          _getSearchData(1);
-        },
       ),
     );
   }
