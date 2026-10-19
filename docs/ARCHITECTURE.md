@@ -79,7 +79,6 @@ lib/
 └── features/
     ├── home/          # trending + latest on the home tab
     ├── latest/        # "see all" latest chapters, paginated
-    ├── search/        # keyword search, paginated
     ├── explore/       # filter by sort/type/status/genre, paginated
     ├── comic_detail/  # comic info + chapter list
     ├── reader/        # chapter images, prev/next
@@ -162,7 +161,7 @@ It must print nothing.
    └─ MaterialApp ─ SplashScreen ─▶ RootScreen (tabs)
                                       │ Navigator.push
                                       ▼
-            route-scoped blocs: SearchBloc · LatestBloc · ComicDetailsBloc · ReaderBloc
+            route-scoped blocs: LatestBloc · ComicDetailsBloc · ReaderBloc
 
    Bloc/Cubit ─▶ UseCase ─▶ Repository (interface) ─▶ RepositoryImpl
                                                        ├─ SeriesRemoteDataSource ─▶ ApiClient (Dio)
@@ -179,14 +178,14 @@ It must print nothing.
 ### 4.2 Bloc scope
 
 - **App scope** (`lib/app/app.dart`): the bottom-tab blocs (`HomeBloc`, `ExploreBloc`, `FilterCubit`) and the library (`BookmarkCubit`, `HistoryCubit`, `SettingsCubit`, `BackupCubit`). Several screens read them, and they have to outlive navigation.
-- **Route scope:** `SearchScreen`, `LatestChapterScreen`, `ComicDetailsScreen` and `ReadChapterScreen` each create their own bloc with `BlocProvider(create: (_) => getIt<…>())`. The public screen widget is a thin wrapper and the stateful view underneath is private (`_ComicDetailsView`). Opening a second comic or moving to the next chapter therefore always starts from a fresh state.
+- **Route scope:** `LatestChapterScreen`, `ComicDetailsScreen` and `ReadChapterScreen` each create their own bloc with `BlocProvider(create: (_) => getIt<…>())`. The public screen widget is a thin wrapper and the stateful view underneath is private (`_ComicDetailsView`). Opening a second comic or moving to the next chapter therefore always starts from a fresh state.
 
 ### 4.3 State shapes
 
 - Remote screens use a freezed sealed state: `initial`, `loading`, `loaded(...)`, `error(message)`, `noInternet`. The generated classes are public (`HomeLoaded`, `ComicDetailsNoInternet`), so widgets use `state is HomeLoaded`.
 - The paginated lists (latest, search, explore) share `ComicListState` and the `ComicListLoader` mixin: `loadFirstPage` and `loadNextPage`. A next-page event is ignored until the first page has loaded. While a page is loading, `ComicListLoaded.isLoadMore` is true.
 - Library cubits hold plain lists (`List<Bookmark>`, `List<ReadHistory>`) or `AppSettings`. After every write they reload from the repository, so the state always matches storage.
-- Events are plain `final class`es named after what happened: `HomeStarted`, `HomeRefreshed`, `SearchRequested`, `ChapterRequested`.
+- Events are plain `final class`es named after what happened: `HomeStarted`, `HomeRefreshed`, `ExploreRequested`, `ChapterRequested`.
 
 ### 4.4 Settings
 
@@ -217,8 +216,7 @@ The UI follows the Dotline design system in `docs/redesign/DESIGN_SYSTEM.md`. De
 |---|---|---|---|
 | home | Home tab | `HomeBloc` | Trending (`/lists/trending`, 10) + latest (`/series?sort=latest`, 20), loaded in parallel. Also shows the last read comic. |
 | latest | "Lihat Semua" | `LatestBloc` | Infinite scroll, up to 10 pages. |
-| search | Search button | `SearchBloc` | Searches `/series?q=`. |
-| explore | Explore tab + filter screen | `ExploreBloc`, `FilterCubit` | `ExploreFilter`. `default` sort and `all` type/status are sent as "no filter". |
+| explore | Jelajah tab: title search + filter sheet | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (search `query` + filters) goes to `/series` in one request; the API applies them together. `default` sort, `all` type/status and an empty query are sent as "no filter". Beranda's search button switches to this tab through `RootTabs`. Requests run in order so an older search cannot overwrite a newer one. |
 | comic_detail | Comic card tap | `ComicDetailsBloc` | Series and chapters fetched in parallel. Bookmark toggle, continue reading, and multi-select of chapters to mark read or unread. |
 | reader | Chapter tap | `ReaderBloc` | Chapter slug is `seriesSlug/number`. Prev/next replace the route. Writes history when a chapter loads. |
 | bookmark | Bookmark tab | `BookmarkCubit` | Search by title. Pull-to-refresh runs `RefreshBookmarks` (§6.1). |
@@ -379,6 +377,5 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 
 ## 12. Open questions
 
-- **Listeners added in `build()`:** the search, explore and latest lists add their `ScrollController` listener inside `build()`. Listeners pile up on every rebuild, which probably triggers load-more more than once. Comic detail (title on scroll) and bookmarks (search field) do the same, which causes extra `setState` calls. Move all of them to `initState`.
 - **Old storage:** when should `hydrated_box.hive` be deleted? Not before most users run a version with the migrator.
 - **Formatting:** the code base predates the current `dart format` style. Reformatting everything in one commit would be a large, noisy diff. Decide whether to do it once.

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
@@ -10,7 +11,6 @@ import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter.dart';
-import 'package:bacakomik_app/features/search/presentation/pages/search_screen.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -52,9 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _openSearch() =>
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const SearchScreen()));
+  void _openSearch() => RootTabsScope.read(context).openExploreSearch();
 
   @override
   Widget build(BuildContext context) {

@@ -92,14 +92,6 @@ import 'package:bacakomik_app/features/reader/domain/usecases/get_chapter_conten
     as _i681;
 import 'package:bacakomik_app/features/reader/presentation/bloc/reader_bloc.dart'
     as _i471;
-import 'package:bacakomik_app/features/search/data/repositories/search_repository_impl.dart'
-    as _i758;
-import 'package:bacakomik_app/features/search/domain/repositories/search_repository.dart'
-    as _i1022;
-import 'package:bacakomik_app/features/search/domain/usecases/search_comics.dart'
-    as _i806;
-import 'package:bacakomik_app/features/search/presentation/bloc/search_bloc.dart'
-    as _i452;
 import 'package:bacakomik_app/features/settings/data/datasources/settings_local_data_source.dart'
     as _i394;
 import 'package:bacakomik_app/features/settings/data/repositories/settings_repository_impl.dart'
@@ -241,12 +233,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i328.GetLatestComics>(
       () => _i328.GetLatestComics(gh<_i655.LatestRepository>()),
     );
-    gh.lazySingleton<_i1022.SearchRepository>(
-      () => _i758.SearchRepositoryImpl(
-        gh<_i535.SeriesRemoteDataSource>(),
-        gh<_i764.NetworkInfo>(),
-      ),
-    );
     gh.lazySingleton<_i282.ComicDetailRepository>(
       () => _i363.ComicDetailRepositoryImpl(
         gh<_i535.SeriesRemoteDataSource>(),
@@ -298,12 +284,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i380.GetComicDetails(gh<_i282.ComicDetailRepository>()),
     );
     gh.factory<_i611.GetHome>(() => _i611.GetHome(gh<_i15.HomeRepository>()));
-    gh.factory<_i806.SearchComics>(
-      () => _i806.SearchComics(gh<_i1022.SearchRepository>()),
-    );
-    gh.factory<_i452.SearchBloc>(
-      () => _i452.SearchBloc(gh<_i806.SearchComics>()),
-    );
     gh.factory<_i520.ExploreComics>(
       () => _i520.ExploreComics(gh<_i215.ExploreRepository>()),
     );

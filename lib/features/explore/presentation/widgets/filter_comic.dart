@@ -93,7 +93,10 @@ class _FilterComicState extends State<FilterComic> {
               ),
             ),
             GestureDetector(
-              onTap: () => setState(() => _filter = const ExploreFilter()),
+              // Reset clears the filters, not the search text.
+              onTap: () => setState(
+                () => _filter = ExploreFilter(query: _filter.query),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(DotSpace.s3),
                 child: Text(

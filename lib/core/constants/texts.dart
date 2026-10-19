@@ -68,11 +68,9 @@ class AppText {
 
   // Search Screen Text
   static const String searchHint = 'Cari Komik Disini';
-  static const String searchComicHere = 'Cari Judul Komik Disini';
   static const String comicNotFound = 'Komik Tidak Ditemukan';
   static const String comicNotFoundFilter = 'Coba ubah atau reset filter.';
   static const String comicNotFoundSearch = 'Coba kata kunci lain.';
-  static const String searchStart = 'Cari judul atau author komik.';
 
   // Filter Screen Text
   static const String filter = 'Filter';
@@ -84,7 +82,7 @@ class AppText {
   static const String sortShortLong = 'Urutkan';
   static const String showResults = 'Tampilkan hasil';
   static const String close = 'Tutup';
-  static const String exploreSearchHint = 'Cari judul, author…';
+  static const String exploreSearchHint = 'Cari judul komik';
 
   // History Screen Text
   static const String historyEmpty = 'Belum ada riwayat baca';

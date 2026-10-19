@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
@@ -33,7 +34,21 @@ class _RootScreenState extends State<RootScreen> {
     FloatingNavItem(icon: LucideIcons300.ellipsis, label: AppText.more),
   ];
 
-  var _selectedIndex = 0;
+  final _tabs = RootTabs();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs.addListener(_onTabChanged);
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  void _onTabChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
@@ -63,15 +78,18 @@ class _RootScreenState extends State<RootScreen> {
                   bottom: keyboardOpen ? 0 : navInset,
                 ),
               ),
-              child: IndexedStack(
-                index: _selectedIndex,
-                children: const [
-                  HomeScreen(),
-                  ExploreScreen(),
-                  BookmarksScreen(),
-                  HistoryScreen(),
-                  MoreScreen(),
-                ],
+              child: RootTabsScope(
+                tabs: _tabs,
+                child: IndexedStack(
+                  index: _tabs.index,
+                  children: const [
+                    HomeScreen(),
+                    ExploreScreen(),
+                    BookmarksScreen(),
+                    HistoryScreen(),
+                    MoreScreen(),
+                  ],
+                ),
               ),
             ),
             if (!keyboardOpen) ...[
@@ -90,9 +108,8 @@ class _RootScreenState extends State<RootScreen> {
                 child: Center(
                   child: FloatingNavBar(
                     items: _items,
-                    selectedIndex: _selectedIndex,
-                    onSelected: (index) =>
-                        setState(() => _selectedIndex = index),
+                    selectedIndex: _tabs.index,
+                    onSelected: _tabs.select,
                   ),
                 ),
               ),

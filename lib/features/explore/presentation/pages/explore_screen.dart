@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/core/constants/filters.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
@@ -10,7 +13,6 @@ import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.da
 import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
 import 'package:bacakomik_app/features/explore/presentation/widgets/filter_comic.dart';
-import 'package:bacakomik_app/features/search/presentation/pages/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -38,16 +40,61 @@ class _ExploreScreenState extends State<ExploreScreen> {
     ),
   );
 
+  final _query = TextEditingController();
+  final _queryFocus = FocusNode();
+  Timer? _debounce;
+  RootTabs? _tabs;
+  var _searchRequests = 0;
+
   @override
   void initState() {
     super.initState();
+    _query.text = context.read<FilterCubit>().state.query;
     _load();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final tabs = RootTabsScope.read(context);
+    if (!identical(tabs, _tabs)) {
+      _tabs?.removeListener(_onTabs);
+      _tabs = tabs..addListener(_onTabs);
+      _searchRequests = tabs.searchRequests;
+    }
+  }
+
+  @override
   void dispose() {
+    _tabs?.removeListener(_onTabs);
+    _debounce?.cancel();
+    _query.dispose();
+    _queryFocus.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Beranda's search button: focus the field once this tab is shown.
+  void _onTabs() {
+    final tabs = _tabs!;
+    if (tabs.searchRequests == _searchRequests) return;
+    _searchRequests = tabs.searchRequests;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _queryFocus.requestFocus();
+    });
+  }
+
+  void _onQueryChanged(String text) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () => _search(text));
+  }
+
+  void _search(String text) {
+    _debounce?.cancel();
+    final cubit = context.read<FilterCubit>();
+    if (cubit.state.query == text.trim()) return;
+    cubit.setQuery(text.trim());
+    _load();
   }
 
   Future<void> _load() async {
@@ -68,10 +115,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
     _load();
   }
-
-  void _openSearch() =>
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const SearchScreen()));
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +162,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SearchField(hint: AppText.exploreSearchHint, onTap: _openSearch),
+          SearchField(
+            hint: AppText.exploreSearchHint,
+            controller: _query,
+            focusNode: _queryFocus,
+            onChanged: _onQueryChanged,
+            onSubmitted: _search,
+            onClear: () {
+              _query.clear();
+              _search('');
+            },
+          ),
           const SizedBox(height: DotSpace.s4),
           SegmentedControl<String>(
             selected: filter.type,
@@ -184,11 +237,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   List<Widget> _results(ComicListState state) => switch (state) {
     ComicListLoaded(:final comics) when comics.isEmpty => [
-      const SliverToBoxAdapter(
+      SliverToBoxAdapter(
         child: EmptyState(
           icon: LucideIcons300.searchX,
           title: AppText.comicNotFound,
-          message: AppText.comicNotFoundFilter,
+          message: _query.text.trim().isEmpty
+              ? AppText.comicNotFoundFilter
+              : AppText.comicNotFoundSearch,
         ),
       ),
     ],
