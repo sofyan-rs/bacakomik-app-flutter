@@ -1,12 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:gal/gal.dart';
 
-showSnackBar({
+void showSnackBar({
   required BuildContext context,
   required String message,
   Icon? icon,
@@ -31,13 +30,12 @@ Future saveImg({
   required String img,
 }) async {
   final dio = Dio();
-  dio.options.headers['Referer'] = AppVariables.referer;
   try {
     final response = await dio.get(
       img,
       options: Options(responseType: ResponseType.bytes),
     );
-    await ImageGallerySaver.saveImage(Uint8List.fromList(response.data));
+    await Gal.putImageBytes(Uint8List.fromList(response.data));
 
     if (!context.mounted) return;
     showSnackBar(

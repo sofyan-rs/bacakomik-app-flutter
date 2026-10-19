@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:bacakomik_app/core/utils/api_format.dart';
 
 part 'chapter_model.dart';
 part 'genre_model.dart';
@@ -101,6 +102,39 @@ class ComicDetailsModel {
           (x) => ChapterModel.fromMap(x as Map<String, dynamic>),
         ),
       ),
+    );
+  }
+
+  factory ComicDetailsModel.fromApi(
+    Map<String, dynamic> series,
+    List<dynamic> chapters,
+  ) {
+    final slug = series['slug'] as String;
+    return ComicDetailsModel(
+      title: series['title'] as String,
+      coverImg: (series['cover'] as String?) ?? '',
+      alternativeTitle: (series['nativeTitle'] as String?) ?? '-',
+      released: (series['releaseDate'] as String?) ?? '-',
+      status: ApiFormat.capitalize(series['status'] as String?),
+      totalChapter: chapters.length.toString(),
+      author: (series['author'] as String?) ?? '-',
+      type: ApiFormat.capitalize(series['format'] as String?),
+      rating: ApiFormat.rating(series['rating'] as num?),
+      synopsis: (series['synopsis'] as String?)?.trim() ?? '',
+      genres: (series['genres'] as List<dynamic>)
+          .map((e) => GenreModel(
+                name: e['name'] as String,
+                slug: e['id'].toString(),
+              ))
+          .toList(),
+      chapters: chapters.map((e) {
+        final number = e['number'] as num;
+        return ChapterModel(
+          number: ApiFormat.number(number),
+          slug: ApiFormat.chapterSlug(slug, number),
+          date: ApiFormat.relativeDate(e['createdAt'] as String?),
+        );
+      }).toList(),
     );
   }
 

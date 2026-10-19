@@ -11,9 +11,9 @@ import 'package:bacakomik_app/presentation/widgets/chip/custom_choice_chip.dart'
 
 class FilterComic extends StatefulWidget {
   const FilterComic({
-    Key? key,
+    super.key,
     required this.onApply,
-  }) : super(key: key);
+  });
 
   final void Function() onApply;
 
@@ -28,7 +28,7 @@ class _FilterComicState extends State<FilterComic>
 
   String _selectedType = 'all';
   String _selectedStatus = 'all';
-  String _selectedSortBy = 'update';
+  String _selectedSortBy = 'latest';
   List<String> _selectedGenres = [];
 
   @override
@@ -64,7 +64,7 @@ class _FilterComicState extends State<FilterComic>
     setState(() {
       _selectedType = 'all';
       _selectedStatus = 'all';
-      _selectedSortBy = 'update';
+      _selectedSortBy = 'latest';
       _selectedGenres = [];
     });
   }
@@ -80,7 +80,7 @@ class _FilterComicState extends State<FilterComic>
           },
           icon: Icon(
             SolarIconsOutline.arrowLeft,
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
@@ -110,7 +110,7 @@ class _FilterComicState extends State<FilterComic>
             fontWeight: FontWeight.w600,
           ),
           labelColor: AppColors.primary,
-          unselectedLabelColor: Theme.of(context).colorScheme.onBackground,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurface,
           indicatorColor: AppColors.primary,
           indicatorSize: TabBarIndicatorSize.tab,
           indicatorWeight: 4,

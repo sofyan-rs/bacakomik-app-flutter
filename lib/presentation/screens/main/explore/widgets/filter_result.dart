@@ -10,10 +10,10 @@ import 'package:solar_icons/solar_icons.dart';
 
 class FilterResult extends StatefulWidget {
   const FilterResult({
-    Key? key,
+    super.key,
     required this.onLoadMore,
     required this.onRefresh,
-  }) : super(key: key);
+  });
 
   final Function(int page) onLoadMore;
   final Function() onRefresh;
@@ -102,7 +102,7 @@ class _FilterResultState extends State<FilterResult> {
                 children: [
                   Icon(
                     SolarIconsOutline.magnifier,
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                     size: 80,
                   ),
                   const SizedBox(height: 20),
@@ -113,8 +113,8 @@ class _FilterResultState extends State<FilterResult> {
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
-                          .withOpacity(0.5),
+                          .onSurface
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                 ],

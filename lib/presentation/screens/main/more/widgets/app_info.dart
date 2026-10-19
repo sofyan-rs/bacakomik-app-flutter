@@ -16,7 +16,7 @@ class _AppInfoState extends State<AppInfo> {
   String _appVersion = '';
   final _appChangelogs = AppChangelogs.changelogs;
 
-  getAppVersion() async {
+  Future<void> getAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     setState(() {
       _appVersion = packageInfo.version;

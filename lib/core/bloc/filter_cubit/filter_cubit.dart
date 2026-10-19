@@ -6,7 +6,7 @@ class FilterCubit extends Cubit<FilterState> {
   FilterCubit()
       : super(
           FilterState(
-            sortBy: 'update',
+            sortBy: 'latest',
             type: 'all',
             status: 'all',
             genres: [],

@@ -11,13 +11,13 @@ import 'package:solar_icons/solar_icons.dart';
 
 class ComicChapters extends StatefulWidget {
   const ComicChapters({
-    Key? key,
+    super.key,
     required this.comicDetails,
     required this.comicSlug,
     required this.onSelectedChapter,
     required this.isInSelectedChapters,
     required this.isHaveSelectedChapter,
-  }) : super(key: key);
+  });
 
   final ComicDetailsModel comicDetails;
   final String comicSlug;

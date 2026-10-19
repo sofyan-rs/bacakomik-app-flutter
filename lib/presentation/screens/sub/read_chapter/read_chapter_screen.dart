@@ -12,11 +12,11 @@ import 'package:solar_icons/solar_icons.dart';
 
 class ReadChapterScreen extends StatefulWidget {
   const ReadChapterScreen({
-    Key? key,
+    super.key,
     required this.slug,
     required this.comicSlug,
     required this.comicDetails,
-  }) : super(key: key);
+  });
 
   final String slug;
   final String comicSlug;
@@ -95,7 +95,7 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                 },
                 icon: Icon(
                   SolarIconsOutline.arrowLeft,
-                  color: Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             )
@@ -143,8 +143,8 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                       //   ..scale(3.0);
                       // Fox a 2x zoom
                       _transformationController.value = Matrix4.identity()
-                        ..translate(-position.dx, -position.dy)
-                        ..scale(2.0);
+                        ..translateByDouble(-position.dx, -position.dy, 0, 1)
+                        ..scaleByDouble(2.0, 2.0, 2.0, 1);
                     }
                   },
                   child: InteractiveViewer(
@@ -179,7 +179,7 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                     right: 0,
                     child: Container(
                       height: 60,
-                      color: AppColors.dark.withOpacity(0.8),
+                      color: AppColors.dark.withValues(alpha: 0.8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -191,7 +191,7 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                                   },
                                   icon: Icon(
                                     SolarIconsOutline.altArrowLeft,
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                   ),
                                 )
                               : const SizedBox(width: 50),
@@ -210,7 +210,7 @@ class _ReadChapterScreenState extends State<ReadChapterScreen> {
                                   },
                                   icon: Icon(
                                     SolarIconsOutline.altArrowRight,
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                   ),
                                 )
                               : const SizedBox(width: 50),

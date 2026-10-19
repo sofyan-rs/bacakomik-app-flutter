@@ -18,7 +18,7 @@ class LatestChapterScreen extends StatelessWidget {
           },
           icon: Icon(
             SolarIconsOutline.arrowLeft,
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ),

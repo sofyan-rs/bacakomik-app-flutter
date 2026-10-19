@@ -14,7 +14,7 @@ class ErrNoInternet extends StatelessWidget {
         children: [
           Icon(
             SolarIconsOutline.translation,
-            color: AppColors.primary.withOpacity(0.5),
+            color: AppColors.primary.withValues(alpha: 0.5),
             size: 80,
           ),
           const SizedBox(height: 20),
@@ -24,7 +24,7 @@ class ErrNoInternet extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color:
-                  Theme.of(context).colorScheme.onBackground.withOpacity(0.5),
+                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ],

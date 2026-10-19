@@ -12,14 +12,14 @@ import 'package:solar_icons/solar_icons.dart';
 
 class HistoryComicCard extends StatefulWidget {
   const HistoryComicCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.cover,
     required this.slug,
     required this.chapter,
     required this.chapterSlug,
     required this.readDate,
-  }) : super(key: key);
+  });
 
   final String title;
   final String cover;
@@ -67,8 +67,8 @@ class _HistoryComicCardState extends State<HistoryComicCard> {
                       bottom: BorderSide(
                         color: Theme.of(context)
                             .colorScheme
-                            .onBackground
-                            .withOpacity(0.1),
+                            .onSurface
+                            .withValues(alpha: 0.1),
                         width: 1,
                       ),
                     ),
@@ -216,13 +216,13 @@ class _HistoryComicCardState extends State<HistoryComicCard> {
                   color: Theme.of(context)
                       .colorScheme
                       .secondaryContainer
-                      .withOpacity(0.2),
+                      .withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(5),
                   border: Border.all(
                     color: Theme.of(context)
                         .colorScheme
                         .secondary
-                        .withOpacity(0.1),
+                        .withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -233,7 +233,7 @@ class _HistoryComicCardState extends State<HistoryComicCard> {
                       height: 60,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(5),
-                        color: Theme.of(context).primaryColor.withOpacity(0.5),
+                        color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: CachedNetworkImage(

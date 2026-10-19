@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/utils/api_format.dart';
 import 'dart:convert';
 
 class ComicModel {
@@ -60,6 +61,24 @@ class ComicModel {
       rating: map['rating'] as String,
       latestChapter: map['latestChapter'] as String,
     );
+  }
+
+  factory ComicModel.fromApi(Map<String, dynamic> map) {
+    return ComicModel(
+      title: map['title'] as String,
+      coverImg: (map['cover'] as String?) ?? '',
+      slug: map['slug'] as String,
+      type: ApiFormat.capitalize(map['format'] as String?),
+      completed: map['status'] == 'completed',
+      rating: ApiFormat.rating(map['rating'] as num?),
+      latestChapter: ApiFormat.number(map['totalChapters'] as num?),
+    );
+  }
+
+  static List<ComicModel> listFromApi(Map<String, dynamic> res) {
+    return (res['data'] as List)
+        .map((e) => ComicModel.fromApi(e as Map<String, dynamic>))
+        .toList();
   }
 
   String toJson() => json.encode(toMap());

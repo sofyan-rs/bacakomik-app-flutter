@@ -1,22 +1,26 @@
-import 'dart:convert';
-
+import 'package:bacakomik_app/core/models/comic_model.dart';
 import 'package:bacakomik_app/core/models/home_model.dart';
-import 'package:bacakomik_app/data/data_provider/home_data_provider.dart';
+import 'package:bacakomik_app/core/models/popular_model.dart';
+import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 
 class HomeRepository {
-  final HomeDataProvider homeProvider;
+  final BacaKomikDataProvider dataProvider;
 
-  HomeRepository(this.homeProvider);
+  HomeRepository(this.dataProvider);
 
   Future<HomeModel> getHome() async {
-    try {
-      final homeData = await homeProvider.getHome();
+    final results = await Future.wait([
+      dataProvider.getCuratedList('trending', limit: 10),
+      dataProvider.getSeriesList(sort: 'latest', limit: 20),
+    ]);
 
-      final data = jsonDecode(homeData);
-
-      return HomeModel.fromMap(data['data']);
-    } catch (e) {
-      throw Exception('Error: $e');
-    }
+    return HomeModel(
+      popular: (results[0]['data'] as List)
+          .map((e) => PopularModel.fromApi(e as Map<String, dynamic>))
+          .toList(),
+      latest: (results[1]['data'] as List)
+          .map((e) => ComicModel.fromApi(e as Map<String, dynamic>))
+          .toList(),
+    );
   }
 }

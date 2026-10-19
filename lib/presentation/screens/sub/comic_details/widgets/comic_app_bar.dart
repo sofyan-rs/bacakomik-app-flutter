@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:solar_icons/solar_icons.dart';
 
-import 'package:bacakomik_app/core/bloc/favorite_cubit/favorite_cubit.dart';
+import 'package:bacakomik_app/core/bloc/bookmark_cubit/bookmark_cubit.dart';
 import 'package:bacakomik_app/core/bloc/history_cubit/history_cubit.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
@@ -14,13 +14,13 @@ import 'package:bacakomik_app/presentation/screens/sub/read_chapter/read_chapter
 
 class ComicAppBar extends StatefulWidget {
   const ComicAppBar({
-    Key? key,
+    super.key,
     required this.comicSlug,
     required this.comicDetails,
     required this.selectedChapters,
     required this.selectAllChapter,
     required this.unselectAllChapter,
-  }) : super(key: key);
+  });
 
   final String comicSlug;
   final ComicDetailsModel comicDetails;
@@ -47,8 +47,8 @@ class _ComicAppBarState extends State<ComicAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    bool isInFavorites =
-        context.watch<FavoriteCubit>().isFavorite(widget.comicSlug);
+    bool isInBookmarks =
+        context.watch<BookmarkCubit>().isBookmark(widget.comicSlug);
     HistoryModel? latestHistory =
         context.watch<HistoryCubit>().getLatestHistoryBySlug(widget.comicSlug);
 
@@ -58,13 +58,13 @@ class _ComicAppBarState extends State<ComicAppBar> {
         children: [
           IconButton(
             onPressed: () {
-              if (!isInFavorites) {
+              if (!isInBookmarks) {
                 context
-                    .read<FavoriteCubit>()
-                    .addFavorite(widget.comicDetails, widget.comicSlug);
+                    .read<BookmarkCubit>()
+                    .addBookmark(widget.comicDetails, widget.comicSlug);
                 showSnackBar(
                   context: context,
-                  message: AppText.addedToFavorite,
+                  message: AppText.addedToBookmark,
                   icon: Icon(
                     SolarIconsOutline.bookmarkSquareMinimalistic,
                     color: Theme.of(context).colorScheme.onPrimary,
@@ -72,10 +72,10 @@ class _ComicAppBarState extends State<ComicAppBar> {
                   ),
                 );
               } else {
-                context.read<FavoriteCubit>().removeFavorite(widget.comicSlug);
+                context.read<BookmarkCubit>().removeBookmark(widget.comicSlug);
                 showSnackBar(
                   context: context,
-                  message: AppText.removedFromFavorite,
+                  message: AppText.removedFromBookmark,
                   icon: Icon(
                     SolarIconsOutline.trashBinMinimalistic,
                     color: Theme.of(context).colorScheme.onPrimary,
@@ -85,7 +85,7 @@ class _ComicAppBarState extends State<ComicAppBar> {
               }
             },
             icon: Icon(
-              isInFavorites ? SolarIconsBold.heart : SolarIconsOutline.heart,
+              isInBookmarks ? SolarIconsBold.heart : SolarIconsOutline.heart,
               color: AppColors.primary,
             ),
             style: TextButton.styleFrom(

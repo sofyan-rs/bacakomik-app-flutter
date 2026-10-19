@@ -23,8 +23,6 @@ class _SettingsState extends State<Settings> {
   final DefaultCacheManager _cacheManager = DefaultCacheManager();
 
   final Uri _reportLink = Uri.parse(AppVariables.reportLink);
-  final Uri _privacyPolicyLink = Uri.parse(AppVariables.privacyPolicyLink);
-  final Uri _dmcaLink = Uri.parse(AppVariables.dmcaLink);
 
   Future<void> _reportBug() async {
     if (!await launchUrl(_reportLink)) {
@@ -32,19 +30,7 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  Future<void> _privacyPolicy() async {
-    if (!await launchUrl(_privacyPolicyLink)) {
-      throw Exception('Could not launch $_reportLink');
-    }
-  }
-
-  Future<void> _dmca() async {
-    if (!await launchUrl(_dmcaLink)) {
-      throw Exception('Could not launch $_reportLink');
-    }
-  }
-
-  _showAppInfo() {
+  void _showAppInfo() {
     showDialog(
       context: context,
       builder: (context) {
@@ -90,8 +76,8 @@ class _SettingsState extends State<Settings> {
                     bottom: BorderSide(
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
-                          .withOpacity(0.1),
+                          .onSurface
+                          .withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),
@@ -132,7 +118,7 @@ class _SettingsState extends State<Settings> {
                         ElevatedButton(
                           onPressed: () async {
                             await _cacheManager.emptyCache();
-                            if (mounted) {
+                            if (context.mounted) {
                               Navigator.of(context).pop();
                             }
                           },
@@ -159,7 +145,7 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  _goToHistoryScreen() {
+  void _goToHistoryScreen() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const HistoryScreen(),
@@ -178,7 +164,7 @@ class _SettingsState extends State<Settings> {
       children: [
         Divider(
           height: 1,
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
         ),
         ListTile(
           leading:
@@ -189,7 +175,7 @@ class _SettingsState extends State<Settings> {
         ),
         Container(
           height: 15,
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
         ),
         ListTile(
           leading: const Icon(SolarIconsOutline.trashBinMinimalistic,
@@ -200,7 +186,7 @@ class _SettingsState extends State<Settings> {
         ),
         Divider(
           height: 1,
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
         ),
         ListTile(
           leading:
@@ -213,7 +199,7 @@ class _SettingsState extends State<Settings> {
         ),
         Divider(
           height: 1,
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
         ),
         ListTile(
           leading:
@@ -226,7 +212,7 @@ class _SettingsState extends State<Settings> {
         ),
         Container(
           height: 15,
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
         ),
         ListTile(
           leading: const Icon(SolarIconsOutline.moon, color: AppColors.primary),
@@ -269,7 +255,7 @@ class _SettingsState extends State<Settings> {
         ),
         Container(
           height: 15,
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
         ),
         ListTile(
           leading: const Icon(SolarIconsOutline.bugMinimalistic,
@@ -279,27 +265,7 @@ class _SettingsState extends State<Settings> {
         ),
         Divider(
           height: 1,
-          color: Colors.grey.withOpacity(0.1),
-        ),
-        ListTile(
-          leading: const Icon(SolarIconsOutline.shieldWarning,
-              color: AppColors.primary),
-          title: const Text(AppText.privacyPolicy),
-          onTap: _privacyPolicy,
-        ),
-        Divider(
-          height: 1,
-          color: Colors.grey.withOpacity(0.1),
-        ),
-        ListTile(
-          leading: const Icon(SolarIconsOutline.lockKeyhole,
-              color: AppColors.primary),
-          title: const Text(AppText.dmca),
-          onTap: _dmca,
-        ),
-        Divider(
-          height: 1,
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
         ),
         ListTile(
           leading: const Icon(SolarIconsOutline.code, color: AppColors.primary),
@@ -308,7 +274,7 @@ class _SettingsState extends State<Settings> {
         ),
         Container(
           height: 15,
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
         ),
       ],
     );

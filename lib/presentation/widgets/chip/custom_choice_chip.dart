@@ -4,11 +4,11 @@ import 'package:bacakomik_app/core/constants/colors.dart';
 
 class CustomChoiceChip extends StatelessWidget {
   const CustomChoiceChip({
-    Key? key,
+    super.key,
     required this.isSelected,
     required this.label,
     required this.onSelected,
-  }) : super(key: key);
+  });
 
   final bool isSelected;
   final String label;
@@ -32,7 +32,7 @@ class CustomChoiceChip extends StatelessWidget {
         style: TextStyle(
           color: isSelected
               ? Colors.white
-              : Theme.of(context).colorScheme.onBackground,
+              : Theme.of(context).colorScheme.onSurface,
         ),
       ),
       selected: isSelected,

@@ -58,15 +58,15 @@ class _SearchScreenState extends State<SearchScreen> {
             hintStyle: TextStyle(
                 color: Theme.of(context)
                     .colorScheme
-                    .onBackground
-                    .withOpacity(0.9)),
+                    .onSurface
+                    .withValues(alpha: 0.9)),
             enabledBorder: OutlineInputBorder(
               borderRadius: const BorderRadius.all(
                 Radius.circular(7),
               ),
               borderSide: BorderSide(
                 color:
-                    Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
               ),
             ),
             focusedBorder: const OutlineInputBorder(
@@ -85,7 +85,7 @@ class _SearchScreenState extends State<SearchScreen> {
           },
           icon: Icon(
             SolarIconsOutline.arrowLeft,
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [

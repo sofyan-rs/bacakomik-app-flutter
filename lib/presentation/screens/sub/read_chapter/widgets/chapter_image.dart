@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 class ChapterImg extends StatefulWidget {
   const ChapterImg({
-    Key? key,
+    super.key,
     required this.chapterImage,
-  }) : super(key: key);
+  });
 
   final String chapterImage;
 
@@ -28,12 +27,11 @@ class _ChapterImgState extends State<ChapterImg> {
 
   Future _sendHttpRequest(String imgUrl) async {
     final dio = Dio();
-    dio.options.headers['Referer'] = AppVariables.referer;
     final response = await dio.get(imgUrl);
     return response;
   }
 
-  void showModalDownloadImg(imgUrl) {
+  void showModalDownloadImg(String imgUrl) {
     showModalBottomSheet(
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -50,7 +48,7 @@ class _ChapterImgState extends State<ChapterImg> {
                 children: [
                   Icon(
                     SolarIconsOutline.galleryDownload,
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onSurface,
                     size: 20,
                   ),
                   const SizedBox(width: 10),
@@ -110,9 +108,6 @@ class _ChapterImgState extends State<ChapterImg> {
               ),
             ),
           );
-        },
-        httpHeaders: const {
-          'Referer': AppVariables.referer,
         },
       ),
     );

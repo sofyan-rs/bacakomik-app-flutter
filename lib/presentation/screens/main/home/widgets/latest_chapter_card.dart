@@ -53,11 +53,11 @@ class LatestChapterCard extends StatelessWidget {
                 color: Theme.of(context)
                     .colorScheme
                     .secondaryContainer
-                    .withOpacity(0.2),
+                    .withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(5),
                 border: Border.all(
                   color:
-                      Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
@@ -68,7 +68,7 @@ class LatestChapterCard extends StatelessWidget {
                     height: 60,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5),
-                      color: Theme.of(context).primaryColor.withOpacity(0.5),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: CachedNetworkImage(

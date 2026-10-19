@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/presentation/screens/auth/login/login_screen.dart';
+import 'package:bacakomik_app/presentation/screens/root/root_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -14,9 +14,10 @@ class SplashScreen extends StatelessWidget {
     Future.delayed(
       const Duration(milliseconds: 3000),
       () {
+        if (!context.mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => LoginScreen(),
+            builder: (context) => const RootScreen(),
           ),
         );
       },
@@ -27,8 +28,8 @@ class SplashScreen extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.primary.withOpacity(0.8),
-              Theme.of(context).colorScheme.background,
+              AppColors.primary.withValues(alpha: 0.8),
+              Theme.of(context).colorScheme.surface,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -52,7 +53,7 @@ class SplashScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.w600,
-                  fontFamily: GoogleFonts.sairaStencilOne().fontFamily,
+                  fontFamily: GoogleFonts.sairaStencil().fontFamily,
                 ),
               ),
             ],

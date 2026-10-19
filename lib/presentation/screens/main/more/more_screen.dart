@@ -1,8 +1,6 @@
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/last_read_comic.dart';
-import 'package:bacakomik_app/presentation/screens/main/more/widgets/logout_button.dart';
-import 'package:bacakomik_app/presentation/screens/main/more/widgets/profile.dart';
 import 'package:bacakomik_app/presentation/screens/main/more/widgets/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -17,7 +15,7 @@ class MoreScreen extends StatefulWidget {
 class _MoreScreenState extends State<MoreScreen> {
   String _appVersion = '';
 
-  getAppVersion() async {
+  Future<void> getAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     setState(() {
       _appVersion = packageInfo.version;
@@ -47,10 +45,8 @@ class _MoreScreenState extends State<MoreScreen> {
               ),
               subtitle: Text('v$_appVersion'),
             ),
-            const Profile(),
             const LastReadComic(),
             const Settings(),
-            const LogoutButton(),
           ],
         ),
       ),

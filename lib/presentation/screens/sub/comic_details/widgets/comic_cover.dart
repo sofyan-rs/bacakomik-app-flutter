@@ -12,10 +12,10 @@ import 'package:solar_icons/solar_icons.dart';
 
 class ComicCover extends StatelessWidget {
   const ComicCover({
-    Key? key,
+    super.key,
     this.cover,
     required this.slug,
-  }) : super(key: key);
+  });
 
   final String? cover;
   final String slug;
@@ -58,7 +58,7 @@ class ComicCover extends StatelessWidget {
                 child: IconButton(
                   color: Colors.white,
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.black.withOpacity(0.5),
+                    backgroundColor: Colors.black.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(7),
                     ),
@@ -117,8 +117,8 @@ class ComicCover extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Theme.of(context).colorScheme.background.withOpacity(0.2),
-                  Theme.of(context).colorScheme.background,
+                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.2),
+                  Theme.of(context).colorScheme.surface,
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -255,7 +255,7 @@ class ComicCover extends StatelessWidget {
                               title,
                               style: TextStyle(
                                 color:
-                                    Theme.of(context).colorScheme.onBackground,
+                                    Theme.of(context).colorScheme.onSurface,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                               ),

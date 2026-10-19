@@ -27,7 +27,7 @@ class HistoryCubit extends HydratedCubit<List<HistoryModel>> {
     emit([history, ...newState]);
   }
 
-  addHistoryList(List<HistoryModel> histories) {
+  void addHistoryList(List<HistoryModel> histories) {
     final newState = state;
     for (var i = 0; i < histories.length; i++) {
       final isExist =

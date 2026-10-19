@@ -1,33 +1,20 @@
-import 'dart:convert';
-
 import 'package:bacakomik_app/core/models/comic_model.dart';
-import 'package:bacakomik_app/data/data_provider/explore_data_provider.dart';
+import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 
 class ExploreRepository {
-  final ExploreDataProvider exploreDataProvider;
+  final BacaKomikDataProvider dataProvider;
 
-  ExploreRepository(this.exploreDataProvider);
+  ExploreRepository(this.dataProvider);
 
   Future<List<ComicModel>> getResult(String sortby, String status, String type,
       List<String> genres, int page) async {
-    try {
-      final searchData = await exploreDataProvider.getResult(
-        sortby,
-        status,
-        type,
-        genres,
-        page,
-      );
-
-      final data = jsonDecode(searchData);
-
-      return List<ComicModel>.from(
-        data['data'].map(
-          (e) => ComicModel.fromMap(e),
-        ),
-      );
-    } catch (e) {
-      throw Exception('Error: $e');
-    }
+    final res = await dataProvider.getSeriesList(
+      sort: sortby == 'default' ? null : sortby,
+      status: status == 'all' ? null : status,
+      format: type == 'all' ? null : type,
+      genres: genres,
+      page: page,
+    );
+    return ComicModel.listFromApi(res);
   }
 }

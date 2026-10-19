@@ -7,12 +7,12 @@ import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
 
 class ComicDetails extends StatefulWidget {
   const ComicDetails({
-    Key? key,
+    super.key,
     required this.altTitle,
     required this.releaseYear,
     required this.synopsis,
     required this.genres,
-  }) : super(key: key);
+  });
 
   final String altTitle;
   final String releaseYear;
@@ -51,8 +51,8 @@ class _ComicDetailsState extends State<ComicDetails> {
                     fontSize: 16,
                     color: Theme.of(context)
                         .colorScheme
-                        .onBackground
-                        .withOpacity(0.5),
+                        .onSurface
+                        .withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -75,8 +75,8 @@ class _ComicDetailsState extends State<ComicDetails> {
                   fontSize: 16,
                   color: Theme.of(context)
                       .colorScheme
-                      .onBackground
-                      .withOpacity(0.5),
+                      .onSurface
+                      .withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -92,8 +92,8 @@ class _ComicDetailsState extends State<ComicDetails> {
                   width: 2,
                   color: Theme.of(context)
                       .colorScheme
-                      .onBackground
-                      .withOpacity(0.1),
+                      .onSurface
+                      .withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -122,8 +122,8 @@ class _ComicDetailsState extends State<ComicDetails> {
                           fontSize: 16,
                           color: Theme.of(context)
                               .colorScheme
-                              .onBackground
-                              .withOpacity(0.5),
+                              .onSurface
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -144,7 +144,7 @@ class _ComicDetailsState extends State<ComicDetails> {
                                 : AppText.hide,
                             style: TextStyle(
                               fontSize: 16,
-                              color: AppColors.primary.withOpacity(0.8),
+                              color: AppColors.primary.withValues(alpha: 0.8),
                             ),
                           ),
                         ),
@@ -165,11 +165,11 @@ class _ComicDetailsState extends State<ComicDetails> {
                                 backgroundColor: Theme.of(context)
                                     .colorScheme
                                     .secondaryContainer
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                                 textColor: Theme.of(context)
                                     .colorScheme
                                     .onSecondaryContainer
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                                 textSize: 14,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,

@@ -1,22 +1,20 @@
-import 'dart:convert';
-
 import 'package:bacakomik_app/core/models/comic_details_model/comic_details_model.dart';
-import 'package:bacakomik_app/data/data_provider/comic_details_data_provider.dart';
+import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 
 class ComicDetailsRepository {
-  final ComicDetailsDataProvider comicDetailsDataProvider;
+  final BacaKomikDataProvider dataProvider;
 
-  ComicDetailsRepository(this.comicDetailsDataProvider);
+  ComicDetailsRepository(this.dataProvider);
 
   Future<ComicDetailsModel> getComicDetails(String slug) async {
-    try {
-      final latestData = await comicDetailsDataProvider.getComicDetails(slug);
+    final results = await Future.wait([
+      dataProvider.getSeries(slug),
+      dataProvider.getChapters(slug),
+    ]);
 
-      final data = jsonDecode(latestData);
-
-      return ComicDetailsModel.fromMap(data['data']);
-    } catch (e) {
-      throw Exception('Error: $e');
-    }
+    return ComicDetailsModel.fromApi(
+      results[0]['data'] as Map<String, dynamic>,
+      results[1]['data'] as List<dynamic>,
+    );
   }
 }

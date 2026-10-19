@@ -5,7 +5,6 @@ import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/presentation/screens/main/explore/widgets/filter_comic.dart';
 import 'package:bacakomik_app/presentation/screens/main/explore/widgets/filter_result.dart';
-import 'package:bacakomik_app/presentation/screens/sub/comic_list/comic_list_screen.dart';
 import 'package:bacakomik_app/presentation/screens/sub/search/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,30 +64,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ],
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: IconButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ComicListScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(
-                SolarIconsOutline.sortByAlphabet,
-                color: Colors.white,
-                size: 23,
-              ),
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                padding: const EdgeInsets.all(12),
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: IconButton(

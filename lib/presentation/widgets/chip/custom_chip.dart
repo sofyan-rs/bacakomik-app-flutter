@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomChip extends StatelessWidget {
   const CustomChip({
-    Key? key,
+    super.key,
     required this.text,
     required this.backgroundColor,
     this.textColor = Colors.white,
@@ -12,7 +12,7 @@ class CustomChip extends StatelessWidget {
       horizontal: 5,
       vertical: 2,
     ),
-  }) : super(key: key);
+  });
 
   final String text;
   final Color backgroundColor;

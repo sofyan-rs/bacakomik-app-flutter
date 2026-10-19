@@ -1,5 +1,5 @@
 import 'package:bacakomik_app/presentation/screens/main/explore/explore_screen.dart';
-import 'package:bacakomik_app/presentation/screens/main/favorites/favorites_screen.dart';
+import 'package:bacakomik_app/presentation/screens/main/bookmarks/bookmarks_screen.dart';
 import 'package:bacakomik_app/presentation/screens/main/more/more_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -40,7 +40,7 @@ class _RootScreenState extends State<RootScreen> {
                   icon: const Icon(SolarIconsOutline.homeSmile),
                   selectedIcon: Icon(
                     SolarIconsBold.homeSmile,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                   label: const Text(AppText.home),
                 ),
@@ -48,7 +48,7 @@ class _RootScreenState extends State<RootScreen> {
                   icon: const Icon(SolarIconsOutline.compass),
                   selectedIcon: Icon(
                     SolarIconsBold.compass,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                   label: const Text(AppText.explore),
                 ),
@@ -57,15 +57,15 @@ class _RootScreenState extends State<RootScreen> {
                       const Icon(SolarIconsOutline.bookmarkSquareMinimalistic),
                   selectedIcon: Icon(
                     SolarIconsBold.bookmarkSquareMinimalistic,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
-                  label: const Text(AppText.favorite),
+                  label: const Text(AppText.bookmark),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(SolarIconsOutline.menuDots),
                   selectedIcon: Icon(
                     SolarIconsBold.menuDots,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                   label: const Text(AppText.more),
                 ),
@@ -77,7 +77,7 @@ class _RootScreenState extends State<RootScreen> {
               children: const [
                 HomeScreen(),
                 ExploreScreen(),
-                FavoritesScreen(),
+                BookmarksScreen(),
                 MoreScreen(),
               ],
             ),
@@ -97,7 +97,7 @@ class _RootScreenState extends State<RootScreen> {
                   icon: const Icon(SolarIconsOutline.homeSmile),
                   selectedIcon: Icon(
                     SolarIconsBold.homeSmile,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                   label: AppText.home,
                 ),
@@ -105,7 +105,7 @@ class _RootScreenState extends State<RootScreen> {
                   icon: const Icon(SolarIconsOutline.compass),
                   selectedIcon: Icon(
                     SolarIconsBold.compass,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                   label: AppText.explore,
                 ),
@@ -114,15 +114,15 @@ class _RootScreenState extends State<RootScreen> {
                       const Icon(SolarIconsOutline.bookmarkSquareMinimalistic),
                   selectedIcon: Icon(
                     SolarIconsBold.bookmarkSquareMinimalistic,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
-                  label: AppText.favorite,
+                  label: AppText.bookmark,
                 ),
                 NavigationDestination(
                   icon: const Icon(SolarIconsOutline.menuDots),
                   selectedIcon: Icon(
                     SolarIconsBold.menuDots,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                   label: AppText.more,
                 ),

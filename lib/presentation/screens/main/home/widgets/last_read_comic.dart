@@ -14,9 +14,9 @@ import 'package:bacakomik_app/presentation/widgets/chip/custom_chip.dart';
 
 class LastReadComic extends StatefulWidget {
   const LastReadComic({
-    Key? key,
+    super.key,
     this.withoutPb = false,
-  }) : super(key: key);
+  });
 
   final bool withoutPb;
 
@@ -59,7 +59,7 @@ class _LastReadComicState extends State<LastReadComic> {
               height: 100,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.5),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(5),
               ),
               child: Stack(
@@ -79,7 +79,7 @@ class _LastReadComicState extends State<LastReadComic> {
                           sigmaY: 3.0,
                         ),
                         child: Container(
-                          color: AppColors.dark.withOpacity(0.4),
+                          color: AppColors.dark.withValues(alpha: 0.4),
                         ),
                       ),
                     ),

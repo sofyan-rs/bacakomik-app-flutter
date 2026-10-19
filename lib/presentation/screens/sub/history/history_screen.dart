@@ -33,8 +33,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     bottom: BorderSide(
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
-                          .withOpacity(0.1),
+                          .onSurface
+                          .withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),
@@ -123,7 +123,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           },
           icon: Icon(
             SolarIconsOutline.arrowLeft,
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
@@ -159,7 +159,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
                   Icon(
                     SolarIconsOutline.history,
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                     size: 80,
                   ),
                   const SizedBox(height: 20),
@@ -170,8 +170,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
-                          .withOpacity(0.5),
+                          .onSurface
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                 ],

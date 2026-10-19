@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChapterTile extends StatefulWidget {
   const ChapterTile({
-    Key? key,
+    super.key,
     required this.chNumber,
     required this.slug,
     required this.date,
@@ -13,7 +13,7 @@ class ChapterTile extends StatefulWidget {
     required this.isSelected,
     required this.onSelected,
     required this.isHaveSelectedChapter,
-  }) : super(key: key);
+  });
 
   final String chNumber;
   final String slug;
@@ -37,7 +37,7 @@ class _ChapterTileState extends State<ChapterTile> {
         ListTile(
           selected: widget.isSelected,
           selectedTileColor:
-              Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5),
+              Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 25,
           ),
@@ -61,16 +61,16 @@ class _ChapterTileState extends State<ChapterTile> {
             'Chapter ${widget.chNumber}',
             style: TextStyle(
               color: isInHistory
-                  ? Theme.of(context).colorScheme.onBackground.withOpacity(0.4)
-                  : Theme.of(context).colorScheme.onBackground,
+                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
+                  : Theme.of(context).colorScheme.onSurface,
             ),
           ),
           trailing: Text(
             widget.date,
             style: TextStyle(
               color: isInHistory
-                  ? Theme.of(context).colorScheme.onBackground.withOpacity(0.4)
-                  : Theme.of(context).colorScheme.onBackground,
+                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
+                  : Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -79,7 +79,7 @@ class _ChapterTileState extends State<ChapterTile> {
           thickness: 1,
           // indent: 25,
           // endIndent: 25,
-          color: Colors.grey.withOpacity(0.2),
+          color: Colors.grey.withValues(alpha: 0.2),
         ),
       ],
     );

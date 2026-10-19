@@ -8,7 +8,7 @@ class AppText {
   // Navigation Bar Text
   static const String home = 'Beranda';
   static const String explore = 'Jelajahi';
-  static const String favorite = 'Favorit';
+  static const String bookmark = 'Bookmark';
   static const String more = 'Lainnya';
 
   // Home Screen Text
@@ -31,18 +31,18 @@ class AppText {
   static const String synopsis = 'Sinopsis';
   static const String seeMore = 'Lihat Selengkapnya...';
   static const String hide = 'Sembunyikan';
-  static const String addedToFavorite = 'Ditambahkan ke Favorit';
-  static const String removedFromFavorite = 'Dihapus dari Favorit';
+  static const String addedToBookmark = 'Ditambahkan ke Bookmark';
+  static const String removedFromBookmark = 'Dihapus dari Bookmark';
   static const String saveImg = 'Simpan Gambar';
   static const String successSaveImg = 'Gambar berhasil disimpan di galeri.';
   static const String failedSaveImg = 'Gagal menyimpan gambar.';
 
-  // Favorites Screen Text
-  static const String favoriteList = 'Daftar Favorit';
-  static const String favoriteEmpty = 'Belum Ada Komik Favorit';
-  static const String deleteFavorite = 'Hapus Favorit';
-  static const String deleteFavoriteDescription =
-      'Kamu yakin ingin menghapus komik berikut dari daftar favorit?';
+  // Bookmarks Screen Text
+  static const String bookmarkList = 'Daftar Bookmark';
+  static const String bookmarkEmpty = 'Belum Ada Komik di Bookmark';
+  static const String deleteBookmark = 'Hapus Bookmark';
+  static const String deleteBookmarkDescription =
+      'Kamu yakin ingin menghapus komik berikut dari daftar bookmark?';
   static const String selected = 'Dipilih';
   static const String cancel = 'Batal';
   static const String delete = 'Hapus';
@@ -53,7 +53,6 @@ class AppText {
   static const String comicNotFound = 'Komik Tidak Ditemukan';
 
   // Comic List Screen Text
-  static const String comicList = 'Daftar Komik';
 
   // Filter Screen Text
   static const String filter = 'Filter';
@@ -80,29 +79,23 @@ class AppText {
 
   static const String clearCache = 'Bersihkan Cache';
   static const String clearCacheDescription =
-      'Bersihkan Cache Tanpa Menghapus Data Favorit dan Riwayat Baca';
+      'Bersihkan Cache Tanpa Menghapus Data Bookmark dan Riwayat Baca';
   static const String clearCacheConfirmation =
       'Kamu yakin ingin membersihkan semua data cache?';
 
   static const String backupData = 'Cadangkan Data';
   static const String backupDataDescription =
-      'Cadangkan Data Favorit dan Riwayat Baca';
+      'Cadangkan Data Bookmark dan Riwayat Baca';
   static const String successBackupData = 'Data berhasil dicadangkan';
   static const String failedBackupData = 'Gagal mencadangkan data';
 
   static const String restoreData = 'Pulihkan Data';
   static const String restoreDataDescription =
-      'Pulihkan Data Favorit dan Riwayat Baca';
+      'Pulihkan Data Bookmark dan Riwayat Baca';
   static const String successRestoreData = 'Data berhasil dipulihkan';
   static const String failedRestoreData = 'Gagal memulihkan data';
 
-  static const String logout = 'Keluar';
-  static const String logoutConfirmation =
-      'Kamu yakin ingin keluar dari akun ini?';
-
   static const String bugReport = 'Lapor Bug atau Saran';
-  static const String privacyPolicy = 'Kebijakan Privasi';
-  static const String dmca = 'DMCA';
   static const String aboutApp = 'Tentang Aplikasi';
   static const String version = 'Versi';
 

@@ -10,10 +10,10 @@ import 'package:solar_icons/solar_icons.dart';
 
 class SearchResult extends StatefulWidget {
   const SearchResult({
-    Key? key,
+    super.key,
     required this.onLoadMore,
     required this.onRefresh,
-  }) : super(key: key);
+  });
 
   final Function(int page) onLoadMore;
   final Function() onRefresh;
@@ -53,7 +53,7 @@ class _SearchResultState extends State<SearchResult> {
               children: [
                 Icon(
                   SolarIconsOutline.magnifier,
-                  color: AppColors.primary.withOpacity(0.5),
+                  color: AppColors.primary.withValues(alpha: 0.5),
                   size: 80,
                 ),
                 const SizedBox(height: 20),
@@ -64,8 +64,8 @@ class _SearchResultState extends State<SearchResult> {
                     fontWeight: FontWeight.w600,
                     color: Theme.of(context)
                         .colorScheme
-                        .onBackground
-                        .withOpacity(0.5),
+                        .onSurface
+                        .withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -129,7 +129,7 @@ class _SearchResultState extends State<SearchResult> {
                 children: [
                   Icon(
                     SolarIconsOutline.magnifier,
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                     size: 80,
                   ),
                   const SizedBox(height: 20),
@@ -140,8 +140,8 @@ class _SearchResultState extends State<SearchResult> {
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
-                          .withOpacity(0.5),
+                          .onSurface
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                 ],

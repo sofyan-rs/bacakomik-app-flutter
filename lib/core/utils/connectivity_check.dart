@@ -5,6 +5,6 @@ class ConnectivityCheck {
     var connectivityResult = await Connectivity().checkConnectivity();
     // print(connectivityResult);
 
-    return connectivityResult == ConnectivityResult.none ? false : true;
+    return !connectivityResult.contains(ConnectivityResult.none);
   }
 }

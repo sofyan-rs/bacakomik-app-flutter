@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/utils/api_format.dart';
 import 'dart:convert';
 
 class PopularModel {
@@ -53,6 +54,17 @@ class PopularModel {
       latestChapter: map['latestChapter'] as String,
       slug: map['slug'] as String,
       rating: map['rating'] as String,
+    );
+  }
+
+  factory PopularModel.fromApi(Map<String, dynamic> map) {
+    return PopularModel(
+      title: map['title'] as String,
+      coverImg: (map['cover'] as String?) ?? '',
+      type: ApiFormat.capitalize(map['format'] as String?),
+      latestChapter: ApiFormat.number(map['totalChapters'] as num?),
+      slug: map['slug'] as String,
+      rating: ApiFormat.rating(map['rating'] as num?),
     );
   }
 

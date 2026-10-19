@@ -1,26 +1,13 @@
-import 'dart:convert';
-
 import 'package:bacakomik_app/core/models/comic_model.dart';
-import 'package:bacakomik_app/data/data_provider/latest_data_provider.dart';
+import 'package:bacakomik_app/data/data_provider/bacakomik_data_provider.dart';
 
 class LatestRepository {
-  final LatestDataProvider latestDataProvider;
+  final BacaKomikDataProvider dataProvider;
 
-  LatestRepository(this.latestDataProvider);
+  LatestRepository(this.dataProvider);
 
   Future<List<ComicModel>> getLatest(int page) async {
-    try {
-      final latestData = await latestDataProvider.getLatest(page);
-
-      final data = jsonDecode(latestData);
-
-      return List<ComicModel>.from(
-        data['data'].map(
-          (e) => ComicModel.fromMap(e),
-        ),
-      );
-    } catch (e) {
-      throw Exception('Error: $e');
-    }
+    final res = await dataProvider.getSeriesList(sort: 'latest', page: page);
+    return ComicModel.listFromApi(res);
   }
 }

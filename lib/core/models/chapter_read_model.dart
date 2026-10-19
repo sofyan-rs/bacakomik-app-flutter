@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/utils/api_format.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
@@ -66,6 +67,26 @@ class ChapterReadModel {
       imageChapters: List<dynamic>.from(
         (map['imageChapters'] as List<dynamic>),
       ),
+    );
+  }
+
+  factory ChapterReadModel.fromApi(
+    Map<String, dynamic> map,
+    String seriesSlug,
+  ) {
+    final number = ApiFormat.number(map['number'] as num);
+    final prev = map['prev'] as num?;
+    final next = map['next'] as num?;
+    return ChapterReadModel(
+      chapterTitle: (map['title'] as String?) ?? 'Chapter $number',
+      chapterNumber: number,
+      seriesTitle: '',
+      seriesSlug: seriesSlug,
+      previousChapterSlug:
+          prev != null ? ApiFormat.chapterSlug(seriesSlug, prev) : null,
+      nextChapterSlug:
+          next != null ? ApiFormat.chapterSlug(seriesSlug, next) : null,
+      imageChapters: List<dynamic>.from(map['images'] as List<dynamic>),
     );
   }
 

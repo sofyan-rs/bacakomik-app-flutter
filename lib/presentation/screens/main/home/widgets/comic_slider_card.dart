@@ -48,7 +48,7 @@ class ComicSliderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               spreadRadius: 2,
               blurRadius: 3,
             ),
@@ -62,7 +62,7 @@ class ComicSliderCard extends StatelessWidget {
                 Container(
                   width: double.infinity,
                   height: 140,
-                  color: Theme.of(context).primaryColor.withOpacity(0.5),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
                   child: CachedNetworkImage(
                     fit: BoxFit.cover,
                     imageUrl: cover,

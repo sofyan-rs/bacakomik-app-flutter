@@ -3,15 +3,14 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bacakomik_app/core/bloc/search_comic_bloc/search_comic_bloc.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bacakomik_app/core/assets/assets.gen.dart';
-import 'package:bacakomik_app/core/auth/auth_methods.dart';
 import 'package:bacakomik_app/core/bloc/home_bloc/home_bloc.dart';
 import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/comic_slider.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/last_read_comic.dart';
 import 'package:bacakomik_app/presentation/screens/main/home/widgets/latest_chapter.dart';
@@ -61,28 +60,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       hiText = AppText.goodNight;
     }
 
-    User user = AuthMethod().currentUser;
-
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
         elevation: 0.8,
         title: Row(
           children: [
-            Container(
-              height: 45,
-              width: 45,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                color: Theme.of(context).colorScheme.background,
-              ),
-              child: Image.network(
-                user.photoURL!,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -94,9 +77,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   textAlign: TextAlign.start,
                 ),
-                Text(
-                  user.displayName!,
-                  style: const TextStyle(
+                const Text(
+                  AppVariables.appName,
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
