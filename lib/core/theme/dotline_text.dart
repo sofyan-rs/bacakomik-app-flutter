@@ -16,14 +16,13 @@ abstract final class DotlineText {
     double lineHeight,
     FontWeight weight, [
     double tracking = 0,
-  ]) =>
-      TextStyle(
-        fontFamily: family,
-        fontSize: size,
-        height: lineHeight / size,
-        fontWeight: weight,
-        letterSpacing: tracking * size,
-      );
+  ]) => TextStyle(
+    fontFamily: family,
+    fontSize: size,
+    height: lineHeight / size,
+    fontWeight: weight,
+    letterSpacing: tracking * size,
+  );
 
   /// Uppercase screen title: `BERANDA`, `JELAJAH`.
   static final dotM = _style(_doto, 32, 36, FontWeight.w700);
