@@ -34,6 +34,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _player = AudioPlayer();
 
+  /// Kuru-kuru stays up at least this long, even when the refresh is fast,
+  /// so the easter egg is actually seen.
+  static const _minSpin = Duration(milliseconds: 2500);
+  var _spinning = false;
+  var _minSpinDone = true;
+  Timer? _spinTimer;
+
   @override
   void initState() {
     super.initState();
@@ -42,14 +49,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _spinTimer?.cancel();
     _player.dispose();
     super.dispose();
   }
 
   Future<void> _refreshData(HomeState state) async {
+    if (state is HomeLoaded) _startKururin();
     context.read<HomeBloc>().add(
       state is HomeLoaded ? HomeRefreshed() : HomeStarted(),
     );
+  }
+
+  Future<void> _startKururin() async {
+    _spinTimer?.cancel();
+    setState(() {
+      _spinning = true;
+      _minSpinDone = false;
+    });
+    _spinTimer = Timer(_minSpin, () {
+      _minSpinDone = true;
+      _stopKururinIfDone();
+    });
+    await _player.setSource(AssetSource('sounds/kuru-kururin.mp3'));
+    await _player.resume();
+  }
+
+  /// Stops once the refresh has finished and the minimum time has passed.
+  void _stopKururinIfDone() {
+    if (!mounted || !_spinning || !_minSpinDone) return;
+    final state = context.read<HomeBloc>().state;
+    if (state is HomeLoaded && state.isRefetch) return;
+    setState(() => _spinning = false);
+    _player.stop();
   }
 
   void _openSearch() => RootTabsScope.read(context).openExploreSearch();
@@ -62,16 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         bottom: false,
         child: BlocConsumer<HomeBloc, HomeState>(
-          listener: (context, state) async {
-            if (state is HomeLoaded && state.isRefetch) {
-              if (_player.state != PlayerState.playing) {
-                await _player.setSource(AssetSource('sounds/kuru-kururin.mp3'));
-                await _player.resume();
-              }
-              return;
-            }
-            await _player.release();
-          },
+          listener: (context, state) => _stopKururinIfDone(),
           builder: (context, state) {
             return CustomRefreshIndicator(
               onRefresh: () async => _refreshData(state),
@@ -137,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Widget child,
     IndicatorController controller,
   ) {
-    final showKururin = state is HomeLoaded && state.isRefetch;
+    final showKururin = _spinning;
     return Stack(
       alignment: Alignment.topCenter,
       children: [
