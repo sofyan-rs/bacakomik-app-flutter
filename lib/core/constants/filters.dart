@@ -11,13 +11,17 @@ class Filters {
     FilterOption(id: 'ongoing', name: 'Ongoing'),
     FilterOption(id: 'completed', name: 'Completed'),
     FilterOption(id: 'hiatus', name: 'Hiatus'),
+    FilterOption(id: 'cancelled', name: 'Cancelled'),
   ];
 
+  // `sort` values bacakomik-api understands; unknown values silently fall back
+  // to `newseries`. `title` sorts Z→A, so there is no A–Z option.
   static final List<FilterOption> sortbyList = [
     FilterOption(id: 'latest', name: 'Terbaru'),
-    FilterOption(id: 'rating', name: 'Rating'),
     FilterOption(id: 'newseries', name: 'Seri Baru'),
-    FilterOption(id: 'default', name: 'Default'),
+    FilterOption(id: 'bookmarks', name: 'Bookmark'),
+    FilterOption(id: 'popularity', name: 'Populer'),
+    FilterOption(id: 'rating', name: 'Rating'),
   ];
 
   // Ids from GET /genres.
