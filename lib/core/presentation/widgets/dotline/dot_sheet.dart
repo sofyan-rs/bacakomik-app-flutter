@@ -5,7 +5,8 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Shows a Dotline bottom sheet: `surface` panel, 28 top corners, dot handle,
-/// content padded 16 with 32 at the bottom.
+/// content padded 16 above the system navigation inset (32 + inset was too
+/// far from the bottom edge).
 Future<T?> showDotSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -32,7 +33,7 @@ Future<T?> showDotSheet<T>({
                   DotSpace.s4,
                   DotSpace.s4,
                   DotSpace.s4,
-                  DotSpace.s6,
+                  DotSpace.s4,
                 ),
                 child: builder(context),
               ),

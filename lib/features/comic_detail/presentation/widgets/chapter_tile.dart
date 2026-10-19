@@ -1,85 +1,99 @@
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/widgets/chapter_date.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-class ChapterTile extends StatefulWidget {
+/// One chapter row. Rows are laid out one by one in a sliver, so each row
+/// draws its own part of the rounded list group ([isFirst] / [isLast]).
+class ChapterTile extends StatelessWidget {
   const ChapterTile({
     super.key,
-    required this.chNumber,
-    required this.slug,
-    required this.date,
-    required this.goToChapterRead,
+    required this.chapter,
+    required this.isRead,
     required this.isSelected,
-    required this.onSelected,
-    required this.isHaveSelectedChapter,
+    required this.isFirst,
+    required this.isLast,
+    required this.onTap,
+    required this.onLongPress,
   });
 
-  final String chNumber;
-  final String slug;
-  final String date;
-  final void Function(BuildContext context, String slug) goToChapterRead;
+  final Chapter chapter;
+  final bool isRead;
   final bool isSelected;
-  final void Function(SelectedChapter) onSelected;
-  final bool isHaveSelectedChapter;
+  final bool isFirst;
+  final bool isLast;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
-  @override
-  State<ChapterTile> createState() => _ChapterTileState();
-}
-
-class _ChapterTileState extends State<ChapterTile> {
   @override
   Widget build(BuildContext context) {
-    bool isInHistory = context.watch<HistoryCubit>().isInHistory(widget.slug);
+    final c = Dotline.of(context);
+    const radius = Radius.circular(DotRadius.m);
+    final isNew = !isRead && ChapterDate.isNew(chapter.date);
 
-    return Column(
-      children: [
-        ListTile(
-          selected: widget.isSelected,
-          selectedTileColor:
-              Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 25,
-          ),
-          onTap: () {
-            if (widget.isHaveSelectedChapter) {
-              widget.onSelected(SelectedChapter(
-                chapterNumber: widget.chNumber,
-                slug: widget.slug,
-              ));
-            } else {
-              widget.goToChapterRead(context, widget.slug);
-            }
-          },
-          onLongPress: () {
-            widget.onSelected(SelectedChapter(
-              chapterNumber: widget.chNumber,
-              slug: widget.slug,
-            ));
-          },
-          title: Text(
-            'Chapter ${widget.chNumber}',
-            style: TextStyle(
-              color: isInHistory
-                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
-                  : Theme.of(context).colorScheme.onSurface,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: AnimatedContainer(
+          duration: DotMotion.press,
+          decoration: BoxDecoration(
+            color: isSelected ? c.surfaceRaised : c.surface,
+            borderRadius: BorderRadius.vertical(
+              top: isFirst ? radius : Radius.zero,
+              bottom: isLast ? radius : Radius.zero,
             ),
           ),
-          trailing: Text(
-            widget.date,
-            style: TextStyle(
-              color: isInHistory
-                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
-                  : Theme.of(context).colorScheme.onSurface,
+          child: Column(
+            children: [
+              Container(
+                constraints: const BoxConstraints(
+                  minHeight: DotSize.rowMin + 8,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: DotSpace.s5),
+                child: _row(c, isNew),
+              ),
+              if (!isLast) const Divider(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _row(DotlineColors c, bool isNew) {
+    return Row(
+      children: [
+        if (isSelected) ...[
+          Icon(LucideIcons300.check, size: DotSize.iconSmall, color: c.ink),
+          const SizedBox(width: DotSpace.s3),
+        ],
+        Expanded(
+          child: Text(
+            '${AppText.chapter} ${chapter.number}',
+            style: DotlineText.headline.copyWith(
+              color: isRead ? c.inkFaint : c.ink,
             ),
           ),
         ),
-        Divider(
-          height: 1,
-          thickness: 1,
-          // indent: 25,
-          // endIndent: 25,
-          color: Colors.grey.withValues(alpha: 0.2),
+        if (isNew) ...[
+          const NewBadge(label: AppText.newLabel),
+          const SizedBox(width: DotSpace.s3),
+        ] else if (isRead) ...[
+          Icon(LucideIcons300.check, size: 18, color: c.inkFaint),
+          const SizedBox(width: DotSpace.s3),
+        ],
+        Text(
+          ChapterDate.short(chapter.date),
+          style: DotlineText.data.copyWith(color: c.inkFaint),
         ),
       ],
     );

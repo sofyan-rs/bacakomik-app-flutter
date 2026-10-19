@@ -38,6 +38,23 @@ class AppText {
   static const String addedToBookmark = 'Ditambahkan ke Bookmark';
   static const String removedFromBookmark = 'Dihapus dari Bookmark';
   static const String saveImg = 'Simpan Gambar';
+  static const String seeCover = 'Lihat cover';
+  static const String rating = 'Rating';
+  static const String chapter = 'Chapter';
+  static const String released = 'Rilis';
+  static const String readMore = 'Selengkapnya';
+  static const String newLabel = 'Baru';
+  static const String startReading = 'Mulai baca';
+  static const String addBookmark = 'Tambah ke favorit';
+  static const String removeBookmark = 'Hapus dari favorit';
+  static const String selectAll = 'Pilih semua';
+  static const String markRead = 'Tandai sudah dibaca';
+  static const String markUnread = 'Tandai belum dibaca';
+  static const String searchChapter = 'Cari chapter';
+  static const String searchChapterHint = 'Nomor chapter';
+  static const String sortChapter = 'Urutkan chapter';
+  static const String share = 'Bagikan';
+  static const String shareSuffix = 'baca di BacaKomik';
   static const String successSaveImg = 'Gambar berhasil disimpan di galeri.';
   static const String failedSaveImg = 'Gagal menyimpan gambar.';
 

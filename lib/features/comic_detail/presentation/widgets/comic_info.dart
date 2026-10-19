@@ -1,192 +1,145 @@
-import 'package:flutter/material.dart';
-
-import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:flutter/material.dart';
 
+/// Meta line, title, author, three stat tiles, synopsis and genres.
 class ComicInfo extends StatefulWidget {
-  const ComicInfo({
-    super.key,
-    required this.altTitle,
-    required this.releaseYear,
-    required this.synopsis,
-    required this.genres,
-  });
+  const ComicInfo({super.key, required this.details});
 
-  final String altTitle;
-  final String releaseYear;
-  final String synopsis;
-  final List<Genre> genres;
+  final ComicDetails details;
+
+  /// Year from the API release date (`2018-04-01` → `2018`).
+  static String year(String released) {
+    final match = RegExp(r'\d{4}').firstMatch(released);
+    return match?.group(0) ?? '-';
+  }
 
   @override
   State<ComicInfo> createState() => _ComicInfoState();
 }
 
 class _ComicInfoState extends State<ComicInfo> {
-  int synopsisMaxLines = 3;
+  static const _collapsedLines = 4;
+  var _expanded = false;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (widget.altTitle.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  AppText.altTitle,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  widget.altTitle,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.5),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                AppText.releaseYear,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                widget.releaseYear,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.5),
-                ),
-              ),
-            ],
+    final c = Dotline.of(context);
+    final d = widget.details;
+    final year = ComicInfo.year(d.released);
+    final meta = [d.type, d.status, if (year != '-') year].join(' · ');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          meta.toUpperCase(),
+          style: DotlineText.label.copyWith(color: c.inkFaint),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: DotSpace.s3),
+        Text(
+          d.title,
+          style: DotlineText.title.copyWith(color: c.ink),
+          textAlign: TextAlign.center,
+        ),
+        if (d.author != '-') ...[
+          const SizedBox(height: DotSpace.s2),
+          Text(
+            d.author,
+            style: DotlineText.bodyS.copyWith(color: c.inkMuted),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            decoration: BoxDecoration(
-              // color: Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
-              // borderRadius: BorderRadius.circular(5),
-              border: Border.symmetric(
-                horizontal: BorderSide(
-                  width: 2,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.1),
-                ),
+        ],
+        const SizedBox(height: DotSpace.s5),
+        Row(
+          children: [
+            Expanded(
+              child: StatTile(
+                value: d.rating,
+                label: AppText.rating,
+                compact: true,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (widget.synopsis.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        AppText.synopsis,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        widget.synopsis,
-                        maxLines: widget.synopsis.length > 120
-                            ? synopsisMaxLines
-                            : 1000,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.5),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      if (widget.synopsis.length > 120)
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              if (synopsisMaxLines == 3) {
-                                synopsisMaxLines = 1000;
-                              } else {
-                                synopsisMaxLines = 3;
-                              }
-                            });
-                          },
-                          child: Text(
-                            synopsisMaxLines == 3
-                                ? AppText.seeMore
-                                : AppText.hide,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.primary.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 20),
-                    ],
+            const SizedBox(width: DotSpace.s3),
+            Expanded(
+              child: StatTile(
+                value: '${d.chapters.length}',
+                label: AppText.chapter,
+                compact: true,
+              ),
+            ),
+            const SizedBox(width: DotSpace.s3),
+            Expanded(
+              child: StatTile(
+                value: year,
+                label: AppText.released,
+                compact: true,
+              ),
+            ),
+          ],
+        ),
+        if (d.synopsis.isNotEmpty) ...[
+          const SizedBox(height: DotSpace.s5),
+          Text(
+            AppText.synopsis.toUpperCase(),
+            style: DotlineText.label.copyWith(color: c.inkFaint),
+          ),
+          const SizedBox(height: DotSpace.s2),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final style = DotlineText.body.copyWith(color: c.inkMuted);
+              final painter = TextPainter(
+                text: TextSpan(text: d.synopsis, style: style),
+                maxLines: _collapsedLines,
+                textDirection: Directionality.of(context),
+              )..layout(maxWidth: constraints.maxWidth);
+              final overflows = painter.didExceedMaxLines;
+              painter.dispose();
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    d.synopsis,
+                    style: style,
+                    maxLines: _expanded ? null : _collapsedLines,
+                    overflow: _expanded ? null : TextOverflow.ellipsis,
                   ),
-                Flex(
-                  direction: Axis.horizontal,
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 5,
-                        runSpacing: 5,
-                        children: widget.genres
-                            .map(
-                              (genre) => CustomChip(
-                                text: genre.name,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .secondaryContainer
-                                    .withValues(alpha: 0.3),
-                                textColor: Theme.of(context)
-                                    .colorScheme
-                                    .onSecondaryContainer
-                                    .withValues(alpha: 0.5),
-                                textSize: 14,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                              ),
-                            )
-                            .toList(),
+                  if (overflows) ...[
+                    const SizedBox(height: DotSpace.s2),
+                    GestureDetector(
+                      onTap: () => setState(() => _expanded = !_expanded),
+                      child: Text(
+                        _expanded ? AppText.hide : AppText.readMore,
+                        style: DotlineText.body.copyWith(
+                          color: c.ink,
+                          decoration: TextDecoration.underline,
+                          decorationColor: c.ink,
+                        ),
                       ),
                     ),
                   ],
-                ),
-              ],
-            ),
+                ],
+              );
+            },
           ),
         ],
-      ),
+        if (d.genres.isNotEmpty) ...[
+          const SizedBox(height: DotSpace.s5),
+          Wrap(
+            spacing: DotSpace.s2,
+            runSpacing: DotSpace.s2,
+            children: [
+              for (final genre in d.genres) DotChip(label: genre.name),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }
