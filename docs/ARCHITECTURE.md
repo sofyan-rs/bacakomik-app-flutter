@@ -374,5 +374,4 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 
 - **Listeners added in `build()`:** the search, explore and latest lists add their `ScrollController` listener inside `build()`. Listeners pile up on every rebuild, which probably triggers load-more more than once. Comic detail (title on scroll) and bookmarks (search field) do the same, which causes extra `setState` calls. Move all of them to `initState`.
 - **Old storage:** when should `hydrated_box.hive` be deleted? Not before most users run a version with the migrator.
-- **Unused dependencies:** `device_info_plus`, `permission_handler`, `grouped_list` and `cupertino_icons` are not imported anywhere. Remove them unless a planned feature needs them.
 - **Formatting:** the code base predates the current `dart format` style. Reformatting everything in one commit would be a large, noisy diff. Decide whether to do it once.
