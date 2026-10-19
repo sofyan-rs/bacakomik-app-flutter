@@ -15,6 +15,7 @@ import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image
 import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settings_sheet.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,7 +63,8 @@ class _ReadChapterView extends StatefulWidget {
   State<_ReadChapterView> createState() => _ReadChapterViewState();
 }
 
-class _ReadChapterViewState extends State<_ReadChapterView> {
+class _ReadChapterViewState extends State<_ReadChapterView>
+    with SingleTickerProviderStateMixin {
   /// Most chapters fit; longer ones scale the meter down.
   static const _maxMeterDots = 24;
 
@@ -77,12 +79,26 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
   PageController? _pageController;
   final _zoom = TransformationController();
   TapDownDetails? _doubleTap;
+  var _zoomed = false;
+  late final _zoomAnimation = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+  )..addListener(() => _zoom.value = _zoomTween?.value ?? _zoom.value);
+  Animation<Matrix4>? _zoomTween;
+
+  /// Pages load in batches of [_batch], in order. Only pages below
+  /// [_loadLimit] may show their image.
+  static const _batch = 5;
+  var _loadLimit = 0;
+  List<String> _images = const [];
+  final _settled = <int>{};
 
   @override
   void initState() {
     super.initState();
     context.read<ReaderBloc>().add(ChapterRequested(widget.slug));
     _itemPositions.itemPositions.addListener(_onItemPositions);
+    _zoom.addListener(_onZoomChanged);
     _syncWakelock(context.read<SettingsCubit>().state.keepScreenOn);
   }
 
@@ -91,6 +107,7 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
     _autoHide?.cancel();
     _itemPositions.itemPositions.removeListener(_onItemPositions);
     _pageController?.dispose();
+    _zoomAnimation.dispose();
     _zoom.dispose();
     WakelockPlus.disable();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -108,6 +125,76 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
     );
   }
 
+  void _onZoomChanged() {
+    final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
+    if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+  }
+
+  /// Double tap: zoom 2.5x into the tapped point, or back out.
+  void _toggleZoom() {
+    final Matrix4 target;
+    if (_zoomed) {
+      target = Matrix4.identity();
+    } else {
+      final tap = _doubleTap;
+      if (tap == null) return;
+      const scale = 2.5;
+      final p = tap.localPosition;
+      target = Matrix4.identity()
+        ..translateByDouble(-p.dx * (scale - 1), -p.dy * (scale - 1), 0, 1)
+        ..scaleByDouble(scale, scale, 1, 1);
+    }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _zoom.value = target;
+      return;
+    }
+    _zoomTween = Matrix4Tween(begin: _zoom.value, end: target).animate(
+      CurvedAnimation(parent: _zoomAnimation, curve: DotMotion.slideCurve),
+    );
+    _zoomAnimation.forward(from: 0);
+  }
+
+  /// Starts the first batch when the chapter arrives.
+  void _startLoading(List<String> images) {
+    _images = images;
+    _loadLimit = 0;
+    _settled.clear();
+    _loadNextBatch();
+  }
+
+  /// Opens the next [_batch] pages and fetches them in the background.
+  void _loadNextBatch() {
+    if (_loadLimit >= _images.length) return;
+    final start = _loadLimit;
+    final end = (start + _batch).clamp(0, _images.length);
+    setState(() => _loadLimit = end);
+    for (var i = start; i < end; i++) {
+      final page = i;
+      precacheImage(
+        CachedNetworkImageProvider(_images[page], cacheKey: _images[page]),
+        context,
+        onError: (_, _) {},
+      ).whenComplete(() => _onPageSettled(page));
+    }
+  }
+
+  /// A page finished loading (or failed). The next batch starts once the
+  /// current one has settled.
+  void _onPageSettled(int page) {
+    if (!mounted) return;
+    _settled.add(page);
+    final batchStart = _loadLimit - _batch;
+    final batchDone = [
+      for (var i = batchStart.clamp(0, _loadLimit); i < _loadLimit; i++) i,
+    ].every(_settled.contains);
+    if (batchDone) _loadNextBatch();
+  }
+
+  /// Reading close to the last opened page opens the next batch early.
+  void _onPageReached(int page) {
+    if (page >= _loadLimit - 2) _loadNextBatch();
+  }
+
   /// The first page whose bottom is below the top third of the screen.
   void _onItemPositions() {
     final positions = _itemPositions.itemPositions.value;
@@ -115,7 +202,10 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
     final visible = positions.where((p) => p.itemTrailingEdge > 0.33);
     if (visible.isEmpty) return;
     final index = visible.reduce((a, b) => a.index < b.index ? a : b).index;
-    if (index != _page) setState(() => _page = index);
+    if (index != _page) {
+      setState(() => _page = index);
+      _onPageReached(index);
+    }
   }
 
   void _openChapter(String slug) {
@@ -229,6 +319,7 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
         body: BlocConsumer<ReaderBloc, ReaderState>(
           listener: (context, state) {
             if (state is ReaderLoaded) {
+              _startLoading(state.chapter.images);
               context.read<HistoryCubit>().addHistory(
                 slug: widget.slug,
                 chapterNumber: state.chapter.chapterNumber,
@@ -260,20 +351,17 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
       ReaderLoaded(:final chapter) => GestureDetector(
         onTap: () => _setControls(!_controlsVisible),
         onDoubleTapDown: (d) => _doubleTap = d,
-        onDoubleTap: () {
-          if (_zoom.value != Matrix4.identity()) {
-            _zoom.value = Matrix4.identity();
-          } else if (_doubleTap case final tap?) {
-            final p = tap.localPosition;
-            _zoom.value = Matrix4.identity()
-              ..translateByDouble(-p.dx, -p.dy, 0, 1)
-              ..scaleByDouble(2.0, 2.0, 2.0, 1);
-          }
-        },
+        onDoubleTap: _toggleZoom,
         child: InteractiveViewer(
           transformationController: _zoom,
           minScale: 1,
-          maxScale: 3,
+          maxScale: 4,
+          // Unzoomed, drags scroll the pages. Zoomed in the vertical
+          // reader, the list keeps scrolling and the viewer pans sideways.
+          panEnabled: _zoomed,
+          panAxis: settings.readingDirection == ReadingDirection.vertical
+              ? PanAxis.horizontal
+              : PanAxis.free,
           child: settings.readingDirection == ReadingDirection.vertical
               ? _verticalPages(chapter, settings)
               : _horizontalPages(chapter, settings),
@@ -331,6 +419,7 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
             key: ValueKey(pages[index]),
             chapterImage: pages[index],
             page: index + 1,
+            load: index < _loadLimit,
             fit: settings.pageFit,
             fitHeight: height,
           ),
@@ -348,7 +437,11 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
       controller: controller,
       reverse: settings.readingDirection == ReadingDirection.rightToLeft,
       itemCount: pages.length + 1,
-      onPageChanged: (page) => setState(() => _page = page),
+      physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+      onPageChanged: (page) {
+        setState(() => _page = page);
+        _onPageReached(page);
+      },
       itemBuilder: (context, index) {
         if (index == pages.length) {
           return SingleChildScrollView(child: _chapterEnd(chapter));
@@ -362,6 +455,7 @@ class _ReadChapterViewState extends State<_ReadChapterView> {
               key: ValueKey(pages[index]),
               chapterImage: pages[index],
               page: index + 1,
+              load: index < _loadLimit,
               fit: settings.pageFit,
               fitHeight: settings.pageFit == PageFit.height
                   ? MediaQuery.sizeOf(context).height

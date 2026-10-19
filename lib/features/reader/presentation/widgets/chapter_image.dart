@@ -10,11 +10,15 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// One chapter page. Long press to save it to the gallery.
+///
+/// The reader loads pages in batches; until [load] is true only the dotted
+/// placeholder with the page number shows.
 class ChapterImg extends StatelessWidget {
   const ChapterImg({
     super.key,
     required this.chapterImage,
     required this.page,
+    this.load = true,
     this.fit = PageFit.width,
     this.fitHeight,
   });
@@ -23,6 +27,9 @@ class ChapterImg extends StatelessWidget {
 
   /// 1-based page number, shown while loading.
   final int page;
+
+  /// False keeps the placeholder until the reader reaches this page's batch.
+  final bool load;
   final PageFit fit;
 
   /// Height used with [PageFit.height] in the vertical reader.
@@ -72,6 +79,8 @@ class ChapterImg extends StatelessWidget {
         ],
       ),
     );
+
+    if (!load) return placeholder;
 
     final image = CachedNetworkImage(
       cacheKey: chapterImage,
