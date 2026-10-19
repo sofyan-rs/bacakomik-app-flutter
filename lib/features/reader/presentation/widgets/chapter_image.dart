@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
@@ -88,12 +89,11 @@ class ChapterImg extends StatelessWidget {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final image = CachedNetworkImage(
       cacheKey: chapterImage,
+      httpHeaders: AppVariables.imageHeaders,
       imageUrl: chapterImage,
       width: double.infinity,
       height: fitHeight,
-      memCacheWidth: fit == PageFit.width
-          ? (screenWidth * dpr).round()
-          : null,
+      memCacheWidth: fit == PageFit.width ? (screenWidth * dpr).round() : null,
       memCacheHeight: fit == PageFit.height && fitHeight != null
           ? (fitHeight! * dpr).round()
           : null,

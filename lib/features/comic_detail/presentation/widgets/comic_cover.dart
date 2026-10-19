@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
@@ -25,7 +26,11 @@ class DetailCover extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(DotRadius.m),
-              child: CachedNetworkImage(imageUrl: url, fit: BoxFit.contain),
+              child: CachedNetworkImage(
+                imageUrl: url,
+                httpHeaders: AppVariables.imageHeaders,
+                fit: BoxFit.contain,
+              ),
             ),
             const SizedBox(height: DotSpace.s4),
             DotButton(

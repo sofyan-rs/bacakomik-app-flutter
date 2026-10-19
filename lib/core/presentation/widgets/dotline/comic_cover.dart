@@ -1,3 +1,5 @@
+import 'package:bacakomik_app/core/constants/variables.dart';
+
 import 'dart:typed_data';
 import 'dart:ui' show PointMode;
 
@@ -47,6 +49,7 @@ class ComicCover extends StatelessWidget {
               // thumbnails are 44 wide while covers are often 600+.
               builder: (context, constraints) => CachedNetworkImage(
                 imageUrl: imageUrl,
+                httpHeaders: AppVariables.imageHeaders,
                 fit: BoxFit.cover,
                 memCacheWidth: _decodeWidth(context, constraints.maxWidth),
                 fadeInDuration: DotMotion.press,
