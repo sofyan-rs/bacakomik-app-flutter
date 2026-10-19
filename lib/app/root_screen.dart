@@ -1,12 +1,22 @@
-import 'package:bacakomik_app/features/explore/presentation/pages/explore_screen.dart';
+import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/pages/bookmarks_screen.dart';
+import 'package:bacakomik_app/features/explore/presentation/pages/explore_screen.dart';
+import 'package:bacakomik_app/features/history/presentation/pages/history_screen.dart';
+import 'package:bacakomik_app/features/home/presentation/pages/home_screen.dart';
 import 'package:bacakomik_app/features/settings/presentation/pages/more_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/features/home/presentation/pages/home_screen.dart';
-import 'package:solar_icons/solar_icons.dart';
-
+/// Five main tabs under a floating pill nav, with content fading into the
+/// background behind it (REDESIGN_PLAN D7).
+///
+/// Tabs get the nav height as bottom [MediaQuery] padding, so scrollables
+/// that use the default padding clear the nav on their own. Screens with
+/// explicit padding add `MediaQuery.paddingOf(context).bottom` themselves.
 class RootScreen extends StatefulWidget {
   const RootScreen({super.key});
 
@@ -15,120 +25,79 @@ class RootScreen extends StatefulWidget {
 }
 
 class _RootScreenState extends State<RootScreen> {
-  var _selectedIndex = 0;
+  static const _items = [
+    FloatingNavItem(icon: LucideIcons300.house, label: AppText.home),
+    FloatingNavItem(icon: LucideIcons300.compass, label: AppText.explore),
+    FloatingNavItem(icon: LucideIcons300.bookmark, label: AppText.favoriteTab),
+    FloatingNavItem(icon: LucideIcons300.history, label: AppText.historyTab),
+    FloatingNavItem(icon: LucideIcons300.ellipsis, label: AppText.more),
+  ];
 
-  void _onTap(int index) {
-    setState(
-      () => _selectedIndex = index,
-    );
-  }
+  var _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          if (MediaQuery.of(context).size.width >= 640)
-            NavigationRail(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: _onTap,
-              labelType: NavigationRailLabelType.all,
-              // elevation: 2,
-              destinations: [
-                NavigationRailDestination(
-                  icon: const Icon(SolarIconsOutline.homeSmile),
-                  selectedIcon: Icon(
-                    SolarIconsBold.homeSmile,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  label: const Text(AppText.home),
-                ),
-                NavigationRailDestination(
-                  icon: const Icon(SolarIconsOutline.compass),
-                  selectedIcon: Icon(
-                    SolarIconsBold.compass,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  label: const Text(AppText.explore),
-                ),
-                NavigationRailDestination(
-                  icon:
-                      const Icon(SolarIconsOutline.bookmarkSquareMinimalistic),
-                  selectedIcon: Icon(
-                    SolarIconsBold.bookmarkSquareMinimalistic,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  label: const Text(AppText.bookmark),
-                ),
-                NavigationRailDestination(
-                  icon: const Icon(SolarIconsOutline.menuDots),
-                  selectedIcon: Icon(
-                    SolarIconsBold.menuDots,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  label: const Text(AppText.more),
-                ),
-              ],
-            ),
-          Expanded(
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: const [
-                HomeScreen(),
-                ExploreScreen(),
-                BookmarksScreen(),
-                MoreScreen(),
-              ],
-            ),
+    final c = Dotline.of(context);
+    final media = MediaQuery.of(context);
+    final systemBottom = media.viewPadding.bottom;
+    final keyboardOpen = media.viewInsets.bottom > 0;
+    final navInset = floatingNavInset(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+          .copyWith(
+            statusBarColor: Colors.transparent,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarContrastEnforced: false,
           ),
-        ],
+      child: Scaffold(
+        backgroundColor: c.bg,
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            MediaQuery(
+              data: media.copyWith(
+                padding: media.padding.copyWith(
+                  bottom: keyboardOpen ? 0 : navInset,
+                ),
+              ),
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: const [
+                  HomeScreen(),
+                  ExploreScreen(),
+                  BookmarksScreen(),
+                  HistoryScreen(),
+                  MoreScreen(),
+                ],
+              ),
+            ),
+            if (!keyboardOpen) ...[
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: BottomFade(height: navInset + DotSpace.s5),
+              ),
+              Positioned(
+                left: DotSpace.s4,
+                right: DotSpace.s4,
+                bottom: systemBottom + DotSize.navGap,
+                child: Center(
+                  child: FloatingNavBar(
+                    items: _items,
+                    selectedIndex: _selectedIndex,
+                    onSelected: (index) =>
+                        setState(() => _selectedIndex = index),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
-      bottomNavigationBar: MediaQuery.of(context).size.width < 640
-          ? NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: _onTap,
-              labelBehavior:
-                  NavigationDestinationLabelBehavior.onlyShowSelected,
-              elevation: 2,
-              shadowColor: Colors.black54,
-              destinations: [
-                NavigationDestination(
-                  icon: const Icon(SolarIconsOutline.homeSmile),
-                  selectedIcon: Icon(
-                    SolarIconsBold.homeSmile,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  label: AppText.home,
-                ),
-                NavigationDestination(
-                  icon: const Icon(SolarIconsOutline.compass),
-                  selectedIcon: Icon(
-                    SolarIconsBold.compass,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  label: AppText.explore,
-                ),
-                NavigationDestination(
-                  icon:
-                      const Icon(SolarIconsOutline.bookmarkSquareMinimalistic),
-                  selectedIcon: Icon(
-                    SolarIconsBold.bookmarkSquareMinimalistic,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  label: AppText.bookmark,
-                ),
-                NavigationDestination(
-                  icon: const Icon(SolarIconsOutline.menuDots),
-                  selectedIcon: Icon(
-                    SolarIconsBold.menuDots,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  label: AppText.more,
-                ),
-              ],
-            )
-          : null,
     );
   }
 }

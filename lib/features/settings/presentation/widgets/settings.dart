@@ -5,7 +5,6 @@ import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/app_info.dart';
-import 'package:bacakomik_app/features/history/presentation/pages/history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -146,14 +145,6 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  void _goToHistoryScreen() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const HistoryScreen(),
-      ),
-    );
-  }
-
   @override
   void initState() {
     super.initState();
@@ -165,17 +156,6 @@ class _SettingsState extends State<Settings> {
       children: [
         Divider(
           height: 1,
-          color: Colors.grey.withValues(alpha: 0.1),
-        ),
-        ListTile(
-          leading:
-              const Icon(SolarIconsOutline.history, color: AppColors.primary),
-          title: const Text(AppText.history),
-          subtitle: const Text(AppText.historyDescription),
-          onTap: _goToHistoryScreen,
-        ),
-        Container(
-          height: 15,
           color: Colors.grey.withValues(alpha: 0.1),
         ),
         ListTile(

@@ -117,15 +117,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Text(AppText.history),
           ],
         ),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: Icon(
-            SolarIconsOutline.arrowLeft,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
+        automaticallyImplyLeading: false,
         actions: [
           if (latestHistory.isNotEmpty)
             Padding(
@@ -180,7 +172,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.fromLTRB(
+              10,
+              10,
+              10,
+              10 + MediaQuery.paddingOf(context).bottom,
+            ),
             itemBuilder: (context, index) {
               final history = latestHistory[index];
               return HistoryComicCard(

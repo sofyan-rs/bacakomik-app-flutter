@@ -65,7 +65,12 @@ class _FilterResultState extends State<FilterResult> {
                   child: AutoHeightGridView(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(15),
+                    padding: EdgeInsets.fromLTRB(
+                      15,
+                      15,
+                      15,
+                      15 + MediaQuery.paddingOf(context).bottom,
+                    ),
                     itemCount: state.comics.length,
                     crossAxisCount:
                         MediaQuery.of(context).size.width > 640 ? 4 : 2,

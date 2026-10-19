@@ -38,6 +38,19 @@ void main() {
     );
   });
 
+  test('FloatingNavBar end circles touch the track ends', () {
+    final lefts = FloatingNavBar.circleLefts(300, 5);
+    expect(lefts.first, 0);
+    expect(lefts.last + 52, 300);
+    expect(lefts[2], (300 - 52) / 2);
+  });
+
+  test('FloatingNavBar gap between circles equals the edge padding', () {
+    final track = FloatingNavBar.widthFor(5) - 6 * 2;
+    final lefts = FloatingNavBar.circleLefts(track, 5);
+    expect(lefts[1] - lefts[0] - 52, 6);
+  });
+
   testWidgets('FloatingNavBar reports the tapped tab', (tester) async {
     int? tapped;
     await tester.pumpWidget(

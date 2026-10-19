@@ -323,7 +323,12 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             },
             child: AutoHeightGridView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(15),
+              padding: EdgeInsets.fromLTRB(
+                15,
+                15,
+                15,
+                15 + MediaQuery.paddingOf(context).bottom,
+              ),
               itemCount: searchBookmarks.length,
               crossAxisCount: MediaQuery.of(context).size.width > 640 ? 4 : 2,
               crossAxisSpacing: 15,

@@ -1,3 +1,5 @@
+import 'dart:ui' show Brightness;
+
 import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart';
 
@@ -64,10 +66,14 @@ abstract final class DotSize {
 }
 
 /// Only for floating elements: bottom nav, chapter navigation pill, menus.
-const shadowFloat = BoxShadow(
-  color: Color(0x80000000),
-  offset: Offset(0, 8),
-  blurRadius: 24,
+/// Softer than the design system's `0x80 / 0,8 / 24`, which read too heavy
+/// on device, and lighter still on the light theme.
+BoxShadow shadowFloat(Brightness brightness) => BoxShadow(
+  color: brightness == Brightness.dark
+      ? const Color(0x52000000)
+      : const Color(0x14000000),
+  offset: const Offset(0, 4),
+  blurRadius: 16,
 );
 
 abstract final class DotMotion {

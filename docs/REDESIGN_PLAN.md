@@ -111,7 +111,7 @@ Mockup menampilkan beberapa hal yang belum ada di kode. Semua diturunkan dari da
 - Durasi tetap 3 detik (perilaku sekarang, keputusan D2).
 
 ### 4.10 Lebar layar ≥ 640 dp
-Design system tidak punya NavigationRail. Keputusan D4: FloatingNavBar yang sama, lebar maksimum 360 dp, di tengah bawah; grid Jelajah/Favorit menambah kolom sesuai lebar (`SliverGridDelegateWithMaxCrossAxisExtent`).
+Design system tidak punya NavigationRail. Keputusan D4: FloatingNavBar yang sama (lebar pas isi, D9), di tengah bawah; grid Jelajah/Favorit menambah kolom sesuai lebar (`SliverGridDelegateWithMaxCrossAxisExtent`).
 
 ## 5. Fase
 
@@ -200,3 +200,5 @@ Tambah `previews.dart` untuk melihat semua komponen di dark & light (opsional).
   - Hanya import `lucide_icons_300.dart` (jangan `lucide_icons_weights.dart`) supaya hanya satu font yang ikut. `IconData` const, jadi tree-shaking ikon saat `flutter build` tetap jalan.
   - Tidak ada `SolarIcons` maupun `Icons.*` Material yang tersisa di UI. Fase 11 memverifikasi dengan grep di `lib/`.
 - **D7. Fade di bagian bawah tab utama.** Konten yang di-scroll memudar ke `bg` di belakang FloatingNavBar, seperti contoh dari user. Fade ini sengaja menyimpang dari `DESIGN_SYSTEM.md` ("tanpa gradien", "tanpa band/latar penuh di belakangnya"). Gradien hanya dipakai untuk fade ini dan mengikuti tema (hitam di dark, `#F2F2F2` di light). Fade tidak menangkap sentuhan (`IgnorePointer`). Pembaca dan Detail komik tidak memakai fade.
+- **D8. `shadowFloat` lebih halus dari design system.** Nilai asli (`0x80000000`, offset 0,8, blur 24) terlalu tebal di perangkat. Sekarang: dark `0x52000000`, light `0x14000000`, offset 0,4, blur 16 (`shadowFloat(brightness)` di `dotline_tokens.dart`).
+- **D9. FloatingNavBar selebar isinya**, mengikuti contoh dari user: lingkaran tab berjarak 6 satu sama lain, sama dengan jarak ke tepi pill, jadi ujung lingkaran konsentris dengan ujung pill. Untuk 5 tab lebarnya 296 dp (`FloatingNavBar.widthFor`). Area tap tiap tab sampai setengah jarak ke tab tetangga.

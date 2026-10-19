@@ -10,6 +10,8 @@ class AppText {
   static const String explore = 'Jelajahi';
   static const String bookmark = 'Bookmark';
   static const String more = 'Lainnya';
+  static const String favoriteTab = 'Favorit';
+  static const String historyTab = 'Riwayat';
 
   // Home Screen Text
   static const String popular = 'Hot Komik';

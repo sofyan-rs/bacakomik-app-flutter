@@ -59,7 +59,9 @@ class DotMenuButton extends StatelessWidget {
       builder: (context, controller, _) => DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          boxShadow: controller.isOpen ? const [shadowFloat] : null,
+          boxShadow: controller.isOpen
+              ? [shadowFloat(Theme.of(context).brightness)]
+              : null,
         ),
         child: RoundIconButton(
           icon: LucideIcons300.ellipsisVertical,
