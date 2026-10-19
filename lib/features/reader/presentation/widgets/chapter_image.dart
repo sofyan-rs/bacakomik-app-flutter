@@ -64,23 +64,43 @@ class ChapterImg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
-    final placeholder = SizedBox(
+    final label = Text(
+      '${AppText.pageShort} $page'.toUpperCase(),
+      style: DotlineText.data.copyWith(color: c.inkFaint),
+    );
+
+    // [progress] is null while queued, then 0..1 once downloading (or -1 when
+    // the server sends no content length).
+    Widget placeholder({double? progress}) => SizedBox(
       height: fitHeight ?? 480,
       child: Stack(
         fit: StackFit.expand,
         children: [
           const DotGridPlaceholder(),
           Center(
-            child: Text(
-              '${AppText.pageShort} $page'.toUpperCase(),
-              style: DotlineText.data.copyWith(color: c.inkFaint),
-            ),
+            child: progress == null
+                ? label
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      label,
+                      const SizedBox(height: DotSpace.s3),
+                      const DotLoader(),
+                      if (progress >= 0) ...[
+                        const SizedBox(height: DotSpace.s2),
+                        Text(
+                          '${(progress * 100).round()}%',
+                          style: DotlineText.data.copyWith(color: c.inkFaint),
+                        ),
+                      ],
+                    ],
+                  ),
           ),
         ],
       ),
     );
 
-    if (!load) return placeholder;
+    if (!load) return placeholder();
 
     // Decode at screen size instead of the source size; webtoon pages can be
     // thousands of pixels tall and take tens of MB each at full resolution.
@@ -99,7 +119,8 @@ class ChapterImg extends StatelessWidget {
           : null,
       fit: fit == PageFit.height ? BoxFit.contain : BoxFit.fitWidth,
       fadeInDuration: DotMotion.press,
-      placeholder: (_, _) => placeholder,
+      progressIndicatorBuilder: (_, _, p) =>
+          placeholder(progress: p.progress ?? -1),
       errorWidget: (_, _, _) => SizedBox(
         height: fitHeight ?? 320,
         child: Center(
