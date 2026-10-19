@@ -2,6 +2,11 @@
 
 Read Comic Application created using Flutter.
 
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md): structure, layers, storage and compatibility rules.
+- [Contributing](docs/CONTRIBUTION.md): setup, build, conventions, testing and PR checklist.
+
 <img src="./screenshot/Featured.png" alt="BacaKomik App" width="400"/>
 
 ## Screenshot
