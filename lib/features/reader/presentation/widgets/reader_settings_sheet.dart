@@ -1,0 +1,101 @@
+import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+/// "Pengaturan baca": direction, page size, keep awake, page gap. Saved
+/// right away through [SettingsCubit].
+class ReaderSettingsSheet extends StatelessWidget {
+  const ReaderSettingsSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    final settings = context.watch<SettingsCubit>().state;
+    final cubit = context.read<SettingsCubit>();
+
+    Widget label(String text) => Padding(
+      padding: const EdgeInsets.only(top: DotSpace.s5, bottom: DotSpace.s3),
+      child: Text(
+        text.toUpperCase(),
+        style: DotlineText.label.copyWith(color: c.inkFaint),
+      ),
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          AppText.readerSettings,
+          style: DotlineText.title.copyWith(color: c.ink),
+        ),
+        label(AppText.readingDirection),
+        SegmentedControl<ReadingDirection>(
+          background: c.bg,
+          selected: settings.readingDirection,
+          onChanged: (d) =>
+              cubit.update((s) => s.copyWith(readingDirection: d)),
+          segments: const [
+            Segment(
+              value: ReadingDirection.vertical,
+              label: AppText.directionVertical,
+            ),
+            Segment(
+              value: ReadingDirection.rightToLeft,
+              label: AppText.directionRtl,
+            ),
+            Segment(
+              value: ReadingDirection.leftToRight,
+              label: AppText.directionLtr,
+            ),
+          ],
+        ),
+        label(AppText.pageSize),
+        SegmentedControl<PageFit>(
+          background: c.bg,
+          selected: settings.pageFit,
+          onChanged: (f) => cubit.update((s) => s.copyWith(pageFit: f)),
+          segments: const [
+            Segment(value: PageFit.width, label: AppText.fitWidth),
+            Segment(value: PageFit.height, label: AppText.fitHeight),
+          ],
+        ),
+        const SizedBox(height: DotSpace.s5),
+        ListGroup(
+          background: c.bg,
+          children: [
+            ListRow(
+              title: AppText.keepScreenOn,
+              subtitle: AppText.keepScreenOnHint,
+              trailing: DotSwitch(
+                value: settings.keepScreenOn,
+                semanticLabel: AppText.keepScreenOn,
+                onChanged: (v) =>
+                    cubit.update((s) => s.copyWith(keepScreenOn: v)),
+              ),
+              onTap: () => cubit.update(
+                (s) => s.copyWith(keepScreenOn: !s.keepScreenOn),
+              ),
+            ),
+            ListRow(
+              title: AppText.pageGap,
+              subtitle: AppText.pageGapHint,
+              trailing: DotSwitch(
+                value: settings.pageGap,
+                semanticLabel: AppText.pageGap,
+                onChanged: (v) => cubit.update((s) => s.copyWith(pageGap: v)),
+              ),
+              onTap: () => cubit.update((s) => s.copyWith(pageGap: !s.pageGap)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}

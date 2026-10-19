@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shrinks the B · Panel glyph inside the adaptive icon safe zone; the
+     exported foreground sat too close to the mask edge on launchers. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@mipmap/ic_launcher_foreground"
+    android:inset="14%" />

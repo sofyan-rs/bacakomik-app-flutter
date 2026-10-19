@@ -14,7 +14,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 - **Never lose the user's library.** Bookmarks, history and settings survive updates. Data from older app versions is migrated (§7.4), and backup files stay readable across versions (§7.5).
 - **Keep logic testable.** Domain code is plain Dart with no Flutter, Dio, Hive or file-picker imports. Repositories and blocs are tested without a device.
 - **Keep layers clear.** UI talks to blocs, blocs call use cases, use cases call repository interfaces. Only the data layer knows about HTTP and storage.
-- Work on phones and wide screens. Root navigation switches from a bottom bar to a navigation rail at 640 dp.
+- Work on phones and wide screens. A floating pill nav sits at the bottom on every width; cover grids add columns as the screen gets wider.
 
 ### Non-goals
 - User accounts, cloud sync, or a server-side library.
@@ -28,7 +28,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 
 | Concern | Choice | Notes |
 |---|---|---|
-| Language / UI | Dart 3.13, Flutter (stable) | Material 3 widgets, Rubik font via `google_fonts`, Solar icons. |
+| Language / UI | Dart 3.13, Flutter (stable) | Material 3 widgets themed with the Dotline design system (§5). Bundled Geist, Geist Mono and Doto fonts, Lucide icons via `lucide_icons_flutter`. |
 | State | `flutter_bloc` (Bloc and Cubit) | States are freezed sealed unions (§4.3). |
 | Dependency wiring | `get_it` + `injectable` | Generated in `lib/core/di/injection.config.dart` (§10). |
 | Errors | `fpdart` `Either<Failure, T>` | Repositories never throw to callers (§9). |
@@ -57,11 +57,12 @@ lib/
 ├── app/
 │   ├── app.dart                    # BacaKomikApp: app-wide BlocProviders, MaterialApp, theme mode
 │   ├── splash_screen.dart
-│   ├── root_screen.dart            # tabs: Home, Explore, Bookmark, More
+│   ├── root_screen.dart            # tabs: Home, Explore, Bookmark, History, More (floating nav)
 │   └── legacy_storage_migrator.dart  # hydrated_bloc → Hive, runs once (§7.4)
 ├── core/
 │   ├── assets/assets.gen.dart      # flutter_gen output
-│   ├── constants/                  # colors, texts (UI strings), theme, filters, variables
+│   ├── constants/                  # texts (UI strings), filters, variables
+│   ├── theme/                      # Dotline tokens: colors, text styles, spacing, ThemeData
 │   ├── di/                         # injection.dart, register_module.dart (Dio, Connectivity, Hive)
 │   ├── error/                      # exceptions.dart (data layer), failures.dart (domain)
 │   ├── network/                    # ApiClient, NetworkInfo, runRemote()
@@ -73,12 +74,11 @@ lib/
 │   │   └── models/                 # SeriesResponse… (API DTOs), ComicDetailsModel (stored)
 │   ├── presentation/
 │   │   ├── bloc/comic_list_state.dart  # paginated list state + ComicListLoader mixin
-│   │   └── widgets/                # comic card, chips, placeholders
+│   │   └── widgets/                # comic card + grid, dotline/ (Dotline component library)
 │   └── utils/                      # ApiFormat, Clock, snackbar/save-image helpers
 └── features/
     ├── home/          # trending + latest on the home tab
     ├── latest/        # "see all" latest chapters, paginated
-    ├── search/        # keyword search, paginated
     ├── explore/       # filter by sort/type/status/genre, paginated
     ├── comic_detail/  # comic info + chapter list
     ├── reader/        # chapter images, prev/next
@@ -161,7 +161,7 @@ It must print nothing.
    └─ MaterialApp ─ SplashScreen ─▶ RootScreen (tabs)
                                       │ Navigator.push
                                       ▼
-            route-scoped blocs: SearchBloc · LatestBloc · ComicDetailsBloc · ReaderBloc
+            route-scoped blocs: LatestBloc · ComicDetailsBloc · ReaderBloc
 
    Bloc/Cubit ─▶ UseCase ─▶ Repository (interface) ─▶ RepositoryImpl
                                                        ├─ SeriesRemoteDataSource ─▶ ApiClient (Dio)
@@ -178,27 +178,39 @@ It must print nothing.
 ### 4.2 Bloc scope
 
 - **App scope** (`lib/app/app.dart`): the bottom-tab blocs (`HomeBloc`, `ExploreBloc`, `FilterCubit`) and the library (`BookmarkCubit`, `HistoryCubit`, `SettingsCubit`, `BackupCubit`). Several screens read them, and they have to outlive navigation.
-- **Route scope:** `SearchScreen`, `LatestChapterScreen`, `ComicDetailsScreen` and `ReadChapterScreen` each create their own bloc with `BlocProvider(create: (_) => getIt<…>())`. The public screen widget is a thin wrapper and the stateful view underneath is private (`_ComicDetailsView`). Opening a second comic or moving to the next chapter therefore always starts from a fresh state.
+- **Route scope:** `LatestChapterScreen`, `ComicDetailsScreen` and `ReadChapterScreen` each create their own bloc with `BlocProvider(create: (_) => getIt<…>())`. The public screen widget is a thin wrapper and the stateful view underneath is private (`_ComicDetailsView`). Opening a second comic or moving to the next chapter therefore always starts from a fresh state.
 
 ### 4.3 State shapes
 
 - Remote screens use a freezed sealed state: `initial`, `loading`, `loaded(...)`, `error(message)`, `noInternet`. The generated classes are public (`HomeLoaded`, `ComicDetailsNoInternet`), so widgets use `state is HomeLoaded`.
 - The paginated lists (latest, search, explore) share `ComicListState` and the `ComicListLoader` mixin: `loadFirstPage` and `loadNextPage`. A next-page event is ignored until the first page has loaded. While a page is loading, `ComicListLoaded.isLoadMore` is true.
 - Library cubits hold plain lists (`List<Bookmark>`, `List<ReadHistory>`) or `AppSettings`. After every write they reload from the repository, so the state always matches storage.
-- Events are plain `final class`es named after what happened: `HomeStarted`, `HomeRefreshed`, `SearchRequested`, `ChapterRequested`.
+- Events are plain `final class`es named after what happened: `HomeStarted`, `HomeRefreshed`, `ExploreRequested`, `ChapterRequested`.
 
 ### 4.4 Settings
 
-`AppSettings` has one field today, `darkMode`, which holds one of `AppText.system`, `AppText.light` or `AppText.dark`. `BacaKomikApp` maps it to `ThemeMode`. The values are the UI strings because earlier versions stored them that way. Keep them unless you also migrate stored settings.
+`AppSettings.darkMode` holds one of `AppText.system`, `AppText.light` or `AppText.dark`. `BacaKomikApp` maps it to `ThemeMode`. The values are old UI strings because earlier versions stored them that way. Keep them unless you also migrate stored settings.
+
+The reader fields (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`) were added later. `SettingsModel` gives each a default, so settings stored by older versions still load (tested in `test/features/settings_model_test.dart`).
 
 ---
 
 ## 5. Theme and UI
 
-- `core/constants/theme.dart` defines `AppThemes.lightTheme` and `AppThemes.darkTheme` with the Rubik font. `core/constants/colors.dart` holds the primary blue `0xFF2565c7` and the format colours (manga, manhwa, manhua).
-- All user-facing text is Indonesian and lives in `AppText` (`core/constants/texts.dart`). No inline strings in widgets.
-- Icons come from `solar_icons`.
-- `RootScreen` shows a `NavigationBar` below 640 dp and a `NavigationRail` from 640 dp. Grids use 2 columns below 640 dp and 4 from 640 dp.
+The UI uses **Dotline**, a monochrome, dark-first design system: pure black background in dark mode (`#F2F2F2` in light), flat surfaces with hairlines, pills and dot motifs. Rules worth keeping:
+
+- **Red is a signal, not a colour.** `accent` appears at most once or twice per screen (NEW dot, `+N` badge, delete actions). Selected chips, switches and segments use `ink`.
+- **Doto only for screen titles** (`BERANDA`, `JELAJAH`) and the app name, never below 24 px. Numbers use `DotlineText.stat` / `statS` (Geist 600). Labels and overlines use Geist Mono, uppercase.
+- **No gradients or glass.** The one exception is the bottom fade behind the nav. Depth comes from `bg` → `surface` → `surfaceRaised`; `shadowFloat` is only for menus and the reader's chapter pill (the main nav has none).
+- **Comic types are labels, not colours.** Manga, manhwa and manhua get the same black label pill.
+- Motion: 140 ms presses (scale to 0.97, no ripple), about 320 ms sliding selection indicators. Respect `MediaQuery.disableAnimationsOf`.
+
+- `core/theme/` holds the tokens: `DotlineColors` (a `ThemeExtension`, read with `Dotline.of(context)`), `DotlineText`, `DotSpace` / `DotRadius` / `DotSize` / `DotMotion`, and `dotlineTheme()` for light and dark.
+- Build screens from `core/presentation/widgets/dotline/` (`ScreenHeader`, `ListGroup` + `ListRow`, `SegmentedControl`, `DotButton`, `DotChip`, `DotSwitch`, `showDotSheet`, `DotMeter`, `ComicCover`, `EmptyState`…) instead of raw Material widgets. There is no ripple; taps scale through `Pressable`.
+- Icons are Lucide from `lucide_icons_flutter`, weight 300 only (`LucideIcons300`, stroke ≈ 1.5). Do not use Material `Icons`.
+- All user-facing text is Indonesian and lives in `AppText` (`core/constants/texts.dart`). No inline strings in widgets. The library is called "Bookmark" in the UI, never "Favorit".
+- `RootScreen` stacks the five tabs under a floating pill nav and a bottom fade. Tabs get the nav height as bottom `MediaQuery` padding; scrollables add `MediaQuery.paddingOf(context).bottom`.
+- Cover grids (`CoverGridSliver`) use 3 columns on phones and more on wide screens (cells about 150 dp).
 - Pull-to-refresh on Home plays the "kuru kururin" animation and sound (`assets/images`, `assets/sounds`).
 - Assets are typed through `flutter_gen` (`Assets.images.…`).
 
@@ -210,8 +222,7 @@ It must print nothing.
 |---|---|---|---|
 | home | Home tab | `HomeBloc` | Trending (`/lists/trending`, 10) + latest (`/series?sort=latest`, 20), loaded in parallel. Also shows the last read comic. |
 | latest | "Lihat Semua" | `LatestBloc` | Infinite scroll, up to 10 pages. |
-| search | Search button | `SearchBloc` | Searches `/series?q=`. |
-| explore | Explore tab + filter screen | `ExploreBloc`, `FilterCubit` | `ExploreFilter`. `default` sort and `all` type/status are sent as "no filter". |
+| explore | Jelajah tab: title search + filter sheet | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (search `query` + filters) goes to `/series` in one request; the API applies them together. `default` sort, `all` type/status and an empty query are sent as "no filter". Beranda's search button switches to this tab through `RootTabs`. Requests run in order so an older search cannot overwrite a newer one. |
 | comic_detail | Comic card tap | `ComicDetailsBloc` | Series and chapters fetched in parallel. Bookmark toggle, continue reading, and multi-select of chapters to mark read or unread. |
 | reader | Chapter tap | `ReaderBloc` | Chapter slug is `seriesSlug/number`. Prev/next replace the route. Writes history when a chapter loads. |
 | bookmark | Bookmark tab | `BookmarkCubit` | Search by title. Pull-to-refresh runs `RefreshBookmarks` (§6.1). |
@@ -372,6 +383,5 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 
 ## 12. Open questions
 
-- **Listeners added in `build()`:** the search, explore and latest lists add their `ScrollController` listener inside `build()`. Listeners pile up on every rebuild, which probably triggers load-more more than once. Comic detail (title on scroll) and bookmarks (search field) do the same, which causes extra `setState` calls. Move all of them to `initState`.
 - **Old storage:** when should `hydrated_box.hive` be deleted? Not before most users run a version with the migrator.
 - **Formatting:** the code base predates the current `dart format` style. Reformatting everything in one commit would be a large, noisy diff. Decide whether to do it once.

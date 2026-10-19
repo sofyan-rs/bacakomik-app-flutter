@@ -12,11 +12,14 @@ class FilterCubit extends Cubit<ExploreFilter> {
     required String status,
     required List<String> genres,
   }) {
-    emit(ExploreFilter(
+    emit(state.copyWith(
       sortBy: sortBy,
       type: type,
       status: status,
       genres: genres,
     ));
   }
+
+  /// Title search; keeps the other filters.
+  void setQuery(String query) => emit(state.copyWith(query: query));
 }

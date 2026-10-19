@@ -1,12 +1,15 @@
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/placeholder/err_no_internet.dart';
+import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_card.dart';
+import 'package:bacakomik_app/features/latest/presentation/bloc/latest_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bacakomik_app/features/latest/presentation/bloc/latest_bloc.dart';
-import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
-import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_card.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
+/// Paginated latest chapters, in the same list group rows as the home tab.
 class LatestChapterMore extends StatefulWidget {
   const LatestChapterMore({super.key});
 
@@ -15,18 +18,16 @@ class LatestChapterMore extends StatefulWidget {
 }
 
 class _LatestChapterMoreState extends State<LatestChapterMore> {
-  var page = 1;
-  final maxPage = 10;
+  static const _maxPage = 10;
+
+  var _page = 1;
   final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     context.read<LatestBloc>().add(LatestRequested());
-  }
-
-  Future _refreshData() async {
-    context.read<LatestBloc>().add(LatestRequested());
+    _scrollController.addListener(_onScroll);
   }
 
   @override
@@ -35,84 +36,78 @@ class _LatestChapterMoreState extends State<LatestChapterMore> {
     super.dispose();
   }
 
+  void _onScroll() {
+    final position = _scrollController.position;
+    final state = context.read<LatestBloc>().state;
+    final loadingMore = state is ComicListLoaded && state.isLoadMore;
+    if (position.pixels >= position.maxScrollExtent - 200 &&
+        !loadingMore &&
+        _page < _maxPage) {
+      _page++;
+      context.read<LatestBloc>().add(LatestNextPageRequested(page: _page));
+    }
+  }
+
+  Future<void> _refresh() async {
+    _page = 1;
+    context.read<LatestBloc>().add(LatestRequested());
+  }
+
   @override
   Widget build(BuildContext context) {
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-              _scrollController.position.maxScrollExtent &&
-          page < maxPage) {
-        page++;
-        context.read<LatestBloc>().add(LatestNextPageRequested(page: page));
-      }
-    });
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return BlocBuilder<LatestBloc, ComicListState>(
       builder: (context, state) {
-        if (state is ComicListInitial || state is ComicListLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        if (state is ComicListLoaded) {
-          return Stack(
-            children: [
-              RefreshIndicator(
-                color: AppColors.primary,
-                onRefresh: () async {
-                  _refreshData();
-                },
-                child: ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(
-                    10,
-                  ),
+        return switch (state) {
+          ComicListLoaded(:final comics, :final isLoadMore) => RefreshIndicator(
+            color: Dotline.of(context).ink,
+            backgroundColor: Dotline.of(context).surface,
+            onRefresh: _refresh,
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                const SliverPadding(padding: EdgeInsets.only(top: DotSpace.s2)),
+                SliverListGroup(
+                  itemCount: comics.length,
                   itemBuilder: (context, index) {
+                    final comic = comics[index];
                     return LatestChapterCard(
-                      title: state.comics[index].title,
-                      cover: state.comics[index].coverImg,
-                      chapter: state.comics[index].latestChapter,
-                      type: state.comics[index].type,
-                      isCompleted: state.comics[index].completed,
-                      slug: state.comics[index].slug,
+                      title: comic.title,
+                      cover: comic.coverImg,
+                      chapter: comic.latestChapter,
+                      type: comic.type,
+                      isCompleted: comic.completed,
+                      slug: comic.slug,
                     );
                   },
-                  itemCount: state.comics.length,
                 ),
-              ),
-              if (state.isLoadMore)
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: LinearProgressIndicator(
-                    minHeight: 5,
-                  ),
-                )
-            ],
-          );
-        }
-
-        if (state is ComicListError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Text(state.message),
+                SliverToBoxAdapter(
+                  child: isLoadMore
+                      ? const Padding(
+                          padding: EdgeInsets.all(DotSpace.s5),
+                          child: Center(child: DotLoader()),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.only(bottom: DotSpace.s4 + bottomInset),
+                ),
+              ],
             ),
-          );
-        }
-
-        if (state is ComicListNoInternet) {
-          return const ErrNoInternet();
-        }
-
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(10),
-            child: Text(AppText.error),
           ),
-        );
+          ComicListNoInternet() => EmptyState.offline(onAction: _refresh),
+          ComicListError(:final message) => EmptyState(
+            icon: LucideIcons300.bug,
+            title: AppText.error,
+            message: message,
+            actionLabel: AppText.retry,
+            onAction: _refresh,
+          ),
+          ComicListInitial() ||
+          ComicListLoading() => const Center(child: DotLoader()),
+        };
       },
     );
   }

@@ -11,13 +11,18 @@ class Filters {
     FilterOption(id: 'ongoing', name: 'Ongoing'),
     FilterOption(id: 'completed', name: 'Completed'),
     FilterOption(id: 'hiatus', name: 'Hiatus'),
+    FilterOption(id: 'cancelled', name: 'Cancelled'),
   ];
 
+  // `sort` enum of GET /series (see /openapi.json). Unknown values are
+  // rejected with 400.
   static final List<FilterOption> sortbyList = [
     FilterOption(id: 'latest', name: 'Terbaru'),
-    FilterOption(id: 'rating', name: 'Rating'),
     FilterOption(id: 'newseries', name: 'Seri Baru'),
-    FilterOption(id: 'default', name: 'Default'),
+    FilterOption(id: 'bookmark', name: 'Bookmark'),
+    FilterOption(id: 'popular', name: 'Populer'),
+    FilterOption(id: 'rating', name: 'Rating'),
+    FilterOption(id: 'az', name: 'A–Z'),
   ];
 
   // Ids from GET /genres.

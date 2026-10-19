@@ -8,7 +8,7 @@ import 'package:injectable/injectable.dart';
 @injectable
 class SettingsCubit extends Cubit<AppSettings> {
   SettingsCubit(this._getSettings, this._saveSettings)
-      : super(const AppSettings());
+    : super(const AppSettings());
 
   final GetSettings _getSettings;
   final SaveSettings _saveSettings;
@@ -18,8 +18,12 @@ class SettingsCubit extends Cubit<AppSettings> {
     result.fold((f) => debugPrint('SettingsCubit: $f'), emit);
   }
 
-  Future<void> changeDarkMode(String darkMode) async {
-    final settings = state.copyWith(darkMode: darkMode);
+  Future<void> changeDarkMode(String darkMode) =>
+      update((s) => s.copyWith(darkMode: darkMode));
+
+  /// Applies [change] and saves the result (reader settings sheet).
+  Future<void> update(AppSettings Function(AppSettings) change) async {
+    final settings = change(state);
     emit(settings);
     final result = await _saveSettings(settings);
     result.fold((f) => debugPrint('SettingsCubit: $f'), (_) {});

@@ -38,16 +38,15 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     required String chapterNumber,
     required ComicDetails comicDetails,
     required String comicSlug,
-  }) =>
-      addHistoryList([
-        ReadHistory(
-          slug: slug,
-          chapterNumber: chapterNumber,
-          readDate: _clock.now(),
-          comicDetails: comicDetails,
-          comicSlug: comicSlug,
-        ),
-      ]);
+  }) => addHistoryList([
+    ReadHistory(
+      slug: slug,
+      chapterNumber: chapterNumber,
+      readDate: _clock.now(),
+      comicDetails: comicDetails,
+      comicSlug: comicSlug,
+    ),
+  ]);
 
   Future<void> addHistoryList(List<ReadHistory> history) =>
       _thenReload(_saveHistory([...history]));
@@ -63,17 +62,29 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
 
   Future<void> clearHistory() => _thenReload(_clearHistory(const NoParams()));
 
-  bool isInHistory(String slug) => state.containsChapter(slug);
+  /// Lookups for the current state, rebuilt only when the state changes.
+  HistoryIndex get index {
+    if (!identical(_indexed, state)) {
+      _indexed = state;
+      _index = HistoryIndex(state);
+    }
+    return _index;
+  }
+
+  List<ReadHistory>? _indexed;
+  late HistoryIndex _index;
+
+  bool isInHistory(String slug) => index.containsChapter(slug);
 
   /// Only valid when [state] is not empty.
-  ReadHistory get latestHistory => state.latest!;
+  ReadHistory get latestHistory => index.latest!;
 
-  int getHistoryCountBySlug(String comicSlug) => state.countOf(comicSlug);
+  int getHistoryCountBySlug(String comicSlug) => index.countOf(comicSlug);
 
   ReadHistory? getLatestHistoryBySlug(String comicSlug) =>
-      state.latestOf(comicSlug);
+      index.latestOf(comicSlug);
 
-  List<ComicLatestHistory> get latestHistories => state.latestPerComic;
+  List<ComicLatestHistory> get latestHistories => index.perComic;
 
   Future<void> _thenReload(Future<Either<Failure, Unit>> action) async {
     (await action).fold(_log, (_) {});

@@ -22,6 +22,7 @@ class ExploreRepositoryImpl implements ExploreRepository {
   ) =>
       runRemote(_networkInfo, () async {
         final res = await _remote.getSeriesList(
+          query: filter.query.trim().isEmpty ? null : filter.query.trim(),
           sort: filter.sortBy == 'default' ? null : filter.sortBy,
           status: filter.status == 'all' ? null : filter.status,
           format: filter.type == 'all' ? null : filter.type,

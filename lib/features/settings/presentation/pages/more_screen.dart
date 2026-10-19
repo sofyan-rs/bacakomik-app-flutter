@@ -1,16 +1,19 @@
-import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+/// Lainnya tab: library stats, data actions, theme, about.
 class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});
 
@@ -21,10 +24,11 @@ class MoreScreen extends StatefulWidget {
 class _MoreScreenState extends State<MoreScreen> {
   String _appVersion = '';
 
-  Future<void> getAppVersion() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    setState(() {
-      _appVersion = packageInfo.version;
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) setState(() => _appVersion = info.version);
     });
   }
 
@@ -44,34 +48,55 @@ class _MoreScreenState extends State<MoreScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    getAppVersion();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    final bookmarks = context.select<BookmarkCubit, int>((b) => b.state.length);
+    final chaptersRead = context.select<HistoryCubit, int>(
+      (h) => h.state.length,
+    );
+
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          children: [
-            ListTile(
-              title: const Text(
-                AppVariables.appName,
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+        bottom: false,
+        child: BlocListener<BackupCubit, BackupState>(
+          listener: _onBackupStateChanged,
+          child: ListView(
+            padding: EdgeInsets.only(
+              bottom: DotSpace.s4 + MediaQuery.paddingOf(context).bottom,
+            ),
+            children: [
+              const ScreenHeader(title: AppText.more),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: StatTile(
+                        value: '$bookmarks',
+                        label: AppText.bookmark,
+                        labelOnTop: true,
+                      ),
+                    ),
+                    const SizedBox(width: DotSpace.s3),
+                    Expanded(
+                      child: StatTile(
+                        value: '$chaptersRead',
+                        label: AppText.chaptersRead,
+                        labelOnTop: true,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              subtitle: Text('v$_appVersion'),
-            ),
-            const LastReadComic(),
-            BlocListener<BackupCubit, BackupState>(
-              listener: _onBackupStateChanged,
-              child: const Settings(),
-            ),
-          ],
+              const Settings(),
+              const SizedBox(height: DotSpace.s5),
+              Text(
+                '${AppVariables.appName} $_appVersion'.toUpperCase(),
+                style: DotlineText.label.copyWith(color: c.inkFaint),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

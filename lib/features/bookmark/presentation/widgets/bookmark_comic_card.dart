@@ -1,170 +1,99 @@
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-class BookmarkComicCard extends StatefulWidget {
+/// Bookmark grid cell: cover with the `+N` new-chapter badge, title, read
+/// meter and `read / latest`.
+class BookmarkComicCard extends StatelessWidget {
   const BookmarkComicCard({
     super.key,
-    required this.title,
-    required this.cover,
-    required this.type,
-    required this.slug,
-    required this.chapterCount,
+    required this.item,
     required this.isSelected,
-    required this.isHaveSelectedComic,
-    required this.onSelected,
+    required this.onTap,
+    required this.onLongPress,
   });
 
-  final String title;
-  final String cover;
-  final String type;
-  final String slug;
-  final int chapterCount;
+  /// Text under the cover: gap, two title lines, gap, meter, gap, numbers.
+  static const textHeight =
+      DotSpace.s2 + 22 * 2 + DotSpace.s2 + DotSize.dot + DotSpace.s2 + 18;
+
+  final BookmarkProgress item;
   final bool isSelected;
-  final bool isHaveSelectedComic;
-  final void Function(String) onSelected;
-
-  @override
-  State<BookmarkComicCard> createState() => _BookmarkComicCardState();
-}
-
-class _BookmarkComicCardState extends State<BookmarkComicCard> {
-  void _goToComicDetails(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ComicDetailsScreen(
-          slug: widget.slug,
-          title: widget.title,
-          cover: widget.cover,
-        ),
-      ),
-    );
-  }
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   @override
   Widget build(BuildContext context) {
-    final historyCount =
-        context.watch<HistoryCubit>().getHistoryCountBySlug(widget.slug);
+    final c = Dotline.of(context);
+    final details = item.bookmark.comicDetails;
+    final progress = item.progress;
+    final total = details.chapters.length;
 
-    return Container(
-      // width: 200,
-      // height: 500,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSecondary,
-        border: widget.isSelected
-            ? Border.all(
-                color: AppColors.primary,
-                width: 3,
-              )
-            : null,
-        borderRadius: BorderRadius.circular(5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            spreadRadius: 2,
-            blurRadius: 3,
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
+    return Semantics(
+      selected: isSelected,
+      child: Pressable(
+        semanticLabel: details.title,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ComicCover(
+              imageUrl: details.coverImg,
+              overlay: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Container(
-                    width: double.infinity,
-                    height: 130,
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                    child: CachedNetworkImage(
-                      fit: BoxFit.cover,
-                      imageUrl: widget.cover,
-                      // errorWidget: (context, url, error) {
-                      //   return const Center(
-                      //     child: Text(
-                      //       'Oops',
-                      //       style: TextStyle(
-                      //         color: Colors.white,
-                      //       ),
-                      //     ),
-                      //   );
-                      // },
+                  if (isSelected)
+                    ColoredBox(color: c.bg.withValues(alpha: 0.55)),
+                  if (item.hasUpdate)
+                    Positioned(
+                      top: DotSpace.s2,
+                      right: DotSpace.s2,
+                      child: UpdateBadge(count: item.newChapters),
                     ),
-                  ),
-                  widget.chapterCount - historyCount > 0
-                      ? Positioned(
-                          left: 10,
-                          top: 10,
-                          child: CustomChip(
-                            text: '${widget.chapterCount - historyCount}',
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .secondaryContainer,
-                            textColor: Theme.of(context)
-                                .colorScheme
-                                .onSecondaryContainer,
-                          ),
-                        )
-                      : const SizedBox(),
-                  Positioned(
-                    right: 10,
-                    top: 10,
-                    child: CustomChip(
-                      text: widget.type,
-                      backgroundColor: widget.type == 'Manga'
-                          ? AppColors.mangaColor
-                          : widget.type == 'Manhwa'
-                              ? AppColors.manhwaColor
-                              : AppColors.manhuaColor,
+                  if (isSelected)
+                    Positioned(
+                      top: DotSpace.s2,
+                      left: DotSpace.s2,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: c.ink,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          LucideIcons300.check,
+                          size: 16,
+                          color: c.onInk,
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Positioned.fill(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  widget.isHaveSelectedComic
-                      ? widget.onSelected(widget.slug)
-                      : _goToComicDetails(context);
-                },
-                onLongPress: () {
-                  widget.onSelected(widget.slug);
-                },
-              ),
             ),
-          ),
-        ],
+            const SizedBox(height: DotSpace.s2),
+            Text(
+              details.title,
+              style: DotlineText.body.copyWith(color: c.ink),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: DotSpace.s2),
+            DotMeter(value: progress?.position ?? 0, total: total, gap: 3),
+            const SizedBox(height: DotSpace.s2),
+            Text(
+              '${progress?.chapterNumber ?? 0} / '
+              '${progress?.latestNumber ?? total}',
+              style: DotlineText.data.copyWith(color: c.inkFaint),
+              maxLines: 1,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -27,8 +27,11 @@ final class ExploreNextPageRequested extends ExploreEvent {
 class ExploreBloc extends Bloc<ExploreEvent, ComicListState>
     with ComicListLoader<ExploreEvent> {
   ExploreBloc(this._exploreComics) : super(const ComicListState.initial()) {
+    // One request at a time, in order: while typing a search, an older
+    // response must not replace a newer one.
     on<ExploreRequested>(
       (event, emit) => loadFirstPage(emit, () => _explore(event)),
+      transformer: (events, mapper) => events.asyncExpand(mapper),
     );
     on<ExploreNextPageRequested>(
       (event, emit) => loadNextPage(emit, () => _explore(event)),

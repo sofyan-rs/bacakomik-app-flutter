@@ -1,166 +1,116 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:ui' as ui;
-
+import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:bacakomik_app/features/history/domain/entities/read_progress.dart';
+import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/core/constants/colors.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
-import 'package:bacakomik_app/core/presentation/widgets/chip/custom_chip.dart';
-
-class LastReadComic extends StatefulWidget {
-  const LastReadComic({
-    super.key,
-    this.withoutPb = false,
-  });
-
-  final bool withoutPb;
-
-  @override
-  State<LastReadComic> createState() => _LastReadComicState();
-}
-
-class _LastReadComicState extends State<LastReadComic> {
-  void _goToComicDetails(
-      BuildContext context, String slug, String title, String cover) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ComicDetailsScreen(
-          slug: slug,
-          title: title,
-          cover: cover,
-        ),
-      ),
-    );
-  }
+/// "LANJUT BACA" card for the most recently read comic. Hidden when the
+/// history is empty.
+class LastReadComic extends StatelessWidget {
+  const LastReadComic({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HistoryCubit, List<ReadHistory>>(
-      builder: (context, state) {
-        if (state.isNotEmpty) {
-          ReadHistory latestHistory =
-              context.watch<HistoryCubit>().latestHistory;
+    final latest = context.watch<HistoryCubit>().index.latest;
+    if (latest == null) return const SizedBox.shrink();
 
-          return Padding(
-            padding: widget.withoutPb
-                ? const EdgeInsets.only(
-                    left: 15,
-                    right: 15,
-                    top: 15,
-                  )
-                : const EdgeInsets.all(15),
+    final c = Dotline.of(context);
+    final details = latest.comicDetails;
+    final progress = ReadProgress.of(details, latest.chapterNumber);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SectionLabel(label: AppText.continueReading),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+          child: Pressable(
+            semanticLabel: '${AppText.continueReading} ${details.title}',
+            onTap: () => ComicDetailsScreen.open(
+              context,
+              slug: latest.comicSlug,
+              title: details.title,
+              cover: details.coverImg,
+            ),
             child: Container(
-              width: double.infinity,
-              height: 100,
-              clipBehavior: Clip.antiAlias,
+              padding: const EdgeInsets.all(DotSpace.s4),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(5),
+                color: c.surface,
+                borderRadius: BorderRadius.circular(DotRadius.l),
               ),
-              child: Stack(
+              child: Row(
                 children: [
-                  Positioned.fill(
-                    child: CachedNetworkImage(
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                      imageUrl: latestHistory.comicDetails.coverImg,
-                    ),
+                  SizedBox(
+                    width: 84,
+                    child: ComicCover(imageUrl: details.coverImg),
                   ),
-                  Positioned.fill(
-                    child: ClipRect(
-                      child: BackdropFilter(
-                        filter: ui.ImageFilter.blur(
-                          sigmaX: 3.0,
-                          sigmaY: 3.0,
+                  const SizedBox(width: DotSpace.s4),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${details.type} · ${details.status}'.toUpperCase(),
+                          style: DotlineText.label.copyWith(color: c.inkFaint),
                         ),
-                        child: Container(
-                          color: AppColors.dark.withValues(alpha: 0.4),
+                        const SizedBox(height: DotSpace.s2),
+                        Text(
+                          details.title,
+                          style: DotlineText.headline.copyWith(color: c.ink),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 15),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              width: 70,
-                              height: 70,
-                              child: CachedNetworkImage(
-                                fit: BoxFit.cover,
-                                imageUrl: latestHistory.comicDetails.coverImg,
+                        const SizedBox(height: DotSpace.s3),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              'CH. ',
+                              style: DotlineText.data.copyWith(
+                                color: c.inkFaint,
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  AppText.lastRead,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
+                            Flexible(
+                              child: Text(
+                                progress.chapterNumber,
+                                style: DotlineText.stat.copyWith(
+                                  fontSize: 28,
+                                  color: c.ink,
                                 ),
-                                Text(
-                                  latestHistory.comicDetails.title,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 5),
-                                CustomChip(
-                                  text:
-                                      'Chapter ${latestHistory.chapterNumber}',
-                                  backgroundColor: AppColors.primary,
-                                )
-                              ],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          )
-                        ],
-                      ),
+                            Text(
+                              ' / ${progress.latestNumber}',
+                              style: DotlineText.data.copyWith(
+                                color: c.inkFaint,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: DotSpace.s2),
+                        DotMeter(
+                          value: progress.position,
+                          total: progress.total,
+                          dots: 22,
+                          gap: 2,
+                        ),
+                      ],
                     ),
                   ),
-                  Positioned.fill(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          _goToComicDetails(
-                            context,
-                            latestHistory.comicSlug,
-                            latestHistory.comicDetails.title,
-                            latestHistory.comicDetails.coverImg,
-                          );
-                        },
-                      ),
-                    ),
-                  )
                 ],
               ),
             ),
-          );
-        } else {
-          return const SizedBox();
-        }
-      },
+          ),
+        ),
+      ],
     );
   }
 }

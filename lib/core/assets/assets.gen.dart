@@ -31,11 +31,15 @@ class $AssetsImagesGen {
   AssetGenImage get kuruKururin =>
       const AssetGenImage('assets/images/kuru-kururin.gif');
 
+  /// File path: assets/images/splash-art.webp
+  AssetGenImage get splashArt =>
+      const AssetGenImage('assets/images/splash-art.webp');
+
   /// File path: assets/images/splash.png
   AssetGenImage get splash => const AssetGenImage('assets/images/splash.png');
 
   /// List of all assets
-  List<AssetGenImage> get values => [kuruKururin, splash];
+  List<AssetGenImage> get values => [kuruKururin, splashArt, splash];
 }
 
 class $AssetsSoundsGen {

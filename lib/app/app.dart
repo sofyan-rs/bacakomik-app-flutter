@@ -1,6 +1,6 @@
 import 'package:bacakomik_app/app/splash_screen.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/theme.dart';
+import 'package:bacakomik_app/core/theme/dotline_theme.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
@@ -36,8 +36,8 @@ class BacaKomikApp extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: AppVariables.appName,
-            theme: AppThemes.lightTheme,
-            darkTheme: AppThemes.darkTheme,
+            theme: DotlineThemes.light,
+            darkTheme: DotlineThemes.dark,
             themeMode: switch (settings.darkMode) {
               AppText.dark => ThemeMode.dark,
               AppText.light => ThemeMode.light,

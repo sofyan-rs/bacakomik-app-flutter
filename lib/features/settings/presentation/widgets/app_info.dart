@@ -1,10 +1,17 @@
-import 'package:bacakomik_app/core/constants/changelogs.dart';
-import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/constants/variables.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+/// "Tentang aplikasi" sheet: version, description and a link to the
+/// developer site.
 class AppInfo extends StatefulWidget {
   const AppInfo({super.key});
 
@@ -14,68 +21,55 @@ class AppInfo extends StatefulWidget {
 
 class _AppInfoState extends State<AppInfo> {
   String _appVersion = '';
-  final _appChangelogs = AppChangelogs.changelogs;
-
-  Future<void> getAppVersion() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    setState(() {
-      _appVersion = packageInfo.version;
-    });
-  }
 
   @override
   void initState() {
     super.initState();
-    getAppVersion();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) setState(() => _appVersion = info.version);
+    });
+  }
+
+  Future<void> _openWebsite() async {
+    final opened = await launchUrl(
+      Uri.parse(AppVariables.websiteLink),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && mounted) {
+      showSnackBar(context: context, message: AppText.linkFailed);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            AppVariables.appName,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+    final c = Dotline.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ActionSheetHeader(
+          icon: LucideIcons300.info,
+          title: AppVariables.appName,
+          subtitle: '${AppText.version} $_appVersion',
+        ),
+        const SizedBox(height: DotSpace.s4),
+        Text(
+          AppVariables.appDescription,
+          style: DotlineText.body.copyWith(color: c.inkMuted),
+        ),
+        const SizedBox(height: DotSpace.s5),
+        ListGroup(
+          background: c.bg,
+          children: [
+            ListRow(
+              icon: LucideIcons300.globe,
+              title: AppText.website,
+              subtitle: AppVariables.websiteLabel,
+              onTap: _openWebsite,
             ),
-          ),
-          Text('${AppText.version} $_appVersion'),
-          const SizedBox(height: 10),
-          const Text(AppVariables.appDescription),
-          const Divider(
-            color: AppColors.primary,
-            thickness: 1,
-            height: 30,
-          ),
-          const Text(
-            'Changelog :',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          for (var changelog in _appChangelogs.reversed)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  changelog['version'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                for (var change in changelog['changes']) Text(' - $change'),
-                const SizedBox(height: 10),
-              ],
-            ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

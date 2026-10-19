@@ -1,267 +1,201 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:solar_icons/solar_icons.dart';
-
-import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
-import 'package:bacakomik_app/core/constants/colors.dart';
 import 'package:bacakomik_app/core/constants/filters.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/chip/custom_choice_chip.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:bacakomik_app/core/theme/dotline_text.dart';
+import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.dart';
+import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
+/// Filters shown on the Jelajah filter button: status, sort and genres.
+/// Type is not counted because the segmented control already shows it.
+int activeFilterCount(ExploreFilter filter) =>
+    (filter.status != 'all' ? 1 : 0) +
+    (filter.sortBy != const ExploreFilter().sortBy ? 1 : 0) +
+    filter.genres.length;
+
+/// "URUT: TERBARU · ONGOING" line above the Jelajah grid.
+String filterSummary(ExploreFilter filter) {
+  String name(List<FilterOption> options, String id) =>
+      options.firstWhere((o) => o.id == id, orElse: () => options.first).name;
+
+  return [
+    '${AppText.sortShort}: ${name(Filters.sortbyList, filter.sortBy)}',
+    if (filter.status != 'all') name(Filters.statusList, filter.status),
+    if (filter.genres.isNotEmpty) '${filter.genres.length} ${AppText.genre}',
+  ].join(' · ').toUpperCase();
+}
+
+/// Opens the filter sheet. Calls [onApply] after the filter is saved.
+Future<void> showFilterSheet(
+  BuildContext context, {
+  required VoidCallback onApply,
+}) {
+  final cubit = context.read<FilterCubit>();
+  return showDotSheet(
+    context: context,
+    builder: (_) => BlocProvider.value(
+      value: cubit,
+      child: FilterComic(onApply: onApply),
+    ),
+  );
+}
+
+/// Filter sheet content: single-select type, status and sort, multi-select
+/// genres. Changes apply only on "Tampilkan hasil".
 class FilterComic extends StatefulWidget {
-  const FilterComic({
-    super.key,
-    required this.onApply,
-  });
+  const FilterComic({super.key, required this.onApply});
 
-  final void Function() onApply;
+  final VoidCallback onApply;
 
   @override
   State<FilterComic> createState() => _FilterComicState();
 }
 
-class _FilterComicState extends State<FilterComic>
-    with SingleTickerProviderStateMixin {
-  final _pageController = PageController(initialPage: 0);
-  late TabController tabController;
+class _FilterComicState extends State<FilterComic> {
+  late ExploreFilter _filter = context.read<FilterCubit>().state;
 
-  String _selectedType = 'all';
-  String _selectedStatus = 'all';
-  String _selectedSortBy = 'latest';
-  List<String> _selectedGenres = [];
-
-  @override
-  void dispose() {
-    super.dispose();
-    _pageController.dispose();
-    tabController.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    tabController = TabController(length: 2, vsync: this);
-    // Get initial filter state
-    _selectedType = context.read<FilterCubit>().state.type;
-    _selectedStatus = context.read<FilterCubit>().state.status;
-    _selectedSortBy = context.read<FilterCubit>().state.sortBy;
-    _selectedGenres = [...context.read<FilterCubit>().state.genres];
-  }
-
-  void _setFilter() {
+  void _apply() {
     context.read<FilterCubit>().setFilter(
-          type: _selectedType,
-          status: _selectedStatus,
-          sortBy: _selectedSortBy,
-          genres: _selectedGenres,
-        );
+      type: _filter.type,
+      status: _filter.status,
+      sortBy: _filter.sortBy,
+      genres: _filter.genres,
+    );
     widget.onApply();
     Navigator.of(context).pop();
   }
 
-  void _resetFilter() {
-    setState(() {
-      _selectedType = 'all';
-      _selectedStatus = 'all';
-      _selectedSortBy = 'latest';
-      _selectedGenres = [];
-    });
+  void _toggleGenre(String id) {
+    final genres = [..._filter.genres];
+    genres.contains(id) ? genres.remove(id) : genres.add(id);
+    setState(() => _filter = _filter.copyWith(genres: genres));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppText.filter),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: Icon(
-            SolarIconsOutline.arrowLeft,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 5),
-            child: TextButton(
-              onPressed: _resetFilter,
-              child: const Text(
-                AppText.reset,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.primary,
+    final c = Dotline.of(context);
+    final genreCount = _filter.genres.length;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                AppText.filter,
+                style: DotlineText.title.copyWith(color: c.ink),
+              ),
+            ),
+            GestureDetector(
+              // Reset clears the filters, not the search text.
+              onTap: () => setState(
+                () => _filter = ExploreFilter(query: _filter.query),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(DotSpace.s3),
+                child: Text(
+                  AppText.reset,
+                  style: DotlineText.body.copyWith(color: c.inkMuted),
                 ),
               ),
             ),
-          ),
-        ],
-        bottom: TabBar(
-          controller: tabController,
-          onTap: (index) {
-            _pageController.animateToPage(index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut);
-          },
-          labelStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-          labelColor: AppColors.primary,
-          unselectedLabelColor: Theme.of(context).colorScheme.onSurface,
-          indicatorColor: AppColors.primary,
-          indicatorSize: TabBarIndicatorSize.tab,
-          indicatorWeight: 4,
-          tabs: const [
-            Tab(text: 'Umum'),
-            Tab(text: 'Genre'),
+            RoundIconButton(
+              icon: LucideIcons300.x,
+              semanticLabel: AppText.close,
+              background: Colors.transparent,
+              onTap: () => Navigator.of(context).pop(),
+            ),
           ],
         ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(20),
-        child: ElevatedButton(
-          onPressed: _setFilter,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            padding: const EdgeInsets.all(15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5),
-            ),
-          ),
-          child: const Text(
-            AppText.apply,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: DotSpace.s4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _Section(
+                  label: AppText.type,
+                  options: Filters.typeList,
+                  isSelected: (id) => _filter.type == id,
+                  onTap: (id) =>
+                      setState(() => _filter = _filter.copyWith(type: id)),
+                ),
+                _Section(
+                  label: AppText.status,
+                  options: Filters.statusList,
+                  isSelected: (id) => _filter.status == id,
+                  onTap: (id) =>
+                      setState(() => _filter = _filter.copyWith(status: id)),
+                ),
+                _Section(
+                  label: AppText.sortShortLong,
+                  options: Filters.sortbyList,
+                  isSelected: (id) => _filter.sortBy == id,
+                  onTap: (id) =>
+                      setState(() => _filter = _filter.copyWith(sortBy: id)),
+                ),
+                _Section(
+                  label: genreCount == 0
+                      ? AppText.genre
+                      : '${AppText.genre} · $genreCount ${AppText.selected}',
+                  options: Filters.genreList,
+                  isSelected: _filter.genres.contains,
+                  onTap: _toggleGenre,
+                ),
+              ],
             ),
           ),
         ),
-      ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          tabController.animateTo(index);
-        },
+        const Divider(),
+        const SizedBox(height: DotSpace.s4),
+        DotButton(label: AppText.showResults, onTap: _apply),
+      ],
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.label,
+    required this.options,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final List<FilterOption> options;
+  final bool Function(String id) isSelected;
+  final void Function(String id) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: DotSpace.s5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              const Text(
-                AppText.type,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Wrap(
-                children:
-                    List<Widget>.generate(Filters.typeList.length, (index) {
-                  final isSelected =
-                      _selectedType == Filters.typeList[index].id;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: CustomChoiceChip(
-                      isSelected: isSelected,
-                      label: Filters.typeList[index].name,
-                      onSelected: (bool selected) {
-                        setState(() {
-                          _selectedType = Filters.typeList[index].id;
-                        });
-                      },
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                AppText.status,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Wrap(
-                children:
-                    List<Widget>.generate(Filters.statusList.length, (index) {
-                  final isSelected =
-                      _selectedStatus == Filters.statusList[index].id;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: CustomChoiceChip(
-                      isSelected: isSelected,
-                      label: Filters.statusList[index].name,
-                      onSelected: (bool selected) {
-                        setState(() {
-                          _selectedStatus = Filters.statusList[index].id;
-                        });
-                      },
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                AppText.sortBy,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Wrap(
-                children:
-                    List<Widget>.generate(Filters.sortbyList.length, (index) {
-                  final isSelected =
-                      _selectedSortBy == Filters.sortbyList[index].id;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: CustomChoiceChip(
-                      isSelected: isSelected,
-                      label: Filters.sortbyList[index].name,
-                      onSelected: (bool selected) {
-                        setState(() {
-                          _selectedSortBy = Filters.sortbyList[index].id;
-                        });
-                      },
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 20),
-            ],
+          Text(
+            label.toUpperCase(),
+            style: DotlineText.label.copyWith(color: c.inkFaint),
           ),
-          ListView(
-            padding: const EdgeInsets.all(20),
+          const SizedBox(height: DotSpace.s3),
+          Wrap(
+            spacing: DotSpace.s2,
+            runSpacing: DotSpace.s2,
             children: [
-              Wrap(
-                children:
-                    List<Widget>.generate(Filters.genreList.length, (index) {
-                  final isSelected =
-                      _selectedGenres.contains(Filters.genreList[index].id);
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: CustomChoiceChip(
-                      isSelected: isSelected,
-                      label: Filters.genreList[index].name,
-                      onSelected: (bool selected) {
-                        setState(() {
-                          if (selected) {
-                            _selectedGenres.add(Filters.genreList[index].id);
-                          } else {
-                            _selectedGenres.remove(Filters.genreList[index].id);
-                          }
-                        });
-                      },
-                    ),
-                  );
-                }),
-              ),
+              for (final option in options)
+                DotChip(
+                  label: option.name,
+                  selected: isSelected(option.id),
+                  onTap: () => onTap(option.id),
+                ),
             ],
           ),
         ],

@@ -7,6 +7,9 @@ class AppVariables {
     defaultValue: 'https://api-bacakomik.kurodev.org',
   );
 
+  static const String websiteLink = 'https://kurodev.org';
+  static const String websiteLabel = 'kurodev.org';
+
   static const String reportLink =
-      'https://github.com/sofyan-rs/bacakomik-app-release/issues/new';
+      'https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new';
 }
