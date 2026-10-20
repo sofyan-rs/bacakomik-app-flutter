@@ -1,0 +1,13 @@
+{
+  "name": "bacakomik-links",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

@@ -1,0 +1,7 @@
+name = "bacakomik-links"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Serves the whole host. kurodev.org must be a zone on the same Cloudflare
+# account; the DNS record is created on deploy.
+routes = [{ pattern = "bacakomik.kurodev.org", custom_domain = true }]
