@@ -1,6 +1,6 @@
 # BacaKomik
 
-An Android reader for manga, manhwa and manhua, backed by [bacakomik-api](https://api-bacakomik.kurodev.org/docs). Browse and search comics, read chapters, and keep a personal library of bookmarks and reading history. There is no account: the library lives on the device and in backup files you export.
+An Android reader for manga, manhwa and manhua, backed by [bacakomik-api](https://api-bacakomik.kurodev.org/docs). Browse and search comics, read chapters online or download them to read offline, and keep a personal library of bookmarks and reading history. There is no account: the library lives on the device and in backup files you export.
 
 Built with **Flutter** (feature-first clean architecture, BLoC), styled with the **Dotline** design system: monochrome, dark first, one red signal colour, dot-matrix display type.
 
@@ -28,11 +28,12 @@ Screenshots were taken on a real device (Realme RMX5085, Android 16).
 
 - **Beranda:** continue reading with chapter progress, ranked hot comics and the latest chapters. Pull to refresh for a small easter egg.
 - **Jelajah:** title search combined with type, status, sort (latest, new series, bookmarks, popular, rating, A–Z) and genre filters in one request, with infinite scroll.
-- **Comic details:** rating, chapter count, release year, synopsis and genres. The chapter list can be searched and sorted, marks new and read chapters, and supports selecting chapters to mark them read or unread. Share a comic or save its cover.
-- **Reader:** vertical strip or page by page (right-to-left or left-to-right), fit to width or height, keep the screen on, optional gap between pages. Double-tap to zoom, page meter, previous/next chapter, and a "chapter finished" card. Pages load in order, five at a time. Long press a page to save it.
+- **Comic details:** rating, chapter count, release year, synopsis and genres; tap a genre to browse it in Jelajah. The chapter list can be searched and sorted, marks new, read, partly read (`5 / 24`) and downloaded chapters, and supports selecting chapters to download them or mark them read or unread. Share a comic as a link that opens the app, save its cover, or long-press the title to copy it. Without a connection, comics you downloaded, bookmarked or read still open from the details saved on the phone.
+- **Reader:** vertical strip or page by page (right-to-left or left-to-right), fit to width or height, keep the screen on, optional gap between pages. Double-tap to zoom, page meter, previous/next chapter, and a "chapter finished" card. Reopens a chapter at the page you stopped at. Auto-scroll with adjustable speed in the vertical reader. Pages load in order, five at a time; downloaded chapters open from the phone. Long press a page to save it.
 - **Bookmark:** new-chapter badge (`+N`), read progress, filters for all / has update / finished, and search by title.
 - **Riwayat:** last read chapter per comic, grouped by day; swipe to delete.
-- **Data:** back up and restore bookmarks and history to a file, clear the image cache, and choose the system, light or dark theme.
+- **Unduhan:** download chapters for offline reading. Downloads keep going in the background and while the phone is locked, with a progress notification. Lainnya → Unduhan shows the storage used, the queue with retry and cancel, and downloads grouped per comic (swipe a chapter to delete it). Files stay in the app's own storage and are removed when the app is uninstalled.
+- **Data:** back up and restore bookmarks and history to a file, clear the image cache (downloads are kept), and choose the system, light or dark theme.
 
 ## Requirements
 
