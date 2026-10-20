@@ -18,7 +18,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 
 ### Non-goals
 - User accounts, cloud sync, or a server-side library.
-- Offline reading or chapter downloads. Reading needs a network connection.
+- iOS background downloads are untested (releases are Android APKs). Download tasks use absolute paths, which iOS can move between launches (§7.5).
 - Hosting or scraping comics. All content comes from bacakomik-api.
 - An app store listing. Releases are APKs on GitHub Releases; the app checks the latest release on start and from Lainnya, downloads the APK for the device's ABI and opens Android's installer (`features/update`, `ota_update`). Asset names and the `## Which APK?` heading are set by the release workflow (CONTRIBUTION §2).
 
@@ -85,6 +85,7 @@ lib/
     ├── history/       # local: read chapters
     ├── settings/      # local: theme; the More tab
     ├── backup/        # export/import the library as a JSON file
+    ├── download/      # local: chapters saved for offline reading, background download queue
     └── update/        # in-app updates from GitHub Releases
 ```
 
@@ -156,7 +157,7 @@ It must print nothing.
           ── runApp(BacaKomikApp)
 
    BacaKomikApp ─ MultiBlocProvider (app scope)
-   │   HomeBloc · ExploreBloc · FilterCubit · BookmarkCubit · HistoryCubit · SettingsCubit · BackupCubit
+   │   HomeBloc · ExploreBloc · FilterCubit · BookmarkCubit · HistoryCubit · SettingsCubit · DownloadCubit · BackupCubit
    └─ MaterialApp ─ SplashScreen ─▶ RootScreen (tabs)
                                       │ Navigator.push
                                       ▼
@@ -170,12 +171,12 @@ It must print nothing.
 ### 4.1 Startup
 
 1. `Hive.init` points Hive at the application documents directory.
-2. `configureDependencies()` registers everything and opens the four Hive boxes before returning (`@preResolve` in `StorageModule`).
+2. `configureDependencies()` registers everything and opens the six Hive boxes before returning (`@preResolve` in `StorageModule`).
 3. `runApp`. `BookmarkCubit`, `HistoryCubit` and `SettingsCubit` call `load()` when they are first created.
 
 ### 4.2 Bloc scope
 
-- **App scope** (`lib/app/app.dart`): the bottom-tab blocs (`HomeBloc`, `ExploreBloc`, `FilterCubit`) and the library (`BookmarkCubit`, `HistoryCubit`, `SettingsCubit`, `BackupCubit`). Several screens read them, and they have to outlive navigation.
+- **App scope** (`lib/app/app.dart`): the bottom-tab blocs (`HomeBloc`, `ExploreBloc`, `FilterCubit`) and the library (`BookmarkCubit`, `HistoryCubit`, `SettingsCubit`, `DownloadCubit`, `BackupCubit`). Several screens read them, and they have to outlive navigation.
 - **Route scope:** `LatestChapterScreen`, `ComicDetailsScreen` and `ReadChapterScreen` each create their own bloc with `BlocProvider(create: (_) => getIt<…>())`. The public screen widget is a thin wrapper and the stateful view underneath is private (`_ComicDetailsView`). Opening a second comic or moving to the next chapter therefore always starts from a fresh state.
 
 ### 4.3 State shapes
@@ -218,13 +219,14 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 |---|---|---|---|
 | home | Home tab | `HomeBloc` | Trending (`/lists/trending`, 10) + latest (`/series?sort=latest`, 20), loaded in parallel. Also shows the last read comic. |
 | latest | "Lihat Semua" | `LatestBloc` | Infinite scroll, up to 10 pages. |
-| explore | Jelajah tab: title search + filter sheet | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (search `query` + filters) goes to `/series` in one request; the API applies them together. `default` sort, `all` type/status and an empty query are sent as "no filter". Beranda's search button switches to this tab through `RootTabs`. Requests run in order so an older search cannot overwrite a newer one. |
-| comic_detail | Comic card tap | `ComicDetailsBloc` | Series and chapters fetched in parallel. Bookmark toggle, continue reading, and multi-select of chapters to mark read or unread. |
-| reader | Chapter tap | `ReaderBloc` | Chapter slug is `seriesSlug/number`. Prev/next replace the route. Writes history when a chapter loads. |
+| explore | Jelajah tab: title search + filter sheet | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (search `query` + filters) goes to `/series` in one request; the API applies them together. `default` sort, `all` type/status and an empty query are sent as "no filter". Beranda's search button and the genre chips on a comic page switch to this tab through `RootTabs`, which `BacaKomikApp` provides above the navigator so pushed routes can use it. A genre chip replaces the filter with that genre alone (`FilterCubit.showGenre`). Requests run in order so an older search cannot overwrite a newer one. |
+| comic_detail | Comic card tap | `ComicDetailsBloc` | Series and chapters fetched in parallel. Bookmark toggle, continue reading, and multi-select of chapters to download or mark read/unread. When the request fails, a comic in the library opens from its stored details (downloads, then bookmarks, then history). Genre chips open Jelajah filtered by that genre. |
+| reader | Chapter tap | `ReaderBloc` | Chapter slug is `seriesSlug/number`. Prev/next replace the route. Writes history when a chapter loads. A downloaded chapter is read from files, online or not. |
 | bookmark | Bookmark tab | `BookmarkCubit` | Search by title. Pull-to-refresh runs `RefreshBookmarks` (§6.1). |
 | history | More → History | `HistoryCubit` | Shows the newest chapter per comic. Remove one chapter, one comic, or everything. |
 | settings | More tab | `SettingsCubit` | Theme, clear image cache, bug report link, app info. |
 | backup | Lainnya → Cadangkan / Pulihkan | `BackupCubit` | §7.4. |
+| download | Lainnya → Unduhan; detail selection bar | `DownloadCubit` | §7.5. |
 
 ### 6.1 Checking bookmarks for new chapters
 
@@ -241,6 +243,8 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 | `bookmarks` | series slug | `BookmarkModel` JSON (includes the comic's details) |
 | `history_entries` | chapter slug (`series/number`) | `ReadHistoryModel` JSON |
 | `history_comics` | series slug | `HistoryComicModel` JSON (the comic's details) |
+| `downloads` | chapter slug | `DownloadedChapterModel` JSON (status, saved page paths, size) |
+| `download_comics` | series slug | `DownloadComicModel` JSON (the comic's details, saved cover path) |
 | `settings` | `settings` | `SettingsModel` JSON |
 
 Every box is a `Box<String>` that holds JSON. There are no Hive type adapters, so stored data never depends on adapter type ids, and the backup format can reuse the same JSON. `JsonBox<T>` (`core/storage/json_box.dart`) gives typed `values()`, `get`, `put`, `putAll`, `deleteAll` and `clear`. An entry that fails to parse is skipped and logged, so one bad record cannot hide the rest.
@@ -289,6 +293,19 @@ Entries are plain JSON objects, in the same shapes as §7.2. A file with another
 
 - **Backup:** if the library is empty, nothing happens and the folder picker does not open. Cancelling the picker does nothing.
 - **Restore:** merges into the library. Entries with the same slug are replaced. After a restore, the Lainnya screen reloads `BookmarkCubit` and `HistoryCubit`.
+- Downloads are not part of backups.
+
+### 7.5 Downloads
+
+Plan and reasoning: `docs/implementation/OFFLINE_DOWNLOAD_PLAN.md`.
+
+- **Files:** `<root>/<seriesSlug>/<chapterNumber>/000.<ext>` and `<root>/<seriesSlug>/cover.<ext>`. The root is `getExternalStorageDirectory()/downloads` on Android (app-specific, no permission, removed on uninstall) and `getApplicationSupportDirectory()/downloads` elsewhere or when external storage is missing. Records store paths relative to the root.
+- **Background:** pages are downloaded by `background_downloader` (`PageDownloadQueue`), outside the Dart isolate, so they continue while the app is in the background, the phone is locked, or the process is gone. A native holding queue runs three pages at a time in enqueue order. One grouped notification shows `x/y halaman`, then done or failed. Notification permission (`POST_NOTIFICATIONS`) is asked on the first download. Each page gets 10 retries with backoff, so short connection drops do not fail a chapter.
+- **Preparing:** `DownloadRepositoryImpl` takes queued chapters one at a time, fetches fresh page URLs through `ReaderRepository` (needs a connection), records the planned page paths, and hands the missing pages to the queue. Covers are fetched directly with Dio.
+- **Progress:** page events update the record while the app runs. Pages finished while the app was suspended or closed are found on disk: on start and whenever the app resumes (`DownloadCubit` calls `sync()`), downloading chapters are checked against their planned paths. A chapter with no pages left in the queue and pages missing becomes failed. Chapters still waiting for their page list after a restart are prepared again.
+- **Status:** `queued → downloading → completed`, or `failed`. Retry keeps saved pages and fetches the rest.
+- **Reading:** `GetChapterContent` asks `DownloadRepository.getOfflineChapter` first; a completed chapter with all its files returns `ChapterContent(isOffline: true)` with file paths, and `ChapterImg` shows them with `Image.file`. `GetComicDetails` falls back to `getOfflineComic` when the request fails.
+- **Clearing the image cache** does not touch downloads.
 
 ---
 
@@ -361,7 +378,7 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 | History | Done |
 | Theme setting (system/light/dark) | Done |
 | Backup / restore | Done |
-| Offline reading | Not planned |
+| Offline reading (chapter downloads) | Done (background downloads on Android) |
 
 ---
 

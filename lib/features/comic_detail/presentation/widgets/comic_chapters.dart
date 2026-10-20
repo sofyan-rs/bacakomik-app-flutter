@@ -6,6 +6,7 @@ import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/chapter_tile.dart';
+import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,6 +66,7 @@ class _ComicChaptersState extends State<ComicChapters> {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final history = context.watch<HistoryCubit>();
+    final downloads = context.watch<DownloadCubit>().state;
     final chapters = _chapters;
 
     return SliverMainAxisGroup(
@@ -136,6 +138,7 @@ class _ComicChaptersState extends State<ComicChapters> {
               return ChapterTile(
                 chapter: chapter,
                 history: history.index.chapter(chapter.slug),
+                download: downloads.chapter(chapter.slug),
                 isSelected: widget.isSelected(chapter.slug),
                 isFirst: index == 0,
                 isLast: index == chapters.length - 1,

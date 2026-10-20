@@ -4,6 +4,8 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
+import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
+import 'package:bacakomik_app/features/download/presentation/pages/downloads_screen.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/app_info.dart';
@@ -15,7 +17,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Lainnya groups: DATA, TEMA, TENTANG.
+/// Lainnya groups: DATA (downloads, backup, cache), TEMA, TENTANG.
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
@@ -50,6 +52,9 @@ class Settings extends StatelessWidget {
     final themeMode = context.select<SettingsCubit, AppThemeMode>(
       (s) => s.state.themeMode,
     );
+    final downloadedBytes = context.select<DownloadCubit, int>(
+      (d) => d.state.totalBytes,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -60,6 +65,16 @@ class Settings extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
           child: ListGroup(
             children: [
+              ListRow(
+                icon: LucideIcons300.download,
+                title: AppText.downloads,
+                subtitle: AppText.downloadsDescription,
+                value: downloadedBytes == 0
+                    ? null
+                    : formatBytes(downloadedBytes),
+                showChevron: true,
+                onTap: () => DownloadsScreen.open(context),
+              ),
               ListRow(
                 icon: LucideIcons300.database,
                 title: AppText.backupData,

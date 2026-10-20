@@ -257,10 +257,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
 
   /// Starts loading when the chapter arrives: every batch up to the
   /// resumed page at once, then one batch at a time.
-  void _startLoading(List<String> images) {
+  void _startLoading(List<String> images, {required bool offline}) {
     _images = images;
     _loadLimit = 0;
     _settled.clear();
+    // Downloaded pages are on the device; nothing to fetch.
+    if (offline) {
+      setState(() => _loadLimit = images.length);
+      return;
+    }
     do {
       _loadNextBatch();
     } while (_loadLimit <= _page.value + 1 && _loadLimit < images.length);
@@ -439,7 +444,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
               _chapter = state.chapter;
               // A chapter that got shorter since the last visit.
               if (_page.value >= pages) _page.value = 0;
-              _startLoading(state.chapter.images);
+              _startLoading(
+                state.chapter.images,
+                offline: state.chapter.isOffline,
+              );
               _saveProgress();
               _autoHide = Timer(const Duration(seconds: 2), () {
                 if (mounted) _setControls(false);
@@ -541,6 +549,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           child: ChapterImg(
             key: ValueKey(pages[index]),
             chapterImage: pages[index],
+            isFile: chapter.isOffline,
             page: index + 1,
             load: index < _loadLimit,
             fit: settings.pageFit,
@@ -580,6 +589,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
             child: ChapterImg(
               key: ValueKey(pages[index]),
               chapterImage: pages[index],
+              isFile: chapter.isOffline,
               page: index + 1,
               load: index < _loadLimit,
               fit: settings.pageFit,

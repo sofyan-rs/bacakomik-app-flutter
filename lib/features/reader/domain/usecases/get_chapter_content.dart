@@ -1,18 +1,24 @@
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
+import 'package:bacakomik_app/features/download/domain/repositories/download_repository.dart';
 import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
 import 'package:bacakomik_app/features/reader/domain/repositories/reader_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
-/// Params: chapter slug (`seriesSlug/number`).
+/// Params: chapter slug (`seriesSlug/number`). A downloaded chapter is read
+/// from the device, online or not.
 @injectable
 class GetChapterContent implements UseCase<ChapterContent, String> {
-  const GetChapterContent(this._repository);
+  const GetChapterContent(this._repository, this._downloads);
 
   final ReaderRepository _repository;
+  final DownloadRepository _downloads;
 
   @override
-  Future<Either<Failure, ChapterContent>> call(String chapterSlug) =>
-      _repository.getChapter(chapterSlug);
+  Future<Either<Failure, ChapterContent>> call(String chapterSlug) async {
+    final offline = await _downloads.getOfflineChapter(chapterSlug);
+    if (offline != null) return right(offline);
+    return _repository.getChapter(chapterSlug);
+  }
 }

@@ -45,6 +45,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Timer? _debounce;
   RootTabs? _tabs;
   var _searchRequests = 0;
+  var _filterRequests = 0;
 
   @override
   void initState() {
@@ -61,6 +62,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       _tabs?.removeListener(_onTabs);
       _tabs = tabs..addListener(_onTabs);
       _searchRequests = tabs.searchRequests;
+      _filterRequests = tabs.filterRequests;
     }
   }
 
@@ -75,8 +77,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   /// Beranda's search button: focus the field once this tab is shown.
+  /// A filter set elsewhere (a genre chip): show its results from the top.
   void _onTabs() {
     final tabs = _tabs!;
+    if (tabs.filterRequests != _filterRequests) {
+      _filterRequests = tabs.filterRequests;
+      _debounce?.cancel();
+      _query.text = context.read<FilterCubit>().state.query;
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+      _load();
+    }
     if (tabs.searchRequests == _searchRequests) return;
     _searchRequests = tabs.searchRequests;
     WidgetsBinding.instance.addPostFrameCallback((_) {

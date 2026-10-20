@@ -11,6 +11,12 @@ abstract final class HiveBoxes {
 
   /// Details of comics in the history, keyed by series slug.
   static const historyComics = 'history_comics';
+
+  /// Downloaded chapters, keyed by chapter slug.
+  static const downloads = 'downloads';
+
+  /// Details of comics with downloads, keyed by series slug.
+  static const downloadComics = 'download_comics';
 }
 
 @module
@@ -29,6 +35,16 @@ abstract class StorageModule {
   @Named(HiveBoxes.historyComics)
   Future<Box<String>> get historyComicsBox =>
       Hive.openBox<String>(HiveBoxes.historyComics);
+
+  @preResolve
+  @Named(HiveBoxes.downloads)
+  Future<Box<String>> get downloadsBox =>
+      Hive.openBox<String>(HiveBoxes.downloads);
+
+  @preResolve
+  @Named(HiveBoxes.downloadComics)
+  Future<Box<String>> get downloadComicsBox =>
+      Hive.openBox<String>(HiveBoxes.downloadComics);
 
   @preResolve
   @Named(HiveBoxes.settings)

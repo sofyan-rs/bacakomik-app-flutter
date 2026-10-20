@@ -7,6 +7,9 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
+import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
+import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +17,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Detail bottom bar: bookmark toggle + continue/start reading. While
-/// chapters are selected it switches to mark read / unread / all / cancel.
+/// chapters are selected it switches to download / mark read / unread /
+/// all / cancel.
 class ComicAppBar extends StatelessWidget {
   const ComicAppBar({
     super.key,
@@ -118,6 +122,7 @@ class ComicAppBar extends StatelessWidget {
 
   Widget _selectionBar(BuildContext context) {
     final c = Dotline.of(context);
+    final toDownload = _toDownload(context.watch<DownloadCubit>().state);
     return Row(
       children: [
         RoundIconButton(
@@ -142,6 +147,14 @@ class ComicAppBar extends StatelessWidget {
                 chapterNumber: chapter.number,
               ),
           ]),
+        ),
+        const SizedBox(width: DotSpace.s2),
+        RoundIconButton(
+          icon: LucideIcons300.download,
+          semanticLabel: AppText.download,
+          onTap: toDownload.isEmpty
+              ? null
+              : () => _download(context, toDownload),
         ),
         const SizedBox(width: DotSpace.s2),
         RoundIconButton(
@@ -176,6 +189,32 @@ class ComicAppBar extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+
+  /// Selected chapters that are not downloaded or queued yet (failed ones
+  /// count), oldest first: the order they are read in.
+  List<Chapter> _toDownload(DownloadLibrary downloads) {
+    final selected = {for (final chapter in selectedChapters) chapter.slug};
+    return [
+      for (final chapter in comicDetails.chapters.reversed)
+        if (selected.contains(chapter.slug))
+          if (downloads.chapter(chapter.slug)?.status
+              case null || DownloadStatus.failed)
+            chapter,
+    ];
+  }
+
+  void _download(BuildContext context, List<Chapter> chapters) {
+    context.read<DownloadCubit>().download(
+      comicSlug: comicSlug,
+      comicDetails: comicDetails,
+      chapters: chapters,
+    );
+    unselectAllChapter();
+    showSnackBar(
+      context: context,
+      message: '${chapters.length} ${AppText.downloadQueued}',
     );
   }
 

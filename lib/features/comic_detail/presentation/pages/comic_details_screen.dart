@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
@@ -11,6 +12,7 @@ import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_c
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_cover.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_info.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
+import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
 import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -109,6 +111,13 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     );
   }
 
+  /// Jelajah filtered by [genre] alone, on top of the tabs.
+  void _exploreGenre(Genre genre) {
+    context.read<FilterCubit>().showGenre(genre.slug);
+    RootTabsScope.read(context).openExploreFiltered();
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   void _share(String title) {
     final link = DeepLinks.comic(widget.slug);
     SharePlus.instance.share(
@@ -189,7 +198,9 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
           DotSpace.s4,
           0,
         ),
-        sliver: SliverToBoxAdapter(child: ComicInfo(details: comicDetails)),
+        sliver: SliverToBoxAdapter(
+          child: ComicInfo(details: comicDetails, onGenreTap: _exploreGenre),
+        ),
       ),
       ComicChapters(
         comicDetails: comicDetails,

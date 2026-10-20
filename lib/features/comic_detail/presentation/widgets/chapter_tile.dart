@@ -5,6 +5,8 @@ import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/chapter_date.dart';
+import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
+import 'package:bacakomik_app/features/download/presentation/widgets/download_badge.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -12,11 +14,13 @@ import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 /// One chapter row. Rows are laid out one by one in a sliver, so each row
 /// draws its own part of the rounded list group ([isFirst] / [isLast]).
 /// A finished chapter shows a check, an unfinished one its page (`5 / 24`).
+/// A downloaded or queued chapter also shows its [DownloadBadge].
 class ChapterTile extends StatelessWidget {
   const ChapterTile({
     super.key,
     required this.chapter,
     required this.history,
+    this.download,
     required this.isSelected,
     required this.isFirst,
     required this.isLast,
@@ -28,6 +32,9 @@ class ChapterTile extends StatelessWidget {
 
   /// Null when the chapter was never opened.
   final ReadHistory? history;
+
+  /// Null when the chapter was never downloaded.
+  final DownloadedChapter? download;
   final bool isSelected;
   final bool isFirst;
   final bool isLast;
@@ -101,6 +108,10 @@ class ChapterTile extends StatelessWidget {
             '${page + 1} / ${history?.pageCount}',
             style: DotlineText.data.copyWith(color: c.ink),
           ),
+          const SizedBox(width: DotSpace.s3),
+        ],
+        if (download case final download?) ...[
+          DownloadBadge(download: download),
           const SizedBox(width: DotSpace.s3),
         ],
         Text(

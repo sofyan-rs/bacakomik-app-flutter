@@ -9,9 +9,12 @@ import 'package:flutter/material.dart';
 
 /// Meta line, title, author, three stat tiles, synopsis and genres.
 class ComicInfo extends StatefulWidget {
-  const ComicInfo({super.key, required this.details});
+  const ComicInfo({super.key, required this.details, this.onGenreTap});
 
   final ComicDetails details;
+
+  /// Tapping a genre chip; null leaves the chips inert.
+  final void Function(Genre genre)? onGenreTap;
 
   static final _yearPattern = RegExp(r'\d{4}');
 
@@ -135,7 +138,13 @@ class _ComicInfoState extends State<ComicInfo> {
             spacing: DotSpace.s2,
             runSpacing: DotSpace.s2,
             children: [
-              for (final genre in d.genres) DotChip(label: genre.name),
+              for (final genre in d.genres)
+                DotChip(
+                  label: genre.name,
+                  onTap: widget.onGenreTap == null
+                      ? null
+                      : () => widget.onGenreTap!(genre),
+                ),
             ],
           ),
         ],
