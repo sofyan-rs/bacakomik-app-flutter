@@ -76,6 +76,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   final _page = ValueNotifier(0);
 
   final _itemScroll = ItemScrollController();
+  final _scrollOffset = ScrollOffsetController();
   final _itemPositions = ItemPositionsListener.create();
   PageController? _pageController;
   final _zoom = TransformationController();
@@ -102,6 +103,14 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   /// The reading position is saved a moment after the page changes, and
   /// when the reader closes.
   late final HistoryCubit _history;
+  late final SettingsCubit _settings;
+
+  /// Vertical auto-scroll. It runs in short linear segments so a speed
+  /// change applies within a second. A touch stops the current segment;
+  /// scrolling resumes shortly after the last finger lifts.
+  var _autoScroll = false;
+  var _autoScrollRun = 0;
+  Timer? _autoScrollResume;
   ChapterContent? _chapter;
   Timer? _saveTimer;
   int? _savedPage;
@@ -110,6 +119,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   void initState() {
     super.initState();
     _history = context.read<HistoryCubit>();
+    _settings = context.read<SettingsCubit>();
     _page.value = _history.resumePage(widget.slug);
     context.read<ReaderBloc>().add(ChapterRequested(widget.slug));
     _itemPositions.itemPositions.addListener(_onItemPositions);
@@ -120,6 +130,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   @override
   void dispose() {
     _autoHide?.cancel();
+    _autoScrollResume?.cancel();
     _saveTimer?.cancel();
     _saveProgress();
     _itemPositions.itemPositions.removeListener(_onItemPositions);
@@ -170,6 +181,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
 
   void _onPointerDown(PointerDownEvent _) {
     _pointers++;
+    _autoScrollResume?.cancel();
     if (_pointers >= 2 && !_pinching) setState(() => _pinching = true);
   }
 
@@ -178,6 +190,45 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   void _onPointerUp(PointerEvent _) {
     _pointers = (_pointers - 1).clamp(0, _pointers);
     if (_pointers == 0 && _pinching) setState(() => _pinching = false);
+    if (_pointers == 0 && _autoScroll) {
+      _autoScrollResume?.cancel();
+      _autoScrollResume = Timer(
+        const Duration(milliseconds: 800),
+        _runAutoScroll,
+      );
+    }
+  }
+
+  void _setAutoScroll(bool on) {
+    _autoScrollResume?.cancel();
+    _autoScrollRun++;
+    if (on == _autoScroll) return;
+    setState(() => _autoScroll = on);
+    if (on) {
+      _setControls(false);
+      _runAutoScroll();
+    }
+  }
+
+  /// The end of the chapter is fully on screen.
+  bool get _atEnd => _itemPositions.itemPositions.value.any(
+    (p) => p.index == _images.length && p.itemTrailingEdge <= 1.0,
+  );
+
+  Future<void> _runAutoScroll() async {
+    final run = ++_autoScrollRun;
+    const segment = Duration(seconds: 1);
+    while (mounted && _autoScroll && run == _autoScrollRun && _pointers == 0) {
+      if (_atEnd) {
+        _setAutoScroll(false);
+        return;
+      }
+      final speed = _settings.state.autoScrollSpeed;
+      await _scrollOffset.animateScroll(
+        offset: speed * autoScrollStep * segment.inMilliseconds / 1000,
+        duration: segment,
+      );
+    }
   }
 
   /// Double tap: zoom 2.5x into the tapped point, or back out.
@@ -370,8 +421,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     final settings = context.watch<SettingsCubit>().state;
 
     return BlocListener<SettingsCubit, AppSettings>(
-      listenWhen: (a, b) => a.keepScreenOn != b.keepScreenOn,
-      listener: (_, s) => _syncWakelock(s.keepScreenOn),
+      listenWhen: (a, b) =>
+          a.keepScreenOn != b.keepScreenOn ||
+          a.readingDirection != b.readingDirection,
+      listener: (_, s) {
+        _syncWakelock(s.keepScreenOn);
+        if (s.readingDirection != ReadingDirection.vertical) {
+          _setAutoScroll(false);
+        }
+      },
       child: Scaffold(
         backgroundColor: c.bg,
         body: BlocConsumer<ReaderBloc, ReaderState>(
@@ -472,6 +530,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     return ScrollablePositionedList.builder(
       initialScrollIndex: _page.value.clamp(0, pages.length),
       itemScrollController: _itemScroll,
+      scrollOffsetController: _scrollOffset,
       itemPositionsListener: _itemPositions,
       physics: _pinching ? const NeverScrollableScrollPhysics() : null,
       itemCount: pages.length + 1,
@@ -565,6 +624,19 @@ class _ReadChapterViewState extends State<_ReadChapterView>
               title: number == null ? null : '${AppText.chapter} $number',
               subtitle: widget.comicDetails.title,
               actions: [
+                if (chapter != null &&
+                    context.read<SettingsCubit>().state.readingDirection ==
+                        ReadingDirection.vertical)
+                  RoundIconButton(
+                    icon: _autoScroll
+                        ? LucideIcons300.pause
+                        : LucideIcons300.play,
+                    semanticLabel: _autoScroll
+                        ? AppText.autoScrollStop
+                        : AppText.autoScrollStart,
+                    iconSize: DotSize.iconSmall,
+                    onTap: () => _setAutoScroll(!_autoScroll),
+                  ),
                 RoundIconButton(
                   icon: LucideIcons300.list,
                   semanticLabel: AppText.chapterList,

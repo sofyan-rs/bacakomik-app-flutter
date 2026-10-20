@@ -12,6 +12,7 @@ class SettingsModel {
     this.pageFit = PageFit.width,
     this.keepScreenOn = true,
     this.pageGap = false,
+    this.autoScrollSpeed = 3,
   });
 
   factory SettingsModel.fromEntity(AppSettings e) => SettingsModel(
@@ -20,6 +21,7 @@ class SettingsModel {
     pageFit: e.pageFit,
     keepScreenOn: e.keepScreenOn,
     pageGap: e.pageGap,
+    autoScrollSpeed: e.autoScrollSpeed,
   );
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) =>
@@ -36,6 +38,7 @@ class SettingsModel {
 
   final bool keepScreenOn;
   final bool pageGap;
+  final int autoScrollSpeed;
 
   Map<String, dynamic> toJson() => _$SettingsModelToJson(this);
 
@@ -45,5 +48,6 @@ class SettingsModel {
     pageFit: pageFit,
     keepScreenOn: keepScreenOn,
     pageGap: pageGap,
+    autoScrollSpeed: autoScrollSpeed.clamp(autoScrollMin, autoScrollMax),
   );
 }

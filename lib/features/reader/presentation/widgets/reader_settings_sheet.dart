@@ -7,8 +7,10 @@ import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dar
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// "Pengaturan baca": direction, page size, keep awake, page gap. Saved
+/// "Pengaturan baca": direction, page size, keep awake, page gap,
+/// auto-scroll speed. Saved
 /// right away through [SettingsCubit].
 class ReaderSettingsSheet extends StatelessWidget {
   const ReaderSettingsSheet({super.key});
@@ -93,7 +95,56 @@ class ReaderSettingsSheet extends StatelessWidget {
               ),
               onTap: () => cubit.update((s) => s.copyWith(pageGap: !s.pageGap)),
             ),
+            ListRow(
+              title: AppText.autoScrollSpeed,
+              subtitle: AppText.autoScrollHint,
+              trailing: _SpeedStepper(
+                value: settings.autoScrollSpeed,
+                onChanged: (v) =>
+                    cubit.update((s) => s.copyWith(autoScrollSpeed: v)),
+              ),
+            ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+/// `-  3  +` for the auto-scroll speed level.
+class _SpeedStepper extends StatelessWidget {
+  const _SpeedStepper({required this.value, required this.onChanged});
+
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        RoundIconButton(
+          icon: LucideIcons300.minus,
+          semanticLabel: AppText.slower,
+          size: 36,
+          iconSize: DotSize.iconSmall,
+          onTap: value > autoScrollMin ? () => onChanged(value - 1) : null,
+        ),
+        SizedBox(
+          width: 32,
+          child: Text(
+            '$value',
+            textAlign: TextAlign.center,
+            style: DotlineText.data.copyWith(color: c.ink),
+          ),
+        ),
+        RoundIconButton(
+          icon: LucideIcons300.plus,
+          semanticLabel: AppText.faster,
+          size: 36,
+          iconSize: DotSize.iconSmall,
+          onTap: value < autoScrollMax ? () => onChanged(value + 1) : null,
         ),
       ],
     );

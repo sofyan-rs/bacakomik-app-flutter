@@ -17,7 +17,8 @@ mixin _$AppSettings {
 
  AppThemeMode get themeMode; ReadingDirection get readingDirection; PageFit get pageFit;/// Keep the screen awake while a chapter is open.
  bool get keepScreenOn;/// 8px gap between pages.
- bool get pageGap;
+ bool get pageGap;/// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
+ int get autoScrollSpeed;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,20 +30,20 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 @override
 bool operator ==(Object other) {
   final _this = this as AppSettings;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.readingDirection, _this.readingDirection) || other.readingDirection == _this.readingDirection)&&(identical(other.pageFit, _this.pageFit) || other.pageFit == _this.pageFit)&&(identical(other.keepScreenOn, _this.keepScreenOn) || other.keepScreenOn == _this.keepScreenOn)&&(identical(other.pageGap, _this.pageGap) || other.pageGap == _this.pageGap));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.readingDirection, _this.readingDirection) || other.readingDirection == _this.readingDirection)&&(identical(other.pageFit, _this.pageFit) || other.pageFit == _this.pageFit)&&(identical(other.keepScreenOn, _this.keepScreenOn) || other.keepScreenOn == _this.keepScreenOn)&&(identical(other.pageGap, _this.pageGap) || other.pageGap == _this.pageGap)&&(identical(other.autoScrollSpeed, _this.autoScrollSpeed) || other.autoScrollSpeed == _this.autoScrollSpeed));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppSettings;
-  return Object.hash(runtimeType,_this.themeMode,_this.readingDirection,_this.pageFit,_this.keepScreenOn,_this.pageGap);
+  return Object.hash(runtimeType,_this.themeMode,_this.readingDirection,_this.pageFit,_this.keepScreenOn,_this.pageGap,_this.autoScrollSpeed);
 }
 
 @override
 String toString() {
   final _this = this as AppSettings;
-  return 'AppSettings(themeMode: ${_this.themeMode}, readingDirection: ${_this.readingDirection}, pageFit: ${_this.pageFit}, keepScreenOn: ${_this.keepScreenOn}, pageGap: ${_this.pageGap})';
+  return 'AppSettings(themeMode: ${_this.themeMode}, readingDirection: ${_this.readingDirection}, pageFit: ${_this.pageFit}, keepScreenOn: ${_this.keepScreenOn}, pageGap: ${_this.pageGap}, autoScrollSpeed: ${_this.autoScrollSpeed})';
 }
 
 
@@ -53,7 +54,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap
+ AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap, int autoScrollSpeed
 });
 
 
@@ -70,14 +71,15 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,Object? autoScrollSpeed = null,}) {
   return _then(AppSettings(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as AppThemeMode,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
 as ReadingDirection,pageFit: null == pageFit ? _self.pageFit : pageFit // ignore: cast_nullable_to_non_nullable
 as PageFit,keepScreenOn: null == keepScreenOn ? _self.keepScreenOn : keepScreenOn // ignore: cast_nullable_to_non_nullable
 as bool,pageGap: null == pageGap ? _self.pageGap : pageGap // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,autoScrollSpeed: null == autoScrollSpeed ? _self.autoScrollSpeed : autoScrollSpeed // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -162,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  int autoScrollSpeed)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.autoScrollSpeed);case _:
   return orElse();
 
 }
@@ -183,10 +185,10 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepS
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  int autoScrollSpeed)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.autoScrollSpeed);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +205,10 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepS
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  int autoScrollSpeed)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.autoScrollSpeed);case _:
   return null;
 
 }
@@ -218,7 +220,7 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepS
 
 
 class _AppSettings implements AppSettings {
-  const _AppSettings({this.themeMode = AppThemeMode.system, this.readingDirection = ReadingDirection.vertical, this.pageFit = PageFit.width, this.keepScreenOn = true, this.pageGap = false});
+  const _AppSettings({this.themeMode = AppThemeMode.system, this.readingDirection = ReadingDirection.vertical, this.pageFit = PageFit.width, this.keepScreenOn = true, this.pageGap = false, this.autoScrollSpeed = 3});
   
 
 @override@JsonKey() final  AppThemeMode themeMode;
@@ -228,6 +230,8 @@ class _AppSettings implements AppSettings {
 @override@JsonKey() final  bool keepScreenOn;
 /// 8px gap between pages.
 @override@JsonKey() final  bool pageGap;
+/// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
+@override@JsonKey() final  int autoScrollSpeed;
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -239,18 +243,18 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.readingDirection, readingDirection) || other.readingDirection == readingDirection)&&(identical(other.pageFit, pageFit) || other.pageFit == pageFit)&&(identical(other.keepScreenOn, keepScreenOn) || other.keepScreenOn == keepScreenOn)&&(identical(other.pageGap, pageGap) || other.pageGap == pageGap));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.readingDirection, readingDirection) || other.readingDirection == readingDirection)&&(identical(other.pageFit, pageFit) || other.pageFit == pageFit)&&(identical(other.keepScreenOn, keepScreenOn) || other.keepScreenOn == keepScreenOn)&&(identical(other.pageGap, pageGap) || other.pageGap == pageGap)&&(identical(other.autoScrollSpeed, autoScrollSpeed) || other.autoScrollSpeed == autoScrollSpeed));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,themeMode,readingDirection,pageFit,keepScreenOn,pageGap);
+    return Object.hash(runtimeType,themeMode,readingDirection,pageFit,keepScreenOn,pageGap,autoScrollSpeed);
 }
 
 @override
 String toString() {
-    return 'AppSettings(themeMode: $themeMode, readingDirection: $readingDirection, pageFit: $pageFit, keepScreenOn: $keepScreenOn, pageGap: $pageGap)';
+    return 'AppSettings(themeMode: $themeMode, readingDirection: $readingDirection, pageFit: $pageFit, keepScreenOn: $keepScreenOn, pageGap: $pageGap, autoScrollSpeed: $autoScrollSpeed)';
 }
 
 
@@ -261,7 +265,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap
+ AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap, int autoScrollSpeed
 });
 
 
@@ -278,14 +282,15 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,Object? autoScrollSpeed = null,}) {
   return _then(_AppSettings(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as AppThemeMode,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
 as ReadingDirection,pageFit: null == pageFit ? _self.pageFit : pageFit // ignore: cast_nullable_to_non_nullable
 as PageFit,keepScreenOn: null == keepScreenOn ? _self.keepScreenOn : keepScreenOn // ignore: cast_nullable_to_non_nullable
 as bool,pageGap: null == pageGap ? _self.pageGap : pageGap // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,autoScrollSpeed: null == autoScrollSpeed ? _self.autoScrollSpeed : autoScrollSpeed // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

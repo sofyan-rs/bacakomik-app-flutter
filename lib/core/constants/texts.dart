@@ -164,6 +164,12 @@ class AppText {
   static const String pageGap = 'Jarak antar halaman';
   static const String pageGapHint = 'Garis 8px di antara halaman';
   static const String pageShort = 'Hal';
+  static const String autoScrollSpeed = 'Kecepatan gulir';
+  static const String autoScrollHint = 'Mode vertikal. Sentuh layar untuk jeda';
+  static const String autoScrollStart = 'Mulai gulir otomatis';
+  static const String autoScrollStop = 'Hentikan gulir otomatis';
+  static const String slower = 'Lebih lambat';
+  static const String faster = 'Lebih cepat';
   static const String pages = 'halaman';
   static const String finished = 'Selesai';
   static const String finishedLower = 'selesai';

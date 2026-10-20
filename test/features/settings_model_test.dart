@@ -14,11 +14,25 @@ void main() {
       pageFit: PageFit.height,
       keepScreenOn: false,
       pageGap: true,
+      autoScrollSpeed: 7,
     );
     final json = SettingsModel.fromEntity(settings).toJson();
 
     expect(json['themeMode'], 'dark');
     expect(SettingsModel.fromJson(json).toEntity(), settings);
+  });
+
+  test('auto-scroll speed is clamped to the levels', () {
+    expect(
+      SettingsModel.fromJson({'autoScrollSpeed': 99})
+          .toEntity()
+          .autoScrollSpeed,
+      autoScrollMax,
+    );
+    expect(
+      SettingsModel.fromJson({'autoScrollSpeed': 0}).toEntity().autoScrollSpeed,
+      autoScrollMin,
+    );
   });
 
   test('unknown enum values fall back', () {

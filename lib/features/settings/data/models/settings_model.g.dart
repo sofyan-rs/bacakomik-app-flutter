@@ -31,6 +31,7 @@ SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
           PageFit.width,
       keepScreenOn: json['keepScreenOn'] as bool? ?? true,
       pageGap: json['pageGap'] as bool? ?? false,
+      autoScrollSpeed: (json['autoScrollSpeed'] as num?)?.toInt() ?? 3,
     );
 
 Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
@@ -40,6 +41,7 @@ Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
       'pageFit': _$PageFitEnumMap[instance.pageFit]!,
       'keepScreenOn': instance.keepScreenOn,
       'pageGap': instance.pageGap,
+      'autoScrollSpeed': instance.autoScrollSpeed,
     };
 
 const _$AppThemeModeEnumMap = {

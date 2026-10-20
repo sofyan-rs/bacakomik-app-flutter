@@ -20,6 +20,11 @@ enum ReadingDirection {
 /// How a page is scaled in the reader.
 enum PageFit { width, height }
 
+/// Auto-scroll speed levels; each level scrolls [autoScrollStep] px/s.
+const autoScrollMin = 1;
+const autoScrollMax = 10;
+const autoScrollStep = 40.0;
+
 @freezed
 abstract class AppSettings with _$AppSettings {
   const factory AppSettings({
@@ -32,5 +37,8 @@ abstract class AppSettings with _$AppSettings {
 
     /// 8px gap between pages.
     @Default(false) bool pageGap,
+
+    /// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
+    @Default(3) int autoScrollSpeed,
   }) = _AppSettings;
 }
