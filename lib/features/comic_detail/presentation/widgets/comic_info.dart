@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:flutter/material.dart';
 
 /// Meta line, title, author, three stat tiles, synopsis and genres.
@@ -44,11 +45,7 @@ class _ComicInfoState extends State<ComicInfo> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DotSpace.s3),
-        Text(
-          d.title,
-          style: DotlineText.title.copyWith(color: c.ink),
-          textAlign: TextAlign.center,
-        ),
+        ComicTitle(d.title),
         // The API sends `?` (or nothing) when the author is unknown.
         if (!const {'', '-', '?'}.contains(d.author.trim())) ...[
           const SizedBox(height: DotSpace.s2),

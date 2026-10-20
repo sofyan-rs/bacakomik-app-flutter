@@ -46,6 +46,8 @@ class AppText {
   static const String sortChapter = 'Urutkan chapter';
   static const String share = 'Bagikan';
   static const String shareSuffix = 'baca di BacaKomik';
+  static const String titleCopied = 'Judul berhasil disalin ke clipboard';
+  static const String copyTitle = 'Salin judul';
   static const String successSaveImg = 'Gambar berhasil disimpan di galeri.';
   static const String failedSaveImg = 'Gagal menyimpan gambar.';
 
