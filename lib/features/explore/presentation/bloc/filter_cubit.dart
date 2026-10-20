@@ -20,6 +20,10 @@ class FilterCubit extends Cubit<ExploreFilter> {
     ));
   }
 
+  /// Only [genreId], with every other filter and the search cleared.
+  void showGenre(String genreId) =>
+      emit(ExploreFilter(genres: [genreId]));
+
   /// Title search; keeps the other filters.
   void setQuery(String query) => emit(state.copyWith(query: query));
 }

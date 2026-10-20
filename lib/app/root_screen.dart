@@ -43,8 +43,6 @@ class _RootScreenState extends State<RootScreen> {
     FloatingNavItem(icon: LucideIcons300.ellipsis, label: AppText.more),
   ];
 
-  final _tabs = RootTabs();
-
   /// Comic links opened from outside the app, including the one that
   /// launched it.
   StreamSubscription<Uri>? _links;
@@ -52,7 +50,6 @@ class _RootScreenState extends State<RootScreen> {
   @override
   void initState() {
     super.initState();
-    _tabs.addListener(_onTabChanged);
     context.read<UpdateCubit>().check(quiet: true);
     _links = AppLinks().uriLinkStream.listen(_onLink);
   }
@@ -60,7 +57,6 @@ class _RootScreenState extends State<RootScreen> {
   @override
   void dispose() {
     _links?.cancel();
-    _tabs.dispose();
     super.dispose();
   }
 
@@ -73,8 +69,6 @@ class _RootScreenState extends State<RootScreen> {
       title: DeepLinks.titleFromSlug(slug),
     );
   }
-
-  void _onTabChanged() => setState(() {});
 
   /// Reacts to the end of an update check, from app start or from Lainnya.
   void _onUpdateChecked(BuildContext context, UpdateState state) {
@@ -100,6 +94,7 @@ class _RootScreenState extends State<RootScreen> {
     final keyboardOpen = media.viewInsets.bottom > 0;
     final navInset = floatingNavInset(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final tabs = RootTabsScope.of(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
@@ -123,18 +118,15 @@ class _RootScreenState extends State<RootScreen> {
                     bottom: keyboardOpen ? 0 : navInset,
                   ),
                 ),
-                child: RootTabsScope(
-                  tabs: _tabs,
-                  child: IndexedStack(
-                    index: _tabs.index,
-                    children: const [
-                      HomeScreen(),
-                      ExploreScreen(),
-                      BookmarksScreen(),
-                      HistoryScreen(),
-                      MoreScreen(),
-                    ],
-                  ),
+                child: IndexedStack(
+                  index: tabs.index,
+                  children: const [
+                    HomeScreen(),
+                    ExploreScreen(),
+                    BookmarksScreen(),
+                    HistoryScreen(),
+                    MoreScreen(),
+                  ],
                 ),
               ),
               if (!keyboardOpen) ...[
@@ -153,8 +145,8 @@ class _RootScreenState extends State<RootScreen> {
                   child: Center(
                     child: FloatingNavBar(
                       items: _items,
-                      selectedIndex: _tabs.index,
-                      onSelected: _tabs.select,
+                      selectedIndex: tabs.index,
+                      onSelected: tabs.select,
                     ),
                   ),
                 ),
