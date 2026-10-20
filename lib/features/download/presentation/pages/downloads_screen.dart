@@ -79,7 +79,11 @@ class DownloadsScreen extends StatelessWidget {
                 ),
               if (pending.isNotEmpty) ..._queue(context, library, pending),
               for (final (comic, chapters) in groups) ...[
-                DownloadComicGroup(comic: comic, chapters: chapters),
+                DownloadComicGroup(
+                  key: ValueKey(comic.slug),
+                  comic: comic,
+                  chapters: chapters,
+                ),
                 const SliverPadding(
                   padding: EdgeInsets.only(bottom: DotSpace.s5),
                 ),

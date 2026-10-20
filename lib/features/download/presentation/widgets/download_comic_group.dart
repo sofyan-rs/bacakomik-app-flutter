@@ -17,10 +17,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// One comic's downloaded chapters: a comic row (opens the comic, trash
-/// deletes all its downloads), then a row per chapter. Tap reads the
-/// chapter; swipe left deletes it.
-class DownloadComicGroup extends StatelessWidget {
+/// One comic's downloaded chapters, collapsed to the comic row until it is
+/// tapped. The cover opens the comic; trash deletes all its downloads.
+/// Chapter rows: tap reads the chapter, swipe left deletes it.
+class DownloadComicGroup extends StatefulWidget {
   const DownloadComicGroup({
     super.key,
     required this.comic,
@@ -29,6 +29,16 @@ class DownloadComicGroup extends StatelessWidget {
 
   final DownloadedComic comic;
   final List<DownloadedChapter> chapters;
+
+  @override
+  State<DownloadComicGroup> createState() => _DownloadComicGroupState();
+}
+
+class _DownloadComicGroupState extends State<DownloadComicGroup> {
+  var _expanded = false;
+
+  DownloadedComic get comic => widget.comic;
+  List<DownloadedChapter> get chapters => widget.chapters;
 
   Future<void> _confirmDeleteComic(BuildContext context) async {
     final cubit = context.read<DownloadCubit>();
@@ -60,14 +70,22 @@ class DownloadComicGroup extends StatelessWidget {
     final size = chapters.fold(0, (sum, c) => sum + c.sizeBytes);
 
     return SliverListGroup(
-      itemCount: chapters.length + 1,
+      itemCount: _expanded ? chapters.length + 1 : 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return ListRow(
-            leading: SizedBox(
-              width: 44,
-              height: 60,
-              child: _Cover(comic: comic),
+            leading: GestureDetector(
+              onTap: () => ComicDetailsScreen.open(
+                context,
+                slug: comic.slug,
+                title: details.title,
+                cover: details.coverImg,
+              ),
+              child: SizedBox(
+                width: 44,
+                height: 60,
+                child: _Cover(comic: comic),
+              ),
             ),
             title: details.title,
             subtitleWidget: Text(
@@ -75,18 +93,30 @@ class DownloadComicGroup extends StatelessWidget {
                   .toUpperCase(),
               style: DotlineText.data.copyWith(color: c.inkMuted),
             ),
-            trailing: RoundIconButton(
-              icon: LucideIcons300.trash2,
-              semanticLabel: AppText.deleteDownloads,
-              iconSize: DotSize.iconSmall,
-              onTap: () => _confirmDeleteComic(context),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RoundIconButton(
+                  icon: LucideIcons300.trash2,
+                  semanticLabel: AppText.deleteDownloads,
+                  iconSize: DotSize.iconSmall,
+                  onTap: () => _confirmDeleteComic(context),
+                ),
+                const SizedBox(width: DotSpace.s2),
+                AnimatedRotation(
+                  turns: _expanded ? 0.5 : 0,
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : DotMotion.press,
+                  child: Icon(
+                    LucideIcons300.chevronDown,
+                    size: DotSize.iconSmall,
+                    color: c.inkMuted,
+                  ),
+                ),
+              ],
             ),
-            onTap: () => ComicDetailsScreen.open(
-              context,
-              slug: comic.slug,
-              title: details.title,
-              cover: details.coverImg,
-            ),
+            onTap: () => setState(() => _expanded = !_expanded),
           );
         }
         final chapter = chapters[index - 1];
