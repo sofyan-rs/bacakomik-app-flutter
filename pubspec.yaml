@@ -8,6 +8,7 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
+  app_links: ^7.2.2
   audioplayers: ^6.8.1
   cached_network_image: ^4.0.4
   connectivity_plus: ^7.3.2

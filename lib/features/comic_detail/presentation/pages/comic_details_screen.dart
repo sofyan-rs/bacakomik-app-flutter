@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/core/utils/deep_links.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_app_bar.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_chapters.dart';
@@ -109,8 +110,12 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   }
 
   void _share(String title) {
+    final link = DeepLinks.comic(widget.slug);
     SharePlus.instance.share(
-      ShareParams(text: '$title — ${AppText.shareSuffix}', subject: title),
+      ShareParams(
+        text: '$title — ${AppText.shareSuffix}\n$link',
+        subject: title,
+      ),
     );
   }
 

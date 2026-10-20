@@ -1,10 +1,15 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/core/utils/deep_links.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/pages/bookmarks_screen.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:bacakomik_app/features/explore/presentation/pages/explore_screen.dart';
 import 'package:bacakomik_app/features/history/presentation/pages/history_screen.dart';
 import 'package:bacakomik_app/features/home/presentation/pages/home_screen.dart';
@@ -40,17 +45,33 @@ class _RootScreenState extends State<RootScreen> {
 
   final _tabs = RootTabs();
 
+  /// Comic links opened from outside the app, including the one that
+  /// launched it.
+  StreamSubscription<Uri>? _links;
+
   @override
   void initState() {
     super.initState();
     _tabs.addListener(_onTabChanged);
     context.read<UpdateCubit>().check(quiet: true);
+    _links = AppLinks().uriLinkStream.listen(_onLink);
   }
 
   @override
   void dispose() {
+    _links?.cancel();
     _tabs.dispose();
     super.dispose();
+  }
+
+  void _onLink(Uri uri) {
+    final slug = DeepLinks.comicSlug(uri);
+    if (slug == null || !mounted) return;
+    ComicDetailsScreen.open(
+      context,
+      slug: slug,
+      title: DeepLinks.titleFromSlug(slug),
+    );
   }
 
   void _onTabChanged() => setState(() {});
