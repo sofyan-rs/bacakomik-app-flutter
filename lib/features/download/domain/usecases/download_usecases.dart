@@ -80,6 +80,17 @@ class DeleteDownloads implements UseCase<Unit, List<String>> {
       _repository.delete(slugs);
 }
 
+/// Catches up with pages saved while the app was in the background.
+@injectable
+class SyncDownloads implements UseCase<Unit, NoParams> {
+  const SyncDownloads(this._repository);
+
+  final DownloadRepository _repository;
+
+  @override
+  Future<Either<Failure, Unit>> call(NoParams params) => _repository.sync();
+}
+
 @injectable
 class ClearDownloads implements UseCase<Unit, NoParams> {
   const ClearDownloads(this._repository);

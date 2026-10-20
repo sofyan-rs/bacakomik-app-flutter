@@ -19,6 +19,7 @@ class DownloadedChapterModel {
     this.nextChapterSlug,
     this.pageCount = 0,
     this.pages = const [],
+    this.planned = const [],
     this.sizeBytes = 0,
     this.downloadedAt,
   });
@@ -43,6 +44,10 @@ class DownloadedChapterModel {
 
   /// Saved pages, in page order. Named by 0-based page index (`007.webp`).
   final List<String> pages;
+
+  /// Every page's path, by index, once the page list is known. Pages
+  /// saved while the app was not running are found by checking these.
+  final List<String> planned;
   final int sizeBytes;
   @EpochMillisConverter()
   final DateTime? downloadedAt;
@@ -56,6 +61,7 @@ class DownloadedChapterModel {
     String? nextChapterSlug,
     int? pageCount,
     List<String>? pages,
+    List<String>? planned,
     int? sizeBytes,
     DateTime? downloadedAt,
   }) => DownloadedChapterModel(
@@ -69,6 +75,7 @@ class DownloadedChapterModel {
     nextChapterSlug: nextChapterSlug ?? this.nextChapterSlug,
     pageCount: pageCount ?? this.pageCount,
     pages: pages ?? this.pages,
+    planned: planned ?? this.planned,
     sizeBytes: sizeBytes ?? this.sizeBytes,
     downloadedAt: downloadedAt ?? this.downloadedAt,
   );

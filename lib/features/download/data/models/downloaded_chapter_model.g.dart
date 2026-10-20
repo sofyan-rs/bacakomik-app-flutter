@@ -29,6 +29,9 @@ DownloadedChapterModel _$DownloadedChapterModelFromJson(
   pages:
       (json['pages'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
+  planned:
+      (json['planned'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
   sizeBytes: (json['sizeBytes'] as num?)?.toInt() ?? 0,
   downloadedAt: _$JsonConverterFromJson<int, DateTime>(
     json['downloadedAt'],
@@ -49,6 +52,7 @@ Map<String, dynamic> _$DownloadedChapterModelToJson(
   'nextChapterSlug': instance.nextChapterSlug,
   'pageCount': instance.pageCount,
   'pages': instance.pages,
+  'planned': instance.planned,
   'sizeBytes': instance.sizeBytes,
   'downloadedAt': _$JsonConverterToJson<int, DateTime>(
     instance.downloadedAt,

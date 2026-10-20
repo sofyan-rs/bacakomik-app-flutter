@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
@@ -9,6 +11,7 @@ import 'package:bacakomik_app/features/comic_detail/domain/repositories/comic_de
 import 'package:bacakomik_app/features/comic_detail/domain/usecases/get_comic_details.dart';
 import 'package:bacakomik_app/features/download/data/datasources/download_file_data_source.dart';
 import 'package:bacakomik_app/features/download/data/datasources/download_local_data_source.dart';
+import 'package:bacakomik_app/features/download/data/datasources/page_download_queue.dart';
 import 'package:bacakomik_app/features/download/data/models/downloaded_chapter_model.dart';
 import 'package:bacakomik_app/features/download/data/repositories/download_repository_impl.dart';
 import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
@@ -33,11 +36,12 @@ class FixedClock implements Clock {
   DateTime now() => DateTime.fromMillisecondsSinceEpoch(1000);
 }
 
-/// Files kept in memory. URLs in [failing] throw.
+/// Files kept in memory (covers are downloaded directly).
 class FakeFiles implements DownloadFileDataSource {
   final files = <String, int>{};
-  final failing = <String>{};
-  final requested = <String>[];
+
+  @override
+  Future<String> get root async => '/root';
 
   @override
   String comicDir(String comicSlug) => comicSlug;
@@ -47,14 +51,15 @@ class FakeFiles implements DownloadFileDataSource {
       '$comicSlug/$chapterNumber';
 
   @override
+  String pagePath(String chapterDir, int index, String url) =>
+      '$chapterDir/${index.toString().padLeft(3, '0')}.jpg';
+
+  @override
   Future<({String path, int size})> download(
     String url,
     String pathWithoutExtension, {
     CancelToken? cancelToken,
   }) async {
-    requested.add(url);
-    await Future<void>.delayed(Duration.zero);
-    if (failing.contains(url)) throw Exception('404 $url');
     final path = '$pathWithoutExtension.jpg';
     files[path] = 10;
     return (path: path, size: 10);
@@ -67,6 +72,9 @@ class FakeFiles implements DownloadFileDataSource {
   Future<bool> exists(String path) async => files.containsKey(path);
 
   @override
+  Future<int> size(String path) async => files[path] ?? 0;
+
+  @override
   Future<void> delete(String path) async =>
       files.removeWhere((key, _) => key == path || key.startsWith('$path/'));
 
@@ -74,13 +82,79 @@ class FakeFiles implements DownloadFileDataSource {
   Future<void> deleteAll() async => files.clear();
 }
 
+/// Background queue in memory. With [autoRun] pages finish right away;
+/// otherwise they wait in [pending] until [runAll].
+class FakePages implements PageDownloadQueue {
+  FakePages(this.files);
+
+  final FakeFiles files;
+  final _events = StreamController<PageEvent>.broadcast();
+  final pending = <PageJob>[];
+  final enqueued = <String>[];
+
+  /// Page URLs that fail.
+  final failing = <String>{};
+  var autoRun = true;
+  var started = false;
+
+  @override
+  Stream<PageEvent> get events => _events.stream;
+
+  @override
+  Future<void> start() async => started = true;
+
+  @override
+  Future<void> requestNotificationPermission() async {}
+
+  @override
+  Future<void> enqueue(List<PageJob> jobs) async {
+    enqueued.addAll(jobs.map((j) => j.url));
+    pending.addAll(jobs);
+    if (autoRun) scheduleMicrotask(runAll);
+  }
+
+  /// Finishes every pending page. With [emit] false the app does not hear
+  /// about it, as when it was suspended or closed.
+  void runAll({bool emit = true}) {
+    final jobs = [...pending];
+    pending.clear();
+    for (final job in jobs) {
+      final failed = failing.contains(job.url);
+      if (!failed) files.files[job.path] = 10;
+      if (emit) {
+        _events.add(
+          PageEvent(
+            job.chapterSlug,
+            job.index,
+            failed ? PageResult.failed : PageResult.saved,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Future<Set<String>> activeChapters() async => {
+    for (final job in pending) job.chapterSlug,
+  };
+
+  @override
+  Future<void> cancel(String chapterSlug) async =>
+      pending.removeWhere((j) => j.chapterSlug == chapterSlug);
+
+  @override
+  Future<void> cancelAll() async => pending.clear();
+}
+
 /// Chapters of [details] with three pages each.
 class FakeReader implements ReaderRepository {
   final requested = <String>[];
+  var offline = false;
 
   @override
   Future<Either<Failure, ChapterContent>> getChapter(String slug) async {
     requested.add(slug);
+    if (offline) return left(const NetworkFailure());
     final number = slug.split('/').last;
     return right(
       ChapterContent(
@@ -144,11 +218,24 @@ void main() {
   late Future<void> Function() tearDownHive;
   late DownloadLocalDataSource local;
   late FakeFiles files;
+  late FakePages pages;
   late FakeReader reader;
   late DownloadRepositoryImpl repo;
 
+  DownloadRepositoryImpl newRepo() =>
+      DownloadRepositoryImpl(local, files, pages, reader, FixedClock());
+
   Future<DownloadLibrary> library() async =>
       (await repo.getDownloads()).getOrElse((f) => throw f);
+
+  DownloadStatus? statusOf(String slug) => local.getChapter(slug)?.status;
+
+  /// Lets the queue and page events run.
+  Future<void> pump() async {
+    for (var i = 0; i < 50; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+  }
 
   /// Waits until nothing is queued or downloading.
   Future<void> settle() async {
@@ -164,12 +251,14 @@ void main() {
     fail('Downloads did not settle');
   }
 
+  Future<void> start(List<Chapter> chapters) => repo.enqueue(
+    comicSlug: 'solo-leveling',
+    comicDetails: details,
+    chapters: chapters,
+  );
+
   Future<void> enqueue(List<Chapter> chapters) async {
-    await repo.enqueue(
-      comicSlug: 'solo-leveling',
-      comicDetails: details,
-      chapters: chapters,
-    );
+    await start(chapters);
     await settle();
   }
 
@@ -180,8 +269,9 @@ void main() {
       await Hive.openBox<String>(HiveBoxes.downloadComics),
     );
     files = FakeFiles();
+    pages = FakePages(files);
     reader = FakeReader();
-    repo = DownloadRepositoryImpl(local, files, reader, FixedClock());
+    repo = newRepo();
   });
 
   tearDown(() => tearDownHive());
@@ -201,14 +291,16 @@ void main() {
       expect(chapter.sizeBytes, 30);
       expect(chapter.downloadedAt, isNotNull);
       expect(local.getComic('solo-leveling')!.cover, 'solo-leveling/cover.jpg');
+      expect(pages.started, isTrue);
     });
 
-    test('runs chapters one at a time in the given order', () async {
+    test('hands pages over in the given chapter order', () async {
       await enqueue(details.chapters.reversed.toList());
 
       expect(reader.requested, ['solo-leveling/1', 'solo-leveling/2']);
-      final downloads = await library();
-      expect(downloads.completedCount, 2);
+      expect(pages.enqueued.first, 'https://img/1/0.jpg');
+      expect(pages.enqueued.last, 'https://img/2/2.jpg');
+      expect((await library()).completedCount, 2);
     });
 
     test('skips chapters that are already downloaded', () async {
@@ -239,53 +331,87 @@ void main() {
     test(
       'a failing page fails the chapter; retry fetches only the rest',
       () async {
-        files.failing.add('https://img/1/1.jpg');
+        pages.failing.add('https://img/1/1.jpg');
         await enqueue([details.chapters.last]);
 
-        var chapter = local.getChapter('solo-leveling/1')!;
-        expect(chapter.status, DownloadStatus.failed);
-        expect(chapter.pages, [
-          'solo-leveling/1/000.jpg',
-          'solo-leveling/1/002.jpg',
-        ]);
+        expect(statusOf('solo-leveling/1'), DownloadStatus.failed);
 
-        files.failing.clear();
-        files.requested.clear();
+        pages.failing.clear();
+        pages.enqueued.clear();
         await repo.retry(['solo-leveling/1']);
         await settle();
 
-        chapter = local.getChapter('solo-leveling/1')!;
+        final chapter = local.getChapter('solo-leveling/1')!;
         expect(chapter.status, DownloadStatus.completed);
         expect(chapter.pages, hasLength(3));
-        expect(files.requested, ['https://img/1/1.jpg']);
+        expect(pages.enqueued, ['https://img/1/1.jpg']);
       },
-      timeout: const Timeout(Duration(seconds: 20)),
     );
 
-    test('downloads cut off by a restart become failed', () async {
-      await local.putChapters([
-        DownloadedChapterModel(
-          slug: 'solo-leveling/2',
-          comicSlug: 'solo-leveling',
-          chapterNumber: '2',
-          addedAt: DateTime.fromMillisecondsSinceEpoch(0),
-          status: DownloadStatus.downloading,
-        ),
-      ]);
+    test('a page list that cannot load fails the chapter', () async {
+      reader.offline = true;
+      await enqueue([details.chapters.last]);
 
-      final downloads = await library();
-
-      expect(
-        downloads.chapter('solo-leveling/2')?.status,
-        DownloadStatus.failed,
-      );
+      expect(statusOf('solo-leveling/1'), DownloadStatus.failed);
+      expect(pages.enqueued, isEmpty);
     });
 
-    test('delete removes files, record and the unused comic', () async {
-      await enqueue([details.chapters.last]);
+    test('pages saved while the app was away are picked up on sync', () async {
+      pages.autoRun = false;
+      await start([details.chapters.last]);
+      await pump();
+      expect(statusOf('solo-leveling/1'), DownloadStatus.downloading);
+
+      pages.runAll(emit: false);
+      await repo.sync();
+
+      final chapter = local.getChapter('solo-leveling/1')!;
+      expect(chapter.status, DownloadStatus.completed);
+      expect(chapter.sizeBytes, 30);
+    });
+
+    test('after a restart, chapters still in the background queue keep '
+        'downloading and stalled ones fail', () async {
+      pages.autoRun = false;
+      await start(details.chapters.reversed.toList());
+      await pump();
+      // Chapter 2's pages are lost; chapter 1's still wait.
+      pages.pending.removeWhere((j) => j.chapterSlug == 'solo-leveling/2');
+
+      repo = newRepo();
+      await library();
+
+      expect(statusOf('solo-leveling/1'), DownloadStatus.downloading);
+      expect(statusOf('solo-leveling/2'), DownloadStatus.failed);
+    });
+
+    test(
+      'chapters still waiting for their page list resume after a restart',
+      () async {
+        await local.putChapters([
+          DownloadedChapterModel(
+            slug: 'solo-leveling/2',
+            comicSlug: 'solo-leveling',
+            chapterNumber: '2',
+            addedAt: DateTime.fromMillisecondsSinceEpoch(0),
+          ),
+        ]);
+
+        await library();
+        await settle();
+
+        expect(statusOf('solo-leveling/2'), DownloadStatus.completed);
+      },
+    );
+
+    test('delete cancels pages and removes files, record and comic', () async {
+      pages.autoRun = false;
+      await start([details.chapters.last]);
+      await pump();
 
       await repo.delete(['solo-leveling/1']);
 
+      expect(pages.pending, isEmpty);
       expect(local.getChapters(), isEmpty);
       expect(local.getComics(), isEmpty);
       expect(files.files, isEmpty);
@@ -307,12 +433,10 @@ void main() {
       final getChapter = GetChapterContent(reader, repo);
       reader.requested.clear();
 
-      final offline = (await getChapter(
-        'solo-leveling/1',
-      )).getOrElse((f) => throw f);
-      final online = (await getChapter(
-        'solo-leveling/2',
-      )).getOrElse((f) => throw f);
+      final offline = (await getChapter('solo-leveling/1'))
+          .getOrElse((f) => throw f);
+      final online = (await getChapter('solo-leveling/2'))
+          .getOrElse((f) => throw f);
 
       expect(offline.isOffline, isTrue);
       expect(online.isOffline, isFalse);

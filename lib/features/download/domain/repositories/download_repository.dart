@@ -4,8 +4,9 @@ import 'package:bacakomik_app/features/download/domain/entities/download_library
 import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
 import 'package:fpdart/fpdart.dart';
 
-/// Chapters saved on the device for offline reading. Downloads run one
-/// chapter at a time, in the order they were queued, while the app is open.
+/// Chapters saved on the device for offline reading. Chapters download in
+/// the order they were queued and keep going in the background, with a
+/// notification, also while the phone is locked or the app is closed.
 abstract interface class DownloadRepository {
   /// Emits after every change to the stored downloads, including each
   /// saved page.
@@ -28,6 +29,9 @@ abstract interface class DownloadRepository {
   Future<Either<Failure, Unit>> delete(List<String> slugs);
 
   Future<Either<Failure, Unit>> clear();
+
+  /// Catches up with pages saved while the app was in the background.
+  Future<Either<Failure, Unit>> sync();
 
   /// A completed chapter with its pages as file paths, or null.
   Future<ChapterContent?> getOfflineChapter(String slug);

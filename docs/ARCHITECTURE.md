@@ -18,7 +18,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 
 ### Non-goals
 - User accounts, cloud sync, or a server-side library.
-- Offline reading or chapter downloads. Reading needs a network connection.
+- iOS background downloads are untested (releases are Android APKs). Download tasks use absolute paths, which iOS can move between launches (§7.5).
 - Hosting or scraping comics. All content comes from bacakomik-api.
 - An app store listing. Releases are APKs on GitHub Releases; the app checks the latest release on start and from Lainnya, downloads the APK for the device's ABI and opens Android's installer (`features/update`, `ota_update`). Asset names and the `## Which APK?` heading are set by the release workflow (CONTRIBUTION §2).
 
@@ -85,6 +85,7 @@ lib/
     ├── history/       # local: read chapters
     ├── settings/      # local: theme; the More tab
     ├── backup/        # export/import the library as a JSON file
+    ├── download/      # local: chapters saved for offline reading, background download queue
     └── update/        # in-app updates from GitHub Releases
 ```
 
@@ -156,7 +157,7 @@ It must print nothing.
           ── runApp(BacaKomikApp)
 
    BacaKomikApp ─ MultiBlocProvider (app scope)
-   │   HomeBloc · ExploreBloc · FilterCubit · BookmarkCubit · HistoryCubit · SettingsCubit · BackupCubit
+   │   HomeBloc · ExploreBloc · FilterCubit · BookmarkCubit · HistoryCubit · SettingsCubit · DownloadCubit · BackupCubit
    └─ MaterialApp ─ SplashScreen ─▶ RootScreen (tabs)
                                       │ Navigator.push
                                       ▼
@@ -170,12 +171,12 @@ It must print nothing.
 ### 4.1 Startup
 
 1. `Hive.init` points Hive at the application documents directory.
-2. `configureDependencies()` registers everything and opens the four Hive boxes before returning (`@preResolve` in `StorageModule`).
+2. `configureDependencies()` registers everything and opens the six Hive boxes before returning (`@preResolve` in `StorageModule`).
 3. `runApp`. `BookmarkCubit`, `HistoryCubit` and `SettingsCubit` call `load()` when they are first created.
 
 ### 4.2 Bloc scope
 
-- **App scope** (`lib/app/app.dart`): the bottom-tab blocs (`HomeBloc`, `ExploreBloc`, `FilterCubit`) and the library (`BookmarkCubit`, `HistoryCubit`, `SettingsCubit`, `BackupCubit`). Several screens read them, and they have to outlive navigation.
+- **App scope** (`lib/app/app.dart`): the bottom-tab blocs (`HomeBloc`, `ExploreBloc`, `FilterCubit`) and the library (`BookmarkCubit`, `HistoryCubit`, `SettingsCubit`, `DownloadCubit`, `BackupCubit`). Several screens read them, and they have to outlive navigation.
 - **Route scope:** `LatestChapterScreen`, `ComicDetailsScreen` and `ReadChapterScreen` each create their own bloc with `BlocProvider(create: (_) => getIt<…>())`. The public screen widget is a thin wrapper and the stateful view underneath is private (`_ComicDetailsView`). Opening a second comic or moving to the next chapter therefore always starts from a fresh state.
 
 ### 4.3 State shapes
@@ -298,9 +299,11 @@ Entries are plain JSON objects, in the same shapes as §7.2. A file with another
 
 Plan and reasoning: `docs/implementation/OFFLINE_DOWNLOAD_PLAN.md`.
 
-- **Files:** `<root>/<seriesSlug>/<chapterNumber>/000.<ext>` and `<root>/<seriesSlug>/cover.<ext>`. The root is `getExternalStorageDirectory()/downloads` on Android (app-specific, no permission, removed on uninstall) and `getApplicationSupportDirectory()/downloads` elsewhere or when external storage is missing. Records store paths relative to the root. Pages are written as `.part` and renamed when complete.
-- **Queue:** `DownloadRepositoryImpl` runs one chapter at a time, three pages in parallel, three attempts per page. It fetches fresh page URLs through `ReaderRepository` right before downloading. Progress is saved after every page and announced on `changes`; `DownloadCubit` reloads on each change.
-- **Status:** `queued → downloading → completed`, or `failed`. Retry keeps saved pages and fetches the rest. On the first read after start, `queued`/`downloading` records become `failed` (the app closed mid-download).
+- **Files:** `<root>/<seriesSlug>/<chapterNumber>/000.<ext>` and `<root>/<seriesSlug>/cover.<ext>`. The root is `getExternalStorageDirectory()/downloads` on Android (app-specific, no permission, removed on uninstall) and `getApplicationSupportDirectory()/downloads` elsewhere or when external storage is missing. Records store paths relative to the root.
+- **Background:** pages are downloaded by `background_downloader` (`PageDownloadQueue`), outside the Dart isolate, so they continue while the app is in the background, the phone is locked, or the process is gone. A native holding queue runs three pages at a time in enqueue order. One grouped notification shows `x/y halaman`, then done or failed. Notification permission (`POST_NOTIFICATIONS`) is asked on the first download. Each page gets 10 retries with backoff, so short connection drops do not fail a chapter.
+- **Preparing:** `DownloadRepositoryImpl` takes queued chapters one at a time, fetches fresh page URLs through `ReaderRepository` (needs a connection), records the planned page paths, and hands the missing pages to the queue. Covers are fetched directly with Dio.
+- **Progress:** page events update the record while the app runs. Pages finished while the app was suspended or closed are found on disk: on start and whenever the app resumes (`DownloadCubit` calls `sync()`), downloading chapters are checked against their planned paths. A chapter with no pages left in the queue and pages missing becomes failed. Chapters still waiting for their page list after a restart are prepared again.
+- **Status:** `queued → downloading → completed`, or `failed`. Retry keeps saved pages and fetches the rest.
 - **Reading:** `GetChapterContent` asks `DownloadRepository.getOfflineChapter` first; a completed chapter with all its files returns `ChapterContent(isOffline: true)` with file paths, and `ChapterImg` shows them with `Image.file`. `GetComicDetails` falls back to `getOfflineComic` when the request fails.
 - **Clearing the image cache** does not touch downloads.
 
@@ -375,7 +378,7 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 | History | Done |
 | Theme setting (system/light/dark) | Done |
 | Backup / restore | Done |
-| Offline reading (chapter downloads) | Done (while the app runs) |
+| Offline reading (chapter downloads) | Done (background downloads on Android) |
 
 ---
 

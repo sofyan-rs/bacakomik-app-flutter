@@ -245,8 +245,8 @@ Differences from the plan above:
 
 - **Offline lookup lives in the use cases**, not in `ReaderRepositoryImpl`. `GetChapterContent` checks `DownloadRepository.getOfflineChapter` first, and `GetComicDetails` falls back to `getOfflineComic` on any failure. `DownloadRepositoryImpl` fetches fresh page URLs through `ReaderRepository`, so the chapter mapping is not duplicated and there is no dependency cycle.
 - **No queue/task stream.** Progress is written to Hive after every page and `DownloadRepository.changes` fires; `DownloadCubit` reloads (coalesced) and its state is a `DownloadLibrary` (chapters by slug + comics).
-- **No wakelock during downloads.** The reader already enables and disables the wakelock on its own, and the two would fight. The Dart isolate keeps running while the app is in the background until Android kills the process; an interrupted chapter becomes `failed` on the next start and resumes on retry.
+- **Background downloads were added after all** (same PR). Tested on an Android 15 emulator, the first Dart-only version stopped about 10 seconds after the app left the foreground: Android cut the app's network and every queued chapter failed. Pages now go through `background_downloader` (WorkManager on Android) with a progress notification; see ARCHITECTURE §7.5. No wakelock is needed because the downloads no longer run in the app process.
 - **No "Mode offline" banner** on the comic page; the stored details simply show.
 - **Cancel = delete.** The queue row's × removes the record and any saved pages.
-- Unduhan entry is the first row of DATA in Lainnya, showing the size used.
-- Verified on an Android 15 emulator: download two chapters, read one in airplane mode, fail mid-download, retry, swipe-delete, open the comic page offline.
+- Unduhan entry is the first row of DATA in Lainnya, showing the size used. Each comic on the Unduhan screen is collapsed until tapped; its cover opens the comic page.
+- Verified on an Android 15 emulator: download two chapters, read one in airplane mode, fail mid-download, retry, swipe-delete, open the comic page offline. With background downloads: chapters kept downloading with the app in the background and the screen locked, with a progress and a done notification, and progress caught up when the app came back.

@@ -14,12 +14,19 @@ import 'package:path_provider/path_provider.dart';
 ///
 /// Paths given to and returned by this class are relative to the root.
 abstract interface class DownloadFileDataSource {
+  /// Absolute path of the downloads folder.
+  Future<String> get root;
+
   String comicDir(String comicSlug);
 
   String chapterDir(String comicSlug, String chapterNumber);
 
-  /// Downloads [url] to `[pathWithoutExtension].<ext>`, through a `.part`
-  /// file so an interrupted download never looks complete.
+  /// `chapterDir/007.webp`; the extension comes from [url], else `jpg`.
+  String pagePath(String chapterDir, int index, String url);
+
+  /// Downloads [url] to `[pathWithoutExtension].<ext>` right away, through
+  /// a `.part` file so an interrupted download never looks complete. Used
+  /// for covers; pages go through `PageDownloadQueue`.
   Future<({String path, int size})> download(
     String url,
     String pathWithoutExtension, {
@@ -29,6 +36,9 @@ abstract interface class DownloadFileDataSource {
   Future<String> absolute(String path);
 
   Future<bool> exists(String path);
+
+  /// Size in bytes, or 0 when the file is missing.
+  Future<int> size(String path);
 
   /// Deletes a file or a folder with everything in it.
   Future<void> delete(String path);
@@ -47,6 +57,7 @@ class DownloadFileDataSourceImpl implements DownloadFileDataSource {
 
   /// App-specific external storage on Android (no permission needed,
   /// removed on uninstall), else the application support directory.
+  @override
   Future<String> get root => _root ??= () async {
     Directory? base;
     if (Platform.isAndroid) base = await getExternalStorageDirectory();
@@ -60,6 +71,11 @@ class DownloadFileDataSourceImpl implements DownloadFileDataSource {
   @override
   String chapterDir(String comicSlug, String chapterNumber) =>
       '${comicDir(comicSlug)}/${_segment(chapterNumber)}';
+
+  @override
+  String pagePath(String chapterDir, int index, String url) =>
+      '$chapterDir/${index.toString().padLeft(3, '0')}.'
+      '${_extensionOfUrl(url) ?? 'jpg'}';
 
   @override
   Future<({String path, int size})> download(
@@ -89,6 +105,12 @@ class DownloadFileDataSourceImpl implements DownloadFileDataSource {
 
   @override
   Future<bool> exists(String path) async => File(await absolute(path)).exists();
+
+  @override
+  Future<int> size(String path) async {
+    final file = File(await absolute(path));
+    return await file.exists() ? file.length() : 0;
+  }
 
   @override
   Future<void> delete(String path) async {

@@ -161,6 +161,9 @@ class AppText {
       'Semua chapter yang diunduh dihapus dari perangkat. Bookmark dan '
       'riwayat baca tidak ikut terhapus.';
   static const String downloadedLabel = 'Diunduh';
+  static const String downloadNotificationRunning = 'Mengunduh chapter';
+  static const String downloadNotificationDone = 'Unduhan selesai';
+  static const String downloadNotificationFailed = 'Sebagian unduhan gagal';
 
   // Update Text
   static const String checkUpdate = 'Cek pembaruan';

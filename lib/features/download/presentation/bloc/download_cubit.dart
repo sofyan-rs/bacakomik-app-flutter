@@ -5,12 +5,13 @@ import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
 import 'package:bacakomik_app/features/download/domain/usecases/download_usecases.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 /// Downloaded and queued chapters. Reloads whenever storage changes, so
-/// download progress shows as it happens.
+/// download progress shows as it happens, and catches up with background
+/// progress when the app comes back to the foreground.
 @injectable
 class DownloadCubit extends Cubit<DownloadLibrary> {
   DownloadCubit(
@@ -20,8 +21,12 @@ class DownloadCubit extends Cubit<DownloadLibrary> {
     this._retry,
     this._delete,
     this._clear,
+    this._sync,
   ) : super(const DownloadLibrary()) {
     _changes = watchDownloads().listen((_) => load());
+    _lifecycle = AppLifecycleListener(
+      onResume: () async => (await _sync(const NoParams())).fold(_log, (_) {}),
+    );
   }
 
   final GetDownloads _getDownloads;
@@ -29,7 +34,9 @@ class DownloadCubit extends Cubit<DownloadLibrary> {
   final RetryDownloads _retry;
   final DeleteDownloads _delete;
   final ClearDownloads _clear;
+  final SyncDownloads _sync;
   late final StreamSubscription<void> _changes;
+  late final AppLifecycleListener _lifecycle;
 
   /// Page progress fires many changes; one reload at a time, plus one more
   /// if something changed meanwhile.
@@ -90,6 +97,7 @@ class DownloadCubit extends Cubit<DownloadLibrary> {
   @override
   Future<void> close() async {
     await _changes.cancel();
+    _lifecycle.dispose();
     return super.close();
   }
 
