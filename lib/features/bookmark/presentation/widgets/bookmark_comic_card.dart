@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Bookmark grid cell: cover with the `+N` new-chapter badge, title, read
-/// meter and `read / latest`.
+/// meter and `read / total` chapters.
 class BookmarkComicCard extends StatelessWidget {
   const BookmarkComicCard({
     super.key,
@@ -30,8 +30,6 @@ class BookmarkComicCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final details = item.bookmark.comicDetails;
-    final progress = item.progress;
-    final total = details.chapters.length;
 
     return Semantics(
       selected: isSelected,
@@ -84,11 +82,10 @@ class BookmarkComicCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: DotSpace.s2),
-            DotMeter(value: progress?.position ?? 0, total: total, gap: 3),
+            DotMeter(value: item.read, total: item.total, gap: 3),
             const SizedBox(height: DotSpace.s2),
             Text(
-              '${progress?.chapterNumber ?? 0} / '
-              '${progress?.latestNumber ?? total}',
+              '${item.read} / ${item.total}',
               style: DotlineText.data.copyWith(color: c.inkFaint),
               maxLines: 1,
             ),

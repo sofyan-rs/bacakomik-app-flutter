@@ -4,7 +4,7 @@ import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_pr
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-ComicDetails _details(int chapters) => ComicDetails(
+ComicDetails _details(String slug, int chapters) => ComicDetails(
   title: 'Comic',
   coverImg: '',
   alternativeTitle: '-',
@@ -18,36 +18,47 @@ ComicDetails _details(int chapters) => ComicDetails(
   genres: const [],
   chapters: [
     for (var n = chapters; n >= 1; n--)
-      Chapter(number: '$n', slug: 'x/$n', date: '-'),
+      Chapter(number: '$n', slug: '$slug/$n', date: '-'),
   ],
 );
 
 Bookmark _bookmark(String slug, int chapters) => Bookmark(
   slug: slug,
-  comicDetails: _details(chapters),
+  comicDetails: _details(slug, chapters),
   updatedDate: DateTime(2026),
 );
 
-ReadHistory _read(String slug, int chapter) => ReadHistory(
+ReadHistory _read(String slug, int chapter, {int day = 1}) => ReadHistory(
   slug: '$slug/$chapter',
   chapterNumber: '$chapter',
-  readDate: DateTime(2026, 1, chapter),
-  comicDetails: _details(chapter),
+  readDate: DateTime(2026, 1, day),
+  comicDetails: _details(slug, chapter),
   comicSlug: slug,
 );
 
 void main() {
   final items = BookmarkProgress.of(
-    [_bookmark('behind', 10), _bookmark('done', 5), _bookmark('new', 7)],
-    HistoryIndex([_read('behind', 6), _read('behind', 7), _read('done', 5)])
-        .latestOf,
+    [
+      _bookmark('behind', 10),
+      _bookmark('done', 5),
+      _bookmark('new', 7),
+      _bookmark('reread', 5),
+    ],
+    HistoryIndex([
+      _read('behind', 6),
+      _read('behind', 7),
+      for (var n = 1; n <= 5; n++) _read('done', n),
+      for (var n = 5; n >= 1; n--) _read('reread', n, day: 6 - n),
+    ]).containsChapter,
   );
   final behind = items[0];
   final done = items[1];
   final unopened = items[2];
+  final reread = items[3];
 
-  test('new chapters count from the latest read chapter', () {
-    expect(behind.newChapters, 3);
+  test('new chapters count the chapters not read yet', () {
+    expect(behind.read, 2);
+    expect(behind.newChapters, 8);
     expect(behind.hasUpdate, isTrue);
     expect(behind.isFinished, isFalse);
   });
@@ -57,8 +68,14 @@ void main() {
     expect(done.isFinished, isTrue);
   });
 
+  test('reading an early chapter last does not bring the badge back', () {
+    expect(reread.read, 5);
+    expect(reread.newChapters, 0);
+    expect(reread.isFinished, isTrue);
+  });
+
   test('comics never opened have no badge and are not finished', () {
-    expect(unopened.progress, isNull);
+    expect(unopened.read, 0);
     expect(unopened.newChapters, 0);
     expect(unopened.isFinished, isFalse);
   });
@@ -68,8 +85,8 @@ void main() {
       for (final i in items.where((i) => i.matches(f))) i.bookmark.slug,
     ];
 
-    expect(slugs(BookmarkFilter.all), ['behind', 'done', 'new']);
+    expect(slugs(BookmarkFilter.all), ['behind', 'done', 'new', 'reread']);
     expect(slugs(BookmarkFilter.updated), ['behind']);
-    expect(slugs(BookmarkFilter.finished), ['done']);
+    expect(slugs(BookmarkFilter.finished), ['done', 'reread']);
   });
 }
