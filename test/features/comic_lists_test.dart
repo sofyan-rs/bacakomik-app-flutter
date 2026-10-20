@@ -133,6 +133,55 @@ void main() {
     );
 
     blocTest<ExploreBloc, ComicListState>(
+      'next page skips comics already listed',
+      setUp: () {
+        when(() => explore((filter: filter, page: 1)))
+            .thenAnswer((_) async => right([a]));
+        when(() => explore((filter: filter, page: 2)))
+            .thenAnswer((_) async => right([a, b]));
+      },
+      build: () => ExploreBloc(explore),
+      act: (bloc) async {
+        bloc.add(const ExploreRequested(filter: filter));
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const ExploreNextPageRequested(filter: filter, page: 2));
+      },
+      expect: () => [
+        const ComicListState.loading(),
+        const ComicListState.loaded(comics: [a]),
+        const ComicListState.loaded(comics: [a], isLoadMore: true),
+        ComicListState.loaded(comics: [a, b]),
+      ],
+    );
+
+    blocTest<ExploreBloc, ComicListState>(
+      'next page while another loads is ignored',
+      setUp: () {
+        when(() => explore((filter: filter, page: 1)))
+            .thenAnswer((_) async => right([a]));
+        when(() => explore((filter: filter, page: 2))).thenAnswer((_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          return right([b]);
+        });
+      },
+      build: () => ExploreBloc(explore),
+      wait: const Duration(milliseconds: 50),
+      act: (bloc) async {
+        bloc.add(const ExploreRequested(filter: filter));
+        await Future<void>.delayed(Duration.zero);
+        bloc
+          ..add(const ExploreNextPageRequested(filter: filter, page: 2))
+          ..add(const ExploreNextPageRequested(filter: filter, page: 2));
+      },
+      expect: () => [
+        const ComicListState.loading(),
+        const ComicListState.loaded(comics: [a]),
+        const ComicListState.loaded(comics: [a], isLoadMore: true),
+        ComicListState.loaded(comics: [a, b]),
+      ],
+    );
+
+    blocTest<ExploreBloc, ComicListState>(
       'next page before first load is ignored',
       build: () => ExploreBloc(explore),
       act: (bloc) =>
