@@ -219,12 +219,13 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 | home | Home tab | `HomeBloc` | Trending (`/lists/trending`, 10) + latest (`/series?sort=latest`, 20), loaded in parallel. Also shows the last read comic. |
 | latest | "Lihat Semua" | `LatestBloc` | Infinite scroll, up to 10 pages. |
 | explore | Jelajah tab: title search + filter sheet | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (search `query` + filters) goes to `/series` in one request; the API applies them together. `default` sort, `all` type/status and an empty query are sent as "no filter". Beranda's search button switches to this tab through `RootTabs`. Requests run in order so an older search cannot overwrite a newer one. |
-| comic_detail | Comic card tap | `ComicDetailsBloc` | Series and chapters fetched in parallel. Bookmark toggle, continue reading, and multi-select of chapters to mark read or unread. |
-| reader | Chapter tap | `ReaderBloc` | Chapter slug is `seriesSlug/number`. Prev/next replace the route. Writes history when a chapter loads. |
+| comic_detail | Comic card tap | `ComicDetailsBloc` | Series and chapters fetched in parallel. Bookmark toggle, continue reading, and multi-select of chapters to download or mark read/unread. When the request fails, a comic in the library opens from its stored details (downloads, then bookmarks, then history). |
+| reader | Chapter tap | `ReaderBloc` | Chapter slug is `seriesSlug/number`. Prev/next replace the route. Writes history when a chapter loads. A downloaded chapter is read from files, online or not. |
 | bookmark | Bookmark tab | `BookmarkCubit` | Search by title. Pull-to-refresh runs `RefreshBookmarks` (§6.1). |
 | history | More → History | `HistoryCubit` | Shows the newest chapter per comic. Remove one chapter, one comic, or everything. |
 | settings | More tab | `SettingsCubit` | Theme, clear image cache, bug report link, app info. |
 | backup | Lainnya → Cadangkan / Pulihkan | `BackupCubit` | §7.4. |
+| download | Lainnya → Unduhan; detail selection bar | `DownloadCubit` | §7.5. |
 
 ### 6.1 Checking bookmarks for new chapters
 
@@ -241,6 +242,8 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 | `bookmarks` | series slug | `BookmarkModel` JSON (includes the comic's details) |
 | `history_entries` | chapter slug (`series/number`) | `ReadHistoryModel` JSON |
 | `history_comics` | series slug | `HistoryComicModel` JSON (the comic's details) |
+| `downloads` | chapter slug | `DownloadedChapterModel` JSON (status, saved page paths, size) |
+| `download_comics` | series slug | `DownloadComicModel` JSON (the comic's details, saved cover path) |
 | `settings` | `settings` | `SettingsModel` JSON |
 
 Every box is a `Box<String>` that holds JSON. There are no Hive type adapters, so stored data never depends on adapter type ids, and the backup format can reuse the same JSON. `JsonBox<T>` (`core/storage/json_box.dart`) gives typed `values()`, `get`, `put`, `putAll`, `deleteAll` and `clear`. An entry that fails to parse is skipped and logged, so one bad record cannot hide the rest.
@@ -289,6 +292,17 @@ Entries are plain JSON objects, in the same shapes as §7.2. A file with another
 
 - **Backup:** if the library is empty, nothing happens and the folder picker does not open. Cancelling the picker does nothing.
 - **Restore:** merges into the library. Entries with the same slug are replaced. After a restore, the Lainnya screen reloads `BookmarkCubit` and `HistoryCubit`.
+- Downloads are not part of backups.
+
+### 7.5 Downloads
+
+Plan and reasoning: `docs/implementation/OFFLINE_DOWNLOAD_PLAN.md`.
+
+- **Files:** `<root>/<seriesSlug>/<chapterNumber>/000.<ext>` and `<root>/<seriesSlug>/cover.<ext>`. The root is `getExternalStorageDirectory()/downloads` on Android (app-specific, no permission, removed on uninstall) and `getApplicationSupportDirectory()/downloads` elsewhere or when external storage is missing. Records store paths relative to the root. Pages are written as `.part` and renamed when complete.
+- **Queue:** `DownloadRepositoryImpl` runs one chapter at a time, three pages in parallel, three attempts per page. It fetches fresh page URLs through `ReaderRepository` right before downloading. Progress is saved after every page and announced on `changes`; `DownloadCubit` reloads on each change.
+- **Status:** `queued → downloading → completed`, or `failed`. Retry keeps saved pages and fetches the rest. On the first read after start, `queued`/`downloading` records become `failed` (the app closed mid-download).
+- **Reading:** `GetChapterContent` asks `DownloadRepository.getOfflineChapter` first; a completed chapter with all its files returns `ChapterContent(isOffline: true)` with file paths, and `ChapterImg` shows them with `Image.file`. `GetComicDetails` falls back to `getOfflineComic` when the request fails.
+- **Clearing the image cache** does not touch downloads.
 
 ---
 
@@ -361,7 +375,7 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 | History | Done |
 | Theme setting (system/light/dark) | Done |
 | Backup / restore | Done |
-| Offline reading | Not planned |
+| Offline reading (chapter downloads) | Done (while the app runs) |
 
 ---
 

@@ -103,7 +103,7 @@ class AppText {
   static const String history = 'Riwayat baca';
 
   static const String clearCache = 'Bersihkan cache';
-  static const String clearCacheDescription = 'Bookmark dan riwayat tetap aman';
+  static const String clearCacheDescription = 'Library dan unduhan tetap aman';
   static const String clearCacheScope =
       'Cover · halaman chapter · data sementara';
   static const String cacheImages = 'Cover & halaman chapter';
@@ -112,7 +112,7 @@ class AppText {
   static const String kept = 'Tetap';
   static const String clearCacheConfirmation =
       'Gambar yang tersimpan dihapus dan diunduh lagi saat kamu membukanya. '
-      'Bookmark dan riwayat baca tidak ikut terhapus.';
+      'Bookmark, riwayat baca, dan unduhan tidak ikut terhapus.';
 
   static const String backupData = 'Cadangkan data';
   static const String backupDataDescription = 'Bookmark dan riwayat baca';
@@ -136,6 +136,31 @@ class AppText {
   static const String themeLight = 'Terang';
   static const String themeDark = 'Gelap';
   static const String version = 'Versi';
+
+  // Download Text
+  static const String downloads = 'Unduhan';
+  static const String downloadsDescription = 'Chapter untuk dibaca offline';
+  static const String download = 'Unduh';
+  static const String downloadQueued = 'chapter masuk antrean unduhan';
+  static const String downloadQueue = 'Antrean';
+  static const String downloadWaiting = 'Menunggu';
+  static const String downloadFailed = 'Gagal';
+  static const String downloadRetry = 'Unduh ulang';
+  static const String downloadRetryAll = 'Ulangi semua';
+  static const String downloadCancel = 'Batalkan unduhan';
+  static const String downloadsEmpty = 'Belum ada unduhan';
+  static const String downloadsEmptyHint =
+      'Pilih chapter di halaman komik, lalu tekan ikon unduh.';
+  static const String downloadedChapters = 'Chapter diunduh';
+  static const String storageUsed = 'Ruang terpakai';
+  static const String deleteDownloads = 'Hapus unduhan';
+  static const String deleteComicDownloads =
+      'Hapus semua chapter yang diunduh dari komik ini?';
+  static const String clearDownloads = 'Hapus semua unduhan';
+  static const String clearDownloadsConfirmation =
+      'Semua chapter yang diunduh dihapus dari perangkat. Bookmark dan '
+      'riwayat baca tidak ikut terhapus.';
+  static const String downloadedLabel = 'Diunduh';
 
   // Update Text
   static const String checkUpdate = 'Cek pembaruan';

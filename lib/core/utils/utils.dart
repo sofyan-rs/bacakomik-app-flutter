@@ -25,17 +25,21 @@ void showSnackBar({
   );
 }
 
+/// [img] is a URL, or a file path for a downloaded page.
 Future saveImg({
   required BuildContext context,
   required String img,
 }) async {
-  final dio = Dio();
   try {
-    final response = await dio.get(
-      img,
-      options: Options(responseType: ResponseType.bytes),
-    );
-    await Gal.putImageBytes(Uint8List.fromList(response.data));
+    if (img.startsWith('http')) {
+      final response = await Dio().get(
+        img,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      await Gal.putImageBytes(Uint8List.fromList(response.data));
+    } else {
+      await Gal.putImage(img);
+    }
 
     if (!context.mounted) return;
     showSnackBar(
@@ -49,4 +53,17 @@ Future saveImg({
       message: AppText.failedSaveImg,
     );
   }
+}
+
+/// `1.4 MB`, `820 KB`.
+String formatBytes(int bytes) {
+  const units = ['B', 'KB', 'MB', 'GB'];
+  var value = bytes.toDouble();
+  var unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  final digits = unit >= 2 && value < 10 ? 1 : 0;
+  return '${value.toStringAsFixed(digits)} ${units[unit]}';
 }

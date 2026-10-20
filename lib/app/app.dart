@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
@@ -29,6 +30,7 @@ class BacaKomikApp extends StatelessWidget {
         BlocProvider(create: (_) => getIt<BookmarkCubit>()..load()),
         BlocProvider(create: (_) => getIt<HistoryCubit>()..load()),
         BlocProvider(create: (_) => getIt<SettingsCubit>()..load()),
+        BlocProvider(create: (_) => getIt<DownloadCubit>()..load()),
         BlocProvider(create: (_) => getIt<BackupCubit>()),
         BlocProvider(create: (_) => getIt<UpdateCubit>()),
       ],

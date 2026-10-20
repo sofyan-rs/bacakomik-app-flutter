@@ -5,6 +5,9 @@ import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -17,13 +20,18 @@ class ChapterImg extends StatelessWidget {
   const ChapterImg({
     super.key,
     required this.chapterImage,
+    this.isFile = false,
     required this.page,
     this.load = true,
     this.fit = PageFit.width,
     this.fitHeight,
   });
 
+  /// URL, or a file path when [isFile].
   final String chapterImage;
+
+  /// A page of a downloaded chapter.
+  final bool isFile;
 
   /// 1-based page number, shown while loading.
   final int page;
@@ -106,28 +114,45 @@ class ChapterImg extends StatelessWidget {
     // thousands of pixels tall and take tens of MB each at full resolution.
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final image = CachedNetworkImage(
-      cacheKey: chapterImage,
-      imageUrl: chapterImage,
-      width: double.infinity,
-      height: fitHeight,
-      memCacheWidth: fit == PageFit.width
-          ? (screenWidth * dpr).round()
-          : null,
-      memCacheHeight: fit == PageFit.height && fitHeight != null
-          ? (fitHeight! * dpr).round()
-          : null,
-      fit: fit == PageFit.height ? BoxFit.contain : BoxFit.fitWidth,
-      fadeInDuration: DotMotion.press,
-      progressIndicatorBuilder: (_, _, p) =>
-          placeholder(progress: p.progress ?? -1),
-      errorWidget: (_, _, _) => SizedBox(
-        height: fitHeight ?? 320,
-        child: Center(
-          child: Icon(LucideIcons300.image, color: c.inkFaint, size: 32),
-        ),
+    final cacheWidth = fit == PageFit.width
+        ? (screenWidth * dpr).round()
+        : null;
+    final cacheHeight = fit == PageFit.height && fitHeight != null
+        ? (fitHeight! * dpr).round()
+        : null;
+    final boxFit = fit == PageFit.height ? BoxFit.contain : BoxFit.fitWidth;
+    Widget error() => SizedBox(
+      height: fitHeight ?? 320,
+      child: Center(
+        child: Icon(LucideIcons300.image, color: c.inkFaint, size: 32),
       ),
     );
+
+    final Widget image = isFile
+        ? Image.file(
+            File(chapterImage),
+            width: double.infinity,
+            height: fitHeight,
+            cacheWidth: cacheWidth,
+            cacheHeight: cacheHeight,
+            fit: boxFit,
+            frameBuilder: (_, child, frame, sync) =>
+                frame == null && !sync ? placeholder() : child,
+            errorBuilder: (_, _, _) => error(),
+          )
+        : CachedNetworkImage(
+            cacheKey: chapterImage,
+            imageUrl: chapterImage,
+            width: double.infinity,
+            height: fitHeight,
+            memCacheWidth: cacheWidth,
+            memCacheHeight: cacheHeight,
+            fit: boxFit,
+            fadeInDuration: DotMotion.press,
+            progressIndicatorBuilder: (_, _, p) =>
+                placeholder(progress: p.progress ?? -1),
+            errorWidget: (_, _, _) => error(),
+          );
 
     return GestureDetector(
       onLongPress: () => _showSaveSheet(context),

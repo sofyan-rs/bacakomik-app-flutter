@@ -53,6 +53,11 @@ class ClearCacheSheet extends StatelessWidget {
               title: AppText.history,
               trailing: status(AppText.kept, c.inkFaint),
             ),
+            ListRow(
+              icon: LucideIcons300.download,
+              title: AppText.downloads,
+              trailing: status(AppText.kept, c.inkFaint),
+            ),
           ],
         ),
         const SizedBox(height: DotSpace.s5),
