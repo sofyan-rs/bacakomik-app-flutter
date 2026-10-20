@@ -5,16 +5,18 @@ import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/chapter_date.dart';
+import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// One chapter row. Rows are laid out one by one in a sliver, so each row
 /// draws its own part of the rounded list group ([isFirst] / [isLast]).
+/// A finished chapter shows a check, an unfinished one its page (`5 / 24`).
 class ChapterTile extends StatelessWidget {
   const ChapterTile({
     super.key,
     required this.chapter,
-    required this.isRead,
+    required this.history,
     required this.isSelected,
     required this.isFirst,
     required this.isLast,
@@ -23,7 +25,9 @@ class ChapterTile extends StatelessWidget {
   });
 
   final Chapter chapter;
-  final bool isRead;
+
+  /// Null when the chapter was never opened.
+  final ReadHistory? history;
   final bool isSelected;
   final bool isFirst;
   final bool isLast;
@@ -34,7 +38,7 @@ class ChapterTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     const radius = Radius.circular(DotRadius.m);
-    final isNew = !isRead && ChapterDate.isNew(chapter.date);
+    final isNew = history == null && ChapterDate.isNew(chapter.date);
 
     return Semantics(
       button: true,
@@ -70,6 +74,8 @@ class ChapterTile extends StatelessWidget {
   }
 
   Widget _row(DotlineColors c, bool isNew) {
+    final history = this.history;
+    final isRead = history?.isFinished ?? false;
     return Row(
       children: [
         if (isSelected) ...[
@@ -89,6 +95,12 @@ class ChapterTile extends StatelessWidget {
           const SizedBox(width: DotSpace.s3),
         ] else if (isRead) ...[
           Icon(LucideIcons300.check, size: 18, color: c.inkFaint),
+          const SizedBox(width: DotSpace.s3),
+        ] else if (history?.page case final page?) ...[
+          Text(
+            '${page + 1} / ${history?.pageCount}',
+            style: DotlineText.data.copyWith(color: c.ink),
+          ),
           const SizedBox(width: DotSpace.s3),
         ],
         Text(

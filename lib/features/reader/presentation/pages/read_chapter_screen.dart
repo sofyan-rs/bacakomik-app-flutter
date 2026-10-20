@@ -99,9 +99,18 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   List<String> _images = const [];
   final _settled = <int>{};
 
+  /// The reading position is saved a moment after the page changes, and
+  /// when the reader closes.
+  late final HistoryCubit _history;
+  ChapterContent? _chapter;
+  Timer? _saveTimer;
+  int? _savedPage;
+
   @override
   void initState() {
     super.initState();
+    _history = context.read<HistoryCubit>();
+    _page.value = _history.resumePage(widget.slug);
     context.read<ReaderBloc>().add(ChapterRequested(widget.slug));
     _itemPositions.itemPositions.addListener(_onItemPositions);
     _zoom.addListener(_onZoomChanged);
@@ -111,6 +120,8 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   @override
   void dispose() {
     _autoHide?.cancel();
+    _saveTimer?.cancel();
+    _saveProgress();
     _itemPositions.itemPositions.removeListener(_onItemPositions);
     _pageController?.dispose();
     _zoomAnimation.dispose();
@@ -119,6 +130,26 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     WakelockPlus.disable();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
+  }
+
+  void _saveProgress() {
+    final chapter = _chapter;
+    final page = _page.value;
+    if (chapter == null || page == _savedPage) return;
+    _savedPage = page;
+    _history.addHistory(
+      slug: widget.slug,
+      chapterNumber: chapter.chapterNumber,
+      comicSlug: widget.comicSlug,
+      comicDetails: widget.comicDetails,
+      page: page,
+      pageCount: chapter.images.length,
+    );
+  }
+
+  void _scheduleSave() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(seconds: 1), _saveProgress);
   }
 
   void _syncWakelock(bool keepOn) =>
@@ -173,12 +204,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     _zoomAnimation.forward(from: 0);
   }
 
-  /// Starts the first batch when the chapter arrives.
+  /// Starts loading when the chapter arrives: every batch up to the
+  /// resumed page at once, then one batch at a time.
   void _startLoading(List<String> images) {
     _images = images;
     _loadLimit = 0;
     _settled.clear();
-    _loadNextBatch();
+    do {
+      _loadNextBatch();
+    } while (_loadLimit <= _page.value + 1 && _loadLimit < images.length);
   }
 
   /// Opens the next [_batch] pages and fetches them in the background.
@@ -228,6 +262,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     if (index != _page.value) {
       _page.value = index;
       _onPageReached(index);
+      _scheduleSave();
     }
   }
 
@@ -342,13 +377,12 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         body: BlocConsumer<ReaderBloc, ReaderState>(
           listener: (context, state) {
             if (state is ReaderLoaded) {
+              final pages = state.chapter.images.length;
+              _chapter = state.chapter;
+              // A chapter that got shorter since the last visit.
+              if (_page.value >= pages) _page.value = 0;
               _startLoading(state.chapter.images);
-              context.read<HistoryCubit>().addHistory(
-                slug: widget.slug,
-                chapterNumber: state.chapter.chapterNumber,
-                comicSlug: widget.comicSlug,
-                comicDetails: widget.comicDetails,
-              );
+              _saveProgress();
               _autoHide = Timer(const Duration(seconds: 2), () {
                 if (mounted) _setControls(false);
               });
@@ -436,6 +470,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         ? MediaQuery.sizeOf(context).height
         : null;
     return ScrollablePositionedList.builder(
+      initialScrollIndex: _page.value.clamp(0, pages.length),
       itemScrollController: _itemScroll,
       itemPositionsListener: _itemPositions,
       physics: _pinching ? const NeverScrollableScrollPhysics() : null,
@@ -472,6 +507,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       onPageChanged: (page) {
         _page.value = page;
         _onPageReached(page);
+        _scheduleSave();
       },
       itemBuilder: (context, index) {
         if (index == pages.length) {

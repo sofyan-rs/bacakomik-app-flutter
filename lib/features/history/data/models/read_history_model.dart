@@ -14,6 +14,8 @@ class ReadHistoryModel {
     required this.chapterNumber,
     required this.readDate,
     required this.comicSlug,
+    this.page,
+    this.pageCount,
   });
 
   factory ReadHistoryModel.fromEntity(ReadHistory e) => ReadHistoryModel(
@@ -21,6 +23,8 @@ class ReadHistoryModel {
     chapterNumber: e.chapterNumber,
     readDate: e.readDate,
     comicSlug: e.comicSlug,
+    page: e.page,
+    pageCount: e.pageCount,
   );
 
   factory ReadHistoryModel.fromJson(Map<String, dynamic> json) =>
@@ -33,6 +37,12 @@ class ReadHistoryModel {
   final DateTime readDate;
   final String comicSlug;
 
+  /// See [ReadHistory.page]. Absent once the chapter is finished.
+  @JsonKey(includeIfNull: false)
+  final int? page;
+  @JsonKey(includeIfNull: false)
+  final int? pageCount;
+
   Map<String, dynamic> toJson() => _$ReadHistoryModelToJson(this);
 
   ReadHistory toEntity(ComicDetails comicDetails) => ReadHistory(
@@ -41,6 +51,8 @@ class ReadHistoryModel {
     readDate: readDate,
     comicDetails: comicDetails,
     comicSlug: comicSlug,
+    page: page,
+    pageCount: pageCount,
   );
 }
 

@@ -33,20 +33,31 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     result.fold(_log, emit);
   }
 
+  /// Records [page] (0-based) as the reading position of a chapter with
+  /// [pageCount] pages. Reaching the last page finishes the chapter; a
+  /// finished chapter stays finished when read again.
   Future<void> addHistory({
     required String slug,
     required String chapterNumber,
     required ComicDetails comicDetails,
     required String comicSlug,
-  }) => addHistoryList([
-    ReadHistory(
-      slug: slug,
-      chapterNumber: chapterNumber,
-      readDate: _clock.now(),
-      comicDetails: comicDetails,
-      comicSlug: comicSlug,
-    ),
-  ]);
+    required int page,
+    required int pageCount,
+  }) {
+    final finished =
+        page >= pageCount - 1 || (index.chapter(slug)?.isFinished ?? false);
+    return addHistoryList([
+      ReadHistory(
+        slug: slug,
+        chapterNumber: chapterNumber,
+        readDate: _clock.now(),
+        comicDetails: comicDetails,
+        comicSlug: comicSlug,
+        page: finished ? null : page,
+        pageCount: finished ? null : pageCount,
+      ),
+    ]);
+  }
 
   Future<void> addHistoryList(List<ReadHistory> history) =>
       _thenReload(_saveHistory([...history]));
@@ -75,6 +86,9 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
   late HistoryIndex _index;
 
   bool isInHistory(String slug) => index.containsChapter(slug);
+
+  /// Where to reopen a chapter: the saved page while unfinished, else 0.
+  int resumePage(String slug) => index.chapter(slug)?.page ?? 0;
 
   /// Only valid when [state] is not empty.
   ReadHistory get latestHistory => index.latest!;

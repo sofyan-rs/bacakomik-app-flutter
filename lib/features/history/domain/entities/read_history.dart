@@ -3,9 +3,11 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'read_history.freezed.dart';
 
-/// One read chapter.
+/// One opened chapter, read to the end or stopped at a page.
 @freezed
 abstract class ReadHistory with _$ReadHistory {
+  const ReadHistory._();
+
   const factory ReadHistory({
     /// Chapter slug (`seriesSlug/number`), unique per entry.
     required String slug,
@@ -15,7 +17,16 @@ abstract class ReadHistory with _$ReadHistory {
 
     /// Series slug.
     required String comicSlug,
+
+    /// 0-based page last on screen while the chapter is unfinished. Null
+    /// once the last page was reached, or when marked read from the list.
+    int? page,
+
+    /// Pages in the chapter, stored with [page].
+    int? pageCount,
   }) = _ReadHistory;
+
+  bool get isFinished => page == null;
 }
 
 /// Most recently read chapter of one comic.
@@ -61,7 +72,7 @@ ReadHistory? _newest(Iterable<ReadHistory> history) {
 class HistoryIndex {
   HistoryIndex(List<ReadHistory> history) {
     for (final h in history.newestFirst) {
-      _chapters.add(h.slug);
+      _chapters[h.slug] = h;
       _counts.update(h.comicSlug, (n) => n + 1, ifAbsent: () => 1);
       if (!_latest.containsKey(h.comicSlug)) {
         _latest[h.comicSlug] = h;
@@ -76,7 +87,7 @@ class HistoryIndex {
     }
   }
 
-  final _chapters = <String>{};
+  final _chapters = <String, ReadHistory>{};
   final _counts = <String, int>{};
   final _latest = <String, ReadHistory>{};
 
@@ -89,5 +100,10 @@ class HistoryIndex {
 
   int countOf(String comicSlug) => _counts[comicSlug] ?? 0;
 
-  bool containsChapter(String slug) => _chapters.contains(slug);
+  bool containsChapter(String slug) => _chapters.containsKey(slug);
+
+  /// The entry of one chapter, finished or not.
+  ReadHistory? chapter(String slug) => _chapters[slug];
+
+  bool isFinished(String slug) => _chapters[slug]?.isFinished ?? false;
 }

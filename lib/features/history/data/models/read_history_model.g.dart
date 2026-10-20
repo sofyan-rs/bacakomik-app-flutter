@@ -14,6 +14,8 @@ ReadHistoryModel _$ReadHistoryModelFromJson(Map<String, dynamic> json) =>
         (json['readDate'] as num).toInt(),
       ),
       comicSlug: json['comicSlug'] as String,
+      page: (json['page'] as num?)?.toInt(),
+      pageCount: (json['pageCount'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$ReadHistoryModelToJson(ReadHistoryModel instance) =>
@@ -22,6 +24,8 @@ Map<String, dynamic> _$ReadHistoryModelToJson(ReadHistoryModel instance) =>
       'chapterNumber': instance.chapterNumber,
       'readDate': const EpochMillisConverter().toJson(instance.readDate),
       'comicSlug': instance.comicSlug,
+      'page': ?instance.page,
+      'pageCount': ?instance.pageCount,
     };
 
 HistoryComicModel _$HistoryComicModelFromJson(Map<String, dynamic> json) =>

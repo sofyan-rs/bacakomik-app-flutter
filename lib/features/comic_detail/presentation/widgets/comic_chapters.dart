@@ -135,7 +135,7 @@ class _ComicChaptersState extends State<ComicChapters> {
               );
               return ChapterTile(
                 chapter: chapter,
-                isRead: history.isInHistory(chapter.slug),
+                history: history.index.chapter(chapter.slug),
                 isSelected: widget.isSelected(chapter.slug),
                 isFirst: index == 0,
                 isLast: index == chapters.length - 1,

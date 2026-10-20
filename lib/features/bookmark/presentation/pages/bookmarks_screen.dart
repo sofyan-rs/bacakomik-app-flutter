@@ -42,7 +42,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
         !identical(_allHistory, history.state)) {
       _allBookmarks = bookmarks.state;
       _allHistory = history.state;
-      _all = BookmarkProgress.of(bookmarks.state, history.index.containsChapter);
+      _all = BookmarkProgress.of(bookmarks.state, history.index.isFinished);
     }
     return _all;
   }

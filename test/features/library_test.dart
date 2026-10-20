@@ -125,11 +125,37 @@ void main() {
         chapterNumber: '1',
         comicDetails: details,
         comicSlug: 'a',
+        page: 9,
+        pageCount: 10,
       );
 
       expect(cubit.state.map((h) => h.slug), ['a/1', 'b/1', 'a/2']);
       expect(cubit.state.first.readDate, at(1000));
       expect(cubit.state, hasLength(3));
+    });
+
+    test('addHistory keeps the page until the last one is reached', () async {
+      Future<void> read(int page) => cubit.addHistory(
+        slug: 'c/1',
+        chapterNumber: '1',
+        comicDetails: details,
+        comicSlug: 'c',
+        page: page,
+        pageCount: 24,
+      );
+
+      await read(4);
+      expect(cubit.index.isFinished('c/1'), isFalse);
+      expect(cubit.index.chapter('c/1')?.pageCount, 24);
+      expect(cubit.resumePage('c/1'), 4);
+
+      await read(23);
+      expect(cubit.index.isFinished('c/1'), isTrue);
+      expect(cubit.resumePage('c/1'), 0);
+
+      // Reading a finished chapter again does not unfinish it.
+      await read(2);
+      expect(cubit.index.isFinished('c/1'), isTrue);
     });
 
     test('queries', () {

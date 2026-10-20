@@ -8,8 +8,8 @@ class BookmarkProgress {
 
   final Bookmark bookmark;
 
-  /// Chapters of the comic marked read, in any order. Zero when the comic
-  /// has never been opened.
+  /// Chapters of the comic read to the end or marked read, in any order.
+  /// Zero when none is.
   final int read;
 
   int get total => bookmark.comicDetails.chapters.length;
@@ -29,8 +29,8 @@ class BookmarkProgress {
     BookmarkFilter.finished => isFinished,
   };
 
-  /// [isRead] tells whether a chapter slug is in the history, e.g.
-  /// `HistoryIndex.containsChapter`.
+  /// [isRead] tells whether a chapter slug is finished, e.g.
+  /// `HistoryIndex.isFinished`.
   static List<BookmarkProgress> of(
     List<Bookmark> bookmarks,
     bool Function(String chapterSlug) isRead,

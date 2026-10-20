@@ -17,7 +17,10 @@ mixin _$ReadHistory {
 
 /// Chapter slug (`seriesSlug/number`), unique per entry.
  String get slug; String get chapterNumber; DateTime get readDate; ComicDetails get comicDetails;/// Series slug.
- String get comicSlug;
+ String get comicSlug;/// 0-based page last on screen while the chapter is unfinished. Null
+/// once the last page was reached, or when marked read from the list.
+ int? get page;/// Pages in the chapter, stored with [page].
+ int? get pageCount;
 /// Create a copy of ReadHistory
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,20 +32,20 @@ $ReadHistoryCopyWith<ReadHistory> get copyWith => _$ReadHistoryCopyWithImpl<Read
 @override
 bool operator ==(Object other) {
   final _this = this as ReadHistory;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadHistory&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.chapterNumber, _this.chapterNumber) || other.chapterNumber == _this.chapterNumber)&&(identical(other.readDate, _this.readDate) || other.readDate == _this.readDate)&&(identical(other.comicDetails, _this.comicDetails) || other.comicDetails == _this.comicDetails)&&(identical(other.comicSlug, _this.comicSlug) || other.comicSlug == _this.comicSlug));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadHistory&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.chapterNumber, _this.chapterNumber) || other.chapterNumber == _this.chapterNumber)&&(identical(other.readDate, _this.readDate) || other.readDate == _this.readDate)&&(identical(other.comicDetails, _this.comicDetails) || other.comicDetails == _this.comicDetails)&&(identical(other.comicSlug, _this.comicSlug) || other.comicSlug == _this.comicSlug)&&(identical(other.page, _this.page) || other.page == _this.page)&&(identical(other.pageCount, _this.pageCount) || other.pageCount == _this.pageCount));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ReadHistory;
-  return Object.hash(runtimeType,_this.slug,_this.chapterNumber,_this.readDate,_this.comicDetails,_this.comicSlug);
+  return Object.hash(runtimeType,_this.slug,_this.chapterNumber,_this.readDate,_this.comicDetails,_this.comicSlug,_this.page,_this.pageCount);
 }
 
 @override
 String toString() {
   final _this = this as ReadHistory;
-  return 'ReadHistory(slug: ${_this.slug}, chapterNumber: ${_this.chapterNumber}, readDate: ${_this.readDate}, comicDetails: ${_this.comicDetails}, comicSlug: ${_this.comicSlug})';
+  return 'ReadHistory(slug: ${_this.slug}, chapterNumber: ${_this.chapterNumber}, readDate: ${_this.readDate}, comicDetails: ${_this.comicDetails}, comicSlug: ${_this.comicSlug}, page: ${_this.page}, pageCount: ${_this.pageCount})';
 }
 
 
@@ -53,7 +56,7 @@ abstract mixin class $ReadHistoryCopyWith<$Res>  {
   factory $ReadHistoryCopyWith(ReadHistory value, $Res Function(ReadHistory) _then) = _$ReadHistoryCopyWithImpl;
 @useResult
 $Res call({
- String slug, String chapterNumber, DateTime readDate, ComicDetails comicDetails, String comicSlug
+ String slug, String chapterNumber, DateTime readDate, ComicDetails comicDetails, String comicSlug, int? page, int? pageCount
 });
 
 
@@ -70,14 +73,16 @@ class _$ReadHistoryCopyWithImpl<$Res>
 
 /// Create a copy of ReadHistory
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? slug = null,Object? chapterNumber = null,Object? readDate = null,Object? comicDetails = null,Object? comicSlug = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? slug = null,Object? chapterNumber = null,Object? readDate = null,Object? comicDetails = null,Object? comicSlug = null,Object? page = freezed,Object? pageCount = freezed,}) {
   return _then(ReadHistory(
 slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,chapterNumber: null == chapterNumber ? _self.chapterNumber : chapterNumber // ignore: cast_nullable_to_non_nullable
 as String,readDate: null == readDate ? _self.readDate : readDate // ignore: cast_nullable_to_non_nullable
 as DateTime,comicDetails: null == comicDetails ? _self.comicDetails : comicDetails // ignore: cast_nullable_to_non_nullable
 as ComicDetails,comicSlug: null == comicSlug ? _self.comicSlug : comicSlug // ignore: cast_nullable_to_non_nullable
-as String,
+as String,page: freezed == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int?,pageCount: freezed == pageCount ? _self.pageCount : pageCount // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 /// Create a copy of ReadHistory
@@ -171,10 +176,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String slug,  String chapterNumber,  DateTime readDate,  ComicDetails comicDetails,  String comicSlug)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String slug,  String chapterNumber,  DateTime readDate,  ComicDetails comicDetails,  String comicSlug,  int? page,  int? pageCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReadHistory() when $default != null:
-return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails,_that.comicSlug);case _:
+return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails,_that.comicSlug,_that.page,_that.pageCount);case _:
   return orElse();
 
 }
@@ -192,10 +197,10 @@ return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String slug,  String chapterNumber,  DateTime readDate,  ComicDetails comicDetails,  String comicSlug)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String slug,  String chapterNumber,  DateTime readDate,  ComicDetails comicDetails,  String comicSlug,  int? page,  int? pageCount)  $default,) {final _that = this;
 switch (_that) {
 case _ReadHistory():
-return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails,_that.comicSlug);case _:
+return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails,_that.comicSlug,_that.page,_that.pageCount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -212,10 +217,10 @@ return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String slug,  String chapterNumber,  DateTime readDate,  ComicDetails comicDetails,  String comicSlug)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String slug,  String chapterNumber,  DateTime readDate,  ComicDetails comicDetails,  String comicSlug,  int? page,  int? pageCount)?  $default,) {final _that = this;
 switch (_that) {
 case _ReadHistory() when $default != null:
-return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails,_that.comicSlug);case _:
+return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails,_that.comicSlug,_that.page,_that.pageCount);case _:
   return null;
 
 }
@@ -226,8 +231,8 @@ return $default(_that.slug,_that.chapterNumber,_that.readDate,_that.comicDetails
 /// @nodoc
 
 
-class _ReadHistory implements ReadHistory {
-  const _ReadHistory({required this.slug, required this.chapterNumber, required this.readDate, required this.comicDetails, required this.comicSlug});
+class _ReadHistory extends ReadHistory {
+  const _ReadHistory({required this.slug, required this.chapterNumber, required this.readDate, required this.comicDetails, required this.comicSlug, this.page, this.pageCount}): super._();
   
 
 /// Chapter slug (`seriesSlug/number`), unique per entry.
@@ -237,6 +242,11 @@ class _ReadHistory implements ReadHistory {
 @override final  ComicDetails comicDetails;
 /// Series slug.
 @override final  String comicSlug;
+/// 0-based page last on screen while the chapter is unfinished. Null
+/// once the last page was reached, or when marked read from the list.
+@override final  int? page;
+/// Pages in the chapter, stored with [page].
+@override final  int? pageCount;
 
 /// Create a copy of ReadHistory
 /// with the given fields replaced by the non-null parameter values.
@@ -248,18 +258,18 @@ _$ReadHistoryCopyWith<_ReadHistory> get copyWith => __$ReadHistoryCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadHistory&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.chapterNumber, chapterNumber) || other.chapterNumber == chapterNumber)&&(identical(other.readDate, readDate) || other.readDate == readDate)&&(identical(other.comicDetails, comicDetails) || other.comicDetails == comicDetails)&&(identical(other.comicSlug, comicSlug) || other.comicSlug == comicSlug));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadHistory&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.chapterNumber, chapterNumber) || other.chapterNumber == chapterNumber)&&(identical(other.readDate, readDate) || other.readDate == readDate)&&(identical(other.comicDetails, comicDetails) || other.comicDetails == comicDetails)&&(identical(other.comicSlug, comicSlug) || other.comicSlug == comicSlug)&&(identical(other.page, page) || other.page == page)&&(identical(other.pageCount, pageCount) || other.pageCount == pageCount));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,slug,chapterNumber,readDate,comicDetails,comicSlug);
+    return Object.hash(runtimeType,slug,chapterNumber,readDate,comicDetails,comicSlug,page,pageCount);
 }
 
 @override
 String toString() {
-    return 'ReadHistory(slug: $slug, chapterNumber: $chapterNumber, readDate: $readDate, comicDetails: $comicDetails, comicSlug: $comicSlug)';
+    return 'ReadHistory(slug: $slug, chapterNumber: $chapterNumber, readDate: $readDate, comicDetails: $comicDetails, comicSlug: $comicSlug, page: $page, pageCount: $pageCount)';
 }
 
 
@@ -270,7 +280,7 @@ abstract mixin class _$ReadHistoryCopyWith<$Res> implements $ReadHistoryCopyWith
   factory _$ReadHistoryCopyWith(_ReadHistory value, $Res Function(_ReadHistory) _then) = __$ReadHistoryCopyWithImpl;
 @override @useResult
 $Res call({
- String slug, String chapterNumber, DateTime readDate, ComicDetails comicDetails, String comicSlug
+ String slug, String chapterNumber, DateTime readDate, ComicDetails comicDetails, String comicSlug, int? page, int? pageCount
 });
 
 
@@ -287,14 +297,16 @@ class __$ReadHistoryCopyWithImpl<$Res>
 
 /// Create a copy of ReadHistory
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? slug = null,Object? chapterNumber = null,Object? readDate = null,Object? comicDetails = null,Object? comicSlug = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? slug = null,Object? chapterNumber = null,Object? readDate = null,Object? comicDetails = null,Object? comicSlug = null,Object? page = freezed,Object? pageCount = freezed,}) {
   return _then(_ReadHistory(
 slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,chapterNumber: null == chapterNumber ? _self.chapterNumber : chapterNumber // ignore: cast_nullable_to_non_nullable
 as String,readDate: null == readDate ? _self.readDate : readDate // ignore: cast_nullable_to_non_nullable
 as DateTime,comicDetails: null == comicDetails ? _self.comicDetails : comicDetails // ignore: cast_nullable_to_non_nullable
 as ComicDetails,comicSlug: null == comicSlug ? _self.comicSlug : comicSlug // ignore: cast_nullable_to_non_nullable
-as String,
+as String,page: freezed == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int?,pageCount: freezed == pageCount ? _self.pageCount : pageCount // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
