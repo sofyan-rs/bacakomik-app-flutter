@@ -124,6 +124,21 @@ class AppText {
   static const String successRestoreData = 'Data berhasil dipulihkan';
   static const String failedRestoreData = 'Gagal memulihkan data';
 
+  static const String sync = 'Sinkron';
+  static const String syncDrive = 'Sinkron Google Drive';
+  static const String syncDriveDescription =
+      'Bookmark dan riwayat baca di semua perangkat';
+  static const String syncSigningIn = 'Menghubungkan…';
+  static const String syncSignInFailed = 'Gagal masuk ke Google';
+  static const String syncNow = 'Sinkronkan sekarang';
+  static const String syncing = 'Menyinkronkan…';
+  static const String syncFailed = 'Gagal sinkron, ketuk untuk coba lagi';
+  static const String syncNever = 'Belum pernah sinkron';
+  static const String syncLast = 'Terakhir';
+  static const String syncSignOut = 'Putuskan Google Drive';
+  static const String syncSignOutDescription =
+      'Data di perangkat ini tetap tersimpan';
+
   static const String bugReport = 'Lapor bug atau saran';
   static const String aboutApp = 'Tentang aplikasi';
   static const String website = 'Situs Kurodev';

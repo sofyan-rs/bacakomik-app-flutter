@@ -23,3 +23,8 @@ final class CacheFailure extends Failure {
 final class FileFailure extends Failure {
   const FileFailure(super.message);
 }
+
+/// Not signed in, or the account no longer grants access.
+final class AuthFailure extends Failure {
+  const AuthFailure(super.message);
+}

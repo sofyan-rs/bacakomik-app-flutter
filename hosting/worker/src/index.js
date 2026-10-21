@@ -6,6 +6,8 @@
 // - /series/<slug> is the fallback page when it is not (or when the link
 //   is opened in a browser). It carries Open Graph tags with the series
 //   title, cover and synopsis so chat apps show a preview.
+// - /privacy-policy is the privacy policy, linked from the Google sign-in consent
+//   screen used by Drive sync.
 
 const PACKAGE = 'org.kurodev.bacakomik';
 
@@ -19,6 +21,11 @@ const API = 'https://api-bacakomik.kurodev.org';
 const DOWNLOAD =
   'https://github.com/sofyan-rs/bacakomik-app-flutter/releases/latest';
 const APP_NAME = 'BacaKomik';
+const ISSUES =
+  'https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new';
+
+// Shown on the privacy page. Bump when the policy text changes.
+const PRIVACY_UPDATED = '21 Oktober 2026';
 
 // Series pages are cached at the edge for this long, in seconds.
 const PAGE_TTL = 60 * 60;
@@ -37,6 +44,9 @@ export default {
     const match = url.pathname.match(/^\/series\/([a-z0-9-]+)\/?$/i);
     if (match) return cached(request, ctx, () => seriesPage(match[1], url));
 
+    if (/^\/privacy(-policy)?\/?$/.test(url.pathname)) {
+      return html(privacyPage());
+    }
     if (url.pathname === '/') return html(page({ url: `${url.origin}/` }));
     return html(page({ url: url.href, missing: true }), 404);
   },
@@ -210,6 +220,87 @@ export function page({ url, title, description, image, meta, missing = false }) 
     <p>${escape(desc)}</p>
     ${missing ? '' : `<a class="primary" href="${escape(intentLink(url))}">Buka di aplikasi</a>`}
     <a class="secondary" href="${DOWNLOAD}">Download APK</a>
+  </main>
+</body>
+</html>`;
+}
+
+export function privacyPage() {
+  return `<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kebijakan Privasi — ${APP_NAME}</title>
+  <meta name="description" content="Data apa yang disimpan ${APP_NAME} dan ke mana data itu dikirim.">
+  <style>
+    body { margin: 0; background: #000; color: #fff;
+      font-family: system-ui, sans-serif; line-height: 1.6; }
+    main { padding: 32px 24px 48px; max-width: 640px; margin: 0 auto; }
+    .brand { font-size: 13px; letter-spacing: 0.2em; color: #9a9a9a; }
+    h1 { font-size: 28px; font-weight: 500; margin: 8px 0 4px; }
+    h2 { font-size: 18px; font-weight: 600; margin: 32px 0 8px; }
+    p, li { color: #cfcfcf; }
+    .updated { color: #9a9a9a; font-size: 14px; margin-top: 0; }
+    a { color: #fff; }
+    code { background: #1a1a1a; padding: 1px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">BACAKOMIK</p>
+    <h1>Kebijakan Privasi</h1>
+    <p class="updated">Terakhir diperbarui ${PRIVACY_UPDATED}</p>
+
+    <p>${APP_NAME} adalah aplikasi Android untuk membaca komik, dibuat oleh
+    Kurodev. Halaman ini menjelaskan data apa yang dipakai aplikasi dan ke
+    mana data itu dikirim.</p>
+
+    <h2>Data di perangkat</h2>
+    <p>Bookmark, riwayat baca (chapter dan halaman terakhir), pengaturan, dan
+    chapter yang diunduh disimpan di penyimpanan aplikasi di perangkat kamu.
+    Data ini tidak dikirim ke server kami.</p>
+
+    <h2>Konten komik</h2>
+    <p>Daftar komik, detail, dan halaman chapter diambil dari server
+    <code>api-bacakomik.kurodev.org</code>. Permintaan ini tidak membawa
+    akun, bookmark, atau riwayat baca kamu. Seperti server web pada umumnya,
+    server dapat mencatat alamat IP dan waktu permintaan untuk keperluan
+    teknis.</p>
+
+    <h2>Sinkron Google Drive (opsional)</h2>
+    <p>Jika kamu menyalakan sinkron, aplikasi meminta login Google dengan
+    akses <code>drive.appdata</code>. Akses ini hanya membuka folder data
+    aplikasi yang tersembunyi di Google Drive kamu, bukan file Drive
+    lainnya.</p>
+    <ul>
+      <li>Yang disimpan di folder itu: bookmark, riwayat baca, dan catatan
+      item yang kamu hapus, dalam satu file.</li>
+      <li>Alamat email akun Google dipakai untuk menampilkan akun yang
+      tersambung di aplikasi.</li>
+      <li>Data dikirim langsung antara perangkat kamu dan Google. Kami tidak
+      menerima, menyimpan, atau membagikan data tersebut.</li>
+      <li>Kamu bisa memutus sinkron kapan saja di menu Lainnya, dan mencabut
+      akses aplikasi di
+      <a href="https://myaccount.google.com/permissions">pengaturan akun
+      Google</a>. Data di Drive dapat dihapus dari Google Drive → Setelan →
+      Kelola aplikasi.</li>
+    </ul>
+    <p>Penggunaan data dari Google API mengikuti
+    <a href="https://developers.google.com/terms/api-services-user-data-policy">Google
+    API Services User Data Policy</a>, termasuk ketentuan Limited Use.</p>
+
+    <h2>Pembaruan aplikasi</h2>
+    <p>Aplikasi memeriksa versi terbaru melalui GitHub. Permintaan ini tidak
+    membawa data pribadi.</p>
+
+    <h2>Iklan dan pelacakan</h2>
+    <p>${APP_NAME} tidak memuat iklan, analitik, atau pelacak pihak
+    ketiga.</p>
+
+    <h2>Kontak</h2>
+    <p>Pertanyaan tentang privasi bisa dikirim lewat
+    <a href="${ISSUES}">GitHub Issues</a>.</p>
   </main>
 </body>
 </html>`;

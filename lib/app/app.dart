@@ -12,6 +12,7 @@ import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.d
 import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart';
 import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -48,24 +49,33 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
         BlocProvider(create: (_) => getIt<DownloadCubit>()..load()),
         BlocProvider(create: (_) => getIt<BackupCubit>()),
         BlocProvider(create: (_) => getIt<UpdateCubit>()),
+        BlocProvider(create: (_) => getIt<SyncCubit>()..start(), lazy: false),
       ],
-      child: RootTabsScope(
-        tabs: _tabs,
-        child: BlocBuilder<SettingsCubit, AppSettings>(
-          builder: (context, settings) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: AppVariables.appName,
-              theme: DotlineThemes.light,
-              darkTheme: DotlineThemes.dark,
-              themeMode: switch (settings.themeMode) {
-                AppThemeMode.dark => ThemeMode.dark,
-                AppThemeMode.light => ThemeMode.light,
-                AppThemeMode.system => ThemeMode.system,
-              },
-              home: const SplashScreen(),
-            );
-          },
+      child: BlocListener<SyncCubit, SyncState>(
+        listenWhen: (previous, current) =>
+            previous.libraryRevision != current.libraryRevision,
+        listener: (context, _) {
+          context.read<BookmarkCubit>().load();
+          context.read<HistoryCubit>().load();
+        },
+        child: RootTabsScope(
+          tabs: _tabs,
+          child: BlocBuilder<SettingsCubit, AppSettings>(
+            builder: (context, settings) {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: AppVariables.appName,
+                theme: DotlineThemes.light,
+                darkTheme: DotlineThemes.dark,
+                themeMode: switch (settings.themeMode) {
+                  AppThemeMode.dark => ThemeMode.dark,
+                  AppThemeMode.light => ThemeMode.light,
+                  AppThemeMode.system => ThemeMode.system,
+                },
+                home: const SplashScreen(),
+              );
+            },
+          ),
         ),
       ),
     );

@@ -81,6 +81,18 @@ test('API failure still serves a page that opens the app', async () => {
   assert.match(body, /Buka di aplikasi/);
 });
 
+test('privacy policy names the Drive scope', async () => {
+  for (const path of ['/privacy-policy', '/privacy-policy/', '/privacy']) {
+    const res = await get(path);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('Content-Type'), 'text/html; charset=utf-8');
+    const body = await res.text();
+    assert.match(body, /<h1>Kebijakan Privasi<\/h1>/);
+    assert.match(body, /drive\.appdata/);
+    assert.match(body, /Limited Use/);
+  }
+});
+
 test('other paths', async () => {
   assert.equal((await get('/')).status, 200);
   assert.equal((await get('/series/a/b')).status, 404);

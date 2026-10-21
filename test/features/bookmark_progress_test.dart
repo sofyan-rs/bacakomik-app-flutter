@@ -74,9 +74,10 @@ void main() {
     expect(reread.isFinished, isTrue);
   });
 
-  test('comics never opened have no badge and are not finished', () {
+  test('comics never opened count every chapter as new', () {
     expect(unopened.read, 0);
-    expect(unopened.newChapters, 0);
+    expect(unopened.newChapters, unopened.total);
+    expect(unopened.hasUpdate, isTrue);
     expect(unopened.isFinished, isFalse);
   });
 
@@ -86,7 +87,7 @@ void main() {
     ];
 
     expect(slugs(BookmarkFilter.all), ['behind', 'done', 'new', 'reread']);
-    expect(slugs(BookmarkFilter.updated), ['behind']);
+    expect(slugs(BookmarkFilter.updated), ['behind', 'new']);
     expect(slugs(BookmarkFilter.finished), ['done', 'reread']);
   });
 }

@@ -14,6 +14,12 @@ class AppVariables {
   /// Android open them in the app; see `hosting/`.
   static const String linkHost = 'bacakomik.kurodev.org';
 
+  /// OAuth client of type "Web application" in the Google Cloud project;
+  /// Android sign-in needs it as the server client id. The Android clients
+  /// are matched by package name and signing SHA-1.
+  static const String googleServerClientId =
+      '805931733064-tmhv2feicbtujdn9snfbp0e30liidr91.apps.googleusercontent.com';
+
   static const String githubRepo = 'sofyan-rs/bacakomik-app-flutter';
   static const String reportLink = 'https://github.com/$githubRepo/issues/new';
   static const String latestReleaseApi =

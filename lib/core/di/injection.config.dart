@@ -16,6 +16,7 @@ import 'package:bacakomik_app/core/di/register_module.dart' as _i600;
 import 'package:bacakomik_app/core/network/api_client.dart' as _i430;
 import 'package:bacakomik_app/core/network/network_info.dart' as _i764;
 import 'package:bacakomik_app/core/storage/hive_boxes.dart' as _i446;
+import 'package:bacakomik_app/core/storage/library_journal.dart' as _i593;
 import 'package:bacakomik_app/core/utils/clock.dart' as _i1011;
 import 'package:bacakomik_app/features/backup/data/datasources/backup_file_data_source.dart'
     as _i713;
@@ -115,6 +116,18 @@ import 'package:bacakomik_app/features/settings/domain/usecases/settings_usecase
     as _i1063;
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart'
     as _i625;
+import 'package:bacakomik_app/features/sync/data/datasources/drive_data_source.dart'
+    as _i25;
+import 'package:bacakomik_app/features/sync/data/datasources/google_auth_data_source.dart'
+    as _i609;
+import 'package:bacakomik_app/features/sync/data/repositories/sync_repository_impl.dart'
+    as _i741;
+import 'package:bacakomik_app/features/sync/domain/repositories/sync_repository.dart'
+    as _i441;
+import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart'
+    as _i629;
+import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart'
+    as _i256;
 import 'package:bacakomik_app/features/update/data/datasources/apk_installer.dart'
     as _i984;
 import 'package:bacakomik_app/features/update/data/datasources/update_remote_data_source.dart'
@@ -184,10 +197,18 @@ extension GetItInjectableX on _i174.GetIt {
       () => registerModule.fileDio,
       instanceName: 'files_dio',
     );
+    await gh.factoryAsync<_i738.Box<String>>(
+      () => storageModule.libraryDeletionsBox,
+      instanceName: 'library_deletions',
+      preResolve: true,
+    );
     gh.lazySingleton<_i676.BookmarkLocalDataSource>(
       () => _i676.BookmarkLocalDataSourceImpl(
         gh<_i738.Box<String>>(instanceName: 'bookmarks'),
       ),
+    );
+    gh.lazySingleton<_i609.GoogleAuthDataSource>(
+      () => _i609.GoogleAuthDataSourceImpl(),
     );
     gh.lazySingleton<_i394.SettingsLocalDataSource>(
       () => _i394.SettingsLocalDataSourceImpl(
@@ -201,12 +222,14 @@ extension GetItInjectableX on _i174.GetIt {
       ),
     );
     gh.lazySingleton<_i984.ApkInstaller>(() => _i984.OtaApkInstaller());
+    await gh.factoryAsync<_i738.Box<String>>(
+      () => storageModule.syncBox,
+      instanceName: 'sync',
+      preResolve: true,
+    );
     gh.lazySingleton<_i430.ApiClient>(() => _i430.ApiClient(gh<_i361.Dio>()));
     gh.lazySingleton<_i551.SettingsRepository>(
       () => _i314.SettingsRepositoryImpl(gh<_i394.SettingsLocalDataSource>()),
-    );
-    gh.lazySingleton<_i851.BookmarkRepository>(
-      () => _i684.BookmarkRepositoryImpl(gh<_i676.BookmarkLocalDataSource>()),
     );
     gh.lazySingleton<_i764.NetworkInfo>(
       () => _i764.NetworkInfoImpl(gh<_i895.Connectivity>()),
@@ -222,23 +245,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1063.SaveSettings>(
       () => _i1063.SaveSettings(gh<_i551.SettingsRepository>()),
     );
-    gh.factory<_i501.GetBookmarks>(
-      () => _i501.GetBookmarks(gh<_i851.BookmarkRepository>()),
-    );
-    gh.factory<_i501.SaveBookmarks>(
-      () => _i501.SaveBookmarks(gh<_i851.BookmarkRepository>()),
-    );
-    gh.factory<_i501.RemoveBookmarks>(
-      () => _i501.RemoveBookmarks(gh<_i851.BookmarkRepository>()),
-    );
     gh.lazySingleton<_i152.BackupRepository>(
       () => _i878.BackupRepositoryImpl(
         gh<_i713.BackupFileDataSource>(),
         gh<_i1011.Clock>(),
       ),
     );
-    gh.lazySingleton<_i55.HistoryRepository>(
-      () => _i262.HistoryRepositoryImpl(gh<_i793.HistoryLocalDataSource>()),
+    gh.lazySingleton<_i593.LibraryJournal>(
+      () => _i593.LibraryJournal(
+        gh<_i738.Box<String>>(instanceName: 'library_deletions'),
+        gh<_i1011.Clock>(),
+      ),
     );
     gh.lazySingleton<_i595.DownloadLocalDataSource>(
       () => _i595.DownloadLocalDataSourceImpl(
@@ -256,10 +273,32 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i535.SeriesRemoteDataSource>(
       () => _i535.SeriesRemoteDataSourceImpl(gh<_i430.ApiClient>()),
     );
+    gh.lazySingleton<_i851.BookmarkRepository>(
+      () => _i684.BookmarkRepositoryImpl(
+        gh<_i676.BookmarkLocalDataSource>(),
+        gh<_i593.LibraryJournal>(),
+      ),
+    );
+    gh.lazySingleton<_i25.DriveDataSource>(
+      () => _i25.DriveDataSourceImpl(
+        gh<_i361.Dio>(instanceName: 'files_dio'),
+        gh<_i609.GoogleAuthDataSource>(),
+      ),
+    );
     gh.factory<_i625.SettingsCubit>(
       () => _i625.SettingsCubit(
         gh<_i1063.GetSettings>(),
         gh<_i1063.SaveSettings>(),
+      ),
+    );
+    gh.lazySingleton<_i441.SyncRepository>(
+      () => _i741.SyncRepositoryImpl(
+        gh<_i609.GoogleAuthDataSource>(),
+        gh<_i25.DriveDataSource>(),
+        gh<_i676.BookmarkLocalDataSource>(),
+        gh<_i793.HistoryLocalDataSource>(),
+        gh<_i593.LibraryJournal>(),
+        gh<_i738.Box<String>>(instanceName: 'sync'),
       ),
     );
     gh.lazySingleton<_i215.ExploreRepository>(
@@ -295,6 +334,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i764.NetworkInfo>(),
       ),
     );
+    gh.lazySingleton<_i55.HistoryRepository>(
+      () => _i262.HistoryRepositoryImpl(
+        gh<_i793.HistoryLocalDataSource>(),
+        gh<_i593.LibraryJournal>(),
+      ),
+    );
     gh.lazySingleton<_i533.UpdateRepository>(
       () => _i106.UpdateRepositoryImpl(
         gh<_i714.UpdateRemoteDataSource>(),
@@ -317,6 +362,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i729.ClearHistory>(
       () => _i729.ClearHistory(gh<_i55.HistoryRepository>()),
     );
+    gh.factory<_i629.RestoreSyncAccount>(
+      () => _i629.RestoreSyncAccount(gh<_i441.SyncRepository>()),
+    );
+    gh.factory<_i629.SignInSync>(
+      () => _i629.SignInSync(gh<_i441.SyncRepository>()),
+    );
+    gh.factory<_i629.SignOutSync>(
+      () => _i629.SignOutSync(gh<_i441.SyncRepository>()),
+    );
     gh.factory<_i81.BackupLibrary>(
       () => _i81.BackupLibrary(
         gh<_i152.BackupRepository>(),
@@ -331,6 +385,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i55.HistoryRepository>(),
       ),
     );
+    gh.factory<_i501.GetBookmarks>(
+      () => _i501.GetBookmarks(gh<_i851.BookmarkRepository>()),
+    );
+    gh.factory<_i501.SaveBookmarks>(
+      () => _i501.SaveBookmarks(gh<_i851.BookmarkRepository>()),
+    );
+    gh.factory<_i501.RemoveBookmarks>(
+      () => _i501.RemoveBookmarks(gh<_i851.BookmarkRepository>()),
+    );
     gh.factory<_i687.BackupCubit>(
       () => _i687.BackupCubit(
         gh<_i81.BackupLibrary>(),
@@ -338,6 +401,9 @@ extension GetItInjectableX on _i174.GetIt {
       ),
     );
     gh.factory<_i611.GetHome>(() => _i611.GetHome(gh<_i15.HomeRepository>()));
+    gh.factory<_i629.SyncLibrary>(
+      () => _i629.SyncLibrary(gh<_i441.SyncRepository>(), gh<_i1011.Clock>()),
+    );
     gh.factory<_i520.ExploreComics>(
       () => _i520.ExploreComics(gh<_i215.ExploreRepository>()),
     );
@@ -435,6 +501,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i88.ClearDownloads>(
       () => _i88.ClearDownloads(gh<_i665.DownloadRepository>()),
+    );
+    gh.factory<_i256.SyncCubit>(
+      () => _i256.SyncCubit(
+        gh<_i629.RestoreSyncAccount>(),
+        gh<_i629.SignInSync>(),
+        gh<_i629.SignOutSync>(),
+        gh<_i629.SyncLibrary>(),
+        gh<_i593.LibraryJournal>(),
+      ),
     );
     gh.factory<_i71.DownloadCubit>(
       () => _i71.DownloadCubit(

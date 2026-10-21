@@ -14,9 +14,8 @@ class BookmarkProgress {
 
   int get total => bookmark.comicDetails.chapters.length;
 
-  /// Chapters not read yet (the `+N` badge). Comics never opened show no
-  /// badge.
-  int get newChapters => read == 0 ? 0 : total - read;
+  /// Chapters not read yet (the `+N` badge), also for comics never opened.
+  int get newChapters => total - read;
 
   bool get hasUpdate => newChapters > 0;
 
