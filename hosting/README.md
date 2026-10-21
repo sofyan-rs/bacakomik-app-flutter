@@ -13,6 +13,10 @@ shared series links (`https://bacakomik.kurodev.org/series/<slug>`).
   the API for the Open Graph preview (title, cover, synopsis) that chat
   apps show, and offers "Buka di aplikasi" and "Download APK". Pages are
   cached at the edge for an hour.
+- `/privacy-policy` is the privacy policy (`/privacy` works too). It is the
+  privacy policy URL of the Google OAuth consent screen used by Drive
+  sync; update `privacyPage()` and `PRIVACY_UPDATED` when the app starts
+  collecting or sending other data.
 
 ## Deploy
 
