@@ -93,6 +93,15 @@ test('privacy policy names the Drive scope', async () => {
   }
 });
 
+test('home page describes the app and links the privacy policy', async () => {
+  const res = await get('/');
+  const body = await res.text();
+  assert.equal(res.status, 200);
+  assert.match(body, /<h1>BacaKomik<\/h1>/);
+  assert.match(body, /href="\/privacy-policy"/);
+  assert.match(body, /Google\s+Drive/);
+});
+
 test('other paths', async () => {
   assert.equal((await get('/')).status, 200);
   assert.equal((await get('/series/a/b')).status, 404);

@@ -6,6 +6,8 @@
 // - /series/<slug> is the fallback page when it is not (or when the link
 //   is opened in a browser). It carries Open Graph tags with the series
 //   title, cover and synopsis so chat apps show a preview.
+// - / is the app's home page (what the app does, download, privacy link),
+//   also the homepage URL of the Google sign-in consent screen.
 // - /privacy-policy is the privacy policy, linked from the Google sign-in consent
 //   screen used by Drive sync.
 
@@ -47,7 +49,7 @@ export default {
     if (/^\/privacy(-policy)?\/?$/.test(url.pathname)) {
       return html(privacyPage());
     }
-    if (url.pathname === '/') return html(page({ url: `${url.origin}/` }));
+    if (url.pathname === '/') return html(homePage(url.origin));
     return html(page({ url: url.href, missing: true }), 404);
   },
 };
@@ -301,6 +303,71 @@ export function privacyPage() {
     <h2>Kontak</h2>
     <p>Pertanyaan tentang privasi bisa dikirim lewat
     <a href="${ISSUES}">GitHub Issues</a>.</p>
+  </main>
+</body>
+</html>`;
+}
+
+export function homePage(origin) {
+  const desc =
+    'Aplikasi Android untuk membaca komik, manhwa, dan manhua berbahasa Indonesia.';
+  return `<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${APP_NAME} — Baca komik di Android</title>
+  <meta name="description" content="${escape(desc)}">
+  <meta property="og:site_name" content="${APP_NAME}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${escape(`${origin}/`)}">
+  <meta property="og:title" content="${APP_NAME}">
+  <meta property="og:description" content="${escape(desc)}">
+  <style>
+    body { margin: 0; background: #000; color: #fff;
+      font-family: system-ui, sans-serif; line-height: 1.6; }
+    main { padding: 48px 24px; max-width: 560px; margin: 0 auto; }
+    .brand { font-size: 13px; letter-spacing: 0.2em; color: #9a9a9a; }
+    h1 { font-size: 32px; font-weight: 500; margin: 8px 0 12px; }
+    h2 { font-size: 18px; font-weight: 600; margin: 32px 0 8px; }
+    p, li { color: #cfcfcf; }
+    ul { padding-left: 20px; }
+    .button { display: block; padding: 16px; border-radius: 999px;
+      text-align: center; text-decoration: none; font-weight: 600;
+      background: #fff; color: #000; margin: 24px 0 12px; }
+    footer { margin-top: 40px; font-size: 14px; color: #9a9a9a; }
+    footer a { color: #fff; margin-right: 16px; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">BACAKOMIK</p>
+    <h1>${APP_NAME}</h1>
+    <p>${escape(desc)} Gratis, tanpa iklan, dibuat oleh Kurodev.</p>
+    <a class="button" href="${DOWNLOAD}">Download APK</a>
+
+    <h2>Fitur</h2>
+    <ul>
+      <li>Jelajah komik terbaru dan populer, cari judul, dan filter genre.</li>
+      <li>Bookmark dengan penanda chapter baru, dan riwayat baca yang
+      menyimpan halaman terakhir.</li>
+      <li>Unduh chapter untuk dibaca offline.</li>
+      <li>Sinkron bookmark dan riwayat baca antar perangkat lewat Google
+      Drive (opsional). Data disimpan di folder aplikasi yang tersembunyi
+      di Drive milikmu; aplikasi tidak bisa melihat file Drive lainnya.</li>
+      <li>Cadangkan dan pulihkan data ke file.</li>
+    </ul>
+
+    <h2>Privasi</h2>
+    <p>Bookmark, riwayat, dan unduhan tersimpan di perangkat. Saat sinkron
+    dinyalakan, data hanya dikirim antara perangkatmu dan Google Drive.
+    Baca selengkapnya di <a href="/privacy-policy">Kebijakan Privasi</a>.</p>
+
+    <footer>
+      <a href="/privacy-policy">Kebijakan Privasi</a>
+      <a href="https://github.com/sofyan-rs/bacakomik-app-flutter">GitHub</a>
+      <a href="${ISSUES}">Kontak</a>
+    </footer>
   </main>
 </body>
 </html>`;
