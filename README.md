@@ -57,8 +57,6 @@ Point the app at another API server with `--dart-define=API_BASE_URL=<url>`. Rel
 
 - [Architecture](docs/ARCHITECTURE.md): structure, layers, storage and compatibility rules, Dotline UI rules
 - [Contributing](docs/CONTRIBUTION.md): setup, build, conventions, testing, PR checklist
-
-- [Privacy policy](https://bacakomik.kurodev.org/privacy-policy)
 - [Link hosting](hosting/README.md): Cloudflare Worker for shared links, the website and the privacy policy
 
 Found a bug or have an idea? [Open an issue](https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new).
