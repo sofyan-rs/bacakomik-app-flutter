@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
+import 'package:bacakomik_app/core/storage/library_journal.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_data_source.dart';
 import 'package:bacakomik_app/features/bookmark/data/repositories/bookmark_repository_impl.dart';
@@ -72,6 +73,10 @@ void main() {
         HistoryLocalDataSourceImpl(
           await Hive.openBox<String>(HiveBoxes.historyEntries),
           await Hive.openBox<String>(HiveBoxes.historyComics),
+        ),
+        LibraryJournal(
+          await Hive.openBox<String>(HiveBoxes.libraryDeletions),
+          clock,
         ),
       );
       cubit = HistoryCubit(
@@ -188,6 +193,7 @@ void main() {
           Hive.box<String>(HiveBoxes.historyEntries),
           Hive.box<String>(HiveBoxes.historyComics),
         ),
+        LibraryJournal(Hive.box<String>(HiveBoxes.libraryDeletions), clock),
       );
       final fresh = HistoryCubit(
         GetHistory(repo),
@@ -213,6 +219,10 @@ void main() {
       repo = BookmarkRepositoryImpl(
         BookmarkLocalDataSourceImpl(
           await Hive.openBox<String>(HiveBoxes.bookmarks),
+        ),
+        LibraryJournal(
+          await Hive.openBox<String>(HiveBoxes.libraryDeletions),
+          clock,
         ),
       );
       comicDetails = MockComicDetailRepository();

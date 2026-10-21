@@ -9,6 +9,7 @@ import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dar
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/settings.dart';
+import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -58,8 +59,21 @@ class _MoreScreenState extends State<MoreScreen> {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: BlocListener<BackupCubit, BackupState>(
-          listener: _onBackupStateChanged,
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<BackupCubit, BackupState>(
+              listener: _onBackupStateChanged,
+            ),
+            BlocListener<SyncCubit, SyncState>(
+              listenWhen: (previous, current) =>
+                  previous.status != current.status &&
+                  current.status == SyncStatus.signInFailed,
+              listener: (context, _) => showSnackBar(
+                context: context,
+                message: AppText.syncSignInFailed,
+              ),
+            ),
+          ],
           child: ListView(
             padding: EdgeInsets.only(
               bottom: DotSpace.s4 + MediaQuery.paddingOf(context).bottom,

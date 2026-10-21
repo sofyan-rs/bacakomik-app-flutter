@@ -1,5 +1,6 @@
 import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
+import 'package:bacakomik_app/core/storage/library_journal.dart';
 import 'package:bacakomik_app/core/storage/local_call.dart';
 import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
 import 'package:bacakomik_app/features/history/data/models/read_history_model.dart';
@@ -10,9 +11,10 @@ import 'package:injectable/injectable.dart';
 
 @LazySingleton(as: HistoryRepository)
 class HistoryRepositoryImpl implements HistoryRepository {
-  const HistoryRepositoryImpl(this._local);
+  const HistoryRepositoryImpl(this._local, this._journal);
 
   final HistoryLocalDataSource _local;
+  final LibraryJournal _journal;
 
   /// Joins entries with their comic. An entry whose comic record is missing
   /// cannot be shown and is skipped.
@@ -28,27 +30,28 @@ class HistoryRepositoryImpl implements HistoryRepository {
 
   /// Stores the entries, and each comic's details once (the last given).
   @override
-  Future<Either<Failure, Unit>> saveHistory(List<ReadHistory> history) =>
-      runLocal(() async {
-        await _local.putEntries(
-          history.map(ReadHistoryModel.fromEntity).toList(),
-        );
-        final comics = {
-          for (final h in history)
-            h.comicSlug: HistoryComicModel(
-              slug: h.comicSlug,
-              comicDetails: ComicDetailsModel.fromEntity(h.comicDetails),
-            ),
-        };
-        await _local.putComics(comics.values.toList());
-        return unit;
-      });
+  Future<Either<Failure, Unit>> saveHistory(
+    List<ReadHistory> history,
+  ) => runLocal(() async {
+    await _local.putEntries(history.map(ReadHistoryModel.fromEntity).toList());
+    final comics = {
+      for (final h in history)
+        h.comicSlug: HistoryComicModel(
+          slug: h.comicSlug,
+          comicDetails: ComicDetailsModel.fromEntity(h.comicDetails),
+        ),
+    };
+    await _local.putComics(comics.values.toList());
+    await _journal.recordSaved(LibraryKind.history, history.map((h) => h.slug));
+    return unit;
+  });
 
   @override
   Future<Either<Failure, Unit>> removeHistory(List<String> slugs) =>
       runLocal(() async {
         await _local.deleteEntries(slugs);
         await _pruneComics();
+        await _journal.recordDeleted(LibraryKind.history, slugs);
         return unit;
       });
 
@@ -61,12 +64,15 @@ class HistoryRepositoryImpl implements HistoryRepository {
         ];
         await _local.deleteEntries(slugs);
         await _local.deleteComics([comicSlug]);
+        await _journal.recordDeleted(LibraryKind.history, slugs);
         return unit;
       });
 
   @override
   Future<Either<Failure, Unit>> clearHistory() => runLocal(() async {
+    final slugs = [for (final entry in _local.getEntries()) entry.slug];
     await _local.clear();
+    await _journal.recordDeleted(LibraryKind.history, slugs);
     return unit;
   });
 

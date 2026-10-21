@@ -53,10 +53,13 @@ class BackupRepositoryImpl implements BackupRepository {
   static const formatVersion = 2;
 
   /// `{version, bookmarks, history, historyComics}` as plain JSON objects.
-  /// History entries refer to their comic by slug; each comic's details are
-  /// written once in `historyComics`.
-  static String encode(LibraryBackup backup) => jsonEncode({
-    'version': formatVersion,
+  static String encode(LibraryBackup backup) =>
+      jsonEncode({'version': formatVersion, ...libraryToJson(backup)});
+
+  /// `{bookmarks, history, historyComics}`. History entries refer to their
+  /// comic by slug; each comic's details are written once in
+  /// `historyComics`. Also used by sync.
+  static Map<String, dynamic> libraryToJson(LibraryBackup backup) => {
     'bookmarks': [
       for (final b in backup.bookmarks) BookmarkModel.fromEntity(b).toJson(),
     ],
@@ -70,13 +73,19 @@ class BackupRepositoryImpl implements BackupRepository {
           comicDetails: ComicDetailsModel.fromEntity(h.comicDetails),
         ).toJson(),
     ],
-  });
+  };
 
   static LibraryBackup decode(String content) {
     final json = jsonDecode(content) as Map<String, dynamic>;
     if (json['version'] != formatVersion) {
       throw FormatException('Unsupported backup version: ${json['version']}');
     }
+    return libraryFromJson(json);
+  }
+
+  /// Reads [libraryToJson] output. History entries whose comic is missing
+  /// are skipped.
+  static LibraryBackup libraryFromJson(Map<String, dynamic> json) {
     List<Map<String, dynamic>> list(String key) =>
         (json[key] as List? ?? []).cast<Map<String, dynamic>>();
 
