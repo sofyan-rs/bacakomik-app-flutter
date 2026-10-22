@@ -79,7 +79,7 @@ void main() {
     test('passes concrete filters', () async {
       await ExploreRepositoryImpl(remote, network).explore(
         const ExploreFilter(
-          sortBy: 'rating',
+          sortBy: 'popular',
           status: 'completed',
           type: 'manga',
         ),
@@ -87,7 +87,7 @@ void main() {
       );
 
       final query = capturedQuery();
-      expect(query['sort'], 'rating');
+      expect(query['sort'], 'popular');
       expect(query['status'], 'completed');
       expect(query['format'], 'manga');
       expect(query['page'], 2);

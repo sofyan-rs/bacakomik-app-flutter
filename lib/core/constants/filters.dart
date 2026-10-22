@@ -19,10 +19,9 @@ class Filters {
   static final List<FilterOption> sortbyList = [
     FilterOption(id: 'latest', name: 'Terbaru'),
     FilterOption(id: 'newseries', name: 'Seri Baru'),
-    FilterOption(id: 'bookmark', name: 'Bookmark'),
     FilterOption(id: 'popular', name: 'Populer'),
-    FilterOption(id: 'rating', name: 'Rating'),
     FilterOption(id: 'az', name: 'A–Z'),
+    FilterOption(id: 'za', name: 'Z–A'),
   ];
 
   // Ids from GET /genres.

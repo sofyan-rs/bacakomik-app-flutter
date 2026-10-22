@@ -3,16 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Enums of GET /series in bacakomik-api's /openapi.json. The API rejects
 // unknown values with 400, so the filter options must stay inside them.
-const _apiSorts = {
-  'latest',
-  'newseries',
-  'bookmark',
-  'popular',
-  'rating',
-  'az',
-};
+const _apiSorts = {'latest', 'newseries', 'popular', 'az', 'za'};
 const _apiStatuses = {'ongoing', 'completed', 'hiatus', 'cancelled'};
-const _apiFormats = {'manhwa', 'manhua', 'manga', 'mangatoon', 'webtoon'};
+const _apiFormats = {'manga', 'manhwa', 'manhua', 'comic'};
 
 void main() {
   test('sort options are API sort values', () {
