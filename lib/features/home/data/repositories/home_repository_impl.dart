@@ -16,12 +16,12 @@ class HomeRepositoryImpl implements HomeRepository {
 
   @override
   Future<Either<Failure, Home>> getHome() => runRemote(_networkInfo, () async {
-        final [popular, latest] = await Future.wait([
-          _remote.getCuratedList('trending', limit: 10),
+        final [newSeries, latest] = await Future.wait([
+          _remote.getSeriesList(sort: 'newseries', limit: 10),
           _remote.getSeriesList(sort: 'latest', limit: 20),
         ]);
         return Home(
-          popular: popular.map((e) => e.toEntity()).toList(),
+          newSeries: newSeries.map((e) => e.toEntity()).toList(),
           latest: latest.map((e) => e.toEntity()).toList(),
         );
       });

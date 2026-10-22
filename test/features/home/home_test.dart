@@ -29,20 +29,21 @@ void main() {
           HomeRepositoryImpl(SeriesRemoteDataSourceImpl(client), network);
     });
 
-    test('maps trending and latest lists', () async {
-      when(() => client.get('/lists/trending',
-              query: {'page': 1, 'limit': 10}))
+    test('maps new series and latest lists', () async {
+      Map<String, dynamic> sorted(String sort) =>
+          any(named: 'query', that: containsPair('sort', sort));
+      when(() => client.get('/series', query: sorted('newseries')))
           .thenAnswer((_) async => listResponse([seriesListItem]));
-      when(() => client.get('/series', query: any(named: 'query')))
+      when(() => client.get('/series', query: sorted('latest')))
           .thenAnswer((_) async => listResponse([seriesListItemNulls]));
 
       final home = (await repository.getHome()).getOrElse((f) => throw f);
 
-      final popular = home.popular.single;
-      expect(popular.title, 'Solo Leveling');
-      expect(popular.type, 'Manhwa');
-      expect(popular.latestChapter, '200');
-      expect(popular.rating, '9.3');
+      final newSeries = home.newSeries.single;
+      expect(newSeries.title, 'Solo Leveling');
+      expect(newSeries.type, 'Manhwa');
+      expect(newSeries.latestChapter, '200');
+      expect(newSeries.rating, '9.3');
 
       final latest = home.latest.single;
       expect(latest.coverImg, '');
@@ -51,12 +52,12 @@ void main() {
       expect(latest.latestChapter, '-');
       expect(latest.completed, isFalse);
 
-      final query = verify(() =>
+      final queries = verify(() =>
               client.get('/series', query: captureAny(named: 'query')))
           .captured
-          .single as Map;
-      expect(query['sort'], 'latest');
-      expect(query['limit'], 20);
+          .cast<Map>();
+      expect(queries.map((q) => (q['sort'], q['limit'])),
+          unorderedEquals([('newseries', 10), ('latest', 20)]));
     });
 
     test('returns NetworkFailure when offline', () async {
@@ -79,7 +80,7 @@ void main() {
 
   group('HomeBloc', () {
     late MockGetHome getHome;
-    const home = Home(popular: [], latest: []);
+    const home = Home(newSeries: [], latest: []);
 
     setUp(() {
       getHome = MockGetHome();

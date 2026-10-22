@@ -76,7 +76,7 @@ lib/
 │   │   └── widgets/                # comic card + grid, dotline/ (Dotline component library)
 │   └── utils/                      # ApiFormat, Clock, snackbar/save-image helpers
 └── features/
-    ├── home/          # trending + latest on the home tab
+    ├── home/          # new series + latest on the home tab
     ├── latest/        # "see all" latest chapters, paginated
     ├── explore/       # filter by sort/type/status/genre, paginated
     ├── comic_detail/  # comic info + chapter list
@@ -217,7 +217,7 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 
 | Feature | Screens / entry | Bloc | Notes |
 |---|---|---|---|
-| home | Home tab | `HomeBloc` | Trending (`/lists/trending`, 10) + latest (`/series?sort=latest`, 20), loaded in parallel. Also shows the last read comic. |
+| home | Home tab | `HomeBloc` | New series (`/series?sort=newseries`, 10) + latest (`/series?sort=latest`, 20), loaded in parallel. Also shows the last read comic. |
 | latest | "Lihat Semua" | `LatestBloc` | Infinite scroll, up to 10 pages. |
 | explore | Jelajah tab: title search + filter sheet | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (search `query` + filters) goes to `/series` in one request; the API applies them together. `default` sort, `all` type/status and an empty query are sent as "no filter". Beranda's search button and the genre chips on a comic page switch to this tab through `RootTabs`, which `BacaKomikApp` provides above the navigator so pushed routes can use it. A genre chip replaces the filter with that genre alone (`FilterCubit.showGenre`). Requests run in order so an older search cannot overwrite a newer one. |
 | comic_detail | Comic card tap | `ComicDetailsBloc` | Series and chapters fetched in parallel. Bookmark toggle, continue reading, and multi-select of chapters to download or mark read/unread. When the request fails, a comic in the library opens from its stored details (downloads, then bookmarks, then history). Genre chips open Jelajah filtered by that genre. |
@@ -370,7 +370,7 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 
 | Area | Status |
 |---|---|
-| Home (trending, latest, last read) | Done |
+| Home (new series, latest, last read) | Done |
 | Latest, search, explore with filters | Done (10-page cap) |
 | Comic detail, mark chapters read/unread | Done |
 | Reader (prev/next, zoom, save image) | Done |

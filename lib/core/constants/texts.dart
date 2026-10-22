@@ -13,7 +13,7 @@ class AppText {
   static const String historyTab = 'Riwayat';
 
   // Home Screen Text
-  static const String popular = 'Hot Komik';
+  static const String newSeries = 'Seri Baru';
   static const String latest = 'Chapter Terbaru';
   static const String seeAll = 'Lihat Semua';
   static const String continueReading = 'Lanjut baca';

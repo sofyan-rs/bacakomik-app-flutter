@@ -3,7 +3,7 @@ import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
-/// Section overline ("HOT KOMIK") with an optional action ("LIHAT SEMUA").
+/// Section overline ("SERI BARU") with an optional action ("LIHAT SEMUA").
 class SectionLabel extends StatelessWidget {
   const SectionLabel({
     super.key,

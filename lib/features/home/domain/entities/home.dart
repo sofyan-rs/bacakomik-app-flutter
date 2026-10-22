@@ -6,7 +6,7 @@ part 'home.freezed.dart';
 @freezed
 abstract class Home with _$Home {
   const factory Home({
-    required List<Comic> popular,
+    required List<Comic> newSeries,
     required List<Comic> latest,
   }) = _Home;
 }

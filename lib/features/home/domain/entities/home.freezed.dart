@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Home {
 
- List<Comic> get popular; List<Comic> get latest;
+ List<Comic> get newSeries; List<Comic> get latest;
 /// Create a copy of Home
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $HomeCopyWith<Home> get copyWith => _$HomeCopyWithImpl<Home>(this as Home, _$ide
 @override
 bool operator ==(Object other) {
   final _this = this as Home;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Home&&const DeepCollectionEquality().equals(other.popular, _this.popular)&&const DeepCollectionEquality().equals(other.latest, _this.latest));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Home&&const DeepCollectionEquality().equals(other.newSeries, _this.newSeries)&&const DeepCollectionEquality().equals(other.latest, _this.latest));
 }
 
 
 @override
 int get hashCode {
   final _this = this as Home;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.popular),const DeepCollectionEquality().hash(_this.latest));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.newSeries),const DeepCollectionEquality().hash(_this.latest));
 }
 
 @override
 String toString() {
   final _this = this as Home;
-  return 'Home(popular: ${_this.popular}, latest: ${_this.latest})';
+  return 'Home(newSeries: ${_this.newSeries}, latest: ${_this.latest})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $HomeCopyWith<$Res>  {
   factory $HomeCopyWith(Home value, $Res Function(Home) _then) = _$HomeCopyWithImpl;
 @useResult
 $Res call({
- List<Comic> popular, List<Comic> latest
+ List<Comic> newSeries, List<Comic> latest
 });
 
 
@@ -68,9 +68,9 @@ class _$HomeCopyWithImpl<$Res>
 
 /// Create a copy of Home
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? popular = null,Object? latest = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? newSeries = null,Object? latest = null,}) {
   return _then(Home(
-popular: null == popular ? _self.popular : popular // ignore: cast_nullable_to_non_nullable
+newSeries: null == newSeries ? _self.newSeries : newSeries // ignore: cast_nullable_to_non_nullable
 as List<Comic>,latest: null == latest ? _self.latest : latest // ignore: cast_nullable_to_non_nullable
 as List<Comic>,
   ));
@@ -157,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Comic> popular,  List<Comic> latest)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Comic> newSeries,  List<Comic> latest)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Home() when $default != null:
-return $default(_that.popular,_that.latest);case _:
+return $default(_that.newSeries,_that.latest);case _:
   return orElse();
 
 }
@@ -178,10 +178,10 @@ return $default(_that.popular,_that.latest);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Comic> popular,  List<Comic> latest)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Comic> newSeries,  List<Comic> latest)  $default,) {final _that = this;
 switch (_that) {
 case _Home():
-return $default(_that.popular,_that.latest);case _:
+return $default(_that.newSeries,_that.latest);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +198,10 @@ return $default(_that.popular,_that.latest);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Comic> popular,  List<Comic> latest)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Comic> newSeries,  List<Comic> latest)?  $default,) {final _that = this;
 switch (_that) {
 case _Home() when $default != null:
-return $default(_that.popular,_that.latest);case _:
+return $default(_that.newSeries,_that.latest);case _:
   return null;
 
 }
@@ -213,14 +213,14 @@ return $default(_that.popular,_that.latest);case _:
 
 
 class _Home implements Home {
-  const _Home({required  List<Comic> popular, required  List<Comic> latest}): _popular = popular,_latest = latest;
+  const _Home({required  List<Comic> newSeries, required  List<Comic> latest}): _newSeries = newSeries,_latest = latest;
   
 
- final  List<Comic> _popular;
-@override List<Comic> get popular {
-  if (_popular is EqualUnmodifiableListView) return _popular;
+ final  List<Comic> _newSeries;
+@override List<Comic> get newSeries {
+  if (_newSeries is EqualUnmodifiableListView) return _newSeries;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_popular);
+  return EqualUnmodifiableListView(_newSeries);
 }
 
  final  List<Comic> _latest;
@@ -241,18 +241,18 @@ _$HomeCopyWith<_Home> get copyWith => __$HomeCopyWithImpl<_Home>(this, _$identit
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Home&&const DeepCollectionEquality().equals(other.popular, _popular)&&const DeepCollectionEquality().equals(other.latest, _latest));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Home&&const DeepCollectionEquality().equals(other.newSeries, _newSeries)&&const DeepCollectionEquality().equals(other.latest, _latest));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_popular),const DeepCollectionEquality().hash(_latest));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_newSeries),const DeepCollectionEquality().hash(_latest));
 }
 
 @override
 String toString() {
-    return 'Home(popular: $popular, latest: $latest)';
+    return 'Home(newSeries: $newSeries, latest: $latest)';
 }
 
 
@@ -263,7 +263,7 @@ abstract mixin class _$HomeCopyWith<$Res> implements $HomeCopyWith<$Res> {
   factory _$HomeCopyWith(_Home value, $Res Function(_Home) _then) = __$HomeCopyWithImpl;
 @override @useResult
 $Res call({
- List<Comic> popular, List<Comic> latest
+ List<Comic> newSeries, List<Comic> latest
 });
 
 
@@ -280,9 +280,9 @@ class __$HomeCopyWithImpl<$Res>
 
 /// Create a copy of Home
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? popular = null,Object? latest = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? newSeries = null,Object? latest = null,}) {
   return _then(_Home(
-popular: null == popular ? _self._popular : popular // ignore: cast_nullable_to_non_nullable
+newSeries: null == newSeries ? _self._newSeries : newSeries // ignore: cast_nullable_to_non_nullable
 as List<Comic>,latest: null == latest ? _self._latest : latest // ignore: cast_nullable_to_non_nullable
 as List<Comic>,
   ));
