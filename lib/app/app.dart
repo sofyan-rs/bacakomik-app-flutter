@@ -8,6 +8,7 @@ import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit
 import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
+import 'package:bacakomik_app/features/explore/presentation/bloc/genres_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
@@ -43,6 +44,7 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
         BlocProvider(create: (_) => getIt<HomeBloc>()),
         BlocProvider(create: (_) => getIt<ExploreBloc>()),
         BlocProvider(create: (_) => getIt<FilterCubit>()),
+        BlocProvider(create: (_) => getIt<GenresCubit>()..load()),
         BlocProvider(create: (_) => getIt<BookmarkCubit>()..load()),
         BlocProvider(create: (_) => getIt<HistoryCubit>()..load()),
         BlocProvider(create: (_) => getIt<SettingsCubit>()..load()),

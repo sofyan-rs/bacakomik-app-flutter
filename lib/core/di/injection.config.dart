@@ -68,10 +68,14 @@ import 'package:bacakomik_app/features/explore/domain/repositories/explore_repos
     as _i215;
 import 'package:bacakomik_app/features/explore/domain/usecases/explore_comics.dart'
     as _i520;
+import 'package:bacakomik_app/features/explore/domain/usecases/get_genres.dart'
+    as _i341;
 import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart'
     as _i794;
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart'
     as _i750;
+import 'package:bacakomik_app/features/explore/presentation/bloc/genres_cubit.dart'
+    as _i479;
 import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart'
     as _i793;
 import 'package:bacakomik_app/features/history/data/repositories/history_repository_impl.dart'
@@ -407,6 +411,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i520.ExploreComics>(
       () => _i520.ExploreComics(gh<_i215.ExploreRepository>()),
     );
+    gh.factory<_i341.GetGenres>(
+      () => _i341.GetGenres(gh<_i215.ExploreRepository>()),
+    );
     gh.lazySingleton<_i665.DownloadRepository>(
       () => _i183.DownloadRepositoryImpl(
         gh<_i595.DownloadLocalDataSource>(),
@@ -415,6 +422,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i578.ReaderRepository>(),
         gh<_i1011.Clock>(),
       ),
+    );
+    gh.factory<_i479.GenresCubit>(
+      () => _i479.GenresCubit(gh<_i341.GetGenres>()),
     );
     gh.factory<_i380.GetComicDetails>(
       () => _i380.GetComicDetails(

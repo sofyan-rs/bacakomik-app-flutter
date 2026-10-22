@@ -1,12 +1,17 @@
+import 'package:bacakomik_app/core/constants/filters.dart';
 import 'package:bacakomik_app/core/data/datasources/series_remote_data_source.dart';
+import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/domain/entities/comic.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
+import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/features/explore/data/repositories/explore_repository_impl.dart';
 import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.dart';
 import 'package:bacakomik_app/features/latest/data/repositories/latest_repository_impl.dart';
 import 'package:bacakomik_app/features/explore/domain/usecases/explore_comics.dart';
+import 'package:bacakomik_app/features/explore/domain/usecases/get_genres.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
+import 'package:bacakomik_app/features/explore/presentation/bloc/genres_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -16,6 +21,8 @@ import '../fixtures/api_fixtures.dart';
 import '../helpers/mocks.dart';
 
 class MockExploreComics extends Mock implements ExploreComics {}
+
+class MockGetGenres extends Mock implements GetGenres {}
 
 void main() {
   late MockApiClient client;
@@ -92,6 +99,54 @@ void main() {
       expect(query['format'], 'manga');
       expect(query['page'], 2);
     });
+
+    test('genres maps API ids to slugs', () async {
+      when(() => client.get('/genres')).thenAnswer(
+        (_) async => {
+          'data': [
+            {'id': 50, 'name': 'Crime'},
+          ],
+        },
+      );
+
+      final result = await ExploreRepositoryImpl(remote, network).genres();
+
+      expect(result.getOrElse((f) => throw f), [
+        const Genre(name: 'Crime', slug: '50'),
+      ]);
+    });
+  });
+
+  group('GenresCubit', () {
+    late MockGetGenres getGenres;
+
+    setUp(() => getGenres = MockGetGenres());
+
+    test('starts with the bundled list', () {
+      expect(GenresCubit(getGenres).state, Filters.genreList);
+    });
+
+    blocTest<GenresCubit, List<FilterOption>>(
+      'swaps in the fetched genres',
+      setUp: () => when(() => getGenres(const NoParams())).thenAnswer(
+        (_) async => right([const Genre(name: 'Crime', slug: '50')]),
+      ),
+      build: () => GenresCubit(getGenres),
+      act: (cubit) => cubit.load(),
+      verify: (cubit) {
+        expect(cubit.state.single.id, '50');
+        expect(cubit.state.single.name, 'Crime');
+      },
+    );
+
+    blocTest<GenresCubit, List<FilterOption>>(
+      'keeps the bundled list when the fetch fails',
+      setUp: () => when(() => getGenres(const NoParams()))
+          .thenAnswer((_) async => left(const NetworkFailure())),
+      build: () => GenresCubit(getGenres),
+      act: (cubit) => cubit.load(),
+      expect: () => <List<FilterOption>>[],
+    );
   });
 
   group('ExploreBloc paging', () {

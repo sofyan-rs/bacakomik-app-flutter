@@ -25,6 +25,8 @@ abstract interface class SeriesRemoteDataSource {
   Future<List<ChapterResponse>> getChapters(String slug);
 
   Future<ChapterDetailResponse> getChapter(String slug, String number);
+
+  Future<List<GenreResponse>> getGenres();
 }
 
 @LazySingleton(as: SeriesRemoteDataSource)
@@ -84,6 +86,14 @@ class SeriesRemoteDataSourceImpl implements SeriesRemoteDataSource {
   Future<ChapterDetailResponse> getChapter(String slug, String number) async {
     final res = await _client.get('/series/$slug/chapters/$number');
     return ChapterDetailResponse.fromJson(res['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<GenreResponse>> getGenres() async {
+    final res = await _client.get('/genres');
+    return (res['data'] as List)
+        .map((e) => GenreResponse.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   List<SeriesResponse> _seriesList(Map<String, dynamic> res) =>

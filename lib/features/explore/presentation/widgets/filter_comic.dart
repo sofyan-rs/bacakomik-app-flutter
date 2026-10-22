@@ -6,6 +6,7 @@ import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
+import 'package:bacakomik_app/features/explore/presentation/bloc/genres_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -35,10 +36,14 @@ Future<void> showFilterSheet(
   required VoidCallback onApply,
 }) {
   final cubit = context.read<FilterCubit>();
+  final genres = context.read<GenresCubit>();
   return showDotSheet(
     context: context,
-    builder: (_) => BlocProvider.value(
-      value: cubit,
+    builder: (_) => MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: cubit),
+        BlocProvider.value(value: genres),
+      ],
       child: FilterComic(onApply: onApply),
     ),
   );
@@ -144,7 +149,7 @@ class _FilterComicState extends State<FilterComic> {
                   label: genreCount == 0
                       ? AppText.genre
                       : '${AppText.genre} · $genreCount ${AppText.selected}',
-                  options: Filters.genreList,
+                  options: context.watch<GenresCubit>().state,
                   isSelected: _filter.genres.contains,
                   onTap: _toggleGenre,
                 ),
