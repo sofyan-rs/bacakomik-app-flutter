@@ -2,6 +2,16 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'comic_details.freezed.dart';
 
+/// Values of [ComicDetails.source].
+abstract final class ComicSource {
+  /// Source of the current API (bacakomik.my).
+  static const current = 'bacakomik';
+
+  /// The API's previous source. Stored comics that could not be found in the
+  /// current source are marked with it, so the migration does not retry them.
+  static const legacy = 'voratoon';
+}
+
 @freezed
 abstract class ComicDetails with _$ComicDetails {
   const factory ComicDetails({
@@ -17,15 +27,17 @@ abstract class ComicDetails with _$ComicDetails {
     required String synopsis,
     required List<Genre> genres,
     required List<Chapter> chapters,
+
+    /// Upstream the details came from, see [ComicSource]. Null in data
+    /// stored before the API switched source; such comics still use the old
+    /// source's slugs and are migrated by MigrateLibrary.
+    String? source,
   }) = _ComicDetails;
 }
 
 @freezed
 abstract class Genre with _$Genre {
-  const factory Genre({
-    required String name,
-    required String slug,
-  }) = _Genre;
+  const factory Genre({required String name, required String slug}) = _Genre;
 }
 
 @freezed

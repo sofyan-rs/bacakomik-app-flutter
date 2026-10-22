@@ -3,6 +3,7 @@ import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/sync/domain/entities/sync_snapshot.dart';
 import 'package:bacakomik_app/features/sync/domain/repositories/sync_repository.dart';
+import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
@@ -58,17 +59,19 @@ class SignOutSync implements UseCase<Unit, NoParams> {
   }
 }
 
-/// Merges the local library with its Drive copy, saves the result on this
-/// device, then uploads it when the Drive copy differs.
+/// Merges the local library with its Drive copy, moves comics stored before
+/// the API switched source to the current one ([MigrateSnapshot]), saves the
+/// result on this device, then uploads it when the Drive copy differs.
 @injectable
 class SyncLibrary implements UseCase<SyncResult, NoParams> {
-  const SyncLibrary(this._repository, this._clock);
+  const SyncLibrary(this._repository, this._migrate, this._clock);
 
   /// Deletions are synced for this long; a device offline for longer may
   /// bring deleted entries back.
   static const keepDeletionsFor = Duration(days: 180);
 
   final SyncRepository _repository;
+  final MigrateSnapshot _migrate;
   final Clock _clock;
 
   @override
@@ -85,8 +88,9 @@ class SyncLibrary implements UseCase<SyncResult, NoParams> {
       (data) async {
         final (remote, local) = data;
         var merged = merge(local, remote ?? const SyncSnapshot());
+        merged = await _migrate(merged, keepDeletionsSince: keepSince);
 
-        // Re-read so edits made while downloading are kept.
+        // Re-read so edits made while downloading or migrating are kept.
         final latest = await _repository.readLocal();
         if (latest case Right(value: final current)) {
           merged = merge(merged, current);

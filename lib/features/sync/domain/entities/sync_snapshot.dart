@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -24,7 +25,8 @@ abstract class SyncSnapshot with _$SyncSnapshot {
   /// Merges two libraries. Per slug the newest version wins: a bookmark by
   /// [Bookmark.updatedDate], a history entry by [ReadHistory.readDate]. An
   /// entry deleted at or after that time is dropped. Deletions older than
-  /// [keepDeletionsSince] are forgotten.
+  /// [keepDeletionsSince] are forgotten. On equal dates a migrated copy
+  /// (with [ComicDetails.source]) wins over one stored before the switch.
   factory SyncSnapshot.merge(
     SyncSnapshot a,
     SyncSnapshot b, {
@@ -45,12 +47,14 @@ abstract class SyncSnapshot with _$SyncSnapshot {
       [...a.bookmarks, ...b.bookmarks],
       slugOf: (b) => b.slug,
       dateOf: (b) => b.updatedDate,
+      detailsOf: (b) => b.comicDetails,
       deleted: deletedBookmarks,
     );
     final history = _newestBySlug(
       [...a.history, ...b.history],
       slugOf: (h) => h.slug,
       dateOf: (h) => h.readDate,
+      detailsOf: (h) => h.comicDetails,
       deleted: deletedHistory,
     );
 
@@ -90,12 +94,17 @@ List<T> _newestBySlug<T>(
   List<T> items, {
   required String Function(T) slugOf,
   required DateTime Function(T) dateOf,
+  required ComicDetails Function(T) detailsOf,
   required Map<String, DateTime> deleted,
 }) {
   final newest = <String, T>{};
   for (final item in items) {
     final current = newest[slugOf(item)];
-    if (current == null || dateOf(item).isAfter(dateOf(current))) {
+    if (current == null ||
+        dateOf(item).isAfter(dateOf(current)) ||
+        (dateOf(item) == dateOf(current) &&
+            detailsOf(current).source == null &&
+            detailsOf(item).source != null)) {
       newest[slugOf(item)] = item;
     }
   }

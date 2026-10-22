@@ -19,6 +19,7 @@ class ComicDetailsModel {
     required this.synopsis,
     required this.genres,
     required this.chapters,
+    this.source,
   });
 
   factory ComicDetailsModel.fromEntity(ComicDetails e) => ComicDetailsModel(
@@ -38,6 +39,7 @@ class ComicDetailsModel {
         chapters: e.chapters
             .map((c) => ChapterModel(number: c.number, slug: c.slug, date: c.date))
             .toList(),
+        source: e.source,
       );
 
   factory ComicDetailsModel.fromJson(Map<String, dynamic> json) =>
@@ -56,6 +58,10 @@ class ComicDetailsModel {
   final List<GenreModel> genres;
   final List<ChapterModel> chapters;
 
+  /// See [ComicDetails.source]. Absent in data stored before the switch.
+  @JsonKey(includeIfNull: false)
+  final String? source;
+
   Map<String, dynamic> toJson() => _$ComicDetailsModelToJson(this);
 
   ComicDetails toEntity() => ComicDetails(
@@ -73,6 +79,7 @@ class ComicDetailsModel {
         chapters: chapters
             .map((c) => Chapter(number: c.number, slug: c.slug, date: c.date))
             .toList(),
+        source: source,
       );
 }
 

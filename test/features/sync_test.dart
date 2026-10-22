@@ -13,7 +13,9 @@ import 'package:bacakomik_app/features/sync/data/datasources/drive_data_source.d
 import 'package:bacakomik_app/features/sync/data/datasources/google_auth_data_source.dart';
 import 'package:bacakomik_app/features/sync/data/repositories/sync_repository_impl.dart';
 import 'package:bacakomik_app/features/sync/domain/entities/sync_snapshot.dart';
+import 'package:bacakomik_app/features/sync/domain/repositories/series_lookup_repository.dart';
 import 'package:bacakomik_app/features/sync/domain/repositories/sync_repository.dart';
+import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart';
 import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart';
 import 'package:bacakomik_app/features/sync/presentation/widgets/sync_section.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +36,8 @@ class FixedClock implements Clock {
 }
 
 class MockSyncRepository extends Mock implements SyncRepository {}
+
+class MockLookup extends Mock implements SeriesLookupRepository {}
 
 class MockAuth extends Mock implements GoogleAuthDataSource {}
 
@@ -222,11 +226,19 @@ void main() {
     late SyncLibrary syncLibrary;
     final now = at(1000);
 
-    setUpAll(() => registerFallbackValue(const SyncSnapshot()));
+    setUpAll(() {
+      registerFallbackValue(const SyncSnapshot());
+      registerFallbackValue(sampleComicDetails);
+    });
 
     setUp(() {
       repo = MockSyncRepository();
-      syncLibrary = SyncLibrary(repo, FixedClock(now));
+      // The sample comics have no source; offline lookups leave them as-is.
+      final lookup = MockLookup();
+      when(() => lookup.find(any(), any()))
+          .thenAnswer((_) async => left(const NetworkFailure()));
+      final clock = FixedClock(now);
+      syncLibrary = SyncLibrary(repo, MigrateSnapshot(lookup, clock), clock);
       when(() => repo.writeLocal(any())).thenAnswer((_) async => right(unit));
       when(() => repo.upload(any())).thenAnswer((_) async => right(unit));
       when(() => repo.saveLastSyncedAt(any())).thenAnswer((_) async {});

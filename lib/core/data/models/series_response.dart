@@ -70,6 +70,7 @@ abstract class SeriesDetailResponse with _$SeriesDetailResponse {
         synopsis: synopsis?.trim() ?? '',
         genres: genres.map((e) => e.toEntity()).toList(),
         chapters: chapters.map((e) => e.toEntity(slug)).toList(),
+        source: ComicSource.current,
       );
 }
 

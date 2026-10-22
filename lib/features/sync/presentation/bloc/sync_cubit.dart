@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/storage/library_journal.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
+import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart';
 import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -37,7 +38,8 @@ abstract class SyncState with _$SyncState {
 
 /// Google Drive sync of bookmarks and history. Once signed in, syncs on
 /// start, when the app returns to the foreground, and shortly after each
-/// library edit.
+/// library edit. Signed out, it still migrates the library to the API's
+/// current source on start and on resume (sync does that when signed in).
 @injectable
 class SyncCubit extends Cubit<SyncState> {
   SyncCubit(
@@ -45,6 +47,7 @@ class SyncCubit extends Cubit<SyncState> {
     this._signIn,
     this._signOut,
     this._syncLibrary,
+    this._migrateLocal,
     this._journal,
   ) : super(const SyncState());
 
@@ -52,6 +55,7 @@ class SyncCubit extends Cubit<SyncState> {
   final SignInSync _signIn;
   final SignOutSync _signOut;
   final SyncLibrary _syncLibrary;
+  final MigrateLocalLibrary _migrateLocal;
   final LibraryJournal _journal;
 
   /// Wait after an edit, so a burst of edits uploads once.
@@ -64,6 +68,7 @@ class SyncCubit extends Cubit<SyncState> {
   AppLifecycleListener? _lifecycle;
   Timer? _debounce;
   bool _syncAgain = false;
+  bool _migrating = false;
 
   Future<void> start() async {
     _edits = _journal.changes.listen((_) => _scheduleSync());
@@ -78,7 +83,11 @@ class SyncCubit extends Cubit<SyncState> {
         ),
       );
     });
-    if (state.signedIn) await sync();
+    if (state.signedIn) {
+      await sync();
+    } else {
+      await _migrate();
+    }
   }
 
   Future<void> signIn() async {
@@ -152,7 +161,25 @@ class SyncCubit extends Cubit<SyncState> {
     _debounce = Timer(editDelay, sync);
   }
 
+  /// Library migration while signed out.
+  Future<void> _migrate() async {
+    if (_migrating || state.signedIn || isClosed) return;
+    _migrating = true;
+    final result = await _migrateLocal(const NoParams());
+    _migrating = false;
+    if (isClosed) return;
+    result.fold(_log, (changed) {
+      if (changed) {
+        emit(state.copyWith(libraryRevision: state.libraryRevision + 1));
+      }
+    });
+  }
+
   void _onResume() {
+    if (!state.signedIn) {
+      _migrate();
+      return;
+    }
     final last = state.lastSyncedAt;
     if (last == null || DateTime.now().difference(last) > resumeInterval) {
       sync();

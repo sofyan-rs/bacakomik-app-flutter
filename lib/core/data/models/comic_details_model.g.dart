@@ -24,6 +24,7 @@ ComicDetailsModel _$ComicDetailsModelFromJson(Map<String, dynamic> json) =>
       chapters: (json['chapters'] as List<dynamic>)
           .map((e) => ChapterModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      source: json['source'] as String?,
     );
 
 Map<String, dynamic> _$ComicDetailsModelToJson(ComicDetailsModel instance) =>
@@ -40,6 +41,7 @@ Map<String, dynamic> _$ComicDetailsModelToJson(ComicDetailsModel instance) =>
       'synopsis': instance.synopsis,
       'genres': instance.genres.map((e) => e.toJson()).toList(),
       'chapters': instance.chapters.map((e) => e.toJson()).toList(),
+      'source': ?instance.source,
     };
 
 GenreModel _$GenreModelFromJson(Map<String, dynamic> json) =>

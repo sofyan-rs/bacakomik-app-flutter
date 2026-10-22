@@ -124,10 +124,16 @@ import 'package:bacakomik_app/features/sync/data/datasources/drive_data_source.d
     as _i25;
 import 'package:bacakomik_app/features/sync/data/datasources/google_auth_data_source.dart'
     as _i609;
+import 'package:bacakomik_app/features/sync/data/repositories/series_lookup_repository_impl.dart'
+    as _i597;
 import 'package:bacakomik_app/features/sync/data/repositories/sync_repository_impl.dart'
     as _i741;
+import 'package:bacakomik_app/features/sync/domain/repositories/series_lookup_repository.dart'
+    as _i543;
 import 'package:bacakomik_app/features/sync/domain/repositories/sync_repository.dart'
     as _i441;
+import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart'
+    as _i660;
 import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart'
     as _i629;
 import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart'
@@ -323,6 +329,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i764.NetworkInfo>(),
       ),
     );
+    gh.lazySingleton<_i543.SeriesLookupRepository>(
+      () => _i597.SeriesLookupRepositoryImpl(
+        gh<_i535.SeriesRemoteDataSource>(),
+        gh<_i764.NetworkInfo>(),
+      ),
+    );
     gh.factory<_i328.GetLatestComics>(
       () => _i328.GetLatestComics(gh<_i655.LatestRepository>()),
     );
@@ -404,10 +416,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i81.RestoreLibrary>(),
       ),
     );
-    gh.factory<_i611.GetHome>(() => _i611.GetHome(gh<_i15.HomeRepository>()));
-    gh.factory<_i629.SyncLibrary>(
-      () => _i629.SyncLibrary(gh<_i441.SyncRepository>(), gh<_i1011.Clock>()),
+    gh.factory<_i660.MigrateSnapshot>(
+      () => _i660.MigrateSnapshot(
+        gh<_i543.SeriesLookupRepository>(),
+        gh<_i1011.Clock>(),
+      ),
     );
+    gh.factory<_i611.GetHome>(() => _i611.GetHome(gh<_i15.HomeRepository>()));
     gh.factory<_i520.ExploreComics>(
       () => _i520.ExploreComics(gh<_i215.ExploreRepository>()),
     );
@@ -457,6 +472,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i729.RemoveHistory>(),
         gh<_i729.RemoveComicHistory>(),
         gh<_i729.ClearHistory>(),
+        gh<_i1011.Clock>(),
+      ),
+    );
+    gh.factory<_i660.MigrateLocalLibrary>(
+      () => _i660.MigrateLocalLibrary(
+        gh<_i441.SyncRepository>(),
+        gh<_i660.MigrateSnapshot>(),
+        gh<_i1011.Clock>(),
+      ),
+    );
+    gh.factory<_i629.SyncLibrary>(
+      () => _i629.SyncLibrary(
+        gh<_i441.SyncRepository>(),
+        gh<_i660.MigrateSnapshot>(),
         gh<_i1011.Clock>(),
       ),
     );
@@ -518,6 +547,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i629.SignInSync>(),
         gh<_i629.SignOutSync>(),
         gh<_i629.SyncLibrary>(),
+        gh<_i660.MigrateLocalLibrary>(),
         gh<_i593.LibraryJournal>(),
       ),
     );
