@@ -5,10 +5,12 @@ import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:injectable/injectable.dart';
+import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Host side of the functions extensions call: `http.fetch`, `html.select`,
@@ -86,7 +88,9 @@ class ExtensionBridge {
         final connection =
             e.type == DioExceptionType.connectionError ||
             e.error is HandshakeException ||
-            e.error is SocketException;
+            e.error is SocketException ||
+            // Cronet reports network and certificate errors as net::ERR_*.
+            '${e.error}'.contains('net::ERR_');
         if (!connection) rethrow;
         if (attempt >= _connectionAttempts) {
           throw ServerException(
@@ -137,14 +141,22 @@ class ExtensionBridge {
   Future<Dio> _client(String extensionId) async {
     final jar = await _jar(extensionId);
     return Dio(
-      BaseOptions(
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 30),
-        responseType: ResponseType.plain,
-        // Scripts read the status themselves.
-        validateStatus: (_) => true,
-      ),
-    )..interceptors.add(CookieManager(jar));
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 30),
+          responseType: ResponseType.plain,
+          // Scripts read the status themselves.
+          validateStatus: (_) => true,
+        ),
+      )
+      // Cronet (Android) / NSURLSession (iOS) instead of dart:io: Cloudflare
+      // turns away dart:io's TLS fingerprint even with a valid cf_clearance.
+      ..httpClientAdapter = Platform.isAndroid || Platform.isIOS
+          ? NativeAdapter(
+              createFallbackAdapter: (_, _) => IOHttpClientAdapter(),
+            )
+          : IOHttpClientAdapter()
+      ..interceptors.add(CookieManager(jar));
   }
 
   /// Clears an extension's cookies and stored values, e.g. on uninstall.
