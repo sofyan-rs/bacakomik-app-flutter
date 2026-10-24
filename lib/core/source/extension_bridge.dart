@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:cookie_jar/cookie_jar.dart';
@@ -47,7 +48,7 @@ class ExtensionBridge {
   ) async {
     final dio = await (_clients[extensionId] ??= _client(extensionId));
     final headers = (req['headers'] as Map?)?.cast<String, Object?>() ?? {};
-    final res = await dio.request<String>(
+    Future<Response<String>> send() => dio.request<String>(
       req['url'] as String,
       data: req['body'],
       options: Options(
@@ -55,6 +56,7 @@ class ExtensionBridge {
         headers: {'User-Agent': userAgent, ...headers},
       ),
     );
+    final res = await _retryingConnection(send);
     if (_isChallenge(res)) {
       throw ServerException(Challenge.message(res.realUri.toString()));
     }
@@ -67,6 +69,33 @@ class ExtensionBridge {
       },
       'body': res.data ?? '',
     };
+  }
+
+  static const _connectionAttempts = 3;
+
+  /// Runs [send] again when the connection itself fails (TLS handshake,
+  /// reset, refused). Some networks intercept connections now and then, e.g.
+  /// with a block page certificate; a later attempt often goes through.
+  static Future<Response<String>> _retryingConnection(
+    Future<Response<String>> Function() send,
+  ) async {
+    for (var attempt = 1; ; attempt++) {
+      try {
+        return await send();
+      } on DioException catch (e) {
+        final connection =
+            e.type == DioExceptionType.connectionError ||
+            e.error is HandshakeException ||
+            e.error is SocketException;
+        if (!connection) rethrow;
+        if (attempt >= _connectionAttempts) {
+          throw ServerException(
+            AppText.connectionFailed(e.requestOptions.uri.host),
+          );
+        }
+        await Future<void>.delayed(Duration(milliseconds: 400 * attempt));
+      }
+    }
   }
 
   /// A Cloudflare challenge page instead of the response.

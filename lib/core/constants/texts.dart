@@ -281,6 +281,9 @@ class AppText {
   static const String clearCookies = 'Clear cookies';
   static const String cookiesCleared = 'Cookies cleared';
   static const String pageNotLoaded = "Page didn't load";
+  static String connectionFailed(String host) =>
+      "Couldn't connect to $host. Your network may be blocking it; try "
+      'again, or use a VPN or another network.';
   static const String verificationNeeded = 'Verification needed';
   static const String verificationNeededHint =
       'The site wants to check you are not a bot. Pass the check in the '
