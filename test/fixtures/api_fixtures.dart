@@ -1,4 +1,5 @@
-/// Sample bacakomik-api responses used by characterization tests.
+/// Sample source responses (results of an extension's methods) used by
+/// characterization tests.
 const seriesListItem = <String, dynamic>{
   'title': 'Solo Leveling',
   'cover': 'https://cdn.example/solo.jpg',
@@ -19,8 +20,11 @@ const seriesListItemNulls = <String, dynamic>{
   'totalChapters': null,
 };
 
-Map<String, dynamic> listResponse(List<Map<String, dynamic>> items) =>
-    {'data': items};
+/// Result of a source's `browse`.
+Map<String, dynamic> browseResponse(
+  List<Map<String, dynamic>> items, {
+  bool hasNext = false,
+}) => {'items': items, 'hasNext': hasNext};
 
 const seriesDetail = <String, dynamic>{
   'title': 'Solo Leveling',

@@ -2,13 +2,11 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'comic_details.freezed.dart';
 
-/// Values of [ComicDetails.source].
+/// Known values of [ComicDetails.source], which holds a source id.
 abstract final class ComicSource {
-  /// Source of the current API (bacakomik.my).
-  static const current = 'bacakomik';
-
-  /// The API's previous source. Stored comics that could not be found in the
-  /// current source are marked with it, so the migration does not retry them.
+  /// Source of everything stored before the app had sources. Such comics
+  /// carry no source, or this one when an older migration could not match
+  /// them; MigrateSnapshot moves them under this source's keys.
   static const legacy = 'voratoon';
 }
 
@@ -28,9 +26,8 @@ abstract class ComicDetails with _$ComicDetails {
     required List<Genre> genres,
     required List<Chapter> chapters,
 
-    /// Upstream the details came from, see [ComicSource]. Null in data
-    /// stored before the API switched source; such comics still use the old
-    /// source's slugs and are migrated by MigrateLibrary.
+    /// Id of the source the details came from. Null in data stored before
+    /// the API switched source; see [ComicSource.legacy].
     String? source,
   }) = _ComicDetails;
 }

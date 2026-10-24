@@ -8,13 +8,16 @@ import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_data_source.dart';
 import 'package:bacakomik_app/features/bookmark/data/repositories/bookmark_repository_impl.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
+import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecases.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmarks.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/comic_detail/domain/repositories/comic_detail_repository.dart';
 import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
 import 'package:bacakomik_app/features/history/data/repositories/history_repository_impl.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
 import 'package:bacakomik_app/features/history/domain/usecases/history_usecases.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +38,10 @@ class FixedClock implements Clock {
 }
 
 class MockComicDetailRepository extends Mock implements ComicDetailRepository {}
+
+class MockBookmarkRepository extends Mock implements BookmarkRepository {}
+
+class MockHistoryRepository extends Mock implements HistoryRepository {}
 
 const details = sampleComicDetails;
 
@@ -212,6 +219,7 @@ void main() {
 
   group('Bookmarks', () {
     late BookmarkRepositoryImpl repo;
+    late HistoryRepositoryImpl historyRepo;
     late MockComicDetailRepository comicDetails;
     late BookmarkCubit cubit;
 
@@ -225,12 +233,20 @@ void main() {
           clock,
         ),
       );
+      historyRepo = HistoryRepositoryImpl(
+        HistoryLocalDataSourceImpl(
+          await Hive.openBox<String>(HiveBoxes.historyEntries),
+          await Hive.openBox<String>(HiveBoxes.historyComics),
+        ),
+        LibraryJournal(Hive.box<String>(HiveBoxes.libraryDeletions), clock),
+      );
       comicDetails = MockComicDetailRepository();
       cubit = BookmarkCubit(
         GetBookmarks(repo),
         SaveBookmarks(repo),
         RemoveBookmarks(repo),
         RefreshBookmarks(repo, comicDetails, clock),
+        MigrateComic(repo, historyRepo, clock),
         clock,
       );
       await repo.saveBookmarks([
@@ -285,6 +301,145 @@ void main() {
       expect(cubit.state.first.comicDetails.chapters, hasLength(3));
       expect(cubit.state[1].updatedDate, at(300));
       expect(cubit.state[2].updatedDate, at(200));
+    });
+
+    test('sameSeriesAs finds other entries with the same title', () async {
+      await repo.saveBookmarks([bookmark('voratoon:a', 'alpha!', 50)]);
+      await cubit.load();
+
+      expect(cubit.sameSeriesAs('a', 'Alpha').map((b) => b.slug), [
+        'voratoon:a',
+      ]);
+      expect(cubit.sameSeriesAs('x', 'Delta'), isEmpty);
+    });
+
+    test('migrate moves the bookmark and matching history', () async {
+      await historyRepo.saveHistory([
+        history('a/1', 'a', 10),
+        history('a/9', 'a', 20),
+        history('b/1', 'b', 30),
+      ]);
+      final target = details.copyWith(
+        source: 'voratoon',
+        chapters: const [
+          Chapter(number: '2', slug: 'voratoon:a/2', date: '-'),
+          Chapter(number: '1', slug: 'voratoon:a/1', date: '-'),
+        ],
+      );
+      clock.value = at(7000);
+
+      await cubit.migrate(from: 'a', to: 'voratoon:a', details: target);
+
+      expect(cubit.isBookmark('a'), isFalse);
+      expect(cubit.state.first.slug, 'voratoon:a');
+      expect(cubit.state.first.comicDetails, target);
+      expect(cubit.state.first.updatedDate, at(7000));
+      final entries = (await historyRepo.getHistory()).getOrElse(
+        (f) => throw f,
+      );
+      expect(
+        entries.map((h) => (h.slug, h.comicSlug, h.readDate)),
+        unorderedEquals([
+          ('voratoon:a/1', 'voratoon:a', at(10)),
+          ('b/1', 'b', at(30)),
+        ]),
+      );
+    });
+  });
+
+  group('MigrateComic', () {
+    late MockBookmarkRepository bookmarks;
+    late MockHistoryRepository historyRepo;
+    late MigrateComic migrate;
+    final target = details.copyWith(
+      chapters: const [Chapter(number: '1', slug: 'v:a/1', date: '-')],
+    );
+
+    setUpAll(() => registerFallbackValue(<String>[]));
+
+    setUp(() {
+      bookmarks = MockBookmarkRepository();
+      historyRepo = MockHistoryRepository();
+      migrate = MigrateComic(bookmarks, historyRepo, clock);
+      when(() => bookmarks.saveBookmarks(any()))
+          .thenAnswer((_) async => right(unit));
+      when(() => bookmarks.removeBookmarks(any()))
+          .thenAnswer((_) async => right(unit));
+      when(() => historyRepo.saveHistory(any()))
+          .thenAnswer((_) async => right(unit));
+      when(() => historyRepo.removeComicHistory(any()))
+          .thenAnswer((_) async => right(unit));
+    });
+
+    test('without read chapters only moves the bookmark', () async {
+      when(() => historyRepo.getHistory())
+          .thenAnswer((_) async => right([history('a/5', 'a', 1)]));
+
+      final result = await migrate((from: 'a', to: 'v:a', details: target));
+
+      expect(result, right(unit));
+      final saved =
+          verify(() => bookmarks.saveBookmarks(captureAny())).captured.single
+              as List<Bookmark>;
+      expect(saved.single.slug, 'v:a');
+      expect(saved.single.updatedDate, at(1000));
+      verifyNever(() => historyRepo.saveHistory(any()));
+      verify(() => historyRepo.removeComicHistory('a')).called(1);
+      verify(() => bookmarks.removeBookmarks(['a'])).called(1);
+    });
+
+    test('history read failure changes nothing', () async {
+      when(() => historyRepo.getHistory())
+          .thenAnswer((_) async => left(const CacheFailure('broken')));
+
+      final result = await migrate((from: 'a', to: 'v:a', details: target));
+
+      expect(result.isLeft(), isTrue);
+      verifyNever(() => bookmarks.saveBookmarks(any()));
+      verifyNever(() => bookmarks.removeBookmarks(any()));
+    });
+
+    test('stops at the first failing step, keeping the old entries', () async {
+      when(() => historyRepo.getHistory())
+          .thenAnswer((_) async => right([history('a/1', 'a', 1)]));
+      when(() => historyRepo.saveHistory(any()))
+          .thenAnswer((_) async => left(const CacheFailure('full')));
+
+      final result = await migrate((from: 'a', to: 'v:a', details: target));
+
+      expect(result.getLeft().toNullable()?.message, 'full');
+      verifyNever(() => historyRepo.removeComicHistory(any()));
+      verifyNever(() => bookmarks.removeBookmarks(any()));
+    });
+  });
+
+  group('sameSeries', () {
+    final library = [
+      bookmark('a', 'Solo Leveling', 1),
+      bookmark('voratoon:a', 'solo  leveling!', 2),
+      bookmark('b', 'Solo Leveling: Ragnarok', 3),
+    ];
+
+    test('matches titles ignoring case, spacing and punctuation', () {
+      expect(sameSeries(library, 'x', 'SOLO-LEVELING').map((b) => b.slug), [
+        'a',
+        'voratoon:a',
+      ]);
+    });
+
+    test('excludes the comic itself', () {
+      expect(sameSeries(library, 'a', 'Solo Leveling').map((b) => b.slug), [
+        'voratoon:a',
+      ]);
+    });
+
+    test('a title of only punctuation matches nothing', () {
+      expect(sameSeries([bookmark('q', '?!', 1)], 'x', '!?'), isEmpty);
+    });
+
+    test('normalizeTitle keeps letters and digits of any script', () {
+      expect(normalizeTitle("Hero’s Return: 2"), 'herosreturn2');
+      expect(normalizeTitle('나 혼자만 레벨업'), '나혼자만레벨업');
     });
   });
 

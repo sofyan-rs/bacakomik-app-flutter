@@ -24,13 +24,13 @@ abstract final class DotlineText {
     letterSpacing: tracking * size,
   );
 
-  /// Uppercase screen title: `BERANDA`, `JELAJAH`.
+  /// Uppercase screen title: `HOME`, `EXPLORE`.
   static final dotM = _style(_doto, 32, 36, FontWeight.w700);
 
   /// App name on the splash screen.
   static final dotBrand = _style(_doto, 40, 44, FontWeight.w900, .01);
 
-  /// Sheet title, section title, "Chapter 67 selesai".
+  /// Sheet title, section title, "Chapter 67 finished".
   static final title = _style(_geist, 22, 28, FontWeight.w500, -.01);
 
   /// Stat tile number.

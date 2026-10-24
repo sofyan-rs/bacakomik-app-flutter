@@ -15,9 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ComicDetails {
 
- String get title; String get coverImg; String get alternativeTitle; String get released; String get status; String get totalChapter; String get author; String get type; String get rating; String get synopsis; List<Genre> get genres; List<Chapter> get chapters;/// Upstream the details came from, see [ComicSource]. Null in data
-/// stored before the API switched source; such comics still use the old
-/// source's slugs and are migrated by MigrateLibrary.
+ String get title; String get coverImg; String get alternativeTitle; String get released; String get status; String get totalChapter; String get author; String get type; String get rating; String get synopsis; List<Genre> get genres; List<Chapter> get chapters;/// Id of the source the details came from. Null in data stored before
+/// the API switched source; see [ComicSource.legacy].
  String? get source;
 /// Create a copy of ComicDetails
 /// with the given fields replaced by the non-null parameter values.
@@ -254,9 +253,8 @@ class _ComicDetails implements ComicDetails {
   return EqualUnmodifiableListView(_chapters);
 }
 
-/// Upstream the details came from, see [ComicSource]. Null in data
-/// stored before the API switched source; such comics still use the old
-/// source's slugs and are migrated by MigrateLibrary.
+/// Id of the source the details came from. Null in data stored before
+/// the API switched source; see [ComicSource.legacy].
 @override final  String? source;
 
 /// Create a copy of ComicDetails

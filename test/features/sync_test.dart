@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/error/failures.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:bacakomik_app/core/storage/library_journal.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
@@ -13,7 +14,6 @@ import 'package:bacakomik_app/features/sync/data/datasources/drive_data_source.d
 import 'package:bacakomik_app/features/sync/data/datasources/google_auth_data_source.dart';
 import 'package:bacakomik_app/features/sync/data/repositories/sync_repository_impl.dart';
 import 'package:bacakomik_app/features/sync/domain/entities/sync_snapshot.dart';
-import 'package:bacakomik_app/features/sync/domain/repositories/series_lookup_repository.dart';
 import 'package:bacakomik_app/features/sync/domain/repositories/sync_repository.dart';
 import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart';
 import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart';
@@ -37,18 +37,22 @@ class FixedClock implements Clock {
 
 class MockSyncRepository extends Mock implements SyncRepository {}
 
-class MockLookup extends Mock implements SeriesLookupRepository {}
-
 class MockAuth extends Mock implements GoogleAuthDataSource {}
 
 class MockDrive extends Mock implements DriveDataSource {}
 
 DateTime at(int ms) => DateTime.fromMillisecondsSinceEpoch(ms);
 
+/// Details of a comic of the default source, which MigrateSnapshot leaves
+/// alone.
+final currentDetails = sampleComicDetails.copyWith(
+  source: ComicKey.defaultSource,
+);
+
 Bookmark bookmark(String slug, int updated, {String title = 'Solo'}) =>
     Bookmark(
       slug: slug,
-      comicDetails: sampleComicDetails.copyWith(title: title),
+      comicDetails: currentDetails.copyWith(title: title),
       updatedDate: at(updated),
     );
 
@@ -56,7 +60,7 @@ ReadHistory read(String slug, int date, {int? page}) => ReadHistory(
   slug: slug,
   chapterNumber: slug.split('/').last,
   readDate: at(date),
-  comicDetails: sampleComicDetails,
+  comicDetails: currentDetails,
   comicSlug: slug.split('/').first,
   page: page,
   pageCount: page == null ? null : 20,
@@ -228,17 +232,12 @@ void main() {
 
     setUpAll(() {
       registerFallbackValue(const SyncSnapshot());
-      registerFallbackValue(sampleComicDetails);
     });
 
     setUp(() {
       repo = MockSyncRepository();
-      // The sample comics have no source; offline lookups leave them as-is.
-      final lookup = MockLookup();
-      when(() => lookup.find(any(), any()))
-          .thenAnswer((_) async => left(const NetworkFailure()));
       final clock = FixedClock(now);
-      syncLibrary = SyncLibrary(repo, MigrateSnapshot(lookup, clock), clock);
+      syncLibrary = SyncLibrary(repo, MigrateSnapshot(clock), clock);
       when(() => repo.writeLocal(any())).thenAnswer((_) async => right(unit));
       when(() => repo.upload(any())).thenAnswer((_) async => right(unit));
       when(() => repo.saveLastSyncedAt(any())).thenAnswer((_) async {});
@@ -268,6 +267,31 @@ void main() {
       expect(result, right((syncedAt: now, localChanged: true)));
       verify(() => repo.writeLocal(remote)).called(1);
       verifyNever(() => repo.upload(any()));
+    });
+
+    test('moves comics stored before sources to the legacy source', () async {
+      final local = SyncSnapshot(
+        bookmarks: [
+          Bookmark(
+            slug: 'solo',
+            comicDetails: sampleComicDetails,
+            updatedDate: at(1),
+          ),
+        ],
+      );
+      when(() => repo.download()).thenAnswer((_) async => right(null));
+      // Re-read after migrating still returns the old entry.
+      when(() => repo.readLocal()).thenAnswer((_) async => right(local));
+
+      final result = await syncLibrary(const NoParams());
+
+      expect(result, right((syncedAt: now, localChanged: true)));
+      final written =
+          verify(() => repo.writeLocal(captureAny())).captured.single
+              as SyncSnapshot;
+      expect(written.bookmarks.single.slug, 'voratoon:solo');
+      expect(written.deletedBookmarks, {'solo': now});
+      verify(() => repo.upload(written)).called(1);
     });
 
     test('download failure stops before writing', () async {

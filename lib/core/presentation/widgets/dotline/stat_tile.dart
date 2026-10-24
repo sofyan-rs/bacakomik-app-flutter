@@ -19,7 +19,7 @@ class StatTile extends StatelessWidget {
   /// Uses `statS` (three tiles in a row) instead of `stat`.
   final bool compact;
 
-  /// Label above the number (Lainnya) instead of below (Detail).
+  /// Label above the number (More) instead of below (Detail).
   final bool labelOnTop;
 
   @override

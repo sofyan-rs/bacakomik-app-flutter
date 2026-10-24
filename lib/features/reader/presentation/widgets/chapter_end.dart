@@ -7,7 +7,7 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Last item of the reader: "Chapter N selesai", the next chapter card and
+/// Last item of the reader: "Chapter N finished", the next chapter card and
 /// where to go next.
 class ChapterEnd extends StatelessWidget {
   const ChapterEnd({

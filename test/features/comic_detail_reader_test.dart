@@ -4,28 +4,34 @@ import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/features/comic_detail/data/repositories/comic_detail_repository_impl.dart';
 import 'package:bacakomik_app/features/reader/data/repositories/reader_repository_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
 import '../fixtures/api_fixtures.dart';
+import '../helpers/fake_source.dart';
 import '../helpers/mocks.dart';
 
 void main() {
-  late MockApiClient client;
+  late FakeSourceBackend bacakomik;
+  late FakeSourceBackend voratoon;
+  late FakeSourceRegistry sources;
   late SeriesRemoteDataSource remote;
   late FakeNetworkInfo network;
 
   setUp(() {
-    client = MockApiClient();
-    remote = SeriesRemoteDataSourceImpl(client);
+    bacakomik = FakeSourceBackend();
+    voratoon = FakeSourceBackend();
+    sources = FakeSourceRegistry({
+      'bacakomik': bacakomik,
+      'voratoon': voratoon,
+    });
+    remote = SeriesRemoteDataSourceImpl(sources);
     network = FakeNetworkInfo();
   });
 
   group('ComicDetailRepositoryImpl', () {
     test('maps series and chapters', () async {
-      when(() => client.get('/series/solo-leveling'))
-          .thenAnswer((_) async => {'data': seriesDetail});
-      when(() => client.get('/series/solo-leveling/chapters'))
-          .thenAnswer((_) async => {'data': chapterList});
+      bacakomik.responses
+        ..['series'] = seriesDetail
+        ..['chapters'] = chapterList;
 
       final result = await ComicDetailRepositoryImpl(remote, network)
           .getComicDetails('solo-leveling');
@@ -43,25 +49,56 @@ void main() {
         ['solo-leveling/2', 'solo-leveling/1.5'],
       );
       expect(details.chapters.first.date, '-');
+      expect(details.source, 'bacakomik');
+      expect(bacakomik.argsOf('series'), ['solo-leveling']);
+      expect(bacakomik.argsOf('chapters'), ['solo-leveling']);
+    });
+
+    test('prefixed key calls its source with the bare slug', () async {
+      voratoon.responses
+        ..['series'] = seriesDetail
+        ..['chapters'] = chapterList;
+
+      final details = (await ComicDetailRepositoryImpl(remote, network)
+              .getComicDetails('voratoon:solo-leveling'))
+          .getOrElse((f) => throw f);
+
+      expect(details.source, 'voratoon');
+      expect(
+        details.chapters.map((c) => c.slug),
+        ['voratoon:solo-leveling/2', 'voratoon:solo-leveling/1.5'],
+      );
+      expect(voratoon.argsOf('series'), ['solo-leveling']);
+      expect(bacakomik.calls, isEmpty);
     });
 
     test('either request failing gives ServerFailure', () async {
-      when(() => client.get('/series/x'))
-          .thenAnswer((_) async => {'data': seriesDetail});
-      when(() => client.get('/series/x/chapters'))
-          .thenThrow(const ServerException('not found', statusCode: 404));
+      bacakomik.responses
+        ..['series'] = seriesDetail
+        ..['chapters'] =
+            const ServerException('not found', statusCode: 404);
 
       final result =
           await ComicDetailRepositoryImpl(remote, network).getComicDetails('x');
 
       expect(result.getLeft().toNullable()?.message, 'not found');
     });
+
+    test('unexpected response shape gives ServerFailure', () async {
+      bacakomik.responses
+        ..['series'] = 'nope'
+        ..['chapters'] = chapterList;
+
+      final result =
+          await ComicDetailRepositoryImpl(remote, network).getComicDetails('x');
+
+      expect(result.getLeft().toNullable(), isA<ServerFailure>());
+    });
   });
 
   group('ReaderRepositoryImpl', () {
     test('splits chapter slug and builds prev/next slugs', () async {
-      when(() => client.get('/series/solo-leveling/chapters/2'))
-          .thenAnswer((_) async => {'data': chapterDetail});
+      bacakomik.responses['chapter'] = chapterDetail;
 
       final result = await ReaderRepositoryImpl(remote, network)
           .getChapter('solo-leveling/2');
@@ -73,13 +110,26 @@ void main() {
       expect(chapter.previousChapterSlug, 'solo-leveling/1.5');
       expect(chapter.nextChapterSlug, isNull);
       expect(chapter.images, hasLength(2));
+      expect(bacakomik.argsOf('chapter'), ['solo-leveling', 2]);
+    });
+
+    test('prefixed chapter slug keeps the key in prev/next', () async {
+      voratoon.responses['chapter'] = chapterDetail;
+
+      final chapter = (await ReaderRepositoryImpl(remote, network)
+              .getChapter('voratoon:solo-leveling/2'))
+          .getOrElse((f) => throw f);
+
+      expect(chapter.seriesSlug, 'voratoon:solo-leveling');
+      expect(chapter.previousChapterSlug, 'voratoon:solo-leveling/1.5');
+      expect(voratoon.argsOf('chapter'), ['solo-leveling', 2]);
     });
 
     test('rejects slug without series part', () async {
       final result = await ReaderRepositoryImpl(remote, network).getChapter('2');
 
       expect(result.getLeft().toNullable(), isA<ServerFailure>());
-      verifyZeroInteractions(client);
+      expect(sources.requested, isEmpty);
     });
   });
 }

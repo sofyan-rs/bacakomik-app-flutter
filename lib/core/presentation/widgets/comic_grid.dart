@@ -4,7 +4,7 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
-/// Cover grid used by Jelajah, search and bookmarks: 3 columns on phones,
+/// Cover grid used by Explore, search and bookmarks: 3 columns on phones,
 /// more on wide screens (cells stay about 150 wide). Each cell is a 2:3
 /// cover plus [textHeight] of text under it.
 class CoverGridSliver extends StatelessWidget {

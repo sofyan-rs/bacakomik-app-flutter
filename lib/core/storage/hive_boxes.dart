@@ -24,6 +24,15 @@ abstract final class HiveBoxes {
 
   /// Sync account state, e.g. the last successful sync.
   static const sync = 'sync';
+
+  /// Installed extensions' metadata, keyed by extension id.
+  static const extensions = 'extensions';
+
+  /// Values extensions save through `storage.set`, keyed by `id:key`.
+  static const extensionStorage = 'extension_storage';
+
+  /// Extension repo URLs and the active source.
+  static const sourceSettings = 'source_settings';
 }
 
 @module
@@ -61,6 +70,21 @@ abstract class StorageModule {
   @preResolve
   @Named(HiveBoxes.sync)
   Future<Box<String>> get syncBox => Hive.openBox<String>(HiveBoxes.sync);
+
+  @preResolve
+  @Named(HiveBoxes.extensions)
+  Future<Box<String>> get extensionsBox =>
+      Hive.openBox<String>(HiveBoxes.extensions);
+
+  @preResolve
+  @Named(HiveBoxes.extensionStorage)
+  Future<Box<String>> get extensionStorageBox =>
+      Hive.openBox<String>(HiveBoxes.extensionStorage);
+
+  @preResolve
+  @Named(HiveBoxes.sourceSettings)
+  Future<Box<String>> get sourceSettingsBox =>
+      Hive.openBox<String>(HiveBoxes.sourceSettings);
 
   @preResolve
   @Named(HiveBoxes.settings)

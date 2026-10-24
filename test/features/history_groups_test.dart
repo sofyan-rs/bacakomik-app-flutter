@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/history/presentation/widgets/history_groups.dart';
@@ -43,7 +44,7 @@ void main() {
 
     expect(
       [for (final d in days) d.label],
-      ['Hari ini', 'Kemarin', '1 Okt 2026'],
+      [AppText.today, AppText.yesterday, '1 Oct 2026'],
     );
     expect([for (final i in days.first.items) i.comicSlug], ['a', 'b']);
   });

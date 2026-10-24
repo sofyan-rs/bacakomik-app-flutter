@@ -1,33 +1,46 @@
-import 'package:bacakomik_app/core/constants/filters.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/source/extension_meta.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
-import 'package:bacakomik_app/features/explore/presentation/bloc/genres_cubit.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Filters shown on the Jelajah filter button: status, sort and genres.
-/// Type is not counted because the segmented control already shows it.
-int activeFilterCount(ExploreFilter filter) =>
-    (filter.status != 'all' ? 1 : 0) +
-    (filter.sortBy != const ExploreFilter().sortBy ? 1 : 0) +
-    filter.genres.length;
+/// Whether [group] has a value other than its default in [filter].
+bool _isSet(ExploreFilter filter, FilterGroup group) {
+  final value = filter.values[group.key];
+  return value != null && !listEquals(value, group.defaults);
+}
 
-/// "URUT: TERBARU · ONGOING" line above the Jelajah grid.
-String filterSummary(ExploreFilter filter) {
-  String name(List<FilterOption> options, String id) =>
-      options.firstWhere((o) => o.id == id, orElse: () => options.first).name;
+/// Filters shown on the Explore filter button: every group set away from
+/// its default, multi groups by their picked count. The quick group is not
+/// counted because its picker is already on screen.
+int activeFilterCount(ExploreFilter filter, SourceFeatures source) => [
+  for (final group in source.groups)
+    if (!group.quick && _isSet(filter, group))
+      group.multi ? filter.values[group.key]!.length : 1,
+].fold(0, (a, b) => a + b);
 
-  return [
-    '${AppText.sortShort}: ${name(Filters.sortbyList, filter.sortBy)}',
-    if (filter.status != 'all') name(Filters.statusList, filter.status),
-    if (filter.genres.isNotEmpty) '${filter.genres.length} ${AppText.genre}',
-  ].join(' · ').toUpperCase();
+/// "LATEST UPDATE · ONGOING · 2 GENRE" line above the Explore grid: the
+/// first group (usually the sort) always, the rest when set.
+String filterSummary(ExploreFilter filter, SourceFeatures source) {
+  final parts = <String>[];
+  for (final (i, group) in source.groups.indexed) {
+    if (group.quick || (i > 0 && !_isSet(filter, group))) continue;
+    final value = source.valueOf(filter.values, group.key);
+    if (group.multi) {
+      if (value.isNotEmpty) parts.add('${value.length} ${group.label}');
+    } else if (value.isNotEmpty) {
+      parts.add(group.labelOf(value.first));
+    }
+  }
+  return parts.join(' · ').toUpperCase();
 }
 
 /// Opens the filter sheet. Calls [onApply] after the filter is saved.
@@ -36,21 +49,21 @@ Future<void> showFilterSheet(
   required VoidCallback onApply,
 }) {
   final cubit = context.read<FilterCubit>();
-  final genres = context.read<GenresCubit>();
+  final sources = context.read<SourcesCubit>();
   return showDotSheet(
     context: context,
     builder: (_) => MultiBlocProvider(
       providers: [
         BlocProvider.value(value: cubit),
-        BlocProvider.value(value: genres),
+        BlocProvider.value(value: sources),
       ],
       child: FilterComic(onApply: onApply),
     ),
   );
 }
 
-/// Filter sheet content: single-select type, status and sort, multi-select
-/// genres. Changes apply only on "Tampilkan hasil".
+/// Filter sheet content: one section per filter group of the source,
+/// single-select or multi-select. Changes apply only on "Show results".
 class FilterComic extends StatefulWidget {
   const FilterComic({super.key, required this.onApply});
 
@@ -61,29 +74,33 @@ class FilterComic extends StatefulWidget {
 }
 
 class _FilterComicState extends State<FilterComic> {
-  late ExploreFilter _filter = context.read<FilterCubit>().state;
+  late FilterValues _values = {...context.read<FilterCubit>().state.values};
 
   void _apply() {
-    context.read<FilterCubit>().setFilter(
-      type: _filter.type,
-      status: _filter.status,
-      sortBy: _filter.sortBy,
-      genres: _filter.genres,
-    );
+    context.read<FilterCubit>().setValues(_values);
     widget.onApply();
     Navigator.of(context).pop();
   }
 
-  void _toggleGenre(String id) {
-    final genres = [..._filter.genres];
-    genres.contains(id) ? genres.remove(id) : genres.add(id);
-    setState(() => _filter = _filter.copyWith(genres: genres));
+  void _tap(FilterGroup group, String value) {
+    setState(() {
+      if (!group.multi) {
+        _values = {
+          ..._values,
+          group.key: [value],
+        };
+        return;
+      }
+      final current = [...?_values[group.key]];
+      current.contains(value) ? current.remove(value) : current.add(value);
+      _values = {..._values, group.key: current};
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
-    final genreCount = _filter.genres.length;
+    final source = context.watch<SourcesCubit>().state.features;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -99,9 +116,7 @@ class _FilterComicState extends State<FilterComic> {
             ),
             GestureDetector(
               // Reset clears the filters, not the search text.
-              onTap: () => setState(
-                () => _filter = ExploreFilter(query: _filter.query),
-              ),
+              onTap: () => setState(() => _values = {}),
               child: Padding(
                 padding: const EdgeInsets.all(DotSpace.s3),
                 child: Text(
@@ -124,35 +139,21 @@ class _FilterComicState extends State<FilterComic> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Section(
-                  label: AppText.type,
-                  options: Filters.typeList,
-                  isSelected: (id) => _filter.type == id,
-                  onTap: (id) =>
-                      setState(() => _filter = _filter.copyWith(type: id)),
-                ),
-                _Section(
-                  label: AppText.status,
-                  options: Filters.statusList,
-                  isSelected: (id) => _filter.status == id,
-                  onTap: (id) =>
-                      setState(() => _filter = _filter.copyWith(status: id)),
-                ),
-                _Section(
-                  label: AppText.sortShortLong,
-                  options: Filters.sortbyList,
-                  isSelected: (id) => _filter.sortBy == id,
-                  onTap: (id) =>
-                      setState(() => _filter = _filter.copyWith(sortBy: id)),
-                ),
-                _Section(
-                  label: genreCount == 0
-                      ? AppText.genre
-                      : '${AppText.genre} · $genreCount ${AppText.selected}',
-                  options: context.watch<GenresCubit>().state,
-                  isSelected: _filter.genres.contains,
-                  onTap: _toggleGenre,
-                ),
+                if (source.groups.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: DotSpace.s5),
+                    child: Text(
+                      AppText.noFilters,
+                      style: DotlineText.body.copyWith(color: c.inkMuted),
+                    ),
+                  ),
+                for (final group in source.groups)
+                  if (group.options.isNotEmpty)
+                    _Section(
+                      group: group,
+                      selected: source.valueOf(_values, group.key),
+                      onTap: (value) => _tap(group, value),
+                    ),
               ],
             ),
           ),
@@ -167,20 +168,21 @@ class _FilterComicState extends State<FilterComic> {
 
 class _Section extends StatelessWidget {
   const _Section({
-    required this.label,
-    required this.options,
-    required this.isSelected,
+    required this.group,
+    required this.selected,
     required this.onTap,
   });
 
-  final String label;
-  final List<FilterOption> options;
-  final bool Function(String id) isSelected;
-  final void Function(String id) onTap;
+  final FilterGroup group;
+  final List<String> selected;
+  final void Function(String value) onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
+    final label = group.multi && selected.isNotEmpty
+        ? '${group.label} · ${selected.length} ${AppText.selected}'
+        : group.label;
     return Padding(
       padding: const EdgeInsets.only(top: DotSpace.s5),
       child: Column(
@@ -195,11 +197,11 @@ class _Section extends StatelessWidget {
             spacing: DotSpace.s2,
             runSpacing: DotSpace.s2,
             children: [
-              for (final option in options)
+              for (final option in group.options)
                 DotChip(
-                  label: option.name,
-                  selected: isSelected(option.id),
-                  onTap: () => onTap(option.id),
+                  label: option.label,
+                  selected: selected.contains(option.value),
+                  onTap: () => onTap(option.value),
                 ),
             ],
           ),

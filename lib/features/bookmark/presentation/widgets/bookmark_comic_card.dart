@@ -3,6 +3,7 @@ import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
@@ -84,10 +85,22 @@ class BookmarkComicCard extends StatelessWidget {
             const SizedBox(height: DotSpace.s2),
             DotMeter(value: item.read, total: item.total, gap: 3),
             const SizedBox(height: DotSpace.s2),
-            Text(
-              '${item.read} / ${item.total}',
-              style: DotlineText.data.copyWith(color: c.inkFaint),
-              maxLines: 1,
+            Row(
+              children: [
+                Text(
+                  '${item.read} / ${item.total}',
+                  style: DotlineText.data.copyWith(color: c.inkFaint),
+                  maxLines: 1,
+                ),
+                Expanded(
+                  child: Text(
+                    ' · ${context.sourceNameOf(item.bookmark.slug)}',
+                    style: DotlineText.data.copyWith(color: c.inkFaint),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

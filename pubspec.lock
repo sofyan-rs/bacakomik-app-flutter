@@ -361,6 +361,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  cookie_jar:
+    dependency: "direct main"
+    description:
+      name: cookie_jar
+      sha256: "963da02c1ef64cb5ac20de948c9e5940aa351f1e34a12b1d327c83d85b7e8fff"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.9"
   coverage:
     dependency: transitive
     description:
@@ -378,7 +386,7 @@ packages:
     source: hosted
     version: "0.3.5+5"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       sha256: c8ea0233063ba03258fbcf2ca4d6dadfefe14f02fab57702265467a19f27fadf
@@ -449,6 +457,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.11.1"
+  dio_cookie_manager:
+    dependency: "direct main"
+    description:
+      name: dio_cookie_manager
+      sha256: "4ed4669cacb11931517c1158876a2189f19386674b9dab498abcca063dbe4c61"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.5.0"
   dio_web_adapter:
     dependency: transitive
     description:
@@ -574,6 +590,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.15.0"
+  flutter_js:
+    dependency: "direct main"
+    description:
+      name: flutter_js
+      sha256: "046428059ac7bef71e305dc35fc24be933b684684a43e83eab7ebd0dc407ad85"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.7"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -774,7 +798,7 @@ packages:
     source: hosted
     version: "4.4.0"
   html:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: html
       sha256: "43b67b8f43321ab066817dfac5619596c98bb1b61624e77203bb4351785f9699"
@@ -1402,6 +1426,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  sync_http:
+    dependency: transitive
+    description:
+      name: sync_http
+      sha256: "7f0cd72eca000d2e026bcd6f990b81d0ca06022ef4e32fb257b30d3d1014a961"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1"
   synchronized:
     dependency: transitive
     description:

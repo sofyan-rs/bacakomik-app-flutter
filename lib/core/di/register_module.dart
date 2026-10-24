@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/constants/variables.dart';
+import 'package:bacakomik_app/core/source/extension_manager.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:hive_ce/hive.dart';
@@ -10,25 +10,18 @@ const filesDio = 'files_dio';
 @module
 abstract class RegisterModule {
   @lazySingleton
-  Dio get dio => Dio(
-        BaseOptions(
-          baseUrl: AppVariables.baseUrl,
-          connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(seconds: 30),
-          responseType: ResponseType.json,
-        ),
-      );
+  SourceRegistry sources(ExtensionManager manager) => manager;
 
   /// No base URL and a long receive timeout; chapter pages can be several
   /// megabytes each.
   @lazySingleton
   @Named(filesDio)
   Dio get fileDio => Dio(
-        BaseOptions(
-          connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(minutes: 2),
-        ),
-      );
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(minutes: 2),
+    ),
+  );
 
   @lazySingleton
   Connectivity get connectivity => Connectivity();

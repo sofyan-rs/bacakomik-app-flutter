@@ -1,228 +1,283 @@
 class AppText {
+  /// `1 comic`, `3 comics`.
+  static String count(int n, String one, String many) =>
+      '$n ${n == 1 ? one : many}';
+
   // Hi Text
-  static const String goodMorning = 'Selamat Pagi';
-  static const String goodAfternoon = 'Selamat Siang';
-  static const String goodEvening = 'Selamat Sore';
-  static const String goodNight = 'Selamat Malam';
+  static const String goodMorning = 'Good morning';
+  static const String goodAfternoon = 'Good afternoon';
+  static const String goodEvening = 'Good evening';
+  static const String goodNight = 'Good night';
 
   // Navigation Bar Text
-  static const String home = 'Beranda';
-  static const String explore = 'Jelajah';
-  static const String bookmark = 'Bookmark';
-  static const String more = 'Lainnya';
-  static const String historyTab = 'Riwayat';
+  static const String home = 'Home';
+  static const String explore = 'Explore';
+  static const String bookmark = 'Bookmarks';
+  static const String more = 'More';
+  static const String historyTab = 'History';
 
   // Home Screen Text
-  static const String newSeries = 'Seri Baru';
-  static const String latest = 'Chapter Terbaru';
-  static const String seeAll = 'Lihat Semua';
-  static const String continueReading = 'Lanjut baca';
-  static const String retry = 'Coba lagi';
+  static const String newSeries = 'New series';
+  static const String latest = 'Latest chapters';
+  static const String seeAll = 'See all';
+  static const String continueReading = 'Continue reading';
+  static const String retry = 'Try again';
 
   // Error Text
-  static const String error = 'Terjadi Kesalahan';
+  static const String error = 'Something went wrong';
 
   // Comic Details Screen Text
-  static const String chapterList = 'Daftar Chapter';
-  static const String synopsis = 'Sinopsis';
-  static const String hide = 'Sembunyikan';
-  static const String addedToBookmark = 'Ditambahkan ke Bookmark';
-  static const String removedFromBookmark = 'Dihapus dari Bookmark';
-  static const String saveImg = 'Simpan Gambar';
-  static const String seeCover = 'Lihat cover';
+  static const String chapterList = 'Chapters';
+  static const String synopsis = 'Synopsis';
+  static const String hide = 'Hide';
+  static const String addedToBookmark = 'Added to bookmarks';
+  static const String removedFromBookmark = 'Removed from bookmarks';
+  static const String saveImg = 'Save image';
+  static const String seeCover = 'View cover';
   static const String rating = 'Rating';
   static const String chapter = 'Chapter';
-  static const String released = 'Rilis';
-  static const String readMore = 'Selengkapnya';
-  static const String newLabel = 'Baru';
-  static const String startReading = 'Mulai baca';
-  static const String addBookmark = 'Tambah ke bookmark';
-  static const String removeBookmark = 'Hapus dari bookmark';
-  static const String selectAll = 'Pilih semua';
-  static const String markRead = 'Tandai sudah dibaca';
-  static const String markUnread = 'Tandai belum dibaca';
-  static const String searchChapter = 'Cari chapter';
-  static const String searchChapterHint = 'Nomor chapter';
-  static const String sortChapter = 'Urutkan chapter';
-  static const String share = 'Bagikan';
-  static const String shareSuffix = 'baca di BacaKomik';
-  static const String titleCopied = 'Judul berhasil disalin ke clipboard';
-  static const String copyTitle = 'Salin judul';
-  static const String successSaveImg = 'Gambar berhasil disimpan di galeri.';
-  static const String failedSaveImg = 'Gagal menyimpan gambar.';
+  static const String chapters = 'Chapters';
+  static const String chapterLower = 'chapter';
+  static const String chaptersLower = 'chapters';
+  static const String released = 'Released';
+  static const String readMore = 'Read more';
+  static const String newLabel = 'New';
+  static const String startReading = 'Start reading';
+  static const String addBookmark = 'Add to bookmarks';
+  static const String removeBookmark = 'Remove from bookmarks';
+  static const String selectAll = 'Select all';
+  static const String markRead = 'Mark as read';
+  static const String markUnread = 'Mark as unread';
+  static const String searchChapter = 'Search chapter';
+  static const String searchChapterHint = 'Chapter number';
+  static const String sortChapter = 'Sort chapters';
+  static const String share = 'Share';
+  static const String shareSuffix = 'read it on BacaKomik';
+  static const String titleCopied = 'Title copied to clipboard';
+  static const String copyTitle = 'Copy title';
+  static const String successSaveImg = 'Image saved to gallery.';
+  static const String failedSaveImg = "Couldn't save image.";
 
   // Bookmarks Screen Text
-  static const String bookmarkEmpty = 'Belum ada bookmark';
+  static const String bookmarkEmpty = 'No bookmarks yet';
   static const String bookmarkEmptyHint =
-      'Tekan ikon bookmark di halaman komik untuk menyimpannya di sini.';
-  static const String searchBookmarkHint = 'Cari di bookmark';
-  static const String filterAll = 'Semua';
-  static const String filterUpdated = 'Ada update';
-  static const String filterFinished = 'Selesai';
-  static const String comics = 'komik';
-  static const String hasUpdate = 'ada update';
-  static const String deleteBookmark = 'Hapus Bookmark';
+      "Tap the bookmark icon on a comic's page to save it here.";
+  static const String searchBookmarkHint = 'Search bookmarks';
+  static const String filterAll = 'All';
+  static const String filterUpdated = 'Updated';
+  static const String filterFinished = 'Completed';
+  static const String comic = 'comic';
+  static const String comics = 'comics';
+  static const String hasUpdate = 'updated';
+  static const String deleteBookmark = 'Delete bookmarks';
   static const String deleteBookmarkDescription =
-      'Kamu yakin ingin menghapus komik berikut dari daftar bookmark?';
-  static const String selected = 'Dipilih';
-  static const String cancel = 'Batal';
-  static const String delete = 'Hapus';
+      'Are you sure you want to remove these comics from your bookmarks?';
+  static const String selected = 'selected';
+  static const String cancel = 'Cancel';
+  static const String delete = 'Delete';
 
   // Search Screen Text
-  static const String searchHint = 'Cari Komik Disini';
-  static const String comicNotFound = 'Komik Tidak Ditemukan';
-  static const String comicNotFoundFilter = 'Coba ubah atau reset filter.';
-  static const String comicNotFoundSearch = 'Coba kata kunci lain.';
+  static const String searchHint = 'Search comics';
+  static const String comicNotFound = 'No comics found';
+  static const String comicNotFoundFilter =
+      'Try changing or resetting the filters.';
+  static const String comicNotFoundSearch = 'Try a different keyword.';
 
   // Filter Screen Text
   static const String filter = 'Filter';
   static const String reset = 'Reset';
-  static const String type = 'Tipe';
+  static const String type = 'Type';
   static const String status = 'Status';
   static const String genre = 'Genre';
-  static const String sortShort = 'Urut';
-  static const String sortShortLong = 'Urutkan';
-  static const String showResults = 'Tampilkan hasil';
-  static const String close = 'Tutup';
-  static const String exploreSearchHint = 'Cari judul komik';
+  static const String sortShort = 'Sort';
+  static const String sortShortLong = 'Sort by';
+  static const String showResults = 'Show results';
+  static const String close = 'Close';
+  static const String exploreSearchHint = 'Search comic titles';
 
   // History Screen Text
-  static const String historyEmpty = 'Belum ada riwayat baca';
-  static const String historyEmptyHint =
-      'Chapter yang kamu baca akan muncul di sini.';
-  static const String swipeToDelete = 'geser untuk hapus';
-  static const String today = 'Hari ini';
-  static const String yesterday = 'Kemarin';
-  static const String deleteLastChapter = 'Chapter terakhir saja';
-  static const String deleteAllChapters = 'Semua chapter komik ini';
-  static const String clearHistory = 'Hapus Riwayat';
+  static const String historyEmpty = 'No reading history yet';
+  static const String historyEmptyHint = 'Chapters you read will show up here.';
+  static const String swipeToDelete = 'swipe to delete';
+  static const String today = 'Today';
+  static const String yesterday = 'Yesterday';
+  static const String deleteLastChapter = 'Last chapter only';
+  static const String deleteAllChapters = 'All chapters of this comic';
+  static const String clearHistory = 'Clear history';
   static const String clearHistoryConfirmation =
-      'Kamu yakin ingin menghapus semua riwayat baca yang tersimpan?';
+      'Are you sure you want to clear all saved reading history?';
 
   // More Screen Text
-  static const String history = 'Riwayat baca';
+  static const String history = 'Reading history';
 
-  static const String clearCache = 'Bersihkan cache';
-  static const String clearCacheDescription = 'Library dan unduhan tetap aman';
+  static const String clearCache = 'Clear cache';
+  static const String clearCacheDescription = 'Library and downloads stay safe';
   static const String clearCacheScope =
-      'Cover · halaman chapter · data sementara';
-  static const String cacheImages = 'Cover & halaman chapter';
-  static const String cacheCleared = 'Cache dibersihkan';
-  static const String removed = 'Dihapus';
-  static const String kept = 'Tetap';
+      'Covers · chapter pages · temporary data';
+  static const String cacheImages = 'Covers & chapter pages';
+  static const String cacheCleared = 'Cache cleared';
+  static const String removed = 'Removed';
+  static const String kept = 'Kept';
   static const String clearCacheConfirmation =
-      'Gambar yang tersimpan dihapus dan diunduh lagi saat kamu membukanya. '
-      'Bookmark, riwayat baca, dan unduhan tidak ikut terhapus.';
+      'Saved images are deleted and downloaded again when you open them. '
+      'Bookmarks, reading history and downloads are kept.';
 
-  static const String backupData = 'Cadangkan data';
-  static const String backupDataDescription = 'Bookmark dan riwayat baca';
-  static const String successBackupData = 'Data berhasil dicadangkan';
-  static const String failedBackupData = 'Gagal mencadangkan data';
+  static const String backupData = 'Back up data';
+  static const String backupDataDescription = 'Bookmarks and reading history';
+  static const String successBackupData = 'Data backed up';
+  static const String failedBackupData = "Couldn't back up data";
 
-  static const String restoreData = 'Pulihkan data';
-  static const String restoreDataDescription = 'Dari file cadangan';
-  static const String successRestoreData = 'Data berhasil dipulihkan';
-  static const String failedRestoreData = 'Gagal memulihkan data';
+  static const String restoreData = 'Restore data';
+  static const String restoreDataDescription = 'From a backup file';
+  static const String successRestoreData = 'Data restored';
+  static const String failedRestoreData = "Couldn't restore data";
 
-  static const String sync = 'Sinkron';
-  static const String syncDrive = 'Sinkron Google Drive';
+  static const String sync = 'Sync';
+  static const String syncDrive = 'Google Drive sync';
   static const String syncDriveDescription =
-      'Bookmark dan riwayat baca di semua perangkat';
-  static const String syncSigningIn = 'Menghubungkan…';
-  static const String syncSignInFailed = 'Gagal masuk ke Google';
-  static const String syncNow = 'Sinkronkan sekarang';
-  static const String syncing = 'Menyinkronkan…';
-  static const String syncFailed = 'Gagal sinkron, ketuk untuk coba lagi';
-  static const String syncNever = 'Belum pernah sinkron';
-  static const String syncLast = 'Terakhir';
-  static const String syncSignOut = 'Putuskan Google Drive';
+      'Bookmarks and reading history on all your devices';
+  static const String syncSigningIn = 'Connecting…';
+  static const String syncSignInFailed = "Couldn't sign in to Google";
+  static const String syncNow = 'Sync now';
+  static const String syncing = 'Syncing…';
+  static const String syncFailed = 'Sync failed, tap to try again';
+  static const String syncNever = 'Never synced';
+  static const String syncLast = 'Last';
+  static const String syncSignOut = 'Disconnect Google Drive';
   static const String syncSignOutDescription =
-      'Data di perangkat ini tetap tersimpan';
+      'Data on this device stays saved';
 
-  static const String bugReport = 'Lapor bug atau saran';
-  static const String aboutApp = 'Tentang aplikasi';
-  static const String website = 'Situs Kurodev';
-  static const String linkFailed = 'Tautan tidak bisa dibuka';
-  static const String chaptersRead = 'Chapter dibaca';
+  static const String bugReport = 'Report a bug or suggestion';
+  static const String aboutApp = 'About the app';
+  static const String website = 'Kurodev website';
+  static const String linkFailed = "Couldn't open the link";
+  static const String chaptersRead = 'Chapters read';
   static const String data = 'Data';
-  static const String theme = 'Tema';
-  static const String about = 'Tentang';
-  static const String themeSystem = 'Sistem';
-  static const String themeLight = 'Terang';
-  static const String themeDark = 'Gelap';
-  static const String version = 'Versi';
+  static const String theme = 'Theme';
+  static const String about = 'About';
+  static const String themeSystem = 'System';
+  static const String themeLight = 'Light';
+  static const String themeDark = 'Dark';
+  static const String version = 'Version';
 
   // Download Text
-  static const String downloads = 'Unduhan';
-  static const String downloadsDescription = 'Chapter untuk dibaca offline';
-  static const String download = 'Unduh';
-  static const String downloadQueued = 'chapter masuk antrean unduhan';
-  static const String downloadQueue = 'Antrean';
-  static const String downloadWaiting = 'Menunggu';
-  static const String downloadFailed = 'Gagal';
-  static const String downloadRetry = 'Unduh ulang';
-  static const String downloadRetryAll = 'Ulangi semua';
-  static const String downloadCancel = 'Batalkan unduhan';
-  static const String downloadsEmpty = 'Belum ada unduhan';
+  static const String downloads = 'Downloads';
+  static const String downloadsDescription = 'Chapters for offline reading';
+  static const String download = 'Download';
+  static const String downloadQueued = 'queued for download';
+  static const String downloadQueue = 'Queue';
+  static const String downloadWaiting = 'Waiting';
+  static const String downloadFailed = 'Failed';
+  static const String downloadRetry = 'Retry download';
+  static const String downloadRetryAll = 'Retry all';
+  static const String downloadCancel = 'Cancel download';
+  static const String downloadsEmpty = 'No downloads yet';
   static const String downloadsEmptyHint =
-      'Pilih chapter di halaman komik, lalu tekan ikon unduh.';
-  static const String downloadedChapters = 'Chapter diunduh';
-  static const String storageUsed = 'Ruang terpakai';
-  static const String deleteDownloads = 'Hapus unduhan';
+      "Select chapters on a comic's page, then tap the download icon.";
+  static const String downloadedChapters = 'Downloaded chapters';
+  static const String storageUsed = 'Storage used';
+  static const String deleteDownloads = 'Delete downloads';
   static const String deleteComicDownloads =
-      'Hapus semua chapter yang diunduh dari komik ini?';
-  static const String clearDownloads = 'Hapus semua unduhan';
+      'Delete all downloaded chapters of this comic?';
+  static const String clearDownloads = 'Delete all downloads';
   static const String clearDownloadsConfirmation =
-      'Semua chapter yang diunduh dihapus dari perangkat. Bookmark dan '
-      'riwayat baca tidak ikut terhapus.';
-  static const String downloadedLabel = 'Diunduh';
-  static const String downloadNotificationRunning = 'Mengunduh chapter';
-  static const String downloadNotificationDone = 'Unduhan selesai';
-  static const String downloadNotificationFailed = 'Sebagian unduhan gagal';
+      'All downloaded chapters are deleted from this device. Bookmarks and '
+      'reading history are kept.';
+  static const String downloadedLabel = 'Downloaded';
+  static const String downloadNotificationRunning = 'Downloading chapters';
+  static const String downloadNotificationDone = 'Downloads complete';
+  static const String downloadNotificationFailed = 'Some downloads failed';
 
   // Update Text
-  static const String checkUpdate = 'Cek pembaruan';
-  static const String updateAvailable = 'Pembaruan tersedia';
-  static const String updateNow = 'Perbarui';
-  static const String updateLater = 'Nanti';
-  static const String updateRetry = 'Coba lagi';
-  static const String updateDownloading = 'Mengunduh';
-  static const String updateInstalling = 'Membuka pemasang';
-  static const String updateFailed = 'Pembaruan gagal. Coba lagi nanti.';
-  static const String upToDate = 'Kamu sudah memakai versi terbaru';
-  static const String checkUpdateFailed = 'Gagal mengecek pembaruan';
-  static const String viewRelease = 'Lihat di GitHub';
+  static const String checkUpdate = 'Check for updates';
+  static const String updateAvailable = 'Update available';
+  static const String updateNow = 'Update';
+  static const String updateLater = 'Later';
+  static const String updateRetry = 'Try again';
+  static const String updateDownloading = 'Downloading';
+  static const String updateInstalling = 'Opening installer';
+  static const String updateFailed = 'Update failed. Try again later.';
+  static const String upToDate = "You're on the latest version";
+  static const String checkUpdateFailed = "Couldn't check for updates";
+  static const String viewRelease = 'View on GitHub';
 
   // Settings Text
 
   // Reader Text
-  static const String readerSettings = 'Pengaturan baca';
-  static const String readingDirection = 'Arah baca';
-  static const String directionVertical = 'Vertikal';
-  static const String directionRtl = 'Kanan-kiri';
-  static const String directionLtr = 'Kiri-kanan';
-  static const String pageSize = 'Ukuran halaman';
-  static const String fitWidth = 'Lebar layar';
-  static const String fitHeight = 'Tinggi layar';
-  static const String keepScreenOn = 'Layar tetap menyala';
-  static const String keepScreenOnHint = 'Selama membaca chapter';
-  static const String pageGap = 'Jarak antar halaman';
-  static const String pageGapHint = 'Garis 8px di antara halaman';
-  static const String pageShort = 'Hal';
-  static const String autoScrollSpeed = 'Kecepatan gulir';
-  static const String autoScrollHint = 'Mode vertikal. Sentuh layar untuk jeda';
-  static const String autoScrollStart = 'Mulai gulir otomatis';
-  static const String autoScrollStop = 'Hentikan gulir otomatis';
-  static const String slower = 'Lebih lambat';
-  static const String faster = 'Lebih cepat';
-  static const String pages = 'halaman';
-  static const String finished = 'Selesai';
-  static const String finishedLower = 'selesai';
-  static const String nextChapter = 'Berikutnya';
-  static const String previousChapter = 'Chapter sebelumnya';
-  static const String releasedOn = 'Rilis';
-  static const String continueTo = 'Lanjut ke Chapter';
+  static const String readerSettings = 'Reader settings';
+  static const String readingDirection = 'Reading direction';
+  static const String directionVertical = 'Vertical';
+  static const String directionRtl = 'Right to left';
+  static const String directionLtr = 'Left to right';
+  static const String pageSize = 'Page size';
+  static const String fitWidth = 'Fit width';
+  static const String fitHeight = 'Fit height';
+  static const String keepScreenOn = 'Keep screen on';
+  static const String keepScreenOnHint = 'While reading a chapter';
+  static const String pageGap = 'Page gap';
+  static const String pageGapHint = '8px line between pages';
+  static const String pageShort = 'Page';
+  static const String autoScrollSpeed = 'Scroll speed';
+  static const String autoScrollHint = 'Vertical mode. Tap the screen to pause';
+  static const String autoScrollStart = 'Start auto-scroll';
+  static const String autoScrollStop = 'Stop auto-scroll';
+  static const String slower = 'Slower';
+  static const String faster = 'Faster';
+  static const String pages = 'pages';
+  static const String finished = 'Finished';
+  static const String finishedLower = 'finished';
+  static const String nextChapter = 'Next';
+  static const String previousChapter = 'Previous chapter';
+  static const String releasedOn = 'Released';
+  static const String continueTo = 'Continue to Chapter';
   static const String latestChapterReached =
-      'Kamu sudah di chapter terbaru. Chapter baru akan muncul di Bookmark.';
-  static const String toHome = 'Ke beranda';
+      "You're on the latest chapter. New chapters will show up in Bookmarks.";
+  static const String toHome = 'Go home';
+
+  // Sources and extensions
+  static const String changeSource = 'Change source';
+  static const String manage = 'Manage';
+  static const String addSource = 'Add source';
+  static const String openSource = 'Open';
+  static const String sourceConnecting = 'Connecting';
+  static const String sourceOnline = 'Online';
+  static const String sourceOffline = 'Offline';
+  static const String sourceError = 'Error';
+  static const String noSourceShort = 'No source installed';
+  static const String extensions = 'Extensions';
+  static const String extensionsDescription = 'Sources to read comics from';
+  static const String installed = 'Installed';
+  static const String available = 'Available';
+  static const String install = 'Install';
+  static const String update = 'Update';
+  static const String uninstall = 'Uninstall';
+  static const String uninstallDescription =
+      'Its bookmarks and reading history stay, but can only be opened again '
+      'after reinstalling the extension.';
+  static const String extensionInstalled = 'installed';
+  static const String extensionUpdated = 'updated';
+  static const String needsAppUpdate = 'Needs app update';
+  static const String noExtensionsHint =
+      'Install an extension to browse and read comics.';
+  static const String noAvailableExtensions = 'Nothing new to install';
+  static const String noAvailableExtensionsHint =
+      'Every extension from your repos is installed. Add a repo for more.';
+  static const String manageRepos = 'Extension repos';
+  static const String reposDescription = 'Where extensions are listed from';
+  static const String addRepo = 'Add repo';
+  static const String repoAdding = 'Checking repo…';
+  static const String repoInvalid = 'Not a valid extension repo URL';
+  static const String repoFailed = 'Repo unavailable';
+  static const String repoWarning =
+      'Extensions run code and access the internet. Only add repos you trust.';
+  static const String noFilters = 'This source has no filters.';
+  static const String duplicateTitle = 'Already in your library';
+  static const String duplicateMessagePrefix =
+      'You bookmarked this series from';
+  static const String duplicateMessage =
+      'Migrate moves that bookmark and its reading history here. '
+      'Add anyway keeps both as separate entries.';
+  static const String migrate = 'Migrate';
+  static const String addAnyway = 'Add anyway';
+  static const String migrated = 'Migrated to this source';
 }

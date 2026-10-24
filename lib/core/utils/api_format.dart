@@ -19,10 +19,11 @@ class ApiFormat {
     final date = iso != null ? DateTime.tryParse(iso)?.toLocal() : null;
     if (date == null) return '-';
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'Baru saja';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
-    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
-    if (diff.inDays < 30) return '${diff.inDays} hari lalu';
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} h ago';
+    if (diff.inDays == 1) return '1 day ago';
+    if (diff.inDays < 30) return '${diff.inDays} days ago';
     String two(int n) => n.toString().padLeft(2, '0');
     return '${two(date.day)}/${two(date.month)}/${date.year}';
   }

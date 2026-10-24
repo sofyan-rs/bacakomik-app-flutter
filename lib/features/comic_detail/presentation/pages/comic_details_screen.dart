@@ -3,6 +3,7 @@ import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/deep_links.dart';
@@ -14,6 +15,7 @@ import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_i
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
 import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -111,9 +113,12 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     );
   }
 
-  /// Jelajah filtered by [genre] alone, on top of the tabs.
+  /// Explore filtered by [genre] alone, in this comic's source, on top of
+  /// the tabs.
   void _exploreGenre(Genre genre) {
-    context.read<FilterCubit>().showGenre(genre.slug);
+    final source = ComicKey.sourceOf(widget.slug);
+    context.read<FilterCubit>().showGenre(source, genre.slug);
+    context.read<SourcesCubit>().select(source);
     RootTabsScope.read(context).openExploreFiltered();
     Navigator.of(context).popUntil((route) => route.isFirst);
   }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ExploreFilter {
 
- String get sortBy; String get type; String get status; List<String> get genres;/// Title search, sent as `q`.
+ String get source; Map<String, List<String>> get values;/// Title search.
  String get query;
 /// Create a copy of ExploreFilter
 /// with the given fields replaced by the non-null parameter values.
@@ -28,20 +28,20 @@ $ExploreFilterCopyWith<ExploreFilter> get copyWith => _$ExploreFilterCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as ExploreFilter;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExploreFilter&&(identical(other.sortBy, _this.sortBy) || other.sortBy == _this.sortBy)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.status, _this.status) || other.status == _this.status)&&const DeepCollectionEquality().equals(other.genres, _this.genres)&&(identical(other.query, _this.query) || other.query == _this.query));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExploreFilter&&(identical(other.source, _this.source) || other.source == _this.source)&&const DeepCollectionEquality().equals(other.values, _this.values)&&(identical(other.query, _this.query) || other.query == _this.query));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ExploreFilter;
-  return Object.hash(runtimeType,_this.sortBy,_this.type,_this.status,const DeepCollectionEquality().hash(_this.genres),_this.query);
+  return Object.hash(runtimeType,_this.source,const DeepCollectionEquality().hash(_this.values),_this.query);
 }
 
 @override
 String toString() {
   final _this = this as ExploreFilter;
-  return 'ExploreFilter(sortBy: ${_this.sortBy}, type: ${_this.type}, status: ${_this.status}, genres: ${_this.genres}, query: ${_this.query})';
+  return 'ExploreFilter(source: ${_this.source}, values: ${_this.values}, query: ${_this.query})';
 }
 
 
@@ -52,7 +52,7 @@ abstract mixin class $ExploreFilterCopyWith<$Res>  {
   factory $ExploreFilterCopyWith(ExploreFilter value, $Res Function(ExploreFilter) _then) = _$ExploreFilterCopyWithImpl;
 @useResult
 $Res call({
- String sortBy, String type, String status, List<String> genres, String query
+ String source, Map<String, List<String>> values, String query
 });
 
 
@@ -69,13 +69,11 @@ class _$ExploreFilterCopyWithImpl<$Res>
 
 /// Create a copy of ExploreFilter
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? sortBy = null,Object? type = null,Object? status = null,Object? genres = null,Object? query = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? source = null,Object? values = null,Object? query = null,}) {
   return _then(ExploreFilter(
-sortBy: null == sortBy ? _self.sortBy : sortBy // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as String,genres: null == genres ? _self.genres : genres // ignore: cast_nullable_to_non_nullable
-as List<String>,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as String,values: null == values ? _self.values : values // ignore: cast_nullable_to_non_nullable
+as Map<String, List<String>>,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -161,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String sortBy,  String type,  String status,  List<String> genres,  String query)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String source,  Map<String, List<String>> values,  String query)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExploreFilter() when $default != null:
-return $default(_that.sortBy,_that.type,_that.status,_that.genres,_that.query);case _:
+return $default(_that.source,_that.values,_that.query);case _:
   return orElse();
 
 }
@@ -182,10 +180,10 @@ return $default(_that.sortBy,_that.type,_that.status,_that.genres,_that.query);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String sortBy,  String type,  String status,  List<String> genres,  String query)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String source,  Map<String, List<String>> values,  String query)  $default,) {final _that = this;
 switch (_that) {
 case _ExploreFilter():
-return $default(_that.sortBy,_that.type,_that.status,_that.genres,_that.query);case _:
+return $default(_that.source,_that.values,_that.query);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +200,10 @@ return $default(_that.sortBy,_that.type,_that.status,_that.genres,_that.query);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String sortBy,  String type,  String status,  List<String> genres,  String query)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String source,  Map<String, List<String>> values,  String query)?  $default,) {final _that = this;
 switch (_that) {
 case _ExploreFilter() when $default != null:
-return $default(_that.sortBy,_that.type,_that.status,_that.genres,_that.query);case _:
+return $default(_that.source,_that.values,_that.query);case _:
   return null;
 
 }
@@ -217,20 +215,18 @@ return $default(_that.sortBy,_that.type,_that.status,_that.genres,_that.query);c
 
 
 class _ExploreFilter implements ExploreFilter {
-  const _ExploreFilter({this.sortBy = 'latest', this.type = 'all', this.status = 'all',  List<String> genres = const [], this.query = ''}): _genres = genres;
+  const _ExploreFilter({this.source = '',  Map<String, List<String>> values = const {}, this.query = ''}): _values = values;
   
 
-@override@JsonKey() final  String sortBy;
-@override@JsonKey() final  String type;
-@override@JsonKey() final  String status;
- final  List<String> _genres;
-@override@JsonKey() List<String> get genres {
-  if (_genres is EqualUnmodifiableListView) return _genres;
+@override@JsonKey() final  String source;
+ final  Map<String, List<String>> _values;
+@override@JsonKey() Map<String, List<String>> get values {
+  if (_values is EqualUnmodifiableMapView) return _values;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_genres);
+  return EqualUnmodifiableMapView(_values);
 }
 
-/// Title search, sent as `q`.
+/// Title search.
 @override@JsonKey() final  String query;
 
 /// Create a copy of ExploreFilter
@@ -243,18 +239,18 @@ _$ExploreFilterCopyWith<_ExploreFilter> get copyWith => __$ExploreFilterCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExploreFilter&&(identical(other.sortBy, sortBy) || other.sortBy == sortBy)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.genres, _genres)&&(identical(other.query, query) || other.query == query));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExploreFilter&&(identical(other.source, source) || other.source == source)&&const DeepCollectionEquality().equals(other.values, _values)&&(identical(other.query, query) || other.query == query));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,sortBy,type,status,const DeepCollectionEquality().hash(_genres),query);
+    return Object.hash(runtimeType,source,const DeepCollectionEquality().hash(_values),query);
 }
 
 @override
 String toString() {
-    return 'ExploreFilter(sortBy: $sortBy, type: $type, status: $status, genres: $genres, query: $query)';
+    return 'ExploreFilter(source: $source, values: $values, query: $query)';
 }
 
 
@@ -265,7 +261,7 @@ abstract mixin class _$ExploreFilterCopyWith<$Res> implements $ExploreFilterCopy
   factory _$ExploreFilterCopyWith(_ExploreFilter value, $Res Function(_ExploreFilter) _then) = __$ExploreFilterCopyWithImpl;
 @override @useResult
 $Res call({
- String sortBy, String type, String status, List<String> genres, String query
+ String source, Map<String, List<String>> values, String query
 });
 
 
@@ -282,13 +278,11 @@ class __$ExploreFilterCopyWithImpl<$Res>
 
 /// Create a copy of ExploreFilter
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sortBy = null,Object? type = null,Object? status = null,Object? genres = null,Object? query = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? source = null,Object? values = null,Object? query = null,}) {
   return _then(_ExploreFilter(
-sortBy: null == sortBy ? _self.sortBy : sortBy // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as String,genres: null == genres ? _self._genres : genres // ignore: cast_nullable_to_non_nullable
-as List<String>,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as String,values: null == values ? _self._values : values // ignore: cast_nullable_to_non_nullable
+as Map<String, List<String>>,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

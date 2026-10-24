@@ -6,6 +6,7 @@ import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
 import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/download/presentation/pages/downloads_screen.dart';
+import 'package:bacakomik_app/features/source/presentation/pages/extensions_screen.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/settings/presentation/widgets/app_info.dart';
@@ -18,7 +19,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Lainnya groups: DATA (downloads, backup, cache), SINKRON, TEMA, TENTANG.
+/// More groups: DATA (downloads, backup, cache), SYNC, THEME, ABOUT.
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
@@ -66,6 +67,13 @@ class Settings extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
           child: ListGroup(
             children: [
+              ListRow(
+                icon: LucideIcons300.puzzle,
+                title: AppText.extensions,
+                subtitle: AppText.extensionsDescription,
+                showChevron: true,
+                onTap: () => ExtensionsScreen.open(context),
+              ),
               ListRow(
                 icon: LucideIcons300.download,
                 title: AppText.downloads,

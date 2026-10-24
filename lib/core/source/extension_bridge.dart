@@ -1,0 +1,109 @@
+import 'dart:io';
+
+import 'package:bacakomik_app/core/storage/hive_boxes.dart';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:hive_ce/hive.dart';
+import 'package:html/parser.dart' as html_parser;
+import 'package:injectable/injectable.dart';
+import 'package:path_provider/path_provider.dart';
+
+/// Host side of the functions extensions call: `http.fetch`, `html.select`,
+/// `storage.get/set`. Each extension gets its own cookie jar and storage
+/// namespace.
+@lazySingleton
+class ExtensionBridge {
+  ExtensionBridge(@Named(HiveBoxes.extensionStorage) this._storage);
+
+  /// Chrome on Android; sites serve extensions what they serve the phone.
+  static const userAgent =
+      'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36';
+
+  final Box<String> _storage;
+  final _clients = <String, Future<Dio>>{};
+
+  Future<Object?> handle(String extensionId, String method, Object? args) =>
+      switch (method) {
+        'http.fetch' => _fetch(extensionId, (args as Map).cast()),
+        'html.select' => Future.value(
+          _select((args as List)[0] as String, args[1] as String),
+        ),
+        'storage.get' => Future.value(
+          _storage.get('$extensionId:${(args as List)[0]}'),
+        ),
+        'storage.set' =>
+          _storage
+              .put('$extensionId:${(args as List)[0]}', '${args[1]}')
+              .then((_) => null),
+        _ => Future.error(UnsupportedError('Unknown host call $method')),
+      };
+
+  Future<Map<String, Object?>> _fetch(
+    String extensionId,
+    Map<String, Object?> req,
+  ) async {
+    final dio = await (_clients[extensionId] ??= _client(extensionId));
+    final headers = (req['headers'] as Map?)?.cast<String, Object?>() ?? {};
+    final res = await dio.request<String>(
+      req['url'] as String,
+      data: req['body'],
+      options: Options(
+        method: (req['method'] as String?)?.toUpperCase() ?? 'GET',
+        headers: {'User-Agent': userAgent, ...headers},
+      ),
+    );
+    return {
+      'status': res.statusCode ?? 0,
+      'url': res.realUri.toString(),
+      'headers': {
+        for (final MapEntry(:key, :value) in res.headers.map.entries)
+          key.toLowerCase(): value.join(', '),
+      },
+      'body': res.data ?? '',
+    };
+  }
+
+  Future<Dio> _client(String extensionId) async {
+    final dir = await getApplicationSupportDirectory();
+    final jar = PersistCookieJar(
+      storage: FileStorage(
+        '${dir.path}${Platform.pathSeparator}cookies'
+        '${Platform.pathSeparator}$extensionId',
+      ),
+    );
+    return Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 30),
+        responseType: ResponseType.plain,
+        // Scripts read the status themselves.
+        validateStatus: (_) => true,
+      ),
+    )..interceptors.add(CookieManager(jar));
+  }
+
+  /// Clears an extension's cookies and stored values, e.g. on uninstall.
+  Future<void> reset(String extensionId) async {
+    _clients.remove(extensionId);
+    final dir = await getApplicationSupportDirectory();
+    final cookies = Directory(
+      '${dir.path}${Platform.pathSeparator}cookies'
+      '${Platform.pathSeparator}$extensionId',
+    );
+    if (await cookies.exists()) await cookies.delete(recursive: true);
+    await _storage.deleteAll(
+      _storage.keys.cast<String>().where((k) => k.startsWith('$extensionId:')),
+    );
+  }
+
+  static List<Map<String, Object?>> _select(String source, String selector) => [
+    for (final e in html_parser.parse(source).querySelectorAll(selector))
+      {
+        'text': e.text.trim(),
+        'html': e.innerHtml,
+        'outerHtml': e.outerHtml,
+        'attrs': {for (final a in e.attributes.entries) '${a.key}': a.value},
+      },
+  ];
+}

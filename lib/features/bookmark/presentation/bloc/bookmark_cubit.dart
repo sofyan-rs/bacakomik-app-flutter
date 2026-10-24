@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecases.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmarks.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +19,7 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     this._saveBookmarks,
     this._removeBookmarks,
     this._refreshBookmarks,
+    this._migrateComic,
     this._clock,
   ) : super(const []);
 
@@ -25,6 +27,7 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   final SaveBookmarks _saveBookmarks;
   final RemoveBookmarks _removeBookmarks;
   final RefreshBookmarks _refreshBookmarks;
+  final MigrateComic _migrateComic;
   final Clock _clock;
 
   Future<void> load() async {
@@ -33,10 +36,10 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   }
 
   Future<void> addBookmark(ComicDetails comic, String slug) => _thenReload(
-        _saveBookmarks([
-          Bookmark(slug: slug, comicDetails: comic, updatedDate: _clock.now()),
-        ]),
-      );
+    _saveBookmarks([
+      Bookmark(slug: slug, comicDetails: comic, updatedDate: _clock.now()),
+    ]),
+  );
 
   Future<void> removeBookmark(String slug) => removeBookmarkList([slug]);
 
@@ -48,6 +51,18 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
       _thenReload(_refreshBookmarks(const NoParams()));
 
   bool isBookmark(String slug) => state.any((b) => b.slug == slug);
+
+  /// Bookmarks of the same series from other sources, by title.
+  List<Bookmark> sameSeriesAs(String slug, String title) =>
+      sameSeries(state, slug, title);
+
+  /// Moves the bookmark and read history of [from] to [to]. The caller
+  /// reloads history.
+  Future<void> migrate({
+    required String from,
+    required String to,
+    required ComicDetails details,
+  }) => _thenReload(_migrateComic((from: from, to: to, details: details)));
 
   /// Bookmarks whose title contains [keyword] (case-insensitive on title).
   List<Bookmark> searchBookmark(String keyword) => state

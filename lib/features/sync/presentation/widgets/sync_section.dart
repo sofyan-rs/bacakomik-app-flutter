@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Lainnya SINKRON group: connect Google Drive, or sync now and disconnect.
+/// More SYNC group: connect Google Drive, or sync now and disconnect.
 class SyncSection extends StatelessWidget {
   const SyncSection({super.key});
 

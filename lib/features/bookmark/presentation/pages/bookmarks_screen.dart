@@ -198,7 +198,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       title: AppText.bookmark,
       subtitle: count == 0
           ? null
-          : '$count ${AppText.comics} · $updated ${AppText.hasUpdate}',
+          : '${AppText.count(count, AppText.comic, AppText.comics)} · '
+                '$updated ${AppText.hasUpdate}',
       actions: [
         if (count > 0)
           RoundIconButton(
@@ -277,7 +278,7 @@ class _DeleteSheet extends StatelessWidget {
         ActionSheetHeader(
           icon: LucideIcons300.trash2,
           title: AppText.deleteBookmark,
-          subtitle: '$count ${AppText.comics}',
+          subtitle: AppText.count(count, AppText.comic, AppText.comics),
         ),
         const SizedBox(height: DotSpace.s4),
         Text(

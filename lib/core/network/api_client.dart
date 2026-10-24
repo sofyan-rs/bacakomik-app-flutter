@@ -1,10 +1,12 @@
+import 'package:bacakomik_app/core/di/register_module.dart';
 import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+/// JSON GET for absolute URLs (GitHub releases).
 @lazySingleton
 class ApiClient {
-  ApiClient(this._dio);
+  ApiClient(@Named(filesDio) this._dio);
 
   final Dio _dio;
 

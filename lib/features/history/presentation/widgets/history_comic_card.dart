@@ -8,6 +8,7 @@ import 'package:bacakomik_app/features/history/domain/entities/read_history.dart
 import 'package:bacakomik_app/features/history/domain/entities/read_progress.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/widgets/history_groups.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -94,6 +95,15 @@ class HistoryComicCard extends StatelessWidget {
                 total: progress.total,
                 dots: 10,
                 gap: 2,
+              ),
+              const SizedBox(width: DotSpace.s3),
+              Flexible(
+                child: Text(
+                  context.sourceNameOf(item.comicSlug).toUpperCase(),
+                  style: DotlineText.label.copyWith(color: c.inkFaint),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

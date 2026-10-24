@@ -5,7 +5,7 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:flutter/material.dart';
 
-/// Grid cell for Jelajah and search: 2:3 cover with type label, two-line
+/// Grid cell for Explore and search: 2:3 cover with type label, two-line
 /// title, latest chapter.
 class ComicCard extends StatelessWidget {
   const ComicCard({

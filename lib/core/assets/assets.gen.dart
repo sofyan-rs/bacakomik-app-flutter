@@ -14,6 +14,22 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart' as _svg;
 import 'package:vector_graphics/vector_graphics.dart' as _vg;
 
+class $AssetsExtensionsGen {
+  const $AssetsExtensionsGen();
+
+  /// File path: assets/extensions/bacakomik.v1.js
+  String get bacakomikV1 => 'assets/extensions/bacakomik.v1.js';
+
+  /// File path: assets/extensions/index.json
+  String get index => 'assets/extensions/index.json';
+
+  /// File path: assets/extensions/voratoon.v1.js
+  String get voratoonV1 => 'assets/extensions/voratoon.v1.js';
+
+  /// List of all assets
+  List<String> get values => [bacakomikV1, index, voratoonV1];
+}
+
 class $AssetsIconsGen {
   const $AssetsIconsGen();
 
@@ -53,6 +69,7 @@ class $AssetsSoundsGen {
 }
 
 abstract final class Assets {
+  static const $AssetsExtensionsGen extensions = $AssetsExtensionsGen();
   static const $AssetsIconsGen icons = $AssetsIconsGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
   static const $AssetsSoundsGen sounds = $AssetsSoundsGen();

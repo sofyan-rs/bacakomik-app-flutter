@@ -34,7 +34,7 @@ class DotMeter extends StatelessWidget {
     final c = Dotline.of(context);
     final lit = litDots(value, total, dots);
     return Semantics(
-      value: '$value dari $total',
+      value: '$value of $total',
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
