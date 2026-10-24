@@ -9,13 +9,19 @@ import 'package:injectable/injectable.dart';
 class SourcesState {
   const SourcesState({
     this.installed = const [],
+    this.known = const [],
     this.activeId,
     this.features = const SourceFeatures(),
     this.loadError,
     this.ready = false,
   });
 
+  /// Sources to pick from: enabled languages only.
   final List<ExtensionMeta> installed;
+
+  /// Every source of the installed extensions, also languages turned off,
+  /// to name and badge their comics.
+  final List<ExtensionMeta> known;
   final String? activeId;
 
   /// Filter options and Home sorts of the active source.
@@ -41,14 +47,14 @@ extension SourceNames on BuildContext {
   /// or when no [SourcesCubit] is above (widget tests).
   ExtensionMeta? sourceOf(String key) {
     final id = ComicKey.sourceOf(key);
-    final installed = read<SourcesCubit?>()?.state.installed ?? const [];
-    return installed.where((e) => e.id == id).firstOrNull;
+    final known = read<SourcesCubit?>()?.state.known ?? const [];
+    return known.where((e) => e.id == id).firstOrNull;
   }
 
   /// `VoraToon · ID`: name and language of the source of a [ComicKey].
   /// Just the id when not installed.
   String sourceLabelOf(String key) => switch (sourceOf(key)) {
-    final meta? => '${meta.name} · ${meta.lang.toUpperCase()}',
+    final meta? => '${meta.baseName} · ${meta.lang.toUpperCase()}',
     null => ComicKey.sourceOf(key),
   };
 }
@@ -82,6 +88,7 @@ class SourcesCubit extends Cubit<SourcesState> {
     emit(
       SourcesState(
         installed: _manager.installed,
+        known: _manager.knownSources,
         activeId: activeId,
         features: features,
         loadError: error,

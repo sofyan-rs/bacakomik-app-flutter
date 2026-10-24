@@ -91,7 +91,12 @@ class ExtensionRuntime implements SourceBackend {
       return null;
     });
     _eval(_prelude, 'prelude.js');
-    _eval(script, '${meta.id}.js');
+    // The source this engine runs as; a multi-language script reads `lang`.
+    _eval(
+      'var source = ${jsonEncode({'id': meta.id, 'lang': meta.lang})};',
+      'source.js',
+    );
+    _eval(script, '${meta.extensionId}.js');
     final described = jsonDecode(_eval('__bkDescribe()', 'describe.js')) as Map;
     _home = described['home'];
     _hasFilters = described['hasFilters'] == true;

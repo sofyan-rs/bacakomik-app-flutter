@@ -72,14 +72,14 @@ class ExtensionsState {
 @injectable
 class ExtensionsCubit extends Cubit<ExtensionsState> {
   ExtensionsCubit(this._manager)
-    : super(ExtensionsState(installed: _manager.installed)) {
+    : super(ExtensionsState(installed: _manager.extensions)) {
     _manager.addListener(_onInstalledChanged);
   }
 
   final ExtensionManager _manager;
 
   void _onInstalledChanged() {
-    if (!isClosed) emit(state.copyWith(installed: _manager.installed));
+    if (!isClosed) emit(state.copyWith(installed: _manager.extensions));
   }
 
   Future<void> refresh() async {
@@ -98,7 +98,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> {
     emit(
       state.copyWith(
         loading: false,
-        installed: _manager.installed,
+        installed: _manager.extensions,
         available: newest.values.toList()
           ..sort(
             (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
@@ -149,7 +149,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> {
     if (!isClosed) {
       emit(
         state.copyWith(
-          installed: _manager.installed,
+          installed: _manager.extensions,
           busy: {...state.busy}..remove(id),
         ),
       );

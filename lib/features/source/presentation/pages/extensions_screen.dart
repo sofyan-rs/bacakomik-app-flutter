@@ -11,6 +11,7 @@ import 'package:bacakomik_app/features/source/presentation/widgets/source_picker
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/languages_sheet.dart';
 
 /// Installed extensions with their updates, and the ones the repos offer,
 /// filtered by language.
@@ -205,6 +206,9 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
                     onTap: () => _install(update, update: true),
                   )
                 : null,
+            onLanguages: meta.languages.isEmpty
+                ? null
+                : () => showLanguagesSheet(context, meta),
             onRemove: () => _uninstall(meta),
           );
         },
@@ -314,12 +318,16 @@ class _ExtensionRow extends StatelessWidget {
     required this.meta,
     required this.busy,
     this.action,
+    this.onLanguages,
     this.onRemove,
   });
 
   final ExtensionMeta meta;
   final bool busy;
   final _RowAction? action;
+
+  /// Opens the language toggles of a multi-language extension.
+  final VoidCallback? onLanguages;
   final VoidCallback? onRemove;
 
   @override
@@ -353,6 +361,14 @@ class _ExtensionRow extends StatelessWidget {
                     size: DotButtonSize.medium,
                     expand: false,
                   ),
+                if (onLanguages != null)
+                  RoundIconButton(
+                    icon: LucideIcons300.languages,
+                    semanticLabel: '${AppText.languages} ${meta.name}',
+                    iconSize: DotSize.iconSmall,
+                    background: Colors.transparent,
+                    onTap: onLanguages,
+                  ),
                 if (onRemove != null)
                   RoundIconButton(
                     icon: LucideIcons300.trash2,
@@ -381,6 +397,16 @@ String languageName(String code) => switch (code) {
   'ru' => 'Russian',
   'th' => 'Thai',
   'vi' => 'Vietnamese',
+  'pt-br' => 'Portuguese (Brazil)',
+  'es-la' => 'Spanish (Latin America)',
+  'zh-hk' => 'Chinese (Traditional)',
+  'it' => 'Italian',
+  'pl' => 'Polish',
+  'tr' => 'Turkish',
+  'ar' => 'Arabic',
+  'ms' => 'Malay',
+  'tl' => 'Filipino',
+  'uk' => 'Ukrainian',
   'all' => 'Multi',
   _ => code.toUpperCase(),
 };

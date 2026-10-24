@@ -68,6 +68,9 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   static const _reposKey = 'repos';
   static const _activeKey = 'active';
 
+  /// Enabled languages of a multi-language extension: `langs:<id>`.
+  static String _languagesKey(String extensionId) => 'langs:$extensionId';
+
   /// Ids become file names and [ComicKey] prefixes.
   static final _validId = RegExp(r'^[a-z0-9][a-z0-9_-]*$');
 
@@ -77,8 +80,28 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   final ExtensionBridge _bridge;
   final _runtimes = <String, ExtensionRuntime>{};
 
-  /// Installed extensions by name.
-  List<ExtensionMeta> get installed {
+  /// Sources to read from, by name: every single-source extension and the
+  /// enabled languages of multi-language ones.
+  List<ExtensionMeta> get installed => [
+    for (final e in extensions)
+      if (e.languages.isEmpty)
+        e
+      else
+        for (final language in languagesOf(e.id)) e.forLanguage(language),
+  ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+  /// Every source of the installed extensions, enabled or not; names comics
+  /// of a language that was turned off.
+  List<ExtensionMeta> get knownSources => [
+    for (final e in extensions)
+      if (e.languages.isEmpty)
+        e
+      else
+        for (final language in e.languages) e.forLanguage(language),
+  ];
+
+  /// Installed extensions by name, as installed (one per script).
+  List<ExtensionMeta> get extensions {
     final list = <ExtensionMeta>[];
     for (final raw in _installed.values) {
       try {
@@ -93,11 +116,42 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
+  /// An installed extension, or one language of a multi-language one
+  /// (enabled or not, so its comics still open).
   ExtensionMeta? meta(String sourceId) {
-    final raw = _installed.get(sourceId);
+    if (_extension(sourceId) case final e?) return e;
+    for (final e in extensions) {
+      if (e.sourceFor(sourceId) case final source?) return source;
+    }
+    return null;
+  }
+
+  ExtensionMeta? _extension(String extensionId) {
+    final raw = _installed.get(extensionId);
     return raw == null
         ? null
         : ExtensionMeta.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+  }
+
+  /// Enabled languages of a multi-language extension; English, else its
+  /// first language, until the user picks.
+  List<String> languagesOf(String extensionId) {
+    final all = _extension(extensionId)?.languages ?? const [];
+    final raw = _settings.get(_languagesKey(extensionId));
+    if (raw != null) {
+      final saved = (jsonDecode(raw) as List).cast<String>();
+      return [
+        for (final l in all)
+          if (saved.contains(l)) l,
+      ];
+    }
+    if (all.contains('en')) return const ['en'];
+    return all.take(1).toList();
+  }
+
+  Future<void> setLanguages(String extensionId, List<String> languages) async {
+    await _settings.put(_languagesKey(extensionId), jsonEncode(languages));
+    notifyListeners();
   }
 
   /// Display name of a source, falling back to its id when not installed.
@@ -124,12 +178,13 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   /// default source, else the first installed.
   @override
   String? get activeSource {
+    final sources = installed;
     final saved = _settings.get(_activeKey);
-    if (saved != null && _installed.containsKey(saved)) return saved;
-    if (_installed.containsKey(ComicKey.defaultSource)) {
+    if (saved != null && sources.any((s) => s.id == saved)) return saved;
+    if (sources.any((s) => s.id == ComicKey.defaultSource)) {
       return ComicKey.defaultSource;
     }
-    return installed.firstOrNull?.id;
+    return sources.firstOrNull?.id;
   }
 
   Future<void> setActiveSource(String sourceId) async {
@@ -176,7 +231,7 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     if (meta == null) {
       throw ServerException('Source "$sourceId" is not installed');
     }
-    final file = await _scriptFile(sourceId);
+    final file = await _scriptFile(meta.extensionId);
     if (!await file.exists()) {
       throw ServerException('${meta.name} is not installed');
     }
@@ -256,13 +311,30 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     notifyListeners();
   }
 
-  Future<void> uninstall(String sourceId) async {
-    _runtimes.remove(sourceId)?.dispose();
-    final file = await _scriptFile(sourceId);
+  /// Removes an extension and, for a multi-language one, all its sources.
+  Future<void> uninstall(String extensionId) async {
+    final sourceIds = [
+      for (final s in knownSources)
+        if (s.extensionId == extensionId) s.id,
+    ];
+    _disposeRuntimes(extensionId);
+    final file = await _scriptFile(extensionId);
     if (await file.exists()) await file.delete();
-    await _installed.delete(sourceId);
-    await _bridge.reset(sourceId);
+    await _installed.delete(extensionId);
+    await _settings.delete(_languagesKey(extensionId));
+    for (final id in {extensionId, ...sourceIds}) {
+      await _bridge.reset(id);
+    }
     notifyListeners();
+  }
+
+  /// Unloads the engines of an extension's sources.
+  void _disposeRuntimes(String extensionId) {
+    _runtimes.removeWhere((id, runtime) {
+      if (runtime.meta.extensionId != extensionId) return false;
+      runtime.dispose();
+      return true;
+    });
   }
 
   Future<void> _save(ExtensionMeta meta, String script) async {
@@ -270,7 +342,7 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     await file.parent.create(recursive: true);
     await file.writeAsString(script);
     await _installed.put(meta.id, jsonEncode(meta.toJson()));
-    _runtimes.remove(meta.id)?.dispose();
+    _disposeRuntimes(meta.id);
   }
 
   Future<void> _saveRepos(List<String> list) =>

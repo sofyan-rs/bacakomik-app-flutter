@@ -45,8 +45,9 @@ class _MissingSourceState extends State<MissingSource> {
     if (!mounted) return;
     setState(() {
       _looking = false;
+      // A language of a multi-language extension installs the extension.
       _offered = [for (final entry in catalog) ...?entry.repo?.extensions]
-          .where((e) => e.id == widget.sourceId)
+          .where((e) => e.sourceFor(widget.sourceId) != null)
           .firstOrNull;
     });
   }
@@ -58,6 +59,14 @@ class _MissingSourceState extends State<MissingSource> {
     });
     try {
       await _manager.install(meta);
+      // Turn on the comic's language next to the default ones.
+      if (meta.sourceFor(widget.sourceId) case final source?
+          when source.parentId != null) {
+        await _manager.setLanguages(
+          meta.id,
+          {..._manager.languagesOf(meta.id), source.lang}.toList(),
+        );
+      }
       widget.onInstalled();
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
@@ -74,7 +83,10 @@ class _MissingSourceState extends State<MissingSource> {
   @override
   Widget build(BuildContext context) {
     final offered = _offered;
-    final name = offered?.name ?? widget.sourceId;
+    final name =
+        offered?.sourceFor(widget.sourceId)?.name ??
+        offered?.name ??
+        widget.sourceId;
     return EmptyState(
       icon: LucideIcons300.puzzle,
       title: '$name ${AppText.sourceNotInstalled}',

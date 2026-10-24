@@ -17,6 +17,8 @@ class ExtensionMeta {
     required this.sha256,
     this.nsfw = false,
     this.repoUrl,
+    this.languages = const [],
+    this.parentId,
   });
 
   factory ExtensionMeta.fromJson(
@@ -33,6 +35,7 @@ class ExtensionMeta {
     sha256: json['sha256'] as String,
     nsfw: json['nsfw'] as bool? ?? false,
     repoUrl: repoUrl ?? json['repoUrl'] as String?,
+    languages: (json['languages'] as List?)?.cast<String>() ?? const [],
   );
 
   final String id;
@@ -53,6 +56,47 @@ class ExtensionMeta {
 
   /// `index.json` the extension came from; null for bundled ones.
   final String? repoUrl;
+
+  /// Language codes of a multi-language extension (e.g. MangaDex). Each
+  /// enabled one is its own source ([forLanguage]); empty for an extension
+  /// that is a single source.
+  final List<String> languages;
+
+  /// For a source made by [forLanguage]: the extension's id.
+  final String? parentId;
+
+  /// Id of the installed extension (script file, updates, uninstall).
+  String get extensionId => parentId ?? id;
+
+  /// Name without the language a [forLanguage] source adds.
+  String get baseName => parentId == null
+      ? name
+      : name.replaceFirst(' (${lang.toUpperCase()})', '');
+
+  /// The source [sourceId] of this extension: itself, or one of its
+  /// [languages] (`<id>-<lang>`). Null when it is neither.
+  ExtensionMeta? sourceFor(String sourceId) {
+    if (sourceId == id) return this;
+    if (!sourceId.startsWith('$id-')) return null;
+    final language = sourceId.substring(id.length + 1);
+    return languages.contains(language) ? forLanguage(language) : null;
+  }
+
+  /// The source of one of [languages]: id `<id>-<lang>`, so its comics,
+  /// bookmarks and history are its own.
+  ExtensionMeta forLanguage(String language) => ExtensionMeta(
+    id: '$id-$language',
+    name: '$name (${language.toUpperCase()})',
+    lang: language,
+    version: version,
+    apiVersion: apiVersion,
+    baseUrl: baseUrl,
+    file: file,
+    sha256: sha256,
+    nsfw: nsfw,
+    repoUrl: repoUrl,
+    parentId: id,
+  );
 
   bool get supported => apiVersion <= supportedExtensionApi;
 
@@ -77,6 +121,7 @@ class ExtensionMeta {
     'sha256': sha256,
     'nsfw': nsfw,
     if (repoUrl != null) 'repoUrl': repoUrl,
+    if (languages.isNotEmpty) 'languages': languages,
   };
 }
 

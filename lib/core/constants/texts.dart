@@ -270,6 +270,11 @@ class AppText {
   static const String addSource = 'Add source';
   static const String openSource = 'Open';
   static const String sourceFrom = 'From';
+  static const String languages = 'Languages';
+  static const String languagesDescription = 'Each language is its own source';
+  static const String languagesHint =
+      'Bookmarks and history are kept per language. Turning one off keeps '
+      'them; its comics still open.';
   static const String openWebView = 'Open in WebView';
   static const String refresh = 'Refresh';
   static const String openInBrowser = 'Open in browser';

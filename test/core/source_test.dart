@@ -180,4 +180,36 @@ void main() {
       expect(Challenge.urlOf('challenge: not-a-url'), isNull);
     });
   });
+
+  group('ExtensionMeta languages', () {
+    final dex = ExtensionMeta.fromJson({
+      'id': 'mangadex',
+      'name': 'MangaDex',
+      'lang': 'all',
+      'version': '1.0.0',
+      'file': 'x.js',
+      'sha256': '',
+      'languages': ['en', 'id', 'pt-br'],
+    });
+
+    test('each language is a source with its own id', () {
+      final id = dex.forLanguage('id');
+      expect(id.id, 'mangadex-id');
+      expect(id.name, 'MangaDex (ID)');
+      expect(id.baseName, 'MangaDex');
+      expect(id.lang, 'id');
+      expect(id.extensionId, 'mangadex');
+    });
+
+    test('sourceFor matches the extension and its languages only', () {
+      expect(dex.sourceFor('mangadex')?.id, 'mangadex');
+      expect(dex.sourceFor('mangadex-pt-br')?.lang, 'pt-br');
+      expect(dex.sourceFor('mangadex-fr'), isNull);
+      expect(dex.sourceFor('mangafire'), isNull);
+    });
+
+    test('languages survive a round trip', () {
+      expect(ExtensionMeta.fromJson(dex.toJson()).languages, dex.languages);
+    });
+  });
 }
