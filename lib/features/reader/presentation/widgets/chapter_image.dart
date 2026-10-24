@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:bacakomik_app/core/network/image_cache.dart';
 
 /// One chapter page. Long press to save it to the gallery.
 ///
@@ -145,6 +146,7 @@ class ChapterImg extends StatelessWidget {
             errorBuilder: (_, _, _) => error(),
           )
         : CachedNetworkImage(
+            cacheManager: comicImageCache,
             cacheKey: chapterImage,
             imageUrl: chapterImage,
             httpHeaders: headers,

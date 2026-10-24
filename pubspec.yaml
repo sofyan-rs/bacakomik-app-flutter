@@ -39,6 +39,8 @@ dependencies:
   injectable: ^3.0.0
   json_annotation: ^4.12.0
   lucide_icons_flutter: ^4.0.0
+  cronet_http: ^1.10.0
+  http: ^1.6.0
   native_dio_adapter: ^1.8.0
   ota_update: ^7.1.0
   package_info_plus: ^10.2.2

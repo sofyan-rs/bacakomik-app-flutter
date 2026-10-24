@@ -5,6 +5,7 @@ import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:bacakomik_app/core/network/image_cache.dart';
 
 /// Centered detail cover. Tap to view it large and save it to the gallery.
 class DetailCover extends StatelessWidget {
@@ -25,7 +26,11 @@ class DetailCover extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(DotRadius.m),
-              child: CachedNetworkImage(imageUrl: url, fit: BoxFit.contain),
+              child: CachedNetworkImage(
+                cacheManager: comicImageCache,
+                imageUrl: url,
+                fit: BoxFit.contain,
+              ),
             ),
             const SizedBox(height: DotSpace.s4),
             DotButton(

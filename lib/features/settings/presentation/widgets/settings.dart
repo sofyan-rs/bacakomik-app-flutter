@@ -16,10 +16,10 @@ import 'package:bacakomik_app/features/sync/presentation/widgets/sync_section.da
 import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bacakomik_app/features/category/presentation/pages/categories_screen.dart';
+import 'package:bacakomik_app/core/network/image_cache.dart';
 
 /// More groups: SOURCES, LIBRARY (categories, downloads, cache), BACKUP &
 /// SYNC, THEME, ABOUT.
@@ -32,7 +32,7 @@ class Settings extends StatelessWidget {
       builder: (_) => const ClearCacheSheet(),
     );
     if (confirmed != true) return;
-    await DefaultCacheManager().emptyCache();
+    await comicImageCache.emptyCache();
     if (context.mounted) {
       showSnackBar(context: context, message: AppText.cacheCleared);
     }

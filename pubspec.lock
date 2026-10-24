@@ -378,7 +378,7 @@ packages:
     source: hosted
     version: "1.16.0"
   cronet_http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: cronet_http
       sha256: d8aa6c72b4a3b6c9b299a53f0c4e10cfc87961b2c7496e6c9a7216157f9c529c
@@ -934,7 +934,7 @@ packages:
     source: hosted
     version: "0.15.7"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"

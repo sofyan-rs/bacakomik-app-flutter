@@ -16,7 +16,6 @@ import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settin
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -24,6 +23,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 import 'package:bacakomik_app/core/source/comic_key.dart';
+import 'package:bacakomik_app/core/network/image_cache.dart';
 
 class ReadChapterScreen extends StatelessWidget {
   const ReadChapterScreen({
@@ -283,7 +283,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       final page = i;
       // Download into the disk cache only; decoding happens when the page
       // is shown, at screen width (see ChapterImg).
-      DefaultCacheManager()
+      comicImageCache
           .getSingleFile(
             _images[page],
             key: _images[page],
