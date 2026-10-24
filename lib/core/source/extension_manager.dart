@@ -142,7 +142,7 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
         in (index['extensions'] as List).cast<Map<String, dynamic>>()) {
       final bundled = ExtensionMeta.fromJson(json);
       final current = meta(bundled.id);
-      if (current != null && current.version >= bundled.version) continue;
+      if (current != null && !bundled.isNewerThan(current)) continue;
       try {
         final script = await rootBundle.loadString(
           'assets/extensions/${bundled.file}',

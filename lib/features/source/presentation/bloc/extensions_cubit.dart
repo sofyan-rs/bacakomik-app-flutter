@@ -38,7 +38,7 @@ class ExtensionsState {
     final current = installed.where((e) => e.id == id).firstOrNull;
     final offered = available.where((e) => e.id == id).firstOrNull;
     if (current == null || offered == null) return null;
-    return offered.version > current.version ? offered : null;
+    return offered.isNewerThan(current) ? offered : null;
   }
 
   int get updateCount =>
@@ -91,7 +91,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> {
         // The first repo listing an id wins unless another has a newer
         // version.
         final seen = newest[e.id];
-        if (seen == null || e.version > seen.version) newest[e.id] = e;
+        if (seen == null || e.isNewerThan(seen)) newest[e.id] = e;
       }
     }
     if (isClosed) return;

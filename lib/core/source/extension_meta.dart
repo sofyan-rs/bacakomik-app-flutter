@@ -1,3 +1,5 @@
+import 'package:bacakomik_app/core/utils/version.dart';
+
 /// Bridge and contract version this app implements. Extensions built for a
 /// newer one are listed but cannot be installed.
 const supportedExtensionApi = 1;
@@ -24,7 +26,7 @@ class ExtensionMeta {
     id: json['id'] as String,
     name: json['name'] as String,
     lang: json['lang'] as String? ?? 'all',
-    version: (json['version'] as num).toInt(),
+    version: _version(json['version']),
     apiVersion: (json['apiVersion'] as num?)?.toInt() ?? 1,
     baseUrl: json['baseUrl'] as String? ?? '',
     file: json['file'] as String,
@@ -38,7 +40,9 @@ class ExtensionMeta {
 
   /// ISO 639-1 code, or `all` for multi-language sources.
   final String lang;
-  final int version;
+
+  /// `major.minor.patch`; compare with [isNewerThan].
+  final String version;
   final int apiVersion;
   final String baseUrl;
 
@@ -51,6 +55,13 @@ class ExtensionMeta {
   final String? repoUrl;
 
   bool get supported => apiVersion <= supportedExtensionApi;
+
+  bool isNewerThan(ExtensionMeta other) =>
+      isNewerVersion(version, other.version);
+
+  /// Builds before semver stored a plain integer; `1` reads as `1.0.0`.
+  static String _version(Object? raw) =>
+      raw is num ? '${raw.toInt()}.0.0' : raw as String;
 
   /// Host shown under the source name, e.g. `voratoon.co`.
   String get domain => Uri.tryParse(baseUrl)?.host ?? baseUrl;

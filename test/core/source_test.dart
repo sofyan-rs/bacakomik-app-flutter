@@ -146,4 +146,24 @@ void main() {
       expect(features.valueOf({}, 'missing'), isEmpty);
     });
   });
+
+  group('ExtensionMeta.version', () {
+    ExtensionMeta meta(Object version) => ExtensionMeta.fromJson({
+      'id': 'x',
+      'name': 'X',
+      'version': version,
+      'file': 'x.js',
+      'sha256': '',
+    });
+
+    test('reads integers stored by older builds as major versions', () {
+      expect(meta(2).version, '2.0.0');
+    });
+
+    test('compares as semver, not as text', () {
+      expect(meta('1.10.0').isNewerThan(meta('1.9.0')), isTrue);
+      expect(meta('1.0.0').isNewerThan(meta(1)), isFalse);
+      expect(meta('1.0.1').isNewerThan(meta(1)), isTrue);
+    });
+  });
 }
