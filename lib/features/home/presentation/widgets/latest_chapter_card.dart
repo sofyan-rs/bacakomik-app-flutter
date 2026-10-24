@@ -37,7 +37,7 @@ class LatestChapterCard extends StatelessWidget {
       ),
       title: title,
       subtitle: '$type · ${isCompleted ? 'Completed' : 'Ongoing'}',
-      value: 'CH. $chapter',
+      value: chapter == '-' ? null : 'CH. $chapter',
       onTap: () => ComicDetailsScreen.open(
         context,
         slug: slug,

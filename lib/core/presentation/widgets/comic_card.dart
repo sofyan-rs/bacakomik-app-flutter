@@ -52,7 +52,8 @@ class ComicCard extends StatelessWidget {
           ),
           const SizedBox(height: DotSpace.s1),
           Text(
-            'CH. $chapter',
+            // Blank (not "CH. -") when the source does not say.
+            chapter == '-' ? '' : 'CH. $chapter',
             style: DotlineText.data.copyWith(color: c.inkFaint),
             maxLines: 1,
           ),

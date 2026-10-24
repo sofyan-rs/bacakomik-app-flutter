@@ -202,10 +202,12 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
             busy: state.busy.contains(meta.id),
             action: update != null && update.supported
                 ? _RowAction(
-                    label: '${AppText.update} v${update.version}',
+                    label: AppText.update,
                     onTap: () => _install(update, update: true),
                   )
                 : null,
+            // The new version goes in the subtitle; the button stays short.
+            newVersion: update?.supported == true ? update!.version : null,
             onLanguages: meta.languages.isEmpty
                 ? null
                 : () => showLanguagesSheet(context, meta),
@@ -318,6 +320,7 @@ class _ExtensionRow extends StatelessWidget {
     required this.meta,
     required this.busy,
     this.action,
+    this.newVersion,
     this.onLanguages,
     this.onRemove,
   });
@@ -325,6 +328,9 @@ class _ExtensionRow extends StatelessWidget {
   final ExtensionMeta meta;
   final bool busy;
   final _RowAction? action;
+
+  /// Offered update, shown as `v1.0.0 → v1.0.1`.
+  final String? newVersion;
 
   /// Opens the language toggles of a multi-language extension.
   final VoidCallback? onLanguages;
@@ -335,7 +341,9 @@ class _ExtensionRow extends StatelessWidget {
     final c = Dotline.of(context);
     return ListRow(
       title: meta.name,
-      subtitle: extensionLine(meta),
+      subtitle: newVersion == null
+          ? extensionLine(meta)
+          : '${extensionLine(meta)} → v$newVersion',
       leading: Container(
         width: 40,
         height: 40,
@@ -354,7 +362,18 @@ class _ExtensionRow extends StatelessWidget {
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (action case final action?)
+                // With the language and remove buttons beside it, an
+                // update is an icon; the new version is in the subtitle.
+                if (action case final action? when onRemove != null)
+                  RoundIconButton(
+                    icon: LucideIcons300.download,
+                    semanticLabel: '${action.label} ${meta.name}',
+                    iconSize: DotSize.iconSmall,
+                    background: c.accent,
+                    foreground: c.onAccent,
+                    onTap: action.onTap,
+                  )
+                else if (action case final action?)
                   DotButton(
                     label: action.label,
                     onTap: action.onTap,

@@ -40,11 +40,7 @@ class ComicSliderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ComicCover(
-              imageUrl: cover,
-              radius: DotRadius.m,
-              typeLabel: type,
-            ),
+            ComicCover(imageUrl: cover, radius: DotRadius.m, typeLabel: type),
             const SizedBox(height: DotSpace.s3),
             Text(
               title,
@@ -54,7 +50,8 @@ class ComicSliderCard extends StatelessWidget {
             ),
             const SizedBox(height: DotSpace.s1),
             Text(
-              'CH. $chapter',
+              // Blank (not "CH. -") when the source does not say.
+              chapter == '-' ? '' : 'CH. $chapter',
               style: DotlineText.data.copyWith(color: c.inkFaint),
               maxLines: 1,
             ),

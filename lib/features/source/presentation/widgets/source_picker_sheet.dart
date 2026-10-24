@@ -221,8 +221,9 @@ class _SourceCard extends StatelessWidget {
 }
 
 /// `voratoon.co · ID · v1`.
+/// `mangadex.org · MULTI · v1.0.0`; a multi-language extension says MULTI.
 String extensionLine(ExtensionMeta meta) =>
-    '${meta.domain} · ${meta.lang.toUpperCase()} · v${meta.version}';
+    '${meta.domain} · ${meta.languages.isEmpty ? meta.lang.toUpperCase() : 'MULTI'} · v${meta.version}';
 
 class _Radio extends StatelessWidget {
   const _Radio({required this.selected});
