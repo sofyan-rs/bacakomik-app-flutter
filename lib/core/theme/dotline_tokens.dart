@@ -63,6 +63,9 @@ abstract final class DotSize {
   static const navPadding = 6.0;
   static const navCircle = 52.0;
   static const navGap = 12.0;
+
+  /// Screens at least this wide move the nav to a left rail.
+  static const navRailMinWidth = 600.0;
 }
 
 /// Only for floating elements: bottom nav, chapter navigation pill, menus.

@@ -72,6 +72,34 @@ void main() {
     expect(find.bySemanticsLabel('Jelajah'), findsOneWidget);
   });
 
+  testWidgets('FloatingNavBar as a rail stacks tabs vertically', (
+    tester,
+  ) async {
+    int? tapped;
+    await tester.pumpWidget(
+      _wrap(
+        FloatingNavBar(
+          axis: Axis.vertical,
+          selectedIndex: 0,
+          onSelected: (i) => tapped = i,
+          items: const [
+            FloatingNavItem(icon: LucideIcons300.house, label: 'Beranda'),
+            FloatingNavItem(icon: LucideIcons300.compass, label: 'Jelajah'),
+            FloatingNavItem(icon: LucideIcons300.history, label: 'Riwayat'),
+          ],
+        ),
+      ),
+    );
+
+    final house = tester.getCenter(find.byIcon(LucideIcons300.house));
+    final history = tester.getCenter(find.byIcon(LucideIcons300.history));
+    expect(history.dx, house.dx);
+    expect(history.dy, greaterThan(house.dy));
+
+    await tester.tap(find.byIcon(LucideIcons300.history));
+    expect(tapped, 2);
+  });
+
   testWidgets('SegmentedControl reports the tapped value', (tester) async {
     String? changed;
     await tester.pumpWidget(

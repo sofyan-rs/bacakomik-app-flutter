@@ -22,11 +22,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Five main tabs under a floating pill nav, with content fading into the
-/// background behind it.
+/// background behind it. On wide screens the pill becomes a rail on the left.
 ///
 /// Tabs get the nav height as bottom [MediaQuery] padding, so scrollables
 /// that use the default padding clear the nav on their own. Screens with
 /// explicit padding add `MediaQuery.paddingOf(context).bottom` themselves.
+/// With the rail, tabs get its width as left padding instead, which their
+/// [SafeArea] applies.
 class RootScreen extends StatefulWidget {
   const RootScreen({super.key});
 
@@ -93,6 +95,7 @@ class _RootScreenState extends State<RootScreen> {
     final systemBottom = media.viewPadding.bottom;
     final keyboardOpen = media.viewInsets.bottom > 0;
     final navInset = floatingNavInset(context);
+    final rail = useNavRail(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
     final tabs = RootTabsScope.of(context);
 
@@ -114,9 +117,11 @@ class _RootScreenState extends State<RootScreen> {
             children: [
               MediaQuery(
                 data: media.copyWith(
-                  padding: media.padding.copyWith(
-                    bottom: keyboardOpen ? 0 : navInset,
-                  ),
+                  padding: rail
+                      ? media.padding.copyWith(left: floatingRailInset(context))
+                      : media.padding.copyWith(
+                          bottom: keyboardOpen ? 0 : navInset,
+                        ),
                 ),
                 child: IndexedStack(
                   index: tabs.index,
@@ -129,7 +134,27 @@ class _RootScreenState extends State<RootScreen> {
                   ],
                 ),
               ),
-              if (!keyboardOpen) ...[
+              if (rail && !keyboardOpen)
+                Positioned(
+                  left: media.viewPadding.left + DotSize.navGap,
+                  top: media.viewPadding.top,
+                  bottom: media.viewPadding.bottom,
+                  // Scrolls when the screen is too short for every tab.
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: DotSize.navGap,
+                      ),
+                      child: FloatingNavBar(
+                        items: _items,
+                        selectedIndex: tabs.index,
+                        onSelected: tabs.select,
+                        axis: Axis.vertical,
+                      ),
+                    ),
+                  ),
+                )
+              else if (!keyboardOpen) ...[
                 Positioned(
                   left: 0,
                   right: 0,
