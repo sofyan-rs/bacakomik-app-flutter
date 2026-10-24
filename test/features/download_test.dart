@@ -230,11 +230,20 @@ void main() {
 
   DownloadStatus? statusOf(String slug) => local.getChapter(slug)?.status;
 
-  /// Lets the queue and page events run.
-  Future<void> pump() async {
-    for (var i = 0; i < 50; i++) {
-      await Future<void>.delayed(Duration.zero);
+  /// Waits until every chapter of [slugs] is downloading with its pages
+  /// handed to the queue. A fixed number of event-loop turns was flaky on a
+  /// busy machine.
+  Future<void> pagesQueued(List<String> slugs) async {
+    for (var i = 0; i < 1000; i++) {
+      final ready = slugs.every(
+        (slug) =>
+            statusOf(slug) == DownloadStatus.downloading &&
+            pages.pending.any((j) => j.chapterSlug == slug),
+      );
+      if (ready) return;
+      await Future<void>.delayed(const Duration(milliseconds: 5));
     }
+    fail('pages of $slugs were never queued');
   }
 
   /// Waits until nothing is queued or downloading.
@@ -359,8 +368,7 @@ void main() {
     test('pages saved while the app was away are picked up on sync', () async {
       pages.autoRun = false;
       await start([details.chapters.last]);
-      await pump();
-      expect(statusOf('solo-leveling/1'), DownloadStatus.downloading);
+      await pagesQueued(['solo-leveling/1']);
 
       pages.runAll(emit: false);
       await repo.sync();
@@ -374,7 +382,7 @@ void main() {
         'downloading and stalled ones fail', () async {
       pages.autoRun = false;
       await start(details.chapters.reversed.toList());
-      await pump();
+      await pagesQueued(['solo-leveling/1', 'solo-leveling/2']);
       // Chapter 2's pages are lost; chapter 1's still wait.
       pages.pending.removeWhere((j) => j.chapterSlug == 'solo-leveling/2');
 
@@ -407,7 +415,7 @@ void main() {
     test('delete cancels pages and removes files, record and comic', () async {
       pages.autoRun = false;
       await start([details.chapters.last]);
-      await pump();
+      await pagesQueued(['solo-leveling/1']);
 
       await repo.delete(['solo-leveling/1']);
 
