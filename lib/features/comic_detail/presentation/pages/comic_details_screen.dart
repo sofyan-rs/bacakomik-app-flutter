@@ -23,6 +23,7 @@ import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/missing_source.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 
 class ComicDetailsScreen extends StatelessWidget {
   const ComicDetailsScreen({
@@ -257,12 +258,10 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
           ],
           ComicDetailsError(:final message) => [
             SliverToBoxAdapter(
-              child: EmptyState(
-                icon: LucideIcons300.bug,
-                title: AppText.error,
+              child: SourceError(
                 message: message,
-                actionLabel: AppText.retry,
-                onAction: _load,
+                sourceId: _sourceId,
+                onRetry: _load,
               ),
             ),
           ],

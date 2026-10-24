@@ -117,6 +117,9 @@ abstract class ChapterDetailResponse with _$ChapterDetailResponse {
     num? prev,
     num? next,
     @Default([]) List<String> images,
+
+    /// Sent with every image request (e.g. a Referer the host requires).
+    @Default({}) Map<String, String> headers,
   }) = _ChapterDetailResponse;
 
   factory ChapterDetailResponse.fromJson(Map<String, dynamic> json) =>

@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -343,12 +344,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
     ],
     ComicListError(:final message) => [
       SliverToBoxAdapter(
-        child: EmptyState(
-          icon: LucideIcons300.bug,
-          title: AppText.error,
+        child: SourceError(
           message: message,
-          actionLabel: AppText.retry,
-          onAction: _load,
+          sourceId: context.read<SourcesCubit>().state.activeId,
+          onRetry: _load,
         ),
       ),
     ],

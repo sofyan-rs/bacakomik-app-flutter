@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
@@ -54,6 +55,9 @@ class ExtensionBridge {
         headers: {'User-Agent': userAgent, ...headers},
       ),
     );
+    if (_isChallenge(res)) {
+      throw ServerException(Challenge.message(res.realUri.toString()));
+    }
     return {
       'status': res.statusCode ?? 0,
       'url': res.realUri.toString(),
@@ -63,6 +67,16 @@ class ExtensionBridge {
       },
       'body': res.data ?? '',
     };
+  }
+
+  /// A Cloudflare challenge page instead of the response.
+  static bool _isChallenge(Response<String> res) {
+    if (res.headers.value('cf-mitigated') == 'challenge') return true;
+    final status = res.statusCode;
+    if (status != 403 && status != 503) return false;
+    final server = res.headers.value('server') ?? '';
+    return server.toLowerCase().contains('cloudflare') &&
+        RegExp('challenge-platform|Just a moment').hasMatch(res.data ?? '');
   }
 
   Future<PersistCookieJar> _jar(String extensionId) =>

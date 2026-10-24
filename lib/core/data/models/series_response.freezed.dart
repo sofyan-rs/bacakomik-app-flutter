@@ -1156,7 +1156,8 @@ as String?,
 /// @nodoc
 mixin _$ChapterDetailResponse {
 
- num get number; String? get title; num? get prev; num? get next; List<String> get images;
+ num get number; String? get title; num? get prev; num? get next; List<String> get images;/// Sent with every image request (e.g. a Referer the host requires).
+ Map<String, String> get headers;
 /// Create a copy of ChapterDetailResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1170,20 +1171,20 @@ $ChapterDetailResponseCopyWith<ChapterDetailResponse> get copyWith => _$ChapterD
 @override
 bool operator ==(Object other) {
   final _this = this as ChapterDetailResponse;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChapterDetailResponse&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.prev, _this.prev) || other.prev == _this.prev)&&(identical(other.next, _this.next) || other.next == _this.next)&&const DeepCollectionEquality().equals(other.images, _this.images));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChapterDetailResponse&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.prev, _this.prev) || other.prev == _this.prev)&&(identical(other.next, _this.next) || other.next == _this.next)&&const DeepCollectionEquality().equals(other.images, _this.images)&&const DeepCollectionEquality().equals(other.headers, _this.headers));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ChapterDetailResponse;
-  return Object.hash(runtimeType,_this.number,_this.title,_this.prev,_this.next,const DeepCollectionEquality().hash(_this.images));
+  return Object.hash(runtimeType,_this.number,_this.title,_this.prev,_this.next,const DeepCollectionEquality().hash(_this.images),const DeepCollectionEquality().hash(_this.headers));
 }
 
 @override
 String toString() {
   final _this = this as ChapterDetailResponse;
-  return 'ChapterDetailResponse(number: ${_this.number}, title: ${_this.title}, prev: ${_this.prev}, next: ${_this.next}, images: ${_this.images})';
+  return 'ChapterDetailResponse(number: ${_this.number}, title: ${_this.title}, prev: ${_this.prev}, next: ${_this.next}, images: ${_this.images}, headers: ${_this.headers})';
 }
 
 
@@ -1194,7 +1195,7 @@ abstract mixin class $ChapterDetailResponseCopyWith<$Res>  {
   factory $ChapterDetailResponseCopyWith(ChapterDetailResponse value, $Res Function(ChapterDetailResponse) _then) = _$ChapterDetailResponseCopyWithImpl;
 @useResult
 $Res call({
- num number, String? title, num? prev, num? next, List<String> images
+ num number, String? title, num? prev, num? next, List<String> images, Map<String, String> headers
 });
 
 
@@ -1211,14 +1212,15 @@ class _$ChapterDetailResponseCopyWithImpl<$Res>
 
 /// Create a copy of ChapterDetailResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? number = null,Object? title = freezed,Object? prev = freezed,Object? next = freezed,Object? images = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? number = null,Object? title = freezed,Object? prev = freezed,Object? next = freezed,Object? images = null,Object? headers = null,}) {
   return _then(ChapterDetailResponse(
 number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
 as num,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,prev: freezed == prev ? _self.prev : prev // ignore: cast_nullable_to_non_nullable
 as num?,next: freezed == next ? _self.next : next // ignore: cast_nullable_to_non_nullable
 as num?,images: null == images ? _self.images : images // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,headers: null == headers ? _self.headers : headers // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,
   ));
 }
 
@@ -1303,10 +1305,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( num number,  String? title,  num? prev,  num? next,  List<String> images)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( num number,  String? title,  num? prev,  num? next,  List<String> images,  Map<String, String> headers)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChapterDetailResponse() when $default != null:
-return $default(_that.number,_that.title,_that.prev,_that.next,_that.images);case _:
+return $default(_that.number,_that.title,_that.prev,_that.next,_that.images,_that.headers);case _:
   return orElse();
 
 }
@@ -1324,10 +1326,10 @@ return $default(_that.number,_that.title,_that.prev,_that.next,_that.images);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( num number,  String? title,  num? prev,  num? next,  List<String> images)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( num number,  String? title,  num? prev,  num? next,  List<String> images,  Map<String, String> headers)  $default,) {final _that = this;
 switch (_that) {
 case _ChapterDetailResponse():
-return $default(_that.number,_that.title,_that.prev,_that.next,_that.images);case _:
+return $default(_that.number,_that.title,_that.prev,_that.next,_that.images,_that.headers);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1344,10 +1346,10 @@ return $default(_that.number,_that.title,_that.prev,_that.next,_that.images);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( num number,  String? title,  num? prev,  num? next,  List<String> images)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( num number,  String? title,  num? prev,  num? next,  List<String> images,  Map<String, String> headers)?  $default,) {final _that = this;
 switch (_that) {
 case _ChapterDetailResponse() when $default != null:
-return $default(_that.number,_that.title,_that.prev,_that.next,_that.images);case _:
+return $default(_that.number,_that.title,_that.prev,_that.next,_that.images,_that.headers);case _:
   return null;
 
 }
@@ -1359,7 +1361,7 @@ return $default(_that.number,_that.title,_that.prev,_that.next,_that.images);cas
 @JsonSerializable()
 
 class _ChapterDetailResponse implements ChapterDetailResponse {
-  const _ChapterDetailResponse({required this.number, this.title, this.prev, this.next,  List<String> images = const []}): _images = images;
+  const _ChapterDetailResponse({required this.number, this.title, this.prev, this.next,  List<String> images = const [],  Map<String, String> headers = const {}}): _images = images,_headers = headers;
   factory _ChapterDetailResponse.fromJson(Map<String, dynamic> json) => _$ChapterDetailResponseFromJson(json);
 
 @override final  num number;
@@ -1371,6 +1373,15 @@ class _ChapterDetailResponse implements ChapterDetailResponse {
   if (_images is EqualUnmodifiableListView) return _images;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_images);
+}
+
+/// Sent with every image request (e.g. a Referer the host requires).
+ final  Map<String, String> _headers;
+/// Sent with every image request (e.g. a Referer the host requires).
+@override@JsonKey() Map<String, String> get headers {
+  if (_headers is EqualUnmodifiableMapView) return _headers;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_headers);
 }
 
 
@@ -1387,18 +1398,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChapterDetailResponse&&(identical(other.number, number) || other.number == number)&&(identical(other.title, title) || other.title == title)&&(identical(other.prev, prev) || other.prev == prev)&&(identical(other.next, next) || other.next == next)&&const DeepCollectionEquality().equals(other.images, _images));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChapterDetailResponse&&(identical(other.number, number) || other.number == number)&&(identical(other.title, title) || other.title == title)&&(identical(other.prev, prev) || other.prev == prev)&&(identical(other.next, next) || other.next == next)&&const DeepCollectionEquality().equals(other.images, _images)&&const DeepCollectionEquality().equals(other.headers, _headers));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,number,title,prev,next,const DeepCollectionEquality().hash(_images));
+    return Object.hash(runtimeType,number,title,prev,next,const DeepCollectionEquality().hash(_images),const DeepCollectionEquality().hash(_headers));
 }
 
 @override
 String toString() {
-    return 'ChapterDetailResponse(number: $number, title: $title, prev: $prev, next: $next, images: $images)';
+    return 'ChapterDetailResponse(number: $number, title: $title, prev: $prev, next: $next, images: $images, headers: $headers)';
 }
 
 
@@ -1409,7 +1420,7 @@ abstract mixin class _$ChapterDetailResponseCopyWith<$Res> implements $ChapterDe
   factory _$ChapterDetailResponseCopyWith(_ChapterDetailResponse value, $Res Function(_ChapterDetailResponse) _then) = __$ChapterDetailResponseCopyWithImpl;
 @override @useResult
 $Res call({
- num number, String? title, num? prev, num? next, List<String> images
+ num number, String? title, num? prev, num? next, List<String> images, Map<String, String> headers
 });
 
 
@@ -1426,14 +1437,15 @@ class __$ChapterDetailResponseCopyWithImpl<$Res>
 
 /// Create a copy of ChapterDetailResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? number = null,Object? title = freezed,Object? prev = freezed,Object? next = freezed,Object? images = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? number = null,Object? title = freezed,Object? prev = freezed,Object? next = freezed,Object? images = null,Object? headers = null,}) {
   return _then(_ChapterDetailResponse(
 number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
 as num,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,prev: freezed == prev ? _self.prev : prev // ignore: cast_nullable_to_non_nullable
 as num?,next: freezed == next ? _self.next : next // ignore: cast_nullable_to_non_nullable
 as num?,images: null == images ? _self._images : images // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,headers: null == headers ? _self._headers : headers // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,
   ));
 }
 

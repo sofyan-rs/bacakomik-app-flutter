@@ -12,9 +12,13 @@ class PageJob {
     required this.index,
     required this.url,
     required this.path,
+    this.headers = const {},
   });
 
   final String chapterSlug;
+
+  /// Sent with the request, e.g. a Referer the image host requires.
+  final Map<String, String> headers;
 
   /// 0-based page index.
   final int index;
@@ -126,6 +130,7 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
         DownloadTask(
           taskId: _taskId(job.chapterSlug, job.index),
           url: job.url,
+          headers: job.headers,
           baseDirectory: BaseDirectory.root,
           directory: '$root/${_dirOf(job.path)}',
           filename: job.path.split('/').last,

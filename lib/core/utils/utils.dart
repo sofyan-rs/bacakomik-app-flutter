@@ -29,12 +29,13 @@ void showSnackBar({
 Future saveImg({
   required BuildContext context,
   required String img,
+  Map<String, String> headers = const {},
 }) async {
   try {
     if (img.startsWith('http')) {
       final response = await Dio().get(
         img,
-        options: Options(responseType: ResponseType.bytes),
+        options: Options(responseType: ResponseType.bytes, headers: headers),
       );
       await Gal.putImageBytes(Uint8List.fromList(response.data));
     } else {

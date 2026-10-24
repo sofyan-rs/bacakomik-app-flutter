@@ -276,6 +276,11 @@ class AppText {
   static const String clearCookies = 'Clear cookies';
   static const String cookiesCleared = 'Cookies cleared';
   static const String pageNotLoaded = "Page didn't load";
+  static const String verificationNeeded = 'Verification needed';
+  static const String verificationNeededHint =
+      'The site wants to check you are not a bot. Pass the check in the '
+      'WebView, then close it to try again.';
+  static const String verifyInWebView = 'Verify in WebView';
   static const String sourceConnecting = 'Connecting';
   static const String sourceOnline = 'Online';
   static const String sourceOffline = 'Offline';

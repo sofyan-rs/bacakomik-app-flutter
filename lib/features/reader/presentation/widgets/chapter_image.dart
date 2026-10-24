@@ -25,7 +25,11 @@ class ChapterImg extends StatelessWidget {
     this.load = true,
     this.fit = PageFit.width,
     this.fitHeight,
+    this.headers = const {},
   });
+
+  /// Sent with the image request, from [ChapterContent.imageHeaders].
+  final Map<String, String> headers;
 
   /// URL, or a file path when [isFile].
   final String chapterImage;
@@ -61,7 +65,7 @@ class ChapterImg extends StatelessWidget {
             leading: LucideIcons300.download,
             onTap: () {
               Navigator.of(sheetContext).pop();
-              saveImg(context: context, img: chapterImage);
+              saveImg(context: context, img: chapterImage, headers: headers);
             },
           ),
         ],
@@ -143,6 +147,7 @@ class ChapterImg extends StatelessWidget {
         : CachedNetworkImage(
             cacheKey: chapterImage,
             imageUrl: chapterImage,
+            httpHeaders: headers,
             width: double.infinity,
             height: fitHeight,
             memCacheWidth: cacheWidth,

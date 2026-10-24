@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/source/extension_meta.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -164,6 +165,19 @@ void main() {
       expect(meta('1.10.0').isNewerThan(meta('1.9.0')), isTrue);
       expect(meta('1.0.0').isNewerThan(meta(1)), isFalse);
       expect(meta('1.0.1').isNewerThan(meta(1)), isTrue);
+    });
+  });
+
+  group('Challenge', () {
+    test('reads the URL back from an error message', () {
+      final message = Challenge.message('https://mangafire.to/');
+      expect(Challenge.urlOf(message), 'https://mangafire.to/');
+      expect(Challenge.urlOf('Error: $message'), 'https://mangafire.to/');
+    });
+
+    test('ignores other errors', () {
+      expect(Challenge.urlOf('404 Not found'), isNull);
+      expect(Challenge.urlOf('challenge: not-a-url'), isNull);
     });
   });
 }

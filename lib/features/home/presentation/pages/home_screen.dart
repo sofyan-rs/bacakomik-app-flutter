@@ -17,6 +17,7 @@ import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -149,12 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
       EmptyState.offline(onAction: () => _refreshData(state)),
     ],
     HomeError(:final message) => [
-      EmptyState(
-        icon: LucideIcons300.bug,
-        title: AppText.error,
+      SourceError(
         message: message,
-        actionLabel: AppText.retry,
-        onAction: () => _refreshData(state),
+        sourceId: context.read<SourcesCubit>().state.activeId,
+        onRetry: () => _refreshData(state),
       ),
     ],
     HomeInitial() || HomeLoading() => [

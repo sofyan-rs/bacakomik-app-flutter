@@ -22,6 +22,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
 
 class ReadChapterScreen extends StatelessWidget {
   const ReadChapterScreen({
@@ -499,12 +501,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         onAction: () =>
             context.read<ReaderBloc>().add(ChapterRequested(widget.slug)),
       ),
-      ReaderError(:final message) => EmptyState(
-        icon: LucideIcons300.bug,
-        title: AppText.error,
+      ReaderError(:final message) => SourceError(
         message: message,
-        actionLabel: AppText.retry,
-        onAction: () =>
+        sourceId: ComicKey.sourceOf(widget.slug),
+        onRetry: () =>
             context.read<ReaderBloc>().add(ChapterRequested(widget.slug)),
       ),
       ReaderInitial() || ReaderLoading() => const Center(child: DotLoader()),
@@ -551,6 +551,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
             chapterImage: pages[index],
             isFile: chapter.isOffline,
             page: index + 1,
+            headers: chapter.imageHeaders,
             load: index < _loadLimit,
             fit: settings.pageFit,
             fitHeight: height,
@@ -591,6 +592,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
               chapterImage: pages[index],
               isFile: chapter.isOffline,
               page: index + 1,
+              headers: chapter.imageHeaders,
               load: index < _loadLimit,
               fit: settings.pageFit,
               fitHeight: settings.pageFit == PageFit.height

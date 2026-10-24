@@ -38,6 +38,7 @@ class ReaderRepositoryImpl implements ReaderRepository {
             ? ApiFormat.chapterSlug(seriesSlug, res.next!)
             : null,
         images: res.images,
+        imageHeaders: res.headers,
       );
     });
   }
