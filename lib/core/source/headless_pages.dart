@@ -3,6 +3,7 @@ import 'dart:io' as io;
 
 import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 /// Hidden WebViews that run extension scripts inside a site, for sites that
@@ -28,6 +29,9 @@ class HeadlessPages {
   static const _loadTimeout = Duration(seconds: 25);
   static const _challengeTimeout = Duration(seconds: 20);
 
+  /// Long enough for a script that walks a long chapter in the site's reader.
+  static const _scriptTimeout = Duration(minutes: 3);
+
   /// Opens [url] (unless the page already shows it), then runs
   /// [script] as the body of an async function in it and returns its
   /// result. Runs of one extension go one at a time.
@@ -50,7 +54,13 @@ class HeadlessPages {
     try {
       final controller = await _open(page, url);
       await _passChallenge(controller, url);
-      final result = await controller.callAsyncJavaScript(functionBody: script);
+      final result = await controller
+          .callAsyncJavaScript(functionBody: script)
+          .timeout(
+            _scriptTimeout,
+            onTimeout: () =>
+                throw ServerException('${url.host} did not finish in time'),
+          );
       if (result?.error case final error?) throw ServerException(error);
       await _saveCookies(extensionId, url);
       return result?.value;
@@ -66,6 +76,7 @@ class HeadlessPages {
     if (controller != null && page.url == url.toString()) return controller;
 
     final loaded = page.loaded = Completer<void>();
+    page.host = url.host;
     if (controller != null) {
       await controller.loadUrl(urlRequest: URLRequest(url: WebUri.uri(url)));
     } else {
@@ -76,8 +87,22 @@ class HeadlessPages {
           javaScriptEnabled: true,
           domStorageEnabled: true,
           isInspectable: kDebugMode,
+          // Ads open windows and redirect the page; neither may take the
+          // page away from the site a script runs in.
+          supportMultipleWindows: true,
+          javaScriptCanOpenWindowsAutomatically: false,
+          useShouldOverrideUrlLoading: true,
         ),
         onWebViewCreated: (c) => page.controller = c,
+        onCreateWindow: (_, _) async => false,
+        shouldOverrideUrlLoading: (_, action) async {
+          final to = action.request.url?.host ?? '';
+          final allowed =
+              !(action.isForMainFrame) || _sameSite(to, page.host ?? '');
+          return allowed
+              ? NavigationActionPolicy.ALLOW
+              : NavigationActionPolicy.CANCEL;
+        },
         onLoadStop: (_, _) {
           if (!(page.loaded?.isCompleted ?? true)) page.loaded!.complete();
         },
@@ -89,6 +114,7 @@ class HeadlessPages {
         },
       );
       await view.run();
+      await _render();
     }
     await loaded.future.timeout(
       _loadTimeout,
@@ -127,6 +153,28 @@ class HeadlessPages {
     }
   }
 
+  /// [a] and [b] are one host, or one is a subdomain of the other; a
+  /// Cloudflare check may also load its own page.
+  static bool _sameSite(String a, String b) =>
+      a.isEmpty ||
+      a == b ||
+      a.endsWith('.$b') ||
+      b.endsWith('.$a') ||
+      a == 'challenges.cloudflare.com';
+
+  static const _hiddenWebViews = MethodChannel('bacakomik/hidden_webviews');
+
+  /// Lets the hidden pages render (see MainActivity): lazy-loading pages
+  /// only load what an IntersectionObserver or a scroll reveals.
+  static Future<void> _render() async {
+    if (!io.Platform.isAndroid) return;
+    try {
+      await _hiddenWebViews.invokeMethod<int>('render');
+    } on MissingPluginException {
+      // Tests and other platforms.
+    }
+  }
+
   void _close(String extensionId) {
     final page = _pages.remove(extensionId);
     page?.idle?.cancel();
@@ -141,6 +189,9 @@ class _Page {
   HeadlessInAppWebView? view;
   InAppWebViewController? controller;
   String? url;
+
+  /// The site the page is meant to show.
+  String? host;
   Completer<void>? loaded;
   Timer? idle;
   Future<Object?> queue = Future.value();

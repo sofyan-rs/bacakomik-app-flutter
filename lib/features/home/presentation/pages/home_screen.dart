@@ -103,7 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _header(state),
                   const LastReadComic(),
-                  const SizedBox(height: DotSpace.s5),
                   ..._content(state),
                 ],
               ),

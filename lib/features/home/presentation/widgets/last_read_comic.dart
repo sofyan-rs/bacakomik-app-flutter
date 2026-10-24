@@ -113,6 +113,8 @@ class LastReadComic extends StatelessWidget {
             ),
           ),
         ),
+        // Part of this section: no gap above New Series without history.
+        const SizedBox(height: DotSpace.s5),
       ],
     );
   }

@@ -52,6 +52,9 @@ class ExtensionRuntime implements SourceBackend {
     }
   }
 
+  /// How long a call may go without progress: neither a host function
+  /// running nor one finishing. A long run of host calls (a chapter list
+  /// read page by page in a WebView) is not cut off.
   static const callTimeout = Duration(seconds: 45);
 
   final ExtensionMeta meta;
@@ -60,6 +63,10 @@ class ExtensionRuntime implements SourceBackend {
   final _calls = <int, Completer<Object?>>{};
   var _nextCall = 0;
   var _disposed = false;
+
+  /// Host functions running, and when the last one started or finished.
+  var _hostCalls = 0;
+  var _lastProgress = DateTime.now();
 
   /// The extension's `home` object, read on load.
   Object? _home;
@@ -109,16 +116,21 @@ class ExtensionRuntime implements SourceBackend {
     }
     final id = ++_nextCall;
     final completer = _calls[id] = Completer<Object?>();
+    _lastProgress = DateTime.now();
     _run(
       '__bkInvoke($id, ${jsonEncode(method)}, ${jsonEncode(jsonEncode(args))})',
     );
-    return completer.future.timeout(
-      callTimeout,
-      onTimeout: () {
-        _calls.remove(id);
-        throw ServerException('${meta.name} did not respond');
-      },
-    );
+    final idle = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_hostCalls > 0 ||
+          DateTime.now().difference(_lastProgress) < callTimeout) {
+        return;
+      }
+      timer.cancel();
+      if (_calls.remove(id) case final pending?) {
+        pending.completeError(ServerException('${meta.name} did not respond'));
+      }
+    });
+    return completer.future.whenComplete(idle.cancel);
   }
 
   void _onResult(Map message) {
@@ -135,10 +147,17 @@ class ExtensionRuntime implements SourceBackend {
   void _onBridge(Map message) {
     final id = message['id'];
     final method = message['method'] as String;
-    Future(() => _bridge(meta.id, method, message['args'])).then(
-      (value) => _settle(id, true, jsonEncode(value)),
-      onError: (Object e) => _settle(id, false, '$e'),
-    );
+    _hostCalls++;
+    _lastProgress = DateTime.now();
+    Future(() => _bridge(meta.id, method, message['args']))
+        .whenComplete(() {
+          _hostCalls--;
+          _lastProgress = DateTime.now();
+        })
+        .then(
+          (value) => _settle(id, true, jsonEncode(value)),
+          onError: (Object e) => _settle(id, false, '$e'),
+        );
   }
 
   void _settle(Object? id, bool ok, String payload) {
