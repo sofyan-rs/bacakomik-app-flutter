@@ -142,6 +142,8 @@ class _RootScreenState extends State<RootScreen> {
                   // Scrolls when the screen is too short for every tab.
                   child: Center(
                     child: SingleChildScrollView(
+                      // Keep the Scaffold's primary controller for the tabs.
+                      primary: false,
                       padding: const EdgeInsets.symmetric(
                         vertical: DotSize.navGap,
                       ),
