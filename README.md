@@ -12,17 +12,17 @@ Get the APK from the [Releases](https://github.com/sofyan-rs/bacakomik-app-flutt
 
 | Splash | Beranda | Jelajah | Filter |
 |---|---|---|---|
-| <img src="screenshot/splash.png" width="200" alt="Splash screen"> | <img src="screenshot/home.png" width="200" alt="Home: continue reading, hot comics, latest chapters"> | <img src="screenshot/explore.png" width="200" alt="Jelajah: title search, type and cover grid"> | <img src="screenshot/filter.png" width="200" alt="Filter sheet: type, status, sort and genres"> |
+| <img src="screenshot/splash.png" width="200" alt="Splash screen"> | <img src="screenshot/home.png" width="200" alt="Home: continue reading, new series, latest chapters"> | <img src="screenshot/explore.png" width="200" alt="Jelajah: title search, type and cover grid"> | <img src="screenshot/filter.png" width="200" alt="Filter sheet: type, status, sort and genres"> |
 
 | Detail | Pembaca | Bookmark | Riwayat |
 |---|---|---|---|
 | <img src="screenshot/detail.png" width="200" alt="Comic details with stats, synopsis and genres"> | <img src="screenshot/reader.png" width="200" alt="Reader with chapter bar and page meter"> | <img src="screenshot/bookmark.png" width="200" alt="Bookmarks with new chapter badge and read meter"> | <img src="screenshot/history.png" width="200" alt="Reading history grouped by day"> |
 
-| Lainnya | Light theme |
-|---|---|
-| <img src="screenshot/more.png" width="200" alt="Stats, backup, cache and theme"> | <img src="screenshot/home-light.png" width="200" alt="Home in the light theme"> |
+| Lainnya | Unduh chapter | Unduhan | Light theme |
+|---|---|---|---|
+| <img src="screenshot/more.png" width="200" alt="Stats, downloads, backup, Google Drive sync and theme"> | <img src="screenshot/download-select.png" width="200" alt="Selecting chapters to download for offline reading"> | <img src="screenshot/downloads.png" width="200" alt="Downloads grouped by comic with storage used"> | <img src="screenshot/home-light.png" width="200" alt="Home in the light theme"> |
 
-Screenshots were taken on a real device (Realme RMX5085, Android 16).
+Screenshots were taken on a real device (iQOO I2218, Android 16) running v1.5.0.
 
 ## Features
 
