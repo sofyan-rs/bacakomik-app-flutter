@@ -18,7 +18,13 @@ abstract final class HiveBoxes {
   /// Details of comics with downloads, keyed by series slug.
   static const downloadComics = 'download_comics';
 
-  /// Deletion times of bookmarks and history entries, keyed by
+  /// Bookmark categories, keyed by category id.
+  static const categories = 'categories';
+
+  /// Categories of each bookmarked comic, keyed by series slug.
+  static const comicCategories = 'comic_categories';
+
+  /// Deletion times of bookmarks, history entries and categories, keyed by
   /// `kind:slug`, so sync can remove them on other devices.
   static const libraryDeletions = 'library_deletions';
 
@@ -61,6 +67,16 @@ abstract class StorageModule {
   @Named(HiveBoxes.downloadComics)
   Future<Box<String>> get downloadComicsBox =>
       Hive.openBox<String>(HiveBoxes.downloadComics);
+
+  @preResolve
+  @Named(HiveBoxes.categories)
+  Future<Box<String>> get categoriesBox =>
+      Hive.openBox<String>(HiveBoxes.categories);
+
+  @preResolve
+  @Named(HiveBoxes.comicCategories)
+  Future<Box<String>> get comicCategoriesBox =>
+      Hive.openBox<String>(HiveBoxes.comicCategories);
 
   @preResolve
   @Named(HiveBoxes.libraryDeletions)

@@ -1,12 +1,13 @@
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
+import 'package:bacakomik_app/features/category/domain/entities/category.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'sync_snapshot.freezed.dart';
 
 /// The synced part of a library, on this device or in the cloud. Lists are
-/// sorted by slug so equal libraries compare equal.
+/// sorted by slug (categories by id) so equal libraries compare equal.
 @freezed
 abstract class SyncSnapshot with _$SyncSnapshot {
   const SyncSnapshot._();
@@ -20,11 +21,19 @@ abstract class SyncSnapshot with _$SyncSnapshot {
 
     /// Deletion time per chapter slug.
     @Default({}) Map<String, DateTime> deletedHistory,
+    @Default([]) List<LibraryCategory> categories,
+    @Default([]) List<ComicCategories> comicCategories,
+
+    /// Deletion time per category id.
+    @Default({}) Map<String, DateTime> deletedCategories,
   }) = _SyncSnapshot;
 
   /// Merges two libraries. Per slug the newest version wins: a bookmark by
-  /// [Bookmark.updatedDate], a history entry by [ReadHistory.readDate]. An
-  /// entry deleted at or after that time is dropped. Deletions older than
+  /// [Bookmark.updatedDate], a history entry by [ReadHistory.readDate], a
+  /// category (per id) and a comic's categories by their `updatedDate`. An
+  /// entry deleted at or after that time is dropped. A side without the
+  /// category fields (an app version before categories) keeps the other
+  /// side's. Deletions older than
   /// [keepDeletionsSince] are forgotten. On equal dates a migrated copy
   /// (with [ComicDetails.source]) wins over one stored before the switch.
   factory SyncSnapshot.merge(
@@ -40,6 +49,11 @@ abstract class SyncSnapshot with _$SyncSnapshot {
     final deletedHistory = _newestDates(
       a.deletedHistory,
       b.deletedHistory,
+      keepDeletionsSince,
+    );
+    final deletedCategories = _newestDates(
+      a.deletedCategories,
+      b.deletedCategories,
       keepDeletionsSince,
     );
 
@@ -58,11 +72,27 @@ abstract class SyncSnapshot with _$SyncSnapshot {
       deleted: deletedHistory,
     );
 
+    final categories = _newestBySlug(
+      [...a.categories, ...b.categories],
+      slugOf: (c) => c.id,
+      dateOf: (c) => c.updatedDate,
+      deleted: deletedCategories,
+    );
+    final comicCategories = _newestBySlug(
+      [...a.comicCategories, ...b.comicCategories],
+      slugOf: (c) => c.slug,
+      dateOf: (c) => c.updatedDate,
+      deleted: const {},
+    );
+
     return SyncSnapshot(
       bookmarks: bookmarks,
       history: history,
       deletedBookmarks: deletedBookmarks,
       deletedHistory: deletedHistory,
+      categories: categories,
+      comicCategories: comicCategories,
+      deletedCategories: deletedCategories,
     );
   }
 
@@ -70,6 +100,9 @@ abstract class SyncSnapshot with _$SyncSnapshot {
   SyncSnapshot sorted() => copyWith(
     bookmarks: [...bookmarks]..sort((a, b) => a.slug.compareTo(b.slug)),
     history: [...history]..sort((a, b) => a.slug.compareTo(b.slug)),
+    categories: [...categories]..sort((a, b) => a.id.compareTo(b.id)),
+    comicCategories: [...comicCategories]
+      ..sort((a, b) => a.slug.compareTo(b.slug)),
   );
 
   /// Same entries and deletions, ignoring list order.
@@ -94,15 +127,18 @@ List<T> _newestBySlug<T>(
   List<T> items, {
   required String Function(T) slugOf,
   required DateTime Function(T) dateOf,
-  required ComicDetails Function(T) detailsOf,
   required Map<String, DateTime> deleted,
+
+  /// For comics: on equal dates the copy with a source wins.
+  ComicDetails Function(T)? detailsOf,
 }) {
   final newest = <String, T>{};
   for (final item in items) {
     final current = newest[slugOf(item)];
     if (current == null ||
         dateOf(item).isAfter(dateOf(current)) ||
-        (dateOf(item) == dateOf(current) &&
+        (detailsOf != null &&
+            dateOf(item) == dateOf(current) &&
             detailsOf(current).source == null &&
             detailsOf(item).source != null)) {
       newest[slugOf(item)] = item;

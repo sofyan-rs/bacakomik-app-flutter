@@ -17,7 +17,8 @@ mixin _$SyncSnapshot {
 
  List<Bookmark> get bookmarks; List<ReadHistory> get history;/// Deletion time per bookmark slug.
  Map<String, DateTime> get deletedBookmarks;/// Deletion time per chapter slug.
- Map<String, DateTime> get deletedHistory;
+ Map<String, DateTime> get deletedHistory; List<LibraryCategory> get categories; List<ComicCategories> get comicCategories;/// Deletion time per category id.
+ Map<String, DateTime> get deletedCategories;
 /// Create a copy of SyncSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,20 +30,20 @@ $SyncSnapshotCopyWith<SyncSnapshot> get copyWith => _$SyncSnapshotCopyWithImpl<S
 @override
 bool operator ==(Object other) {
   final _this = this as SyncSnapshot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncSnapshot&&const DeepCollectionEquality().equals(other.bookmarks, _this.bookmarks)&&const DeepCollectionEquality().equals(other.history, _this.history)&&const DeepCollectionEquality().equals(other.deletedBookmarks, _this.deletedBookmarks)&&const DeepCollectionEquality().equals(other.deletedHistory, _this.deletedHistory));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncSnapshot&&const DeepCollectionEquality().equals(other.bookmarks, _this.bookmarks)&&const DeepCollectionEquality().equals(other.history, _this.history)&&const DeepCollectionEquality().equals(other.deletedBookmarks, _this.deletedBookmarks)&&const DeepCollectionEquality().equals(other.deletedHistory, _this.deletedHistory)&&const DeepCollectionEquality().equals(other.categories, _this.categories)&&const DeepCollectionEquality().equals(other.comicCategories, _this.comicCategories)&&const DeepCollectionEquality().equals(other.deletedCategories, _this.deletedCategories));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SyncSnapshot;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.bookmarks),const DeepCollectionEquality().hash(_this.history),const DeepCollectionEquality().hash(_this.deletedBookmarks),const DeepCollectionEquality().hash(_this.deletedHistory));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.bookmarks),const DeepCollectionEquality().hash(_this.history),const DeepCollectionEquality().hash(_this.deletedBookmarks),const DeepCollectionEquality().hash(_this.deletedHistory),const DeepCollectionEquality().hash(_this.categories),const DeepCollectionEquality().hash(_this.comicCategories),const DeepCollectionEquality().hash(_this.deletedCategories));
 }
 
 @override
 String toString() {
   final _this = this as SyncSnapshot;
-  return 'SyncSnapshot(bookmarks: ${_this.bookmarks}, history: ${_this.history}, deletedBookmarks: ${_this.deletedBookmarks}, deletedHistory: ${_this.deletedHistory})';
+  return 'SyncSnapshot(bookmarks: ${_this.bookmarks}, history: ${_this.history}, deletedBookmarks: ${_this.deletedBookmarks}, deletedHistory: ${_this.deletedHistory}, categories: ${_this.categories}, comicCategories: ${_this.comicCategories}, deletedCategories: ${_this.deletedCategories})';
 }
 
 
@@ -53,7 +54,7 @@ abstract mixin class $SyncSnapshotCopyWith<$Res>  {
   factory $SyncSnapshotCopyWith(SyncSnapshot value, $Res Function(SyncSnapshot) _then) = _$SyncSnapshotCopyWithImpl;
 @useResult
 $Res call({
- List<Bookmark> bookmarks, List<ReadHistory> history, Map<String, DateTime> deletedBookmarks, Map<String, DateTime> deletedHistory
+ List<Bookmark> bookmarks, List<ReadHistory> history, Map<String, DateTime> deletedBookmarks, Map<String, DateTime> deletedHistory, List<LibraryCategory> categories, List<ComicCategories> comicCategories, Map<String, DateTime> deletedCategories
 });
 
 
@@ -70,12 +71,15 @@ class _$SyncSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of SyncSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? bookmarks = null,Object? history = null,Object? deletedBookmarks = null,Object? deletedHistory = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? bookmarks = null,Object? history = null,Object? deletedBookmarks = null,Object? deletedHistory = null,Object? categories = null,Object? comicCategories = null,Object? deletedCategories = null,}) {
   return _then(SyncSnapshot(
 bookmarks: null == bookmarks ? _self.bookmarks : bookmarks // ignore: cast_nullable_to_non_nullable
 as List<Bookmark>,history: null == history ? _self.history : history // ignore: cast_nullable_to_non_nullable
 as List<ReadHistory>,deletedBookmarks: null == deletedBookmarks ? _self.deletedBookmarks : deletedBookmarks // ignore: cast_nullable_to_non_nullable
 as Map<String, DateTime>,deletedHistory: null == deletedHistory ? _self.deletedHistory : deletedHistory // ignore: cast_nullable_to_non_nullable
+as Map<String, DateTime>,categories: null == categories ? _self.categories : categories // ignore: cast_nullable_to_non_nullable
+as List<LibraryCategory>,comicCategories: null == comicCategories ? _self.comicCategories : comicCategories // ignore: cast_nullable_to_non_nullable
+as List<ComicCategories>,deletedCategories: null == deletedCategories ? _self.deletedCategories : deletedCategories // ignore: cast_nullable_to_non_nullable
 as Map<String, DateTime>,
   ));
 }
@@ -161,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  Map<String, DateTime> deletedBookmarks,  Map<String, DateTime> deletedHistory)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  Map<String, DateTime> deletedBookmarks,  Map<String, DateTime> deletedHistory,  List<LibraryCategory> categories,  List<ComicCategories> comicCategories,  Map<String, DateTime> deletedCategories)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SyncSnapshot() when $default != null:
-return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.deletedHistory);case _:
+return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.deletedHistory,_that.categories,_that.comicCategories,_that.deletedCategories);case _:
   return orElse();
 
 }
@@ -182,10 +186,10 @@ return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.delet
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  Map<String, DateTime> deletedBookmarks,  Map<String, DateTime> deletedHistory)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  Map<String, DateTime> deletedBookmarks,  Map<String, DateTime> deletedHistory,  List<LibraryCategory> categories,  List<ComicCategories> comicCategories,  Map<String, DateTime> deletedCategories)  $default,) {final _that = this;
 switch (_that) {
 case _SyncSnapshot():
-return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.deletedHistory);case _:
+return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.deletedHistory,_that.categories,_that.comicCategories,_that.deletedCategories);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +206,10 @@ return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.delet
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  Map<String, DateTime> deletedBookmarks,  Map<String, DateTime> deletedHistory)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  Map<String, DateTime> deletedBookmarks,  Map<String, DateTime> deletedHistory,  List<LibraryCategory> categories,  List<ComicCategories> comicCategories,  Map<String, DateTime> deletedCategories)?  $default,) {final _that = this;
 switch (_that) {
 case _SyncSnapshot() when $default != null:
-return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.deletedHistory);case _:
+return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.deletedHistory,_that.categories,_that.comicCategories,_that.deletedCategories);case _:
   return null;
 
 }
@@ -217,7 +221,7 @@ return $default(_that.bookmarks,_that.history,_that.deletedBookmarks,_that.delet
 
 
 class _SyncSnapshot extends SyncSnapshot {
-  const _SyncSnapshot({ List<Bookmark> bookmarks = const [],  List<ReadHistory> history = const [],  Map<String, DateTime> deletedBookmarks = const {},  Map<String, DateTime> deletedHistory = const {}}): _bookmarks = bookmarks,_history = history,_deletedBookmarks = deletedBookmarks,_deletedHistory = deletedHistory,super._();
+  const _SyncSnapshot({ List<Bookmark> bookmarks = const [],  List<ReadHistory> history = const [],  Map<String, DateTime> deletedBookmarks = const {},  Map<String, DateTime> deletedHistory = const {},  List<LibraryCategory> categories = const [],  List<ComicCategories> comicCategories = const [],  Map<String, DateTime> deletedCategories = const {}}): _bookmarks = bookmarks,_history = history,_deletedBookmarks = deletedBookmarks,_deletedHistory = deletedHistory,_categories = categories,_comicCategories = comicCategories,_deletedCategories = deletedCategories,super._();
   
 
  final  List<Bookmark> _bookmarks;
@@ -252,6 +256,29 @@ class _SyncSnapshot extends SyncSnapshot {
   return EqualUnmodifiableMapView(_deletedHistory);
 }
 
+ final  List<LibraryCategory> _categories;
+@override@JsonKey() List<LibraryCategory> get categories {
+  if (_categories is EqualUnmodifiableListView) return _categories;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_categories);
+}
+
+ final  List<ComicCategories> _comicCategories;
+@override@JsonKey() List<ComicCategories> get comicCategories {
+  if (_comicCategories is EqualUnmodifiableListView) return _comicCategories;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_comicCategories);
+}
+
+/// Deletion time per category id.
+ final  Map<String, DateTime> _deletedCategories;
+/// Deletion time per category id.
+@override@JsonKey() Map<String, DateTime> get deletedCategories {
+  if (_deletedCategories is EqualUnmodifiableMapView) return _deletedCategories;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_deletedCategories);
+}
+
 
 /// Create a copy of SyncSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -263,18 +290,18 @@ _$SyncSnapshotCopyWith<_SyncSnapshot> get copyWith => __$SyncSnapshotCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncSnapshot&&const DeepCollectionEquality().equals(other.bookmarks, _bookmarks)&&const DeepCollectionEquality().equals(other.history, _history)&&const DeepCollectionEquality().equals(other.deletedBookmarks, _deletedBookmarks)&&const DeepCollectionEquality().equals(other.deletedHistory, _deletedHistory));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncSnapshot&&const DeepCollectionEquality().equals(other.bookmarks, _bookmarks)&&const DeepCollectionEquality().equals(other.history, _history)&&const DeepCollectionEquality().equals(other.deletedBookmarks, _deletedBookmarks)&&const DeepCollectionEquality().equals(other.deletedHistory, _deletedHistory)&&const DeepCollectionEquality().equals(other.categories, _categories)&&const DeepCollectionEquality().equals(other.comicCategories, _comicCategories)&&const DeepCollectionEquality().equals(other.deletedCategories, _deletedCategories));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_bookmarks),const DeepCollectionEquality().hash(_history),const DeepCollectionEquality().hash(_deletedBookmarks),const DeepCollectionEquality().hash(_deletedHistory));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_bookmarks),const DeepCollectionEquality().hash(_history),const DeepCollectionEquality().hash(_deletedBookmarks),const DeepCollectionEquality().hash(_deletedHistory),const DeepCollectionEquality().hash(_categories),const DeepCollectionEquality().hash(_comicCategories),const DeepCollectionEquality().hash(_deletedCategories));
 }
 
 @override
 String toString() {
-    return 'SyncSnapshot(bookmarks: $bookmarks, history: $history, deletedBookmarks: $deletedBookmarks, deletedHistory: $deletedHistory)';
+    return 'SyncSnapshot(bookmarks: $bookmarks, history: $history, deletedBookmarks: $deletedBookmarks, deletedHistory: $deletedHistory, categories: $categories, comicCategories: $comicCategories, deletedCategories: $deletedCategories)';
 }
 
 
@@ -285,7 +312,7 @@ abstract mixin class _$SyncSnapshotCopyWith<$Res> implements $SyncSnapshotCopyWi
   factory _$SyncSnapshotCopyWith(_SyncSnapshot value, $Res Function(_SyncSnapshot) _then) = __$SyncSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- List<Bookmark> bookmarks, List<ReadHistory> history, Map<String, DateTime> deletedBookmarks, Map<String, DateTime> deletedHistory
+ List<Bookmark> bookmarks, List<ReadHistory> history, Map<String, DateTime> deletedBookmarks, Map<String, DateTime> deletedHistory, List<LibraryCategory> categories, List<ComicCategories> comicCategories, Map<String, DateTime> deletedCategories
 });
 
 
@@ -302,12 +329,15 @@ class __$SyncSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of SyncSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? bookmarks = null,Object? history = null,Object? deletedBookmarks = null,Object? deletedHistory = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? bookmarks = null,Object? history = null,Object? deletedBookmarks = null,Object? deletedHistory = null,Object? categories = null,Object? comicCategories = null,Object? deletedCategories = null,}) {
   return _then(_SyncSnapshot(
 bookmarks: null == bookmarks ? _self._bookmarks : bookmarks // ignore: cast_nullable_to_non_nullable
 as List<Bookmark>,history: null == history ? _self._history : history // ignore: cast_nullable_to_non_nullable
 as List<ReadHistory>,deletedBookmarks: null == deletedBookmarks ? _self._deletedBookmarks : deletedBookmarks // ignore: cast_nullable_to_non_nullable
 as Map<String, DateTime>,deletedHistory: null == deletedHistory ? _self._deletedHistory : deletedHistory // ignore: cast_nullable_to_non_nullable
+as Map<String, DateTime>,categories: null == categories ? _self._categories : categories // ignore: cast_nullable_to_non_nullable
+as List<LibraryCategory>,comicCategories: null == comicCategories ? _self._comicCategories : comicCategories // ignore: cast_nullable_to_non_nullable
+as List<ComicCategories>,deletedCategories: null == deletedCategories ? _self._deletedCategories : deletedCategories // ignore: cast_nullable_to_non_nullable
 as Map<String, DateTime>,
   ));
 }

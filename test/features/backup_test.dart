@@ -10,6 +10,7 @@ import 'package:bacakomik_app/features/backup/domain/repositories/backup_reposit
 import 'package:bacakomik_app/features/backup/domain/usecases/backup_library.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:bacakomik_app/features/category/domain/repositories/category_repository.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +26,8 @@ class MockBackupRepository extends Mock implements BackupRepository {}
 class MockBookmarkRepository extends Mock implements BookmarkRepository {}
 
 class MockHistoryRepository extends Mock implements HistoryRepository {}
+
+class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class FixedClock implements Clock {
   @override
@@ -134,21 +137,29 @@ void main() {
     late MockBackupRepository backupRepo;
     late MockBookmarkRepository bookmarks;
     late MockHistoryRepository history;
+    late MockCategoryRepository categories;
     final backup = sampleBackup;
 
     setUp(() {
       backupRepo = MockBackupRepository();
       bookmarks = MockBookmarkRepository();
       history = MockHistoryRepository();
+      categories = MockCategoryRepository();
+      when(() => categories.getCategories()).thenAnswer((_) async => right([]));
+      when(() => categories.getComicCategories())
+          .thenAnswer((_) async => right({}));
     });
 
     test('backup with an empty library does not open the picker', () async {
       when(() => bookmarks.getBookmarks()).thenAnswer((_) async => right([]));
       when(() => history.getHistory()).thenAnswer((_) async => right([]));
 
-      final result = await BackupLibrary(backupRepo, bookmarks, history)(
-        const NoParams(),
-      );
+      final result = await BackupLibrary(
+        backupRepo,
+        bookmarks,
+        history,
+        categories,
+      )(const NoParams());
 
       expect(result, right(BackupResult.nothingToSave));
       verifyNever(() => backupRepo.exportBackup(any()));
@@ -162,9 +173,12 @@ void main() {
       when(() => backupRepo.exportBackup(any()))
           .thenAnswer((_) async => right(true));
 
-      final result = await BackupLibrary(backupRepo, bookmarks, history)(
-        const NoParams(),
-      );
+      final result = await BackupLibrary(
+        backupRepo,
+        bookmarks,
+        history,
+        categories,
+      )(const NoParams());
 
       expect(result, right(BackupResult.saved));
       verify(() => backupRepo.exportBackup(backup)).called(1);
@@ -178,9 +192,12 @@ void main() {
       when(() => history.saveHistory(any()))
           .thenAnswer((_) async => right(unit));
 
-      final result = await RestoreLibrary(backupRepo, bookmarks, history)(
-        const NoParams(),
-      );
+      final result = await RestoreLibrary(
+        backupRepo,
+        bookmarks,
+        history,
+        categories,
+      )(const NoParams());
 
       expect(result, right(RestoreResult.restored));
       verify(() => bookmarks.saveBookmarks(backup.bookmarks)).called(1);
@@ -191,9 +208,12 @@ void main() {
       when(() => backupRepo.importBackup())
           .thenAnswer((_) async => right(null));
 
-      final result = await RestoreLibrary(backupRepo, bookmarks, history)(
-        const NoParams(),
-      );
+      final result = await RestoreLibrary(
+        backupRepo,
+        bookmarks,
+        history,
+        categories,
+      )(const NoParams());
 
       expect(result, right(RestoreResult.cancelled));
     });

@@ -11,6 +11,8 @@ import 'package:bacakomik_app/features/backup/data/repositories/backup_repositor
 import 'package:bacakomik_app/features/backup/domain/entities/library_backup.dart';
 import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_data_source.dart';
 import 'package:bacakomik_app/features/bookmark/data/models/bookmark_model.dart';
+import 'package:bacakomik_app/features/category/data/datasources/category_local_data_source.dart';
+import 'package:bacakomik_app/features/category/data/models/category_model.dart';
 import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
 import 'package:bacakomik_app/features/history/data/models/read_history_model.dart';
 import 'package:bacakomik_app/features/sync/data/datasources/drive_data_source.dart';
@@ -30,6 +32,7 @@ class SyncRepositoryImpl implements SyncRepository {
     this._drive,
     this._bookmarks,
     this._history,
+    this._categories,
     this._journal,
     @Named(HiveBoxes.sync) this._state,
   );
@@ -38,6 +41,7 @@ class SyncRepositoryImpl implements SyncRepository {
   final DriveDataSource _drive;
   final BookmarkLocalDataSource _bookmarks;
   final HistoryLocalDataSource _history;
+  final CategoryLocalDataSource _categories;
   final LibraryJournal _journal;
   final Box<String> _state;
 
@@ -79,54 +83,78 @@ class SyncRepositoryImpl implements SyncRepository {
       ],
       deletedBookmarks: _journal.deleted(LibraryKind.bookmark),
       deletedHistory: _journal.deleted(LibraryKind.history),
+      categories: [for (final c in _categories.getCategories()) c.toEntity()],
+      comicCategories: [
+        for (final c in _categories.getComicCategories()) c.toEntity(),
+      ],
+      deletedCategories: _journal.deleted(LibraryKind.category),
     ).sorted();
   });
 
   /// Writes through the data sources, not the repositories, so sync's own
   /// writes are not journaled as user edits.
   @override
-  Future<Either<Failure, Unit>> writeLocal(SyncSnapshot snapshot) =>
-      runLocal(() async {
-        final bookmarkSlugs = {for (final b in snapshot.bookmarks) b.slug};
-        await _bookmarks.putAll(
-          snapshot.bookmarks.map(BookmarkModel.fromEntity).toList(),
-        );
-        await _bookmarks.deleteAll([
-          for (final b in _bookmarks.getAll())
-            if (!bookmarkSlugs.contains(b.slug)) b.slug,
-        ]);
+  Future<Either<Failure, Unit>> writeLocal(
+    SyncSnapshot snapshot,
+  ) => runLocal(() async {
+    final bookmarkSlugs = {for (final b in snapshot.bookmarks) b.slug};
+    await _bookmarks.putAll(
+      snapshot.bookmarks.map(BookmarkModel.fromEntity).toList(),
+    );
+    await _bookmarks.deleteAll([
+      for (final b in _bookmarks.getAll())
+        if (!bookmarkSlugs.contains(b.slug)) b.slug,
+    ]);
 
-        final historySlugs = {for (final h in snapshot.history) h.slug};
-        final comics = {
-          for (final h in snapshot.history)
-            h.comicSlug: HistoryComicModel(
-              slug: h.comicSlug,
-              comicDetails: ComicDetailsModel.fromEntity(h.comicDetails),
-            ),
-        };
-        await _history.putEntries(
-          snapshot.history.map(ReadHistoryModel.fromEntity).toList(),
-        );
-        await _history.putComics(comics.values.toList());
-        await _history.deleteEntries([
-          for (final e in _history.getEntries())
-            if (!historySlugs.contains(e.slug)) e.slug,
-        ]);
-        await _history.deleteComics([
-          for (final slug in _history.getComics().keys)
-            if (!comics.containsKey(slug)) slug,
-        ]);
+    final historySlugs = {for (final h in snapshot.history) h.slug};
+    final comics = {
+      for (final h in snapshot.history)
+        h.comicSlug: HistoryComicModel(
+          slug: h.comicSlug,
+          comicDetails: ComicDetailsModel.fromEntity(h.comicDetails),
+        ),
+    };
+    await _history.putEntries(
+      snapshot.history.map(ReadHistoryModel.fromEntity).toList(),
+    );
+    await _history.putComics(comics.values.toList());
+    await _history.deleteEntries([
+      for (final e in _history.getEntries())
+        if (!historySlugs.contains(e.slug)) e.slug,
+    ]);
+    await _history.deleteComics([
+      for (final slug in _history.getComics().keys)
+        if (!comics.containsKey(slug)) slug,
+    ]);
 
-        await _journal.replaceDeleted(
-          LibraryKind.bookmark,
-          snapshot.deletedBookmarks,
-        );
-        await _journal.replaceDeleted(
-          LibraryKind.history,
-          snapshot.deletedHistory,
-        );
-        return unit;
-      });
+    final categoryIds = {for (final c in snapshot.categories) c.id};
+    await _categories.putCategories(
+      snapshot.categories.map(CategoryModel.fromEntity).toList(),
+    );
+    await _categories.deleteCategories([
+      for (final c in _categories.getCategories())
+        if (!categoryIds.contains(c.id)) c.id,
+    ]);
+    final comicSlugs = {for (final c in snapshot.comicCategories) c.slug};
+    await _categories.putComicCategories(
+      snapshot.comicCategories.map(ComicCategoriesModel.fromEntity).toList(),
+    );
+    await _categories.deleteComicCategories([
+      for (final c in _categories.getComicCategories())
+        if (!comicSlugs.contains(c.slug)) c.slug,
+    ]);
+
+    await _journal.replaceDeleted(
+      LibraryKind.bookmark,
+      snapshot.deletedBookmarks,
+    );
+    await _journal.replaceDeleted(LibraryKind.history, snapshot.deletedHistory);
+    await _journal.replaceDeleted(
+      LibraryKind.category,
+      snapshot.deletedCategories,
+    );
+    return unit;
+  });
 
   @override
   Future<Either<Failure, SyncSnapshot?>> download() => _remote(() async {
@@ -157,7 +185,10 @@ class SyncRepositoryImpl implements SyncRepository {
   static const formatVersion = 1;
 
   /// Gzipped JSON: the backup file's library fields plus
-  /// `deletedBookmarks` / `deletedHistory` (slug to epoch milliseconds).
+  /// `deletedBookmarks` / `deletedHistory` / `deletedCategories` (slug or
+  /// id to epoch milliseconds). Category fields were added without a new
+  /// version: older app versions ignore them, and [SyncSnapshot.merge] keeps
+  /// them when such a version uploads a copy without them.
   static Uint8List encode(SyncSnapshot snapshot) {
     Map<String, int> dates(Map<String, DateTime> map) => {
       for (final MapEntry(:key, :value) in map.entries)
@@ -166,10 +197,16 @@ class SyncRepositoryImpl implements SyncRepository {
     final json = jsonEncode({
       'version': formatVersion,
       ...BackupRepositoryImpl.libraryToJson(
-        LibraryBackup(bookmarks: snapshot.bookmarks, history: snapshot.history),
+        LibraryBackup(
+          bookmarks: snapshot.bookmarks,
+          history: snapshot.history,
+          categories: snapshot.categories,
+          comicCategories: snapshot.comicCategories,
+        ),
       ),
       'deletedBookmarks': dates(snapshot.deletedBookmarks),
       'deletedHistory': dates(snapshot.deletedHistory),
+      'deletedCategories': dates(snapshot.deletedCategories),
     });
     return Uint8List.fromList(gzip.encode(utf8.encode(json)));
   }
@@ -191,6 +228,9 @@ class SyncRepositoryImpl implements SyncRepository {
       history: library.history,
       deletedBookmarks: dates('deletedBookmarks'),
       deletedHistory: dates('deletedHistory'),
+      categories: library.categories,
+      comicCategories: library.comicCategories,
+      deletedCategories: dates('deletedCategories'),
     ).sorted();
   }
 

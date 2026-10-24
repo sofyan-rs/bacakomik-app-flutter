@@ -7,6 +7,7 @@ import 'package:bacakomik_app/features/backup/data/datasources/backup_file_data_
 import 'package:bacakomik_app/features/backup/domain/entities/library_backup.dart';
 import 'package:bacakomik_app/features/backup/domain/repositories/backup_repository.dart';
 import 'package:bacakomik_app/features/bookmark/data/models/bookmark_model.dart';
+import 'package:bacakomik_app/features/category/data/models/category_model.dart';
 import 'package:bacakomik_app/features/history/data/models/read_history_model.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
@@ -52,13 +53,15 @@ class BackupRepositoryImpl implements BackupRepository {
   /// Current backup file format. Files with another version are rejected.
   static const formatVersion = 2;
 
-  /// `{version, bookmarks, history, historyComics}` as plain JSON objects.
+  /// `{version, bookmarks, history, historyComics, categories,
+  /// comicCategories}` as plain JSON objects. Versions before categories
+  /// ignore the last two, so they stay readable by older app versions.
   static String encode(LibraryBackup backup) =>
       jsonEncode({'version': formatVersion, ...libraryToJson(backup)});
 
-  /// `{bookmarks, history, historyComics}`. History entries refer to their
-  /// comic by slug; each comic's details are written once in
-  /// `historyComics`. Also used by sync.
+  /// `{bookmarks, history, historyComics, categories, comicCategories}`.
+  /// History entries refer to their comic by slug; each comic's details
+  /// are written once in `historyComics`. Also used by sync.
   static Map<String, dynamic> libraryToJson(LibraryBackup backup) => {
     'bookmarks': [
       for (final b in backup.bookmarks) BookmarkModel.fromEntity(b).toJson(),
@@ -72,6 +75,13 @@ class BackupRepositoryImpl implements BackupRepository {
           slug: h.comicSlug,
           comicDetails: ComicDetailsModel.fromEntity(h.comicDetails),
         ).toJson(),
+    ],
+    'categories': [
+      for (final c in backup.categories) CategoryModel.fromEntity(c).toJson(),
+    ],
+    'comicCategories': [
+      for (final c in backup.comicCategories)
+        ComicCategoriesModel.fromEntity(c).toJson(),
     ],
   };
 
@@ -101,6 +111,14 @@ class BackupRepositoryImpl implements BackupRepository {
         for (final entry in list('history').map(ReadHistoryModel.fromJson))
           if (comics[entry.comicSlug] case final details?)
             entry.toEntity(details),
+      ],
+      categories: [
+        for (final c in list('categories'))
+          CategoryModel.fromJson(c).toEntity(),
+      ],
+      comicCategories: [
+        for (final c in list('comicCategories'))
+          ComicCategoriesModel.fromJson(c).toEntity(),
       ],
     );
   }

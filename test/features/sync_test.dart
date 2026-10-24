@@ -7,6 +7,8 @@ import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_data_source.dart';
 import 'package:bacakomik_app/features/bookmark/data/repositories/bookmark_repository_impl.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
+import 'package:bacakomik_app/features/category/data/datasources/category_local_data_source.dart';
+import 'package:bacakomik_app/features/category/domain/entities/category.dart';
 import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
 import 'package:bacakomik_app/features/history/data/repositories/history_repository_impl.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
@@ -65,6 +67,12 @@ ReadHistory read(String slug, int date, {int? page}) => ReadHistory(
   page: page,
   pageCount: page == null ? null : 20,
 );
+
+LibraryCategory category(String id, int date, {String name = 'C'}) =>
+    LibraryCategory(id: id, name: name, order: 0, updatedDate: at(date));
+
+ComicCategories inCategories(String slug, List<String> ids, int date) =>
+    ComicCategories(slug: slug, categoryIds: ids, updatedDate: at(date));
 
 SyncSnapshot merge(SyncSnapshot a, SyncSnapshot b, {int keepSince = 0}) =>
     SyncSnapshot.merge(a, b, keepDeletionsSince: at(keepSince));
@@ -125,6 +133,34 @@ void main() {
       expect(merged.deletedHistory, {'a/1': at(60)});
     });
 
+    test('categories: newest wins, deletions apply', () {
+      final merged = merge(
+        SyncSnapshot(
+          categories: [category('x', 1, name: 'Old'), category('y', 1)],
+          comicCategories: [inCategories('a', ['x'], 1)],
+        ),
+        SyncSnapshot(
+          categories: [category('x', 2, name: 'New')],
+          comicCategories: [inCategories('a', ['x', 'y'], 2)],
+          deletedCategories: {'y': at(2)},
+        ),
+      );
+      expect(merged.categories.single.name, 'New');
+      expect(merged.comicCategories.single.categoryIds, ['x', 'y']);
+      expect(merged.deletedCategories.keys, ['y']);
+    });
+
+    test('a copy from an app without categories keeps them', () {
+      final local = SyncSnapshot(
+        bookmarks: [bookmark('a', 1)],
+        categories: [category('x', 1)],
+        comicCategories: [inCategories('a', ['x'], 1)],
+      );
+      final merged = merge(local, SyncSnapshot(bookmarks: [bookmark('a', 5)]));
+      expect(merged.categories, local.categories);
+      expect(merged.comicCategories, local.comicCategories);
+    });
+
     test('sameAs ignores list order', () {
       final a = SyncSnapshot(bookmarks: [bookmark('a', 1), bookmark('b', 1)]);
       final b = SyncSnapshot(bookmarks: [bookmark('b', 1), bookmark('a', 1)]);
@@ -133,6 +169,18 @@ void main() {
   });
 
   group('sync file format', () {
+    test('round-trips categories', () {
+      final snapshot = SyncSnapshot(
+        categories: [category('x', 1)],
+        comicCategories: [inCategories('a', ['x'], 2)],
+        deletedCategories: {'y': at(3)},
+      );
+      expect(
+        SyncRepositoryImpl.decode(SyncRepositoryImpl.encode(snapshot)),
+        snapshot,
+      );
+    });
+
     test('round-trips entries and deletions', () {
       final snapshot = SyncSnapshot(
         bookmarks: [bookmark('solo-leveling', 1)],
@@ -176,6 +224,10 @@ void main() {
         MockDrive(),
         bookmarkSource,
         historySource,
+        CategoryLocalDataSourceImpl(
+          await Hive.openBox<String>(HiveBoxes.categories),
+          await Hive.openBox<String>(HiveBoxes.comicCategories),
+        ),
         journal,
         await Hive.openBox<String>(HiveBoxes.sync),
       );

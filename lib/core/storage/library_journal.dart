@@ -5,10 +5,10 @@ import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';
 
-enum LibraryKind { bookmark, history }
+enum LibraryKind { bookmark, history, category, comicCategories }
 
-/// Records library edits for sync: when each bookmark or history entry was
-/// deleted, and a [changes] event after every local save or delete.
+/// Records library edits for sync: when each bookmark, history entry or
+/// category was deleted, and a [changes] event after every local save or delete.
 ///
 /// Deletion times are stored as epoch milliseconds keyed by `kind:slug`.
 @lazySingleton
