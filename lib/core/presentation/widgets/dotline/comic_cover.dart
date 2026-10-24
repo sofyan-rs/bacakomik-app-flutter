@@ -54,11 +54,12 @@ class ComicCover extends StatelessWidget {
                 errorWidget: (_, _, _) => const DotGridPlaceholder(),
               ),
             ),
-          if (typeLabel != null)
+          // "-" is what a source without a format maps to.
+          if (typeLabel case final label? when label != '-' && label.isNotEmpty)
             Positioned(
               top: DotSpace.s2,
               left: DotSpace.s2,
-              child: TypeLabel(typeLabel!),
+              child: TypeLabel(label),
             ),
           ?overlay,
         ],
