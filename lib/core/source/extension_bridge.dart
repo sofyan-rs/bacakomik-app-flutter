@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/error/exceptions.dart';
+import 'package:bacakomik_app/core/source/headless_pages.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
@@ -26,6 +27,10 @@ class ExtensionBridge {
 
   final Box<String> _storage;
   final _clients = <String, Future<Dio>>{};
+  late final _pages = HeadlessPages(
+    userAgent: userAgent,
+    onCookies: saveCookies,
+  );
   final _jars = <String, Future<PersistCookieJar>>{};
 
   Future<Object?> handle(String extensionId, String method, Object? args) =>
@@ -41,6 +46,11 @@ class ExtensionBridge {
           _storage
               .put('$extensionId:${(args as List)[0]}', '${args[1]}')
               .then((_) => null),
+        'webview.run' => _pages.run(
+          extensionId,
+          (args as Map)['url'] as String,
+          args['script'] as String,
+        ),
         _ => Future.error(UnsupportedError('Unknown host call $method')),
       };
 
@@ -163,6 +173,7 @@ class ExtensionBridge {
   Future<void> reset(String extensionId) async {
     _clients.remove(extensionId);
     _jars.remove(extensionId);
+    _pages.close(extensionId);
     final dir = await getApplicationSupportDirectory();
     final cookies = Directory(
       '${dir.path}${Platform.pathSeparator}cookies'

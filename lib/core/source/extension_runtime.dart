@@ -207,6 +207,19 @@ var http = {
 var html = {
   select: function (source, selector) { return __bkCall('html.select', [source, selector]); },
 };
+var webview = {
+  // Runs [script] (an async function, or the body of one) inside [url] in a
+  // hidden WebView; resolves with its JSON-able result. A function is sent
+  // as source, so it cannot use variables of the extension; pass them in
+  // [args].
+  run: function (url, script) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    var body = typeof script === 'function'
+      ? 'return await (' + String(script) + ').apply(null, ' + JSON.stringify(args) + ');'
+      : String(script);
+    return __bkCall('webview.run', { url: url, script: body });
+  },
+};
 var storage = {
   get: function (key) { return __bkCall('storage.get', [key]); },
   set: function (key, value) { return __bkCall('storage.set', [key, String(value)]); },

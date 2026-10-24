@@ -8,6 +8,7 @@ import 'package:bacakomik_app/core/source/extension_bridge.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -169,6 +170,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         userAgent: ExtensionBridge.userAgent,
                         javaScriptEnabled: true,
                         domStorageEnabled: true,
+                        // chrome://inspect in debug builds.
+                        isInspectable: kDebugMode,
                       ),
                       onWebViewCreated: (controller) =>
                           _controller = controller,
