@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/constants/variables.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
 
 /// Shareable HTTPS links that open the app (Android App Links), e.g.
 /// `https://bacakomik.kurodev.org/series/magic-emperor`.
@@ -16,9 +17,9 @@ abstract final class DeepLinks {
     return segments.last;
   }
 
-  /// Placeholder title from a slug while the details load:
-  /// `magic-emperor` → `Magic Emperor`.
-  static String titleFromSlug(String slug) => slug
+  /// Placeholder title from a comic key while the details load:
+  /// `magic-emperor` and `voratoon:magic-emperor` → `Magic Emperor`.
+  static String titleFromSlug(String key) => ComicKey.slugOf(key)
       .split('-')
       .where((w) => w.isNotEmpty)
       .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
