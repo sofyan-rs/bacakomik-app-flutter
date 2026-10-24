@@ -16,6 +16,7 @@ import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_t
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
 import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -166,6 +167,16 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                     SliverToBoxAdapter(
                       child: DotTopBar(
                         actions: [
+                          RoundIconButton(
+                            icon: LucideIcons300.globe,
+                            semanticLabel: AppText.openWebView,
+                            iconSize: DotSize.iconSmall,
+                            onTap: () => WebViewScreen.openSeries(
+                              context,
+                              sourceId: ComicKey.sourceOf(widget.slug),
+                              key: widget.slug,
+                            ),
+                          ),
                           RoundIconButton(
                             icon: LucideIcons300.share2,
                             semanticLabel: AppText.share,

@@ -22,6 +22,7 @@ class ExtensionBridge {
 
   final Box<String> _storage;
   final _clients = <String, Future<Dio>>{};
+  final _jars = <String, Future<PersistCookieJar>>{};
 
   Future<Object?> handle(String extensionId, String method, Object? args) =>
       switch (method) {
@@ -64,14 +65,34 @@ class ExtensionBridge {
     };
   }
 
+  Future<PersistCookieJar> _jar(String extensionId) =>
+      _jars[extensionId] ??= () async {
+        final dir = await getApplicationSupportDirectory();
+        return PersistCookieJar(
+          storage: FileStorage(
+            '${dir.path}${Platform.pathSeparator}cookies'
+            '${Platform.pathSeparator}$extensionId',
+          ),
+        );
+      }();
+
+  /// Copies cookies the WebView got for [uri] (e.g. Cloudflare's
+  /// `cf_clearance`) into the extension's jar, so `http.fetch` sends them.
+  Future<void> saveCookies(
+    String extensionId,
+    Uri uri,
+    List<Cookie> cookies,
+  ) async {
+    if (cookies.isEmpty) return;
+    await (await _jar(extensionId)).saveFromResponse(uri, cookies);
+  }
+
+  /// Forgets the extension's cookies for [uri]'s host.
+  Future<void> clearCookies(String extensionId, Uri uri) async =>
+      (await _jar(extensionId)).delete(uri, true);
+
   Future<Dio> _client(String extensionId) async {
-    final dir = await getApplicationSupportDirectory();
-    final jar = PersistCookieJar(
-      storage: FileStorage(
-        '${dir.path}${Platform.pathSeparator}cookies'
-        '${Platform.pathSeparator}$extensionId',
-      ),
-    );
+    final jar = await _jar(extensionId);
     return Dio(
       BaseOptions(
         connectTimeout: const Duration(seconds: 15),
@@ -86,6 +107,7 @@ class ExtensionBridge {
   /// Clears an extension's cookies and stored values, e.g. on uninstall.
   Future<void> reset(String extensionId) async {
     _clients.remove(extensionId);
+    _jars.remove(extensionId);
     final dir = await getApplicationSupportDirectory();
     final cookies = Directory(
       '${dir.path}${Platform.pathSeparator}cookies'

@@ -116,6 +116,10 @@
       }
     },
 
+    webUrl(slug) {
+      return `https://bacakomik.my/komik/${enc(slug)}/`
+    },
+
     async series(slug) {
       const { data: d } = await get(`/series/${enc(slug)}`)
       return {

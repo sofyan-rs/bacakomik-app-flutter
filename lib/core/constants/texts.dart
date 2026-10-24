@@ -270,6 +270,12 @@ class AppText {
   static const String addSource = 'Add source';
   static const String openSource = 'Open';
   static const String sourceFrom = 'From';
+  static const String openWebView = 'Open in WebView';
+  static const String refresh = 'Refresh';
+  static const String openInBrowser = 'Open in browser';
+  static const String clearCookies = 'Clear cookies';
+  static const String cookiesCleared = 'Cookies cleared';
+  static const String pageNotLoaded = "Page didn't load";
   static const String sourceConnecting = 'Connecting';
   static const String sourceOnline = 'Online';
   static const String sourceOffline = 'Offline';

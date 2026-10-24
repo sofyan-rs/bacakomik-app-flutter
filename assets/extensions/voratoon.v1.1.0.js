@@ -167,6 +167,10 @@
       }
     },
 
+    webUrl(slug) {
+      return `${BASE}/series/${enc(slug)}`
+    },
+
     async series(slug) {
       const { data: item } = await get(`/series/${enc(slug)}`)
       const d = item.data || {}

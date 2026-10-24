@@ -165,7 +165,7 @@ void main() {
       ),
     );
     expect(find.text('EXPLORE'), findsOneWidget);
-    expect(find.text('+3'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
     expect(find.text('NEW'), findsOneWidget);
   });
 }

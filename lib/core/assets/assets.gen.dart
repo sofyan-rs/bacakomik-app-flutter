@@ -17,17 +17,17 @@ import 'package:vector_graphics/vector_graphics.dart' as _vg;
 class $AssetsExtensionsGen {
   const $AssetsExtensionsGen();
 
-  /// File path: assets/extensions/bacakomik.v1.0.0.js
-  String get bacakomikV100 => 'assets/extensions/bacakomik.v1.0.0.js';
+  /// File path: assets/extensions/bacakomik.v1.1.0.js
+  String get bacakomikV110 => 'assets/extensions/bacakomik.v1.1.0.js';
 
   /// File path: assets/extensions/index.json
   String get index => 'assets/extensions/index.json';
 
-  /// File path: assets/extensions/voratoon.v1.0.0.js
-  String get voratoonV100 => 'assets/extensions/voratoon.v1.0.0.js';
+  /// File path: assets/extensions/voratoon.v1.1.0.js
+  String get voratoonV110 => 'assets/extensions/voratoon.v1.1.0.js';
 
   /// List of all assets
-  List<String> get values => [bacakomikV100, index, voratoonV100];
+  List<String> get values => [bacakomikV110, index, voratoonV110];
 }
 
 class $AssetsIconsGen {

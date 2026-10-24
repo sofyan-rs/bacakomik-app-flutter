@@ -106,6 +106,20 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   /// Name of the source a [ComicKey] belongs to.
   String sourceNameOfKey(String key) => nameOf(ComicKey.sourceOf(key));
 
+  /// The series' page on its site, from the extension's optional `webUrl`;
+  /// the source's home page when it has none or it fails.
+  Future<String> webUrlOf(String key) async {
+    final sourceId = ComicKey.sourceOf(key);
+    final home = meta(sourceId)?.baseUrl ?? '';
+    try {
+      final url = await (await backend(sourceId))
+          .call('webUrl', [ComicKey.slugOf(key)]);
+      return url is String && url.startsWith('http') ? url : home;
+    } catch (_) {
+      return home;
+    }
+  }
+
   /// Source shown on Home and Explore: the one picked last, else the
   /// default source, else the first installed.
   @override

@@ -18,6 +18,7 @@ import 'package:bacakomik_app/features/source/presentation/widgets/source_picker
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -179,6 +180,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
       title: source?.name ?? AppText.explore,
       titleSemanticLabel: AppText.changeSource,
       onTitleTap: () => showSourcePicker(context),
+      actions: [
+        if (source != null && source.baseUrl.isNotEmpty)
+          RoundIconButton(
+            icon: LucideIcons300.globe,
+            semanticLabel: AppText.openWebView,
+            onTap: () => WebViewScreen.open(
+              context,
+              sourceId: source.id,
+              url: source.baseUrl,
+            ),
+          ),
+      ],
       subtitleWidget: SourceSubtitle(
         source: source,
         status: switch (state) {

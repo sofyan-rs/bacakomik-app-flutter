@@ -5,23 +5,23 @@
       "id": "bacakomik",
       "name": "BacaKomik",
       "lang": "id",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "apiVersion": 1,
       "baseUrl": "https://bacakomik.my",
       "nsfw": false,
-      "file": "bacakomik.v1.0.0.js",
-      "sha256": "ba5d94cf8c90dcd77aa842fd6c65f4a5432f4c2a1fb7e0870ceff5024a4943a0"
+      "file": "bacakomik.v1.1.0.js",
+      "sha256": "24874597a1c59aec4fba8946be4acdc1139641de9bc7eb22c4ee73883aff1dc5"
     },
     {
       "id": "voratoon",
       "name": "VoraToon",
       "lang": "id",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "apiVersion": 1,
       "baseUrl": "https://voratoon.co",
       "nsfw": false,
-      "file": "voratoon.v1.0.0.js",
-      "sha256": "51bdb48be9a2ece0669d95b93e78a30cd9d180f820b2c06ffdee4ce212c0bf85"
+      "file": "voratoon.v1.1.0.js",
+      "sha256": "59bfb93a96bc59e85ef73c75c9220406a6d1d0e8d9d47e066d5e3964bfd9cfb7"
     }
   ]
 }
