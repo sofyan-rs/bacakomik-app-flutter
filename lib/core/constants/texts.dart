@@ -286,6 +286,13 @@ class AppText {
   static const String installed = 'Installed';
   static const String available = 'Available';
   static const String install = 'Install';
+  static const String installing = 'Installing…';
+  static const String sourceNotInstalled = 'is not installed';
+  static const String sourceLooking = 'Looking for it in your repos…';
+  static const String sourceInstallHint =
+      'Install the extension to open this comic.';
+  static const String sourceNotInRepos =
+      'None of your repos has this source. Add its repo in Extensions.';
   static const String update = 'Update';
   static const String uninstall = 'Uninstall';
   static const String uninstallDescription =

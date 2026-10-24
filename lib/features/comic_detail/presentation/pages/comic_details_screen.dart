@@ -21,6 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/missing_source.dart';
+import 'package:bacakomik_app/core/source/extension_manager.dart';
 
 class ComicDetailsScreen extends StatelessWidget {
   const ComicDetailsScreen({
@@ -76,6 +78,12 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   /// Selected chapters by slug, in selection order.
   final _selected = <String, SelectedChapter>{};
 
+  late final _sourceId = ComicKey.sourceOf(widget.slug);
+
+  /// The comic's source extension is not installed: show [MissingSource]
+  /// instead of loading.
+  var _sourceMissing = false;
+
   @override
   void initState() {
     super.initState();
@@ -83,6 +91,9 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   }
 
   Future<void> _load() async {
+    final missing = getIt<ExtensionManager>().meta(_sourceId) == null;
+    if (missing != _sourceMissing) setState(() => _sourceMissing = missing);
+    if (missing) return;
     context.read<ComicDetailsBloc>().add(ComicDetailsRequested(widget.slug));
   }
 
@@ -166,23 +177,27 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: DotTopBar(
+                        // Hidden until the source is installed.
                         actions: [
-                          RoundIconButton(
-                            icon: LucideIcons300.globe,
-                            semanticLabel: AppText.openWebView,
-                            iconSize: DotSize.iconSmall,
-                            onTap: () => WebViewScreen.openSeries(
-                              context,
-                              sourceId: ComicKey.sourceOf(widget.slug),
-                              key: widget.slug,
+                          if (!_sourceMissing) ...[
+                            RoundIconButton(
+                              icon: LucideIcons300.globe,
+                              semanticLabel: AppText.openWebView,
+                              iconSize: DotSize.iconSmall,
+                              onTap: () => WebViewScreen.openSeries(
+                                context,
+                                sourceId: ComicKey.sourceOf(widget.slug),
+                                key: widget.slug,
+                              ),
                             ),
-                          ),
-                          RoundIconButton(
-                            icon: LucideIcons300.share2,
-                            semanticLabel: AppText.share,
-                            iconSize: DotSize.iconSmall,
-                            onTap: () => _share(details?.title ?? widget.title),
-                          ),
+                            RoundIconButton(
+                              icon: LucideIcons300.share2,
+                              semanticLabel: AppText.share,
+                              iconSize: DotSize.iconSmall,
+                              onTap: () =>
+                                  _share(details?.title ?? widget.title),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -205,51 +220,59 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     );
   }
 
-  List<Widget> _body(ComicDetailsState state) => switch (state) {
-    ComicDetailsLoaded(:final comicDetails) => [
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(
-          DotSpace.s4,
-          DotSpace.s5,
-          DotSpace.s4,
-          0,
-        ),
-        sliver: SliverToBoxAdapter(
-          child: ComicInfo(
-            details: comicDetails,
-            source: context.sourceLabelOf(widget.slug),
-            onGenreTap: _exploreGenre,
+  List<Widget> _body(ComicDetailsState state) => _sourceMissing
+      ? [
+          SliverToBoxAdapter(child: _loadingTitle(loading: false)),
+          SliverToBoxAdapter(
+            child: MissingSource(sourceId: _sourceId, onInstalled: _load),
           ),
-        ),
-      ),
-      ComicChapters(
-        comicDetails: comicDetails,
-        onOpenChapter: (chapter) => _read(comicDetails, chapter.slug),
-        onToggleSelected: _toggleSelected,
-        isSelected: _isSelected,
-        isSelecting: _selected.isNotEmpty,
-      ),
-    ],
-    ComicDetailsNoInternet() => [
-      SliverToBoxAdapter(child: EmptyState.offline(onAction: _load)),
-    ],
-    ComicDetailsError(:final message) => [
-      SliverToBoxAdapter(
-        child: EmptyState(
-          icon: LucideIcons300.bug,
-          title: AppText.error,
-          message: message,
-          actionLabel: AppText.retry,
-          onAction: _load,
-        ),
-      ),
-    ],
-    ComicDetailsInitial() ||
-    ComicDetailsLoading() => [SliverToBoxAdapter(child: _loadingTitle())],
-  };
+        ]
+      : switch (state) {
+          ComicDetailsLoaded(:final comicDetails) => [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                DotSpace.s4,
+                DotSpace.s5,
+                DotSpace.s4,
+                0,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: ComicInfo(
+                  details: comicDetails,
+                  source: context.sourceLabelOf(widget.slug),
+                  onGenreTap: _exploreGenre,
+                ),
+              ),
+            ),
+            ComicChapters(
+              comicDetails: comicDetails,
+              onOpenChapter: (chapter) => _read(comicDetails, chapter.slug),
+              onToggleSelected: _toggleSelected,
+              isSelected: _isSelected,
+              isSelecting: _selected.isNotEmpty,
+            ),
+          ],
+          ComicDetailsNoInternet() => [
+            SliverToBoxAdapter(child: EmptyState.offline(onAction: _load)),
+          ],
+          ComicDetailsError(:final message) => [
+            SliverToBoxAdapter(
+              child: EmptyState(
+                icon: LucideIcons300.bug,
+                title: AppText.error,
+                message: message,
+                actionLabel: AppText.retry,
+                onAction: _load,
+              ),
+            ),
+          ],
+          ComicDetailsInitial() ||
+          ComicDetailsLoading() => [SliverToBoxAdapter(child: _loadingTitle())],
+        };
 
-  /// Title from the previous screen while the details load.
-  Widget _loadingTitle() {
+  /// Title from the previous screen while the details load, with a loader
+  /// unless [loading] is false.
+  Widget _loadingTitle({bool loading = true}) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DotSpace.s4,
@@ -260,8 +283,10 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
       child: Column(
         children: [
           ComicTitle(widget.title),
-          const SizedBox(height: DotSpace.s6),
-          const DotLoader(),
+          if (loading) ...[
+            const SizedBox(height: DotSpace.s6),
+            const DotLoader(),
+          ],
         ],
       ),
     );
