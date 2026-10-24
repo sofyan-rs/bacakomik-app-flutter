@@ -59,9 +59,10 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     this._bridge,
   );
 
-  /// Added on first run; served from the extension repo's `dist/`.
+  /// Added on first run; the public repo holds the built `dist/` of the
+  /// private extension source repo.
   static const defaultRepo =
-      'https://raw.githubusercontent.com/sofyan-rs/bacakomik-ext/main/dist/index.json';
+      'https://raw.githubusercontent.com/sofyan-rs/bacakomik-ext/main/index.json';
 
   static const _bundledIndex = 'assets/extensions/index.json';
   static const _reposKey = 'repos';

@@ -11,7 +11,8 @@ Repo terkait:
 | Repo | Isi | Status |
 |---|---|---|
 | `bacakomik-app-flutter` (ini) | App, runtime ekstensi, UI sumber | branch `feat/multi-source` |
-| `bacakomik-ext` (`github.com/sofyan-rs/bacakomik-ext`, **private**) | Ekstensi `bacakomik` + `voratoon`, tooling Bun | branch `main` |
+| `bacakomik-ext-source` (`github.com/sofyan-rs/bacakomik-ext-source`, private; folder lokal `bacakomik-ext`) | Source ekstensi `bacakomik` + `voratoon`, tooling Bun, workflow `Publish` | branch `main` |
+| `bacakomik-ext` (`github.com/sofyan-rs/bacakomik-ext`, public) | Hasil build (`index.json` + `*.js`) di root, di-push oleh workflow `Publish`. Jangan edit manual. | branch `main` |
 | `bacakomik-api` | Worker API bacakomik (dipakai ekstensi `bacakomik`) | UA Chrome Android di `src/upstream.ts` belum di-commit |
 
 ## Setup di PC baru
@@ -99,7 +100,7 @@ Semua teks UI sudah English (`AppText` + literal lain). Tab: Home, Explore, Book
    - Bookmark judul yang sama dari dua sumber → cek sheet Migrate / Add anyway, cek history ikut pindah.
    - Extensions screen: repo, install/uninstall.
    - Worktree `/tmp/bk-main` (checkout `main`) dibuat di PC lama untuk tes ini — abaikan / `git worktree prune` di PC baru.
-2. **Repo ekstensi private** → app tidak bisa ambil `https://raw.githubusercontent.com/sofyan-rs/bacakomik-ext/main/dist/index.json` (`ExtensionManager.defaultRepo`). Jadikan public, atau host `dist/` di Cloudflare Pages/R2 lalu ganti `defaultRepo`. Sampai itu, app tetap jalan dengan ekstensi bundled.
+2. **Publish repo ekstensi**: `defaultRepo` = `https://raw.githubusercontent.com/sofyan-rs/bacakomik-ext/main/index.json`. Workflow `Publish` di repo source butuh secret `PUBLISH_DEPLOY_KEY` + deploy key (write) di repo public — langkah di header `.github/workflows/publish.yml`. Sampai publish pertama, app tetap jalan dengan ekstensi bundled.
 3. **Sinkron aset bundled**: tiap ubah ekstensi → `bun run build` di `bacakomik-ext` → copy `dist/*` ke `assets/extensions/` → naikkan `version` di `meta.json` kalau user lama harus dapat versi baru.
 4. **Download** belum dimigrasi untuk entri voratoon lama (folder/key tetap slug polos). Konten offline masih bisa dibaca dari Downloads.
 5. **Cover voratoon** = presigned S3 (kedaluwarsa ~6 hari). Cover di bookmark diperbarui saat refresh bookmark / buka detail.
