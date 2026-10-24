@@ -118,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final source = context.watch<SourcesCubit>().state.active;
     return ScreenHeader(
       overline: HomeScreen.greeting(DateTime.now()),
-      title: source?.name ?? AppVariables.appName,
+      title: source?.baseName ?? AppVariables.appName,
       titleSemanticLabel: AppText.changeSource,
       onTitleTap: () => showSourcePicker(context),
       subtitleWidget: SourceSubtitle(

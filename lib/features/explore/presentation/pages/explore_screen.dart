@@ -178,7 +178,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final source = context.watch<SourcesCubit>().state.active;
     return ScreenHeader(
       overline: AppText.explore,
-      title: source?.name ?? AppText.explore,
+      title: source?.baseName ?? AppText.explore,
       titleSemanticLabel: AppText.changeSource,
       onTitleTap: () => showSourcePicker(context),
       actions: [

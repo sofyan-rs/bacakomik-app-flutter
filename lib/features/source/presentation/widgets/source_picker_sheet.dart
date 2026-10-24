@@ -13,7 +13,8 @@ import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 /// Health of the active source, from the last load of the screen showing it.
 enum SourceStatus { connecting, online, offline, error }
 
-/// `voratoon.co · ● Online` under a source title.
+/// `voratoon.co · ● Online` under a source title; one language of a
+/// multi-language extension adds it: `mangadex.org · ID · ● Online`.
 class SourceSubtitle extends StatelessWidget {
   const SourceSubtitle({super.key, required this.source, required this.status});
 
@@ -41,6 +42,8 @@ class SourceSubtitle extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (source!.parentId != null)
+          Text(' · ${source!.lang.toUpperCase()}', style: style),
         Text(' · ', style: style),
         Container(
           width: 6,
