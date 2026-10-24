@@ -107,7 +107,15 @@ Semua teks UI sudah English (`AppText` + literal lain). Tab: Home, Explore, Book
 - **Bot check**: bridge melempar `challenge: <url>` untuk halaman Cloudflare; ekstensi boleh melempar sendiri (MangaFire `captcha_required`). UI (`SourceError`) menampilkan **Verify in WebView**, retry setelah WebView ditutup.
 - **Layout repo**: `dist/index.json` + `dist/extensions/*.js`. Aset app di-generate dengan `bun run bundle ../bacakomik-app-flutter/assets/extensions bacakomik voratoon` (hanya yang di-bundle).
 
+- **Multi-bahasa**: `meta.json` `languages` + `lang: "all"`. App memecah jadi sumber per bahasa aktif (`<ext>-<lang>`, nama `MangaDex (ID)`), bookmark/history terpisah. Toggle di Extensions (ikon Languages), default EN. Script membaca `source.lang`. Runner: `--lang=id`.
+- **MangaDex** (1.0.2): API publik, gambar dari `uploads.mangadex.org` (node MD@H sering 404). Satu upload per nomor chapter: grup dengan chapter terbanyak, lalu terbaru (diputuskan cukup, tanpa pilihan grup manual). Tag filter statis. Daftar tidak menampilkan nomor chapter (`lastChapter` lintas bahasa).
+- **Koneksi**: `http.fetch` retry 3x untuk error TLS/reset/refused, lalu pesan "network may be blocking it". Gangguan ISP di jaringan dev: kadang DNS (VoraToon di emulator), kadang sertifikat palsu (MangaDex). DoH belum ada dan tidak menolong kasus sertifikat.
+
 ## Belum selesai / TODO
+
+- **Comix** (`comix.to`): ditunda. API butuh token dari JS situs; keiyoushi memakai WebView tersembunyi + descramble gambar 5×5. Perlu host API `webview.run` dulu.
+- **DoH** opsional untuk kasus blokir DNS (HttpOverrides global); tidak menjangkau WebView/background_downloader.
+- Satu test flaky (gagal sesekali, lolos saat diulang); belum diidentifikasi.
 
 1. **Tes emulator sudah** (2026-10-24): upgrade dari v1.5.1 aman, VoraToon browse/filter/detail, Migrate + history pindah, uninstall/install dari repo public, WebView + cookie. **Belum**: build iOS, tes di HP fisik. Catatan tes lama:
    - Install build `main` (v1.5.1) → buat beberapa bookmark & history → install build branch ini (debug key sama, data tetap) → cek bookmark/history lama masih ada dan bisa dibuka.
