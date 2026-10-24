@@ -295,6 +295,8 @@ class AppText {
   static const String sourceOffline = 'Offline';
   static const String sourceError = 'Error';
   static const String noSourceShort = 'No source installed';
+  static const String noSourceHint =
+      'Install a source in Extensions to start reading.';
   static const String extensions = 'Extensions';
   static const String extensionsDescription = 'Sources to read comics from';
   static const String installed = 'Installed';
