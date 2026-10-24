@@ -204,7 +204,11 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
           0,
         ),
         sliver: SliverToBoxAdapter(
-          child: ComicInfo(details: comicDetails, onGenreTap: _exploreGenre),
+          child: ComicInfo(
+            details: comicDetails,
+            source: context.sourceLabelOf(widget.slug),
+            onGenreTap: _exploreGenre,
+          ),
         ),
       ),
       ComicChapters(

@@ -80,3 +80,27 @@ class CountBadge extends StatelessWidget {
     );
   }
 }
+
+/// Small `ink` pill with a language code over a cover: "ID", "EN".
+class LangBadge extends StatelessWidget {
+  const LangBadge({super.key, required this.lang});
+
+  /// ISO 639-1 code, shown upper-case.
+  final String lang;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: c.ink,
+        borderRadius: BorderRadius.circular(DotRadius.pill),
+      ),
+      child: Text(
+        lang.toUpperCase(),
+        style: DotlineText.data.copyWith(color: c.onInk, height: 1),
+      ),
+    );
+  }
+}

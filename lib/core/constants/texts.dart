@@ -239,6 +239,7 @@ class AppText {
   static const String manage = 'Manage';
   static const String addSource = 'Add source';
   static const String openSource = 'Open';
+  static const String sourceFrom = 'From';
   static const String sourceConnecting = 'Connecting';
   static const String sourceOnline = 'Online';
   static const String sourceOffline = 'Offline';

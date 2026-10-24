@@ -34,11 +34,23 @@ class SourcesState {
 extension SourceNames on BuildContext {
   /// Name of the source of a [ComicKey]; its id when not installed, or
   /// when no [SourcesCubit] is above (widget tests).
-  String sourceNameOf(String key) {
+  String sourceNameOf(String key) =>
+      sourceOf(key)?.name ?? ComicKey.sourceOf(key);
+
+  /// Installed extension a [ComicKey] belongs to; null when not installed,
+  /// or when no [SourcesCubit] is above (widget tests).
+  ExtensionMeta? sourceOf(String key) {
     final id = ComicKey.sourceOf(key);
     final installed = read<SourcesCubit?>()?.state.installed ?? const [];
-    return installed.where((e) => e.id == id).firstOrNull?.name ?? id;
+    return installed.where((e) => e.id == id).firstOrNull;
   }
+
+  /// `VoraToon · ID`: name and language of the source of a [ComicKey].
+  /// Just the id when not installed.
+  String sourceLabelOf(String key) => switch (sourceOf(key)) {
+    final meta? => '${meta.name} · ${meta.lang.toUpperCase()}',
+    null => ComicKey.sourceOf(key),
+  };
 }
 
 /// Mirrors [ExtensionManager]: re-emits whenever an extension is installed,

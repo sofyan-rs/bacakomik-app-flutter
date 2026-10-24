@@ -7,8 +7,8 @@ import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.da
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Bookmark grid cell: cover with the `+N` new-chapter badge, title, read
-/// meter and `read / total` chapters.
+/// Bookmark grid cell: cover with the source language and `+N` new-chapter
+/// badges, title, read meter and `read / total` chapters.
 class BookmarkComicCard extends StatelessWidget {
   const BookmarkComicCard({
     super.key,
@@ -31,6 +31,7 @@ class BookmarkComicCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final details = item.bookmark.comicDetails;
+    final lang = context.sourceOf(item.bookmark.slug)?.lang;
 
     return Semantics(
       selected: isSelected,
@@ -48,6 +49,12 @@ class BookmarkComicCard extends StatelessWidget {
                 children: [
                   if (isSelected)
                     ColoredBox(color: c.bg.withValues(alpha: 0.55)),
+                  if (lang != null && !isSelected)
+                    Positioned(
+                      top: DotSpace.s2,
+                      left: DotSpace.s2,
+                      child: LangBadge(lang: lang),
+                    ),
                   if (item.hasUpdate)
                     Positioned(
                       top: DotSpace.s2,
@@ -85,22 +92,10 @@ class BookmarkComicCard extends StatelessWidget {
             const SizedBox(height: DotSpace.s2),
             DotMeter(value: item.read, total: item.total, gap: 3),
             const SizedBox(height: DotSpace.s2),
-            Row(
-              children: [
-                Text(
-                  '${item.read} / ${item.total}',
-                  style: DotlineText.data.copyWith(color: c.inkFaint),
-                  maxLines: 1,
-                ),
-                Expanded(
-                  child: Text(
-                    ' · ${context.sourceNameOf(item.bookmark.slug)}',
-                    style: DotlineText.data.copyWith(color: c.inkFaint),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            Text(
+              '${item.read} / ${item.total}',
+              style: DotlineText.data.copyWith(color: c.inkFaint),
+              maxLines: 1,
             ),
           ],
         ),
