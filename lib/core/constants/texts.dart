@@ -234,6 +234,30 @@ class AppText {
       "You're on the latest chapter. New chapters will show up in Bookmarks.";
   static const String toHome = 'Go home';
 
+  // Bookmark groups and categories
+  static const String groupBy = 'Group by';
+  static const String groupByStatus = 'Status';
+  static const String groupByStatusDescription = 'All, updated, completed';
+  static const String groupBySource = 'Source';
+  static const String groupBySourceDescription = 'One tab per source';
+  static const String groupByCategory = 'Category';
+  static const String groupByCategoryDescription = 'Your own categories';
+  static const String categories = 'Categories';
+  static const String manageCategories = 'Manage categories';
+  static const String categoriesDescription =
+      'Long press bookmarks, then the folder button to put them in one.';
+  static const String uncategorized = 'Uncategorized';
+  static const String setCategories = 'Set categories';
+  static const String noCategories = 'No categories yet';
+  static const String newCategoryHint = 'New category';
+  static const String addCategory = 'Add category';
+  static const String renameCategory = 'Rename';
+  static const String deleteCategory = 'Delete category';
+  static const String deleteCategoryDescription =
+      'Its comics stay bookmarked and keep their other categories.';
+  static const String save = 'Save';
+  static const String skip = 'Skip';
+
   // Bookmark refresh notification
   static const String progressChannel = 'Progress';
   static const String updatingBookmarks = 'Updating bookmarks';

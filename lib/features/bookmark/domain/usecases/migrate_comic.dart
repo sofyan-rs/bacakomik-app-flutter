@@ -4,6 +4,8 @@ import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:bacakomik_app/features/category/domain/entities/category.dart';
+import 'package:bacakomik_app/features/category/domain/repositories/category_repository.dart';
 import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
@@ -14,13 +16,19 @@ typedef MigrateComicParams = ({String from, String to, ComicDetails details});
 /// like Mihon's migrate: the bookmark under [MigrateComicParams.from] is
 /// replaced by one under [MigrateComicParams.to], and each read chapter
 /// moves to the chapter with the same number in the new source. Chapters
-/// the new source lacks are dropped.
+/// the new source lacks are dropped. The comic keeps its categories.
 @injectable
 class MigrateComic implements UseCase<Unit, MigrateComicParams> {
-  const MigrateComic(this._bookmarks, this._history, this._clock);
+  const MigrateComic(
+    this._bookmarks,
+    this._history,
+    this._categories,
+    this._clock,
+  );
 
   final BookmarkRepository _bookmarks;
   final HistoryRepository _history;
+  final CategoryRepository _categories;
   final Clock _clock;
 
   @override
@@ -28,6 +36,10 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
     final (:from, :to, :details) = params;
     final history = await _history.getHistory();
     if (history case Left(value: final failure)) return left(failure);
+    final categories = await _categories.getComicCategories();
+    if (categories case Left(value: final failure)) return left(failure);
+    final categoryIds =
+        categories.getOrElse((_) => const {})[from]?.categoryIds ?? const [];
 
     final chapters = {for (final c in details.chapters) c.number: c.slug};
     final moved = [
@@ -42,6 +54,14 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
         Bookmark(slug: to, comicDetails: details, updatedDate: _clock.now()),
       ]),
       if (moved.isNotEmpty) () => _history.saveHistory(moved),
+      if (categoryIds.isNotEmpty)
+        () => _categories.saveComicCategories([
+          ComicCategories(
+            slug: to,
+            categoryIds: categoryIds,
+            updatedDate: _clock.now(),
+          ),
+        ]),
       () => _history.removeComicHistory(from),
       () => _bookmarks.removeBookmarks([from]),
     ];

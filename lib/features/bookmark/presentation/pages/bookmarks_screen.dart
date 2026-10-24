@@ -7,16 +7,23 @@ import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_comic_card.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:bacakomik_app/features/bookmark/presentation/widgets/group_by_sheet.dart';
+import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
+import 'package:bacakomik_app/features/category/presentation/widgets/set_categories_sheet.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Bookmark tab: filter (all / has update / finished), local title search,
-/// long press to select and delete.
+/// Bookmark tab: tabs split by status, source or category ([BookmarkGrouping]),
+/// local title search, long press to select, categorize and delete.
 class BookmarksScreen extends StatefulWidget {
   const BookmarksScreen({super.key});
 
@@ -27,7 +34,10 @@ class BookmarksScreen extends StatefulWidget {
 class _BookmarksScreenState extends State<BookmarksScreen> {
   final _query = TextEditingController();
   var _searching = false;
-  var _filter = BookmarkFilter.all;
+
+  /// Selected tab: [_allTab], a [BookmarkFilter] name, a source id, a category
+  /// id or [_uncategorizedTab], depending on the grouping.
+  var _group = _allTab;
   final _selected = <String>{};
 
   /// Progress per bookmark, recomputed only when bookmarks or history
@@ -76,18 +86,91 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     setState(_selected.clear);
   }
 
+  static const _allTab = 'all';
+  static const _uncategorizedTab = '';
+
+  /// Tabs of [grouping] as (key, label).
+  List<Segment<String>> _tabs(
+    BookmarkGrouping grouping,
+    List<BookmarkProgress> all,
+    CategoryState categories,
+  ) => [
+    const Segment(value: _allTab, label: AppText.filterAll),
+    ...switch (grouping) {
+      BookmarkGrouping.status => [
+        Segment(
+          value: BookmarkFilter.updated.name,
+          label: AppText.filterUpdated,
+        ),
+        Segment(
+          value: BookmarkFilter.finished.name,
+          label: AppText.filterFinished,
+        ),
+      ],
+      BookmarkGrouping.source => [
+        for (final slug in {
+          for (final item in all)
+            ComicKey.sourceOf(item.bookmark.slug): item.bookmark.slug,
+        }.values)
+          Segment(
+            value: ComicKey.sourceOf(slug),
+            label: context.sourceNameOf(slug),
+          ),
+      ]..sort((a, b) => a.label.compareTo(b.label)),
+      BookmarkGrouping.category => [
+        for (final category in categories.categories)
+          Segment(value: category.id, label: category.name),
+        const Segment(value: _uncategorizedTab, label: AppText.uncategorized),
+      ],
+    },
+  ];
+
+  bool _inGroup(
+    BookmarkGrouping grouping,
+    BookmarkProgress item,
+    CategoryState categories,
+  ) {
+    if (_group == _allTab) return true;
+    final slug = item.bookmark.slug;
+    return switch (grouping) {
+      BookmarkGrouping.status => item.matches(
+        BookmarkFilter.values.byName(_group),
+      ),
+      BookmarkGrouping.source => ComicKey.sourceOf(slug) == _group,
+      BookmarkGrouping.category =>
+        _group == _uncategorizedTab
+            ? categories.idsOf(slug).isEmpty
+            : categories.idsOf(slug).contains(_group),
+    };
+  }
+
+  Future<void> _setCategories() async {
+    final saved = await showSetCategoriesSheet(context, {..._selected});
+    if (saved && mounted) setState(_selected.clear);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final grouping = context.select(
+      (SettingsCubit s) => s.state.bookmarkGrouping,
+    );
+    final categories = context.watch<CategoryCubit>().state;
     final all = _progress(
       context.watch<BookmarkCubit>(),
       context.watch<HistoryCubit>(),
     );
     final updated = all.where((i) => i.hasUpdate).length;
+    final tabs = _tabs(grouping, all, categories);
+    // The tab is gone (grouping changed, category deleted): show all.
+    if (!tabs.any((t) => t.value == _group)) _group = _allTab;
     final query = _query.text.trim().toLowerCase();
-    final shown = [
+    final group = [
       for (final item in all)
-        if (item.matches(_filter) &&
-            item.bookmark.comicDetails.title.toLowerCase().contains(query))
+        if (_inGroup(grouping, item, categories)) item,
+    ];
+    final shown = [
+      for (final item in group)
+        if (item.bookmark.comicDetails.title.toLowerCase().contains(query))
           item,
     ];
 
@@ -106,8 +189,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             // again in another group adds that group to the running queue.
             onRefresh: () async => unawaited(
               context.read<BookmarkCubit>().updateBookmarkList([
-                for (final item in all)
-                  if (item.matches(_filter)) item.bookmark.slug,
+                for (final item in group) item.bookmark.slug,
               ]),
             ),
             child: CustomScrollView(
@@ -145,23 +227,10 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                         DotSpace.s4,
                         DotSpace.s5,
                       ),
-                      child: SegmentedControl<BookmarkFilter>(
-                        selected: _filter,
-                        onChanged: (f) => setState(() => _filter = f),
-                        segments: const [
-                          Segment(
-                            value: BookmarkFilter.all,
-                            label: AppText.filterAll,
-                          ),
-                          Segment(
-                            value: BookmarkFilter.updated,
-                            label: AppText.filterUpdated,
-                          ),
-                          Segment(
-                            value: BookmarkFilter.finished,
-                            label: AppText.filterFinished,
-                          ),
-                        ],
+                      child: ScrollableTabs<String>(
+                        selected: _group,
+                        onChanged: (g) => setState(() => _group = g),
+                        segments: tabs,
                       ),
                     ),
                   ),
@@ -210,12 +279,18 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           : '${AppText.count(count, AppText.comic, AppText.comics)} · '
                 '$updated ${AppText.hasUpdate}',
       actions: [
-        if (count > 0)
+        if (count > 0) ...[
+          RoundIconButton(
+            icon: LucideIcons300.layers,
+            semanticLabel: AppText.groupBy,
+            onTap: () => showGroupBySheet(context),
+          ),
           RoundIconButton(
             icon: _searching ? LucideIcons300.x : LucideIcons300.search,
             semanticLabel: AppText.searchBookmarkHint,
             onTap: _toggleSearch,
           ),
+        ],
       ],
     );
   }
@@ -243,6 +318,12 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               style: DotlineText.label.copyWith(color: c.ink),
             ),
           ),
+          RoundIconButton(
+            icon: LucideIcons300.folder,
+            semanticLabel: AppText.setCategories,
+            onTap: _setCategories,
+          ),
+          const SizedBox(width: DotSpace.s2),
           RoundIconButton(
             icon: LucideIcons300.trash2,
             semanticLabel: AppText.deleteBookmark,

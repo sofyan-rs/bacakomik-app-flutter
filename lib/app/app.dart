@@ -5,6 +5,7 @@ import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
 import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
@@ -46,6 +47,7 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
         BlocProvider(create: (_) => getIt<ExploreBloc>()),
         BlocProvider(create: (_) => getIt<FilterCubit>()),
         BlocProvider(create: (_) => getIt<BookmarkCubit>()..load()),
+        BlocProvider(create: (_) => getIt<CategoryCubit>()..load()),
         BlocProvider(create: (_) => getIt<HistoryCubit>()..load()),
         BlocProvider(create: (_) => getIt<SettingsCubit>()..load()),
         BlocProvider(create: (_) => getIt<DownloadCubit>()..load()),
@@ -60,6 +62,7 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
                 previous.libraryRevision != current.libraryRevision,
             listener: (context, _) {
               context.read<BookmarkCubit>().load();
+              context.read<CategoryCubit>().load();
               context.read<HistoryCubit>().load();
             },
           ),

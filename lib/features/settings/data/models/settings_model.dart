@@ -13,6 +13,7 @@ class SettingsModel {
     this.keepScreenOn = true,
     this.pageGap = false,
     this.autoScrollSpeed = 3,
+    this.bookmarkGrouping = BookmarkGrouping.status,
   });
 
   factory SettingsModel.fromEntity(AppSettings e) => SettingsModel(
@@ -22,6 +23,7 @@ class SettingsModel {
     keepScreenOn: e.keepScreenOn,
     pageGap: e.pageGap,
     autoScrollSpeed: e.autoScrollSpeed,
+    bookmarkGrouping: e.bookmarkGrouping,
   );
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) =>
@@ -40,6 +42,9 @@ class SettingsModel {
   final bool pageGap;
   final int autoScrollSpeed;
 
+  @JsonKey(unknownEnumValue: BookmarkGrouping.status)
+  final BookmarkGrouping bookmarkGrouping;
+
   Map<String, dynamic> toJson() => _$SettingsModelToJson(this);
 
   AppSettings toEntity() => AppSettings(
@@ -49,5 +54,6 @@ class SettingsModel {
     keepScreenOn: keepScreenOn,
     pageGap: pageGap,
     autoScrollSpeed: autoScrollSpeed.clamp(autoScrollMin, autoScrollMax),
+    bookmarkGrouping: bookmarkGrouping,
   );
 }

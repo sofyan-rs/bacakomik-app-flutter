@@ -477,13 +477,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i364.SaveComicCategories>(
       () => _i364.SaveComicCategories(gh<_i866.CategoryRepository>()),
     );
-    gh.factory<_i823.MigrateComic>(
-      () => _i823.MigrateComic(
-        gh<_i851.BookmarkRepository>(),
-        gh<_i55.HistoryRepository>(),
-        gh<_i1011.Clock>(),
-      ),
-    );
     gh.factory<_i611.GetHome>(() => _i611.GetHome(gh<_i15.HomeRepository>()));
     gh.lazySingleton<_i665.DownloadRepository>(
       () => _i183.DownloadRepositoryImpl(
@@ -507,6 +500,14 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i607.InstallUpdate>(
       () => _i607.InstallUpdate(gh<_i533.UpdateRepository>()),
+    );
+    gh.factory<_i823.MigrateComic>(
+      () => _i823.MigrateComic(
+        gh<_i851.BookmarkRepository>(),
+        gh<_i55.HistoryRepository>(),
+        gh<_i866.CategoryRepository>(),
+        gh<_i1011.Clock>(),
+      ),
     );
     gh.factory<_i1060.RefreshBookmark>(
       () => _i1060.RefreshBookmark(

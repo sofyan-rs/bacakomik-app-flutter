@@ -16,6 +16,8 @@ import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecase
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:bacakomik_app/features/category/domain/entities/category.dart';
+import 'package:bacakomik_app/features/category/domain/repositories/category_repository.dart';
 import 'package:bacakomik_app/features/comic_detail/domain/repositories/comic_detail_repository.dart';
 import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
 import 'package:bacakomik_app/features/history/data/repositories/history_repository_impl.dart';
@@ -45,6 +47,16 @@ class MockComicDetailRepository extends Mock implements ComicDetailRepository {}
 class MockBookmarkRepository extends Mock implements BookmarkRepository {}
 
 class MockHistoryRepository extends Mock implements HistoryRepository {}
+
+class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+/// A category repository where no comic is in a category yet.
+MockCategoryRepository noCategories() {
+  final repo = MockCategoryRepository();
+  when(() => repo.getComicCategories()).thenAnswer((_) async => right({}));
+  when(() => repo.saveComicCategories(any())).thenAnswer((_) async => right(unit));
+  return repo;
+}
 
 /// Records `done/total` for progress and the title of the end notification.
 class RecordingNotifier implements ProgressNotifier {
@@ -268,7 +280,7 @@ void main() {
         SaveBookmarks(repo),
         RemoveBookmarks(repo),
         RefreshBookmark(repo, comicDetails, clock),
-        MigrateComic(repo, historyRepo, clock),
+        MigrateComic(repo, historyRepo, noCategories(), clock),
         notifier,
         clock,
       );
@@ -408,17 +420,22 @@ void main() {
   group('MigrateComic', () {
     late MockBookmarkRepository bookmarks;
     late MockHistoryRepository historyRepo;
+    late MockCategoryRepository categories;
     late MigrateComic migrate;
     final target = details.copyWith(
       chapters: const [Chapter(number: '1', slug: 'v:a/1', date: '-')],
     );
 
-    setUpAll(() => registerFallbackValue(<String>[]));
+    setUpAll(() {
+      registerFallbackValue(<String>[]);
+      registerFallbackValue(<ComicCategories>[]);
+    });
 
     setUp(() {
       bookmarks = MockBookmarkRepository();
       historyRepo = MockHistoryRepository();
-      migrate = MigrateComic(bookmarks, historyRepo, clock);
+      categories = noCategories();
+      migrate = MigrateComic(bookmarks, historyRepo, categories, clock);
       when(() => bookmarks.saveBookmarks(any()))
           .thenAnswer((_) async => right(unit));
       when(() => bookmarks.removeBookmarks(any()))
@@ -444,6 +461,25 @@ void main() {
       verifyNever(() => historyRepo.saveHistory(any()));
       verify(() => historyRepo.removeComicHistory('a')).called(1);
       verify(() => bookmarks.removeBookmarks(['a'])).called(1);
+    });
+
+    test('keeps the categories of the comic', () async {
+      when(() => historyRepo.getHistory()).thenAnswer((_) async => right([]));
+      when(() => categories.getComicCategories()).thenAnswer(
+        (_) async => right({
+          'a': ComicCategories(slug: 'a', categoryIds: ['x'], updatedDate: at(1)),
+        }),
+      );
+
+      await migrate((from: 'a', to: 'v:a', details: target));
+
+      final saved =
+          verify(() => categories.saveComicCategories(captureAny()))
+                  .captured
+                  .single
+              as List<ComicCategories>;
+      expect(saved.single.slug, 'v:a');
+      expect(saved.single.categoryIds, ['x']);
     });
 
     test('history read failure changes nothing', () async {

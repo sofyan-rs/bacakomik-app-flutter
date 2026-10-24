@@ -18,6 +18,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:bacakomik_app/features/category/presentation/pages/categories_screen.dart';
 
 /// More groups: DATA (downloads, backup, cache), SYNC, THEME, ABOUT.
 class Settings extends StatelessWidget {
@@ -73,6 +74,13 @@ class Settings extends StatelessWidget {
                 subtitle: AppText.extensionsDescription,
                 showChevron: true,
                 onTap: () => ExtensionsScreen.open(context),
+              ),
+              ListRow(
+                icon: LucideIcons300.folder,
+                title: AppText.categories,
+                subtitle: AppText.groupByCategoryDescription,
+                showChevron: true,
+                onTap: () => CategoriesScreen.open(context),
               ),
               ListRow(
                 icon: LucideIcons300.download,
