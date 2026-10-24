@@ -192,6 +192,8 @@ Bump the extension's `version` for every change you want the app to pick up as a
 - Keep PRs small: one feature or fix per PR.
 
 ### PR checklist
+
+The same list is in the PR template (`.github/pull_request_template.md`).
 - [ ] `flutter analyze` and `flutter test` pass.
 - [ ] Code regenerated with `build_runner` and committed, if annotations changed.
 - [ ] New domain logic and repositories have tests.
