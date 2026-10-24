@@ -103,6 +103,10 @@ Semua teks UI sudah English (`AppText` + literal lain). Tab: Home, Explore, Book
 - `android/build.gradle`: samakan JVM target Java `flutter_js` dengan Kotlin (1.8).
 - Repo ekstensi dipisah: source private `bacakomik-ext-source`, hasil build di repo public `bacakomik-ext` (workflow `Publish` + deploy key sudah aktif).
 
+- **MangaFire** (`src/mangafire`, EN, `nsfw: true`, tidak di-bundle): JSON API `/api` + tanda tangan `vrf` (port dari keiyoushi, Apache-2.0). Gambar wajib `Referer` → kontrak `chapter().headers` (dipakai reader, save image, download). CDN `mfcdn1` sempat 403 di pembukaan pertama lalu normal.
+- **Bot check**: bridge melempar `challenge: <url>` untuk halaman Cloudflare; ekstensi boleh melempar sendiri (MangaFire `captcha_required`). UI (`SourceError`) menampilkan **Verify in WebView**, retry setelah WebView ditutup.
+- **Layout repo**: `dist/index.json` + `dist/extensions/*.js`. Aset app di-generate dengan `bun run bundle ../bacakomik-app-flutter/assets/extensions bacakomik voratoon` (hanya yang di-bundle).
+
 ## Belum selesai / TODO
 
 1. **Tes emulator sudah** (2026-10-24): upgrade dari v1.5.1 aman, VoraToon browse/filter/detail, Migrate + history pindah, uninstall/install dari repo public, WebView + cookie. **Belum**: build iOS, tes di HP fisik. Catatan tes lama:
@@ -112,7 +116,7 @@ Semua teks UI sudah English (`AppText` + literal lain). Tab: Home, Explore, Book
    - Extensions screen: repo, install/uninstall.
    - Worktree `/tmp/bk-main` (checkout `main`) dibuat di PC lama untuk tes ini — abaikan / `git worktree prune` di PC baru.
 2. **Publish repo ekstensi**: `defaultRepo` = `https://raw.githubusercontent.com/sofyan-rs/bacakomik-ext/main/index.json`. Workflow `Publish` di repo source butuh secret `PUBLISH_DEPLOY_KEY` + deploy key (write) di repo public — langkah di header `.github/workflows/publish.yml`. Sampai publish pertama, app tetap jalan dengan ekstensi bundled.
-3. **Sinkron aset bundled**: tiap ubah ekstensi → `bun run build` di `bacakomik-ext` → copy `dist/*` ke `assets/extensions/` → naikkan `version` di `meta.json` kalau user lama harus dapat versi baru.
+3. **Sinkron aset bundled**: tiap ubah ekstensi → naikkan `version` (semver) di `meta.json` → `bun run build` → `bun run bundle ../bacakomik-app-flutter/assets/extensions bacakomik voratoon`.
 4. **Download** belum dimigrasi untuk entri voratoon lama (folder/key tetap slug polos). Konten offline masih bisa dibaca dari Downloads.
 5. **Cover voratoon** = presigned S3 (kedaluwarsa ~6 hari). Cover di bookmark diperbarui saat refresh bookmark / buka detail.
 6. **ISP block**: voratoon kadang diblok Internet Positif (sertifikat `internetpositif.id`). Pertimbangkan DoH/pengaturan DNS di bridge.
