@@ -19,8 +19,16 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart' as webview;
 /// inside the site in a hidden WebView. It keeps [DefaultCacheManager]'s
 /// key, so images cached before stay.
 final CacheManager comicImageCache = CacheManager(
-  Config(DefaultCacheManager.key, fileService: _BrowserLikeFileService()),
+  Config(DefaultCacheManager.key, fileService: _fileService),
 );
+
+final _fileService = _BrowserLikeFileService();
+
+/// Whether [url]'s host turns away requests that do not come from inside
+/// the site (see [comicImageCache]); [comicImageCache] gets its images
+/// anyway, other downloaders do not.
+Future<bool> imageHostBlocks(String url, {Map<String, String>? headers}) =>
+    _fileService.blocks(Uri.parse(url), headers);
 
 class _BrowserLikeFileService extends FileService {
   _BrowserLikeFileService() : _inner = _httpFileService();
@@ -68,20 +76,43 @@ class _BrowserLikeFileService extends FileService {
   }) async {
     final uri = Uri.parse(url);
     if (_inPage(uri.host)) return _getInPage(uri, headers);
-    final cookie = await _cookieHeader(uri);
-    final response = await _inner.get(
-      url,
+    final response = await _getDirect(uri, headers);
+    if (!_isBlocked(uri, response)) return response;
+    await response.content.drain<void>();
+    return _getInPage(uri, headers);
+  }
+
+  /// See [imageHostBlocks].
+  Future<bool> blocks(Uri url, Map<String, String>? headers) async {
+    if (_inPage(url.host)) return true;
+    final response = await _getDirect(url, headers);
+    await response.content.drain<void>();
+    return _isBlocked(url, response);
+  }
+
+  Future<FileServiceResponse> _getDirect(
+    Uri url,
+    Map<String, String>? headers,
+  ) async {
+    final cookie = await _cookieHeader(url);
+    return _inner.get(
+      url.toString(),
       headers: {
         ..._imageHeaders,
         if (cookie.isNotEmpty) 'Cookie': cookie,
         ...?headers,
       },
     );
+  }
+
+  /// Whether [response] is a block the WebView can get past; remembers
+  /// [url]'s host when it is.
+  bool _isBlocked(Uri url, FileServiceResponse response) {
     if (!_pages.available || !_blocked.contains(response.statusCode)) {
-      return response;
+      return false;
     }
-    _inPageSince[uri.host] = DateTime.now();
-    return _getInPage(uri, headers);
+    _inPageSince[url.host] = DateTime.now();
+    return true;
   }
 
   /// Statuses Cloudflare answers a blocked request with.

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:bacakomik_app/core/di/register_module.dart';
+import 'package:bacakomik_app/core/network/image_cache.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';
@@ -24,9 +24,10 @@ abstract interface class DownloadFileDataSource {
   /// `chapterDir/007.webp`; the extension comes from [url], else `jpg`.
   String pagePath(String chapterDir, int index, String url);
 
-  /// Downloads [url] to `[pathWithoutExtension].<ext>` right away, through
-  /// a `.part` file so an interrupted download never looks complete. Used
-  /// for covers; pages go through `PageDownloadQueue`.
+  /// Copies [url] to `[pathWithoutExtension].<ext>` right away from the
+  /// image cache (which downloads it when missing), through a `.part` file
+  /// so an interrupted copy never looks complete. Used for covers; pages go
+  /// through `PageDownloadQueue`.
   Future<({String path, int size})> download(
     String url,
     String pathWithoutExtension, {
@@ -48,11 +49,8 @@ abstract interface class DownloadFileDataSource {
 
 @LazySingleton(as: DownloadFileDataSource)
 class DownloadFileDataSourceImpl implements DownloadFileDataSource {
-  DownloadFileDataSourceImpl(@Named(filesDio) this._dio);
-
   static const _imageExtensions = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'};
 
-  final Dio _dio;
   Future<String>? _root;
 
   /// App-specific external storage on Android (no permission needed,
@@ -86,15 +84,11 @@ class DownloadFileDataSourceImpl implements DownloadFileDataSource {
     final root = await this.root;
     final part = File('$root/$pathWithoutExtension.part');
     await part.parent.create(recursive: true);
-    final response = await _dio.download(
-      url,
-      part.path,
-      cancelToken: cancelToken,
-    );
+    final cached = await comicImageCache.getSingleFile(url);
+    if (cancelToken?.isCancelled ?? false) throw StateError('Cancelled');
+    await cached.copy(part.path);
     final extension =
-        _extensionOfUrl(url) ??
-        _extensionOfType(response.headers.value(Headers.contentTypeHeader)) ??
-        'jpg';
+        _extensionOfUrl(url) ?? _extensionOfUrl(cached.path) ?? 'jpg';
     final path = '$pathWithoutExtension.$extension';
     final file = await part.rename('$root/$path');
     return (path: path, size: await file.length());
@@ -141,13 +135,6 @@ class DownloadFileDataSourceImpl implements DownloadFileDataSource {
     final dot = name.lastIndexOf('.');
     if (dot < 0) return null;
     final extension = name.substring(dot + 1).toLowerCase();
-    return _imageExtensions.contains(extension) ? extension : null;
-  }
-
-  static String? _extensionOfType(String? contentType) {
-    if (contentType == null) return null;
-    final subtype = contentType.split(';').first.split('/').last.trim();
-    final extension = subtype == 'jpeg' ? 'jpg' : subtype.toLowerCase();
     return _imageExtensions.contains(extension) ? extension : null;
   }
 }

@@ -260,6 +260,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i738.Box<String>>(instanceName: 'history_comics'),
       ),
     );
+    gh.lazySingleton<_i389.DownloadFileDataSource>(
+      () => _i389.DownloadFileDataSourceImpl(),
+    );
     await gh.factoryAsync<_i738.Box<String>>(
       () => storageModule.extensionsBox,
       instanceName: 'extensions',
@@ -294,11 +297,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i764.NetworkInfo>(
       () => _i764.NetworkInfoImpl(gh<_i895.Connectivity>()),
-    );
-    gh.lazySingleton<_i389.DownloadFileDataSource>(
-      () => _i389.DownloadFileDataSourceImpl(
-        gh<_i361.Dio>(instanceName: 'files_dio'),
-      ),
     );
     gh.factory<_i660.MigrateSnapshot>(
       () => _i660.MigrateSnapshot(gh<_i1011.Clock>()),
