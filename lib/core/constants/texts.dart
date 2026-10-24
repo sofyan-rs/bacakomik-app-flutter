@@ -132,7 +132,6 @@ class AppText {
   static const String successRestoreData = 'Data restored';
   static const String failedRestoreData = "Couldn't restore data";
 
-  static const String sync = 'Sync';
   static const String syncDrive = 'Google Drive sync';
   static const String syncDriveDescription =
       'Bookmarks and reading history on all your devices';
@@ -152,7 +151,9 @@ class AppText {
   static const String website = 'Kurodev website';
   static const String linkFailed = "Couldn't open the link";
   static const String chaptersRead = 'Chapters read';
-  static const String data = 'Data';
+  static const String sources = 'Sources';
+  static const String library = 'Library';
+  static const String backupAndSync = 'Backup & sync';
   static const String theme = 'Theme';
   static const String about = 'About';
   static const String themeSystem = 'System';

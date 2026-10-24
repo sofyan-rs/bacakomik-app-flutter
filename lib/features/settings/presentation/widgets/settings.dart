@@ -20,7 +20,8 @@ import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bacakomik_app/features/category/presentation/pages/categories_screen.dart';
 
-/// More groups: DATA (downloads, backup, cache), SYNC, THEME, ABOUT.
+/// More groups: SOURCES, LIBRARY (categories, downloads, cache), BACKUP &
+/// SYNC, THEME, ABOUT.
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
@@ -63,7 +64,7 @@ class Settings extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: DotSpace.s3),
-        const SectionLabel(label: AppText.data),
+        const SectionLabel(label: AppText.sources),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
           child: ListGroup(
@@ -75,6 +76,15 @@ class Settings extends StatelessWidget {
                 showChevron: true,
                 onTap: () => ExtensionsScreen.open(context),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: DotSpace.s3),
+        const SectionLabel(label: AppText.library),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+          child: ListGroup(
+            children: [
               ListRow(
                 icon: LucideIcons300.folder,
                 title: AppText.categories,
@@ -93,20 +103,6 @@ class Settings extends StatelessWidget {
                 onTap: () => DownloadsScreen.open(context),
               ),
               ListRow(
-                icon: LucideIcons300.database,
-                title: AppText.backupData,
-                subtitle: AppText.backupDataDescription,
-                onTap: busy ? null : () => context.read<BackupCubit>().backup(),
-              ),
-              ListRow(
-                icon: LucideIcons300.rotateCcw,
-                title: AppText.restoreData,
-                subtitle: AppText.restoreDataDescription,
-                onTap: busy
-                    ? null
-                    : () => context.read<BackupCubit>().restore(),
-              ),
-              ListRow(
                 icon: LucideIcons300.trash2,
                 title: AppText.clearCache,
                 subtitle: AppText.clearCacheDescription,
@@ -115,7 +111,22 @@ class Settings extends StatelessWidget {
             ],
           ),
         ),
-        const SyncSection(),
+        SyncSection(
+          backup: [
+            ListRow(
+              icon: LucideIcons300.database,
+              title: AppText.backupData,
+              subtitle: AppText.backupDataDescription,
+              onTap: busy ? null : () => context.read<BackupCubit>().backup(),
+            ),
+            ListRow(
+              icon: LucideIcons300.rotateCcw,
+              title: AppText.restoreData,
+              subtitle: AppText.restoreDataDescription,
+              onTap: busy ? null : () => context.read<BackupCubit>().restore(),
+            ),
+          ],
+        ),
         const SizedBox(height: DotSpace.s3),
         const SectionLabel(label: AppText.theme),
         Padding(

@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// More SYNC group: connect Google Drive, or sync now and disconnect.
+/// More BACKUP & SYNC group: connect Google Drive, or sync now and
+/// disconnect, then the [backup] rows (backup file, restore).
 class SyncSection extends StatelessWidget {
-  const SyncSection({super.key});
+  const SyncSection({super.key, this.backup = const []});
+
+  final List<Widget> backup;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +22,7 @@ class SyncSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: DotSpace.s3),
-        const SectionLabel(label: AppText.sync),
+        const SectionLabel(label: AppText.backupAndSync),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
           child: ListGroup(
@@ -49,6 +52,7 @@ class SyncSection extends StatelessWidget {
                   onTap: state.busy ? null : cubit.signOut,
                 ),
               ],
+              ...backup,
             ],
           ),
         ),
