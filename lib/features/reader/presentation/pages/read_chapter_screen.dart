@@ -284,7 +284,12 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       // Download into the disk cache only; decoding happens when the page
       // is shown, at screen width (see ChapterImg).
       DefaultCacheManager()
-          .getSingleFile(_images[page], key: _images[page])
+          .getSingleFile(
+            _images[page],
+            key: _images[page],
+            // Same headers as ChapterImg: it shares this download.
+            headers: _chapter?.imageHeaders ?? const {},
+          )
           .then((_) {}, onError: (_) {})
           .whenComplete(() => _onPageSettled(page));
     }
