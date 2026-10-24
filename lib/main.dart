@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bacakomik_app/app/app.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
@@ -10,6 +12,9 @@ Future<void> main() async {
   Hive.init((await getApplicationDocumentsDirectory()).path);
   await configureDependencies();
   // Sources must exist before the first screen loads comics.
-  await getIt<ExtensionManager>().installBundled();
+  final extensions = getIt<ExtensionManager>();
+  await extensions.installBundled();
   runApp(const BacaKomikApp());
+  // In the background: finds extension updates for the badge in More.
+  unawaited(extensions.catalog());
 }

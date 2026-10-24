@@ -80,6 +80,16 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   final ExtensionBridge _bridge;
   final _runtimes = <String, ExtensionRuntime>{};
 
+  /// Newest version of each extension in the repos, from the last
+  /// [catalog] fetch.
+  var _offered = <String, ExtensionMeta>{};
+
+  /// Installed extensions the repos have a newer, installable version of.
+  int get updateCount => extensions.where((e) {
+    final offered = _offered[e.id];
+    return offered != null && offered.supported && offered.isNewerThan(e);
+  }).length;
+
   /// Sources to read from, by name: every single-source extension and the
   /// enabled languages of multi-language ones.
   List<ExtensionMeta> get installed => [
@@ -244,15 +254,25 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   }
 
   /// Fetches every repo. A repo that fails is returned as an error entry so
-  /// the rest still show.
-  Future<List<({String url, ExtensionRepo? repo, String? error})>> catalog() =>
-      Future.wait([
-        for (final url in repos)
-          fetchRepo(url).then(
-            (repo) => (url: url, repo: repo, error: null),
-            onError: (Object e) => (url: url, repo: null, error: '$e'),
-          ),
-      ]);
+  /// the rest still show. Also refreshes [updateCount].
+  Future<List<({String url, ExtensionRepo? repo, String? error})>>
+  catalog() async {
+    final result = await Future.wait([
+      for (final url in repos)
+        fetchRepo(url).then<({String url, ExtensionRepo? repo, String? error})>(
+          (repo) => (url: url, repo: repo, error: null),
+          onError: (Object e) => (url: url, repo: null, error: '$e'),
+        ),
+    ]);
+    final offered = <String, ExtensionMeta>{};
+    for (final e in result.expand((r) => r.repo?.extensions ?? const [])) {
+      final seen = offered[e.id];
+      if (seen == null || e.isNewerThan(seen)) offered[e.id] = e;
+    }
+    _offered = offered;
+    notifyListeners();
+    return result;
+  }
 
   Future<ExtensionRepo> fetchRepo(String url) async {
     final res = await _dio.get<String>(

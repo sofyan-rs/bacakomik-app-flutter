@@ -14,6 +14,7 @@ class SourcesState {
     this.features = const SourceFeatures(),
     this.loadError,
     this.ready = false,
+    this.updateCount = 0,
   });
 
   /// Sources to pick from: enabled languages only.
@@ -32,6 +33,9 @@ class SourcesState {
 
   /// False until the active source was loaded once.
   final bool ready;
+
+  /// Extensions with an update in the repos (badge on More > Extensions).
+  final int updateCount;
 
   ExtensionMeta? get active =>
       installed.where((e) => e.id == activeId).firstOrNull;
@@ -93,6 +97,7 @@ class SourcesCubit extends Cubit<SourcesState> {
         features: features,
         loadError: error,
         ready: true,
+        updateCount: _manager.updateCount,
       ),
     );
   }

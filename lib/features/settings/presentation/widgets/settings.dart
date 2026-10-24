@@ -6,6 +6,7 @@ import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
 import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/download/presentation/pages/downloads_screen.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/extensions_screen.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
@@ -59,6 +60,9 @@ class Settings extends StatelessWidget {
     final downloadedBytes = context.select<DownloadCubit, int>(
       (d) => d.state.totalBytes,
     );
+    final extensionUpdates = context.select<SourcesCubit, int>(
+      (s) => s.state.updateCount,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -73,6 +77,9 @@ class Settings extends StatelessWidget {
                 icon: LucideIcons300.puzzle,
                 title: AppText.extensions,
                 subtitle: AppText.extensionsDescription,
+                trailing: extensionUpdates == 0
+                    ? null
+                    : UpdateBadge(count: extensionUpdates),
                 showChevron: true,
                 onTap: () => ExtensionsScreen.open(context),
               ),
