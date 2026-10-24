@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/widgets/comic_grid.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
@@ -100,7 +102,14 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           child: RefreshIndicator(
             color: Dotline.of(context).ink,
             backgroundColor: Dotline.of(context).surface,
-            onRefresh: () => context.read<BookmarkCubit>().updateBookmarkList(),
+            // Not awaited: the notification shows progress, and pulling
+            // again in another group adds that group to the running queue.
+            onRefresh: () async => unawaited(
+              context.read<BookmarkCubit>().updateBookmarkList([
+                for (final item in all)
+                  if (item.matches(_filter)) item.bookmark.slug,
+              ]),
+            ),
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [

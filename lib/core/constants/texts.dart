@@ -234,6 +234,12 @@ class AppText {
       "You're on the latest chapter. New chapters will show up in Bookmarks.";
   static const String toHome = 'Go home';
 
+  // Bookmark refresh notification
+  static const String progressChannel = 'Progress';
+  static const String updatingBookmarks = 'Updating bookmarks';
+  static const String bookmarksUpdated = 'Bookmarks updated';
+  static const String haveNewChapters = 'with new chapters';
+
   // Sources and extensions
   static const String changeSource = 'Change source';
   static const String manage = 'Manage';

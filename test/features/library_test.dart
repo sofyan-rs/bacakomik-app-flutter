@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
+import 'package:bacakomik_app/core/notifications/progress_notifier.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:bacakomik_app/core/storage/library_journal.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
@@ -11,7 +14,7 @@ import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecases.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
-import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmarks.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/comic_detail/domain/repositories/comic_detail_repository.dart';
 import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
@@ -42,6 +45,23 @@ class MockComicDetailRepository extends Mock implements ComicDetailRepository {}
 class MockBookmarkRepository extends Mock implements BookmarkRepository {}
 
 class MockHistoryRepository extends Mock implements HistoryRepository {}
+
+/// Records `done/total` for progress and the title of the end notification.
+class RecordingNotifier implements ProgressNotifier {
+  final calls = <String>[];
+
+  @override
+  Future<void> progress(
+    int id, {
+    required String title,
+    required int done,
+    required int total,
+  }) async => calls.add('$done/$total');
+
+  @override
+  Future<void> finish(int id, {String? title, String? body}) async =>
+      calls.add('finish ${title ?? '-'}');
+}
 
 const details = sampleComicDetails;
 
@@ -222,6 +242,7 @@ void main() {
     late HistoryRepositoryImpl historyRepo;
     late MockComicDetailRepository comicDetails;
     late BookmarkCubit cubit;
+    late RecordingNotifier notifier;
 
     setUp(() async {
       repo = BookmarkRepositoryImpl(
@@ -241,12 +262,14 @@ void main() {
         LibraryJournal(Hive.box<String>(HiveBoxes.libraryDeletions), clock),
       );
       comicDetails = MockComicDetailRepository();
+      notifier = RecordingNotifier();
       cubit = BookmarkCubit(
         GetBookmarks(repo),
         SaveBookmarks(repo),
         RemoveBookmarks(repo),
-        RefreshBookmarks(repo, comicDetails, clock),
+        RefreshBookmark(repo, comicDetails, clock),
         MigrateComic(repo, historyRepo, clock),
+        notifier,
         clock,
       );
       await repo.saveBookmarks([
@@ -294,13 +317,48 @@ void main() {
           .thenAnswer((_) async => right(details.copyWith(title: 'Gamma')));
       clock.value = at(5000);
 
-      await cubit.updateBookmarkList();
+      await cubit.updateBookmarkList(['a', 'b', 'c']);
 
       expect(cubit.state.map((b) => b.slug), ['a', 'b', 'c']);
       expect(cubit.state.first.updatedDate, at(5000));
       expect(cubit.state.first.comicDetails.chapters, hasLength(3));
       expect(cubit.state[1].updatedDate, at(300));
       expect(cubit.state[2].updatedDate, at(200));
+    });
+
+    test('refresh checks only the given group; a second call joins the run',
+        () async {
+      final first = Completer<Either<Failure, ComicDetails>>();
+      when(() => comicDetails.getComicDetails('a'))
+          .thenAnswer((_) => first.future);
+      when(() => comicDetails.getComicDetails('c'))
+          .thenAnswer((_) async => right(details));
+
+      final run = cubit.updateBookmarkList(['a']);
+      final joined = cubit.updateBookmarkList(['a', 'c']);
+      first.complete(right(details));
+      await Future.wait([run, joined]);
+
+      verifyNever(() => comicDetails.getComicDetails('b'));
+      verify(() => comicDetails.getComicDetails('a')).called(1);
+      expect(notifier.calls, ['0/1', '1/2', 'finish -']);
+    });
+
+    test('refresh reports how many comics changed', () async {
+      when(() => comicDetails.getComicDetails(any())).thenAnswer(
+        (_) async => right(
+          details.copyWith(
+            chapters: [
+              ...details.chapters,
+              const Chapter(number: '9', slug: 'x/9', date: '-'),
+            ],
+          ),
+        ),
+      );
+
+      await cubit.updateBookmarkList(['a', 'b']);
+
+      expect(notifier.calls.last, 'finish ${AppText.bookmarksUpdated}');
     });
 
     test('sameSeriesAs finds other entries with the same title', () async {
