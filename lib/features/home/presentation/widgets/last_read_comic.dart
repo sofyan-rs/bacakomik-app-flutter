@@ -55,7 +55,10 @@ class LastReadComic extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${details.type} · ${details.status}'.toUpperCase(),
+                          [
+                            if (details.type != '-') details.type,
+                            details.status,
+                          ].join(' · ').toUpperCase(),
                           style: DotlineText.label.copyWith(color: c.inkFaint),
                         ),
                         const SizedBox(height: DotSpace.s2),

@@ -45,7 +45,11 @@ class _ComicInfoState extends State<ComicInfo> {
     final c = Dotline.of(context);
     final d = widget.details;
     final year = ComicInfo.year(d.released);
-    final meta = [d.type, d.status, if (year != '-') year].join(' · ');
+    final meta = [
+      if (d.type != '-') d.type,
+      d.status,
+      if (year != '-') year,
+    ].join(' · ');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
