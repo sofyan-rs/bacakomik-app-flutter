@@ -123,7 +123,7 @@ Semua teks UI sudah English (`AppText` + literal lain). Tab: Home, Explore, Book
    - Bookmark judul yang sama dari dua sumber → cek sheet Migrate / Add anyway, cek history ikut pindah.
    - Extensions screen: repo, install/uninstall.
    - Worktree `/tmp/bk-main` (checkout `main`) dibuat di PC lama untuk tes ini — abaikan / `git worktree prune` di PC baru.
-2. **Publish repo ekstensi**: `defaultRepo` = `https://raw.githubusercontent.com/sofyan-rs/bacakomik-ext/main/index.json`. Workflow `Publish` di repo source butuh secret `PUBLISH_DEPLOY_KEY` + deploy key (write) di repo public — langkah di header `.github/workflows/publish.yml`. Sampai publish pertama, app tetap jalan dengan ekstensi bundled.
+2. **Publish repo ekstensi**: `defaultRepo` = `https://bacakomik-ext.kurodev.org/index.json` (Cloudflare Worker, static assets dari `dist/`; URL raw GitHub lama otomatis dibaca sebagai URL ini). Workflow `Publish` di repo source butuh secret `PUBLISH_DEPLOY_KEY` + deploy key (write) di repo public — langkah di header `.github/workflows/publish.yml`. Sampai publish pertama, app tetap jalan dengan ekstensi bundled.
 3. **Sinkron aset bundled**: tiap ubah ekstensi → naikkan `version` (semver) di `meta.json` → `bun run build` → `bun run bundle ../bacakomik-app-flutter/assets/extensions bacakomik voratoon`.
 4. **Download** belum dimigrasi untuk entri voratoon lama (folder/key tetap slug polos). Konten offline masih bisa dibaca dari Downloads.
 5. **Cover voratoon** = presigned S3 (kedaluwarsa ~6 hari). Cover di bookmark diperbarui saat refresh bookmark / buka detail.

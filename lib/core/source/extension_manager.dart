@@ -59,9 +59,13 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     this._bridge,
   );
 
-  /// Added on first run; the public repo holds the built `dist/` of the
-  /// private extension source repo.
-  static const defaultRepo =
+  /// Added on first run: the built `dist/` of the private extension source
+  /// repo, served from a Cloudflare Worker.
+  static const defaultRepo = 'https://bacakomik-ext.kurodev.org/index.json';
+
+  /// Where [defaultRepo] was before; read as [defaultRepo]. Still updated,
+  /// so older app versions keep working.
+  static const _previousDefaultRepo =
       'https://raw.githubusercontent.com/sofyan-rs/bacakomik-ext/main/index.json';
 
   static const _bundledIndex = 'assets/extensions/index.json';
@@ -205,7 +209,10 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   List<String> get repos {
     final raw = _settings.get(_reposKey);
     if (raw == null) return const [defaultRepo];
-    return (jsonDecode(raw) as List).cast<String>();
+    return {
+      for (final url in (jsonDecode(raw) as List).cast<String>())
+        url == _previousDefaultRepo ? defaultRepo : url,
+    }.toList();
   }
 
   /// Installs or upgrades the bundled extensions. Called once on start.
