@@ -1,6 +1,6 @@
 # Multi-source (extensions) — handoff
 
-Status per 2026-10-24. Branch `feat/multi-source`. Lanjutkan dari sini di PC lain.
+Status per 2026-10-24 (sore). Branch `feat/multi-source`. Lanjutkan dari sini di PC lain.
 
 ## Ringkasan
 
@@ -92,9 +92,20 @@ Saat bookmark judul yang sudah ada dari sumber lain (judul dinormalisasi): sheet
 
 Semua teks UI sudah English (`AppText` + literal lain). Tab: Home, Explore, Bookmarks, History, More.
 
+## Ditambahkan 2026-10-24 (sore)
+
+- **Versi ekstensi semver** (`1.0.0`, sekarang `1.1.0`); integer lama dibaca `N.0.0` (`ExtensionMeta.isNewerThan`, `core/utils/version.dart`).
+- **Kontrak**: method opsional `webUrl(slug)` → URL halaman series di situs.
+- **WebView** (`features/source/presentation/pages/web_view_screen.dart`, `flutter_inappwebview` 6.2.0-beta.3 — versi stabil 6.1.5 gagal build di AGP baru karena `proguard-android.txt`). Tombol globe di detail series (webUrl) dan Explore (baseUrl). UA = `ExtensionBridge.userAgent`; cookie WebView disalin ke jar ekstensi (`path=/`) tiap page load. Menu: Refresh, Share, Open in browser, Clear cookies.
+- **Detail series**: baris `FROM VORATOON · ID`. Kartu bookmark: badge bahasa, badge chapter baru tanpa `+`.
+- **Refresh bookmark per grup** dengan notifikasi progress Android (`core/notifications/progress_notifier.dart`); pull di grup lain saat jalan → masuk antrean, total bertambah.
+- **Kategori** (`features/category/`): banyak kategori per komik, ikut sync/backup sebagai field tambahan (format sync tetap v1, backup tetap v2). Bookmarks: tombol Group by (Status / Source / Category), tab scrollable (`ScrollableTabs`), aksi Set categories di mode seleksi, sheet kategori setelah add bookmark (dengan Skip), layar Categories (tambah/rename/hapus/urutkan) juga dari More.
+- `android/build.gradle`: samakan JVM target Java `flutter_js` dengan Kotlin (1.8).
+- Repo ekstensi dipisah: source private `bacakomik-ext-source`, hasil build di repo public `bacakomik-ext` (workflow `Publish` + deploy key sudah aktif).
+
 ## Belum selesai / TODO
 
-1. **Tes di emulator/HP belum dilakukan.** Belum terbukti `flutter_js` + bridge async jalan di device. Rencana tes:
+1. **Tes emulator sudah** (2026-10-24): upgrade dari v1.5.1 aman, VoraToon browse/filter/detail, Migrate + history pindah, uninstall/install dari repo public, WebView + cookie. **Belum**: build iOS, tes di HP fisik. Catatan tes lama:
    - Install build `main` (v1.5.1) → buat beberapa bookmark & history → install build branch ini (debug key sama, data tetap) → cek bookmark/history lama masih ada dan bisa dibuka.
    - Ganti sumber ke VoraToon, browse, filter, buka chapter.
    - Bookmark judul yang sama dari dua sumber → cek sheet Migrate / Add anyway, cek history ikut pindah.
