@@ -27,7 +27,7 @@ class DetailCover extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(DotRadius.m),
               child: CachedNetworkImage(
-                cacheManager: comicImageCache,
+                cacheManager: coverImageCache,
                 imageUrl: url,
                 fit: BoxFit.contain,
               ),
@@ -39,7 +39,7 @@ class DetailCover extends StatelessWidget {
               size: DotButtonSize.medium,
               onTap: () {
                 Navigator.of(context).pop();
-                saveImg(context: context, img: url);
+                saveImg(context: context, img: url, cache: coverImageCache);
               },
             ),
           ],

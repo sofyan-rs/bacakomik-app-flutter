@@ -116,16 +116,17 @@ class AppText {
   static const String history = 'Reading history';
 
   static const String clearCache = 'Clear cache';
-  static const String clearCacheDescription = 'Library and downloads stay safe';
-  static const String clearCacheScope =
-      'Covers · chapter pages · temporary data';
-  static const String cacheImages = 'Covers & chapter pages';
+  static const String clearCacheDescription =
+      'Library, covers and downloads stay safe';
+  static const String clearCacheScope = 'Chapter pages · temporary data';
+  static const String cacheImages = 'Chapter pages';
+  static const String cacheCovers = 'Covers';
   static const String cacheCleared = 'Cache cleared';
   static const String removed = 'Removed';
   static const String kept = 'Kept';
   static const String clearCacheConfirmation =
-      'Saved images are deleted and downloaded again when you open them. '
-      'Bookmarks, reading history and downloads are kept.';
+      'Saved chapter pages are deleted and downloaded again when you open '
+      'them. Covers, bookmarks, reading history and downloads are kept.';
 
   static const String backupData = 'Back up data';
   static const String backupDataDescription = 'Bookmarks and reading history';

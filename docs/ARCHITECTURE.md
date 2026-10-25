@@ -50,7 +50,7 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 | Sources | `flutter_js` | One QuickJS engine per source (§8.3); `crypto` checks script `sha256` |
 | Source HTTP | `dio` + `native_dio_adapter` (Cronet), `cookie_jar`, `html` | One cookie jar per source (§8.4) |
 | WebViews | `flutter_inappwebview` | Hidden pages and the visible WebView screen (§8.5) |
-| Images | `cached_network_image`, `flutter_cache_manager`, `cronet_http` | One `comicImageCache` (§8.6) |
+| Images | `cached_network_image`, `flutter_cache_manager`, `cronet_http` | `coverImageCache` + `comicImageCache` (§8.6) |
 | Other HTTP | `dio` (`filesDio`) | Repos, scripts, Drive, GitHub releases (§8.8) |
 | Storage | `hive_ce` | JSON strings, no adapters (§7) |
 | Downloads | `background_downloader` | Outside the Dart isolate (§7.5) |
@@ -303,7 +303,7 @@ Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and h
 - **Files:** `<root>/<comicKey>/<chapter>/000.<ext>` and `<root>/<comicKey>/cover.<ext>`; unsafe characters become `_` (`voratoon:slug` → `voratoon_slug`). Root: `getExternalStorageDirectory()/downloads` on Android (app-specific, removed on uninstall), else `getApplicationSupportDirectory()/downloads`. Records store relative paths.
 - **Background:** `background_downloader` (`PageDownloadQueue`) runs outside Dart, three pages at a time, through lock and process death, with `imageHeaders`, 10 retries with backoff, one grouped notification. `POST_NOTIFICATIONS` is asked on the first download.
 - **Blocked hosts:** on a page's first retry, `imageHostBlocks` (§8.6) checks the host once; a blocking host's pages are saved through `comicImageCache` instead (only while the app runs).
-- **Preparing:** `DownloadRepositoryImpl` takes one chapter at a time, gets fresh page URLs from `ReaderRepository`, records planned paths and queues missing pages. Covers come from `comicImageCache` via a `.part` file; a missing cover doesn't fail the chapter.
+- **Preparing:** `DownloadRepositoryImpl` takes one chapter at a time, gets fresh page URLs from `ReaderRepository`, records planned paths and queues missing pages. Covers come from `coverImageCache` via a `.part` file; a missing cover doesn't fail the chapter.
 - **Progress:** events update records while running; on start and resume `DownloadCubit.sync()` checks planned paths on disk. Nothing queued but pages missing → failed. Unprepared chapters are prepared again.
 - **Status:** `queued → downloading → completed`, or `failed`; retry keeps saved pages.
 - **Reading:** `GetChapterContent` tries `getOfflineChapter` first (`isOffline: true`, `Image.file`); `GetComicDetails` falls back to `getOfflineComic`. Clearing the image cache keeps downloads.
@@ -377,7 +377,8 @@ The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-ba
 **WebView screen** shows the site with the extension's User-Agent. `SourceError` opens it on a challenge URL, the comic page on `webUrl`. It copies cookies (e.g. `cf_clearance`) after every load; the failed screen retries when it closes; it can clear the source's cookies.
 
 ### 8.6 Images
-`comicImageCache` serves covers, pages, prefetch, download covers and blocked-host pages (keeps `DefaultCacheManager`'s key).
+Two caches share one downloader. `coverImageCache` (key `bacakomikCovers`, 5000 files, 365 days) serves every cover, cover saving and download covers; Clear cache keeps it. `comicImageCache` (`DefaultCacheManager`'s key, 500 files, 14 days) serves pages, prefetch and blocked-host pages; Clear cache empties it.
+- `CoverCacheMigration` (started from `main`, once, flag `coverCacheMigrated` in the `settings` box) copies covers of bookmarks, history and downloads from `comicImageCache` with `putFile` (same extension, eTag and expiry).
 - Android downloads go through Cronet (`dart:io` if unavailable) with Chrome's `<img>` headers and the WebViews' cookies; the reader adds `imageHeaders`.
 - A host answering 403/503 is fetched inside a hidden page (`fetch` with credentials, base64) for 30 minutes. `imageHostBlocks` runs the same check for the download queue (§7.5).
 

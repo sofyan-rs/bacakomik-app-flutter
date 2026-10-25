@@ -39,7 +39,7 @@ Screenshots were taken on a real device (iQOO I2218, Android 16) running v2.0.0.
 - **Downloads:** download chapters for offline reading. Downloads keep going in the background and while the phone is locked, with a progress notification. More → Downloads shows the storage used, the queue with retry and cancel, and downloads grouped per comic. Files stay in the app's own storage and are removed when the app is uninstalled.
 - **Migration:** in More → Backup & sync → Migration. Move bookmarks and reading history to another source, one comic, a selection or a whole source: each title is searched in the new source, exact matches are picked for you and you choose the rest. Import your library from a Mihon / Tachiyomi backup (`.tachibk`: bookmarks from sources BacaKomik has, with their categories and read chapters) or from a Comix.to CSV export (titles are searched in the Comix source, one at a time). Imported comics load their covers and chapters when you open them or refresh, and the chapters you had read are marked read then. A series you already bookmarked from another source is not added twice.
 - **Sync:** turn on Google Drive sync in More to sync bookmarks, categories and reading history across devices. The library is kept as one file in the app's hidden Drive folder (`drive.appdata`), so the app cannot see your other Drive files. Nothing goes through our servers.
-- **Data:** back up and restore the library to a file, clear the image cache (downloads are kept), and choose the system, light or dark theme.
+- **Data:** back up and restore the library to a file, clear cached chapter pages (covers and downloads are kept), and choose the system, light or dark theme.
 
 ## Extensions
 

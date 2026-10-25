@@ -25,7 +25,7 @@ abstract interface class DownloadFileDataSource {
   String pagePath(String chapterDir, int index, String url);
 
   /// Copies [url] to `[pathWithoutExtension].<ext>` right away from the
-  /// image cache (which downloads it when missing), through a `.part` file
+  /// cover cache (which downloads it when missing), through a `.part` file
   /// so an interrupted copy never looks complete. Used for covers; pages go
   /// through `PageDownloadQueue`.
   Future<({String path, int size})> download(
@@ -84,7 +84,7 @@ class DownloadFileDataSourceImpl implements DownloadFileDataSource {
     final root = await this.root;
     final part = File('$root/$pathWithoutExtension.part');
     await part.parent.create(recursive: true);
-    final cached = await comicImageCache.getSingleFile(url);
+    final cached = await coverImageCache.getSingleFile(url);
     if (cancelToken?.isCancelled ?? false) throw StateError('Cancelled');
     await cached.copy(part.path);
     final extension =

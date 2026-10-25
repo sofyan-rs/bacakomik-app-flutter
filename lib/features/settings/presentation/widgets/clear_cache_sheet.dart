@@ -6,7 +6,7 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Confirms clearing the image cache and shows what is kept. Pops `true`
+/// Confirms clearing the chapter page cache and shows what is kept. Pops `true`
 /// to clear.
 class ClearCacheSheet extends StatelessWidget {
   const ClearCacheSheet({super.key});
@@ -42,6 +42,11 @@ class ClearCacheSheet extends StatelessWidget {
               icon: LucideIcons300.image,
               title: AppText.cacheImages,
               trailing: status(AppText.removed, c.accentText),
+            ),
+            ListRow(
+              icon: LucideIcons300.bookImage,
+              title: AppText.cacheCovers,
+              trailing: status(AppText.kept, c.inkFaint),
             ),
             ListRow(
               icon: LucideIcons300.bookmark,

@@ -47,7 +47,7 @@ class ComicCover extends StatelessWidget {
               // Decode at the size shown, not the source size: list
               // thumbnails are 44 wide while covers are often 600+.
               builder: (context, constraints) => CachedNetworkImage(
-                cacheManager: comicImageCache,
+                cacheManager: coverImageCache,
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 memCacheWidth: _decodeWidth(context, constraints.maxWidth),

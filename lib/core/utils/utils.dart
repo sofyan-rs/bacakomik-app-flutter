@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:gal/gal.dart';
 
 void showSnackBar({
@@ -25,14 +26,19 @@ void showSnackBar({
   );
 }
 
-/// [img] is a URL, or a file path for a downloaded page.
+/// [img] is a URL, or a file path for a downloaded page. A URL is taken
+/// from [cache] when given (downloaded into it when missing).
 Future saveImg({
   required BuildContext context,
   required String img,
   Map<String, String> headers = const {},
+  BaseCacheManager? cache,
 }) async {
   try {
-    if (img.startsWith('http')) {
+    if (cache != null && img.startsWith('http')) {
+      final file = await cache.getSingleFile(img, headers: headers);
+      await Gal.putImage(file.path);
+    } else if (img.startsWith('http')) {
       final response = await Dio().get(
         img,
         options: Options(responseType: ResponseType.bytes, headers: headers),
@@ -43,16 +49,10 @@ Future saveImg({
     }
 
     if (!context.mounted) return;
-    showSnackBar(
-      context: context,
-      message: AppText.successSaveImg,
-    );
+    showSnackBar(context: context, message: AppText.successSaveImg);
   } catch (e) {
     if (!context.mounted) return;
-    showSnackBar(
-      context: context,
-      message: AppText.failedSaveImg,
-    );
+    showSnackBar(context: context, message: AppText.failedSaveImg);
   }
 }
 

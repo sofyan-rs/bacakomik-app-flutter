@@ -8,8 +8,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart' as webview;
 
-/// Disk cache for covers and chapter pages, shared by every image widget,
-/// the reader's prefetch and Clear cache.
+/// Disk cache for chapter pages: the reader, its prefetch, page downloads
+/// from blocked hosts. Clear cache empties it. Covers are in
+/// [coverImageCache].
 ///
 /// On Android it downloads through Cronet (Chrome's network stack) with the
 /// headers Chrome sends for an image, plus the cookies the WebViews got for
@@ -18,14 +19,35 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart' as webview;
 /// rules still turn that away (WestManga's chapter pages) are fetched from
 /// inside the site in a hidden WebView. It keeps [DefaultCacheManager]'s
 /// key, so images cached before stay.
+///
+/// About ten chapters' worth of pages; ones not seen for two weeks go.
 final CacheManager comicImageCache = CacheManager(
-  Config(DefaultCacheManager.key, fileService: _fileService),
+  Config(
+    DefaultCacheManager.key,
+    maxNrOfCacheObjects: 500,
+    stalePeriod: const Duration(days: 14),
+    fileService: _fileService,
+  ),
 );
+
+/// Disk cache for covers, kept apart from [comicImageCache] so a large
+/// library's covers are not pushed out by chapter pages and survive Clear
+/// cache. Same downloader as [comicImageCache].
+final CacheManager coverImageCache = CacheManager(
+  Config(
+    coverImageCacheKey,
+    maxNrOfCacheObjects: 5000,
+    stalePeriod: const Duration(days: 365),
+    fileService: _fileService,
+  ),
+);
+
+const coverImageCacheKey = 'bacakomikCovers';
 
 final _fileService = _BrowserLikeFileService();
 
 /// Whether [url]'s host turns away requests that do not come from inside
-/// the site (see [comicImageCache]); [comicImageCache] gets its images
+/// the site (see [comicImageCache]); the image caches get its images
 /// anyway, other downloaders do not.
 Future<bool> imageHostBlocks(String url, {Map<String, String>? headers}) =>
     _fileService.blocks(Uri.parse(url), headers);
