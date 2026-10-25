@@ -56,6 +56,18 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   Future<void> removeBookmarkList(List<String> slugs) =>
       _thenReload(_removeBookmarks([...slugs]));
 
+  final _historyChanges = StreamController<void>.broadcast();
+
+  /// Fires when a refresh wrote imported reading progress to the history,
+  /// so whoever shows the history reloads it.
+  Stream<void> get historyChanges => _historyChanges.stream;
+
+  @override
+  Future<void> close() async {
+    await _historyChanges.close();
+    return super.close();
+  }
+
   /// Bookmarks waiting to be refreshed, in order.
   final _refreshQueue = Queue<Bookmark>();
 
@@ -97,10 +109,12 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
       );
       final result = await _refreshBookmark(_refreshQueue.removeFirst());
       _refreshDone++;
-      if (result.getOrElse((failure) {
+      final (:updated, :historyChanged) = result.getOrElse((failure) {
         _log(failure);
-        return false;
-      })) {
+        return (updated: false, historyChanged: false);
+      });
+      if (historyChanged) _historyChanges.add(null);
+      if (updated) {
         _refreshUpdated++;
         await load();
       }

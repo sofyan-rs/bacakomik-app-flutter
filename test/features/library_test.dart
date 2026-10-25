@@ -386,6 +386,25 @@ void main() {
       expect(notifier.calls.last, 'finish ${AppText.bookmarksUpdated}');
     });
 
+    test('refresh applies imported progress and reports it at once', () async {
+      when(() => comicDetails.getComicDetails('a'))
+          .thenAnswer((_) async => right(details));
+      when(() => comicDetails.getComicDetails('b'))
+          .thenAnswer((_) async => right(details));
+      await pendingReads.save({'a': '1'});
+      final changes = <void>[];
+      final sub = cubit.historyChanges.listen(changes.add);
+
+      await cubit.updateBookmarkList(['a', 'b']);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(changes, hasLength(1));
+      expect(pendingReads.values, isEmpty);
+      final read = (await historyRepo.getHistory()).getOrElse((_) => []);
+      expect(read.map((h) => (h.comicSlug, h.chapterNumber)), [('a', '1')]);
+      await sub.cancel();
+    });
+
     test('sameSeriesAs finds other entries with the same title', () async {
       await repo.saveBookmarks([bookmark('voratoon:a', 'alpha!', 50)]);
       await cubit.load();

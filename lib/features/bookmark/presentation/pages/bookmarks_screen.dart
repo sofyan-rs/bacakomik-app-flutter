@@ -60,8 +60,21 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     return _all;
   }
 
+  /// A refresh applied imported reading progress: show it right away.
+  late final StreamSubscription<void> _historyChanges;
+
+  @override
+  void initState() {
+    super.initState();
+    final history = context.read<HistoryCubit>();
+    _historyChanges = context.read<BookmarkCubit>().historyChanges.listen(
+      (_) => history.load(),
+    );
+  }
+
   @override
   void dispose() {
+    _historyChanges.cancel();
     _query.dispose();
     super.dispose();
   }
@@ -194,19 +207,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             backgroundColor: Dotline.of(context).surface,
             // Not awaited: the notification shows progress, and pulling
             // again in another group adds that group to the running queue.
-            // Imported progress may be applied on the way: reload history
-            // after the run.
-            onRefresh: () async {
-              final history = context.read<HistoryCubit>();
-              unawaited(
-                context
-                    .read<BookmarkCubit>()
-                    .updateBookmarkList([
-                      for (final item in group) item.bookmark.slug,
-                    ])
-                    .then((_) => history.load()),
-              );
-            },
+            onRefresh: () async => unawaited(
+              context.read<BookmarkCubit>().updateBookmarkList([
+                for (final item in group) item.bookmark.slug,
+              ]),
+            ),
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
