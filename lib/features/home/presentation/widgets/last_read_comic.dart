@@ -3,8 +3,10 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_progress.dart';
+import 'package:bacakomik_app/features/history/domain/entities/resume_chapter.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,8 +22,22 @@ class LastReadComic extends StatelessWidget {
     if (latest == null) return const SizedBox.shrink();
 
     final c = Dotline.of(context);
-    final details = latest.comicDetails;
+    // History keeps the details from when the chapter was read; a bookmark
+    // refresh only updates the bookmark. Chapter lists only grow, so the
+    // longer one knows about new chapters.
+    final bookmarked = context
+        .watch<BookmarkCubit>()
+        .state
+        .where((b) => b.slug == latest.comicSlug)
+        .firstOrNull
+        ?.comicDetails;
+    final details =
+        bookmarked != null &&
+            bookmarked.chapters.length > latest.comicDetails.chapters.length
+        ? bookmarked
+        : latest.comicDetails;
     final progress = ReadProgress.of(details, latest.chapterNumber);
+    final resume = ResumeChapter.of(latest, details.chapters);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -74,14 +90,17 @@ class LastReadComic extends StatelessWidget {
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              'CH. ',
+                              // The chapter Continue reading opens.
+                              resume.isNext
+                                  ? '${AppText.nextChapter.toUpperCase()} CH. '
+                                  : 'CH. ',
                               style: DotlineText.data.copyWith(
                                 color: c.inkFaint,
                               ),
                             ),
                             Flexible(
                               child: Text(
-                                progress.chapterNumber,
+                                resume.number,
                                 style: DotlineText.stat.copyWith(
                                   fontSize: 28,
                                   color: c.ink,

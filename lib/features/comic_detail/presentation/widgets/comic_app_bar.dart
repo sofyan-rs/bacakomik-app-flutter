@@ -12,6 +12,7 @@ import 'package:bacakomik_app/features/download/domain/entities/download_library
 import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:bacakomik_app/features/history/domain/entities/resume_chapter.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -77,8 +78,10 @@ class ComicAppBar extends StatelessWidget {
 
     // API order is newest first, so the first chapter is the last one.
     final first = chapters.isEmpty ? null : chapters.last;
-    final label = latest != null
-        ? '${AppText.continueReading} · Ch. ${latest.chapterNumber}'
+    // The freshly loaded list, so a chapter released since is found.
+    final resume = latest == null ? null : ResumeChapter.of(latest, chapters);
+    final label = resume != null
+        ? '${AppText.continueReading} · Ch. ${resume.number}'
         : first != null
         ? '${AppText.startReading} · Ch. ${first.number}'
         : AppText.startReading;
@@ -112,8 +115,8 @@ class ComicAppBar extends StatelessWidget {
           child: DotButton(
             label: label,
             leading: LucideIcons300.bookOpen,
-            onTap: latest != null
-                ? () => onRead(latest.slug)
+            onTap: resume != null
+                ? () => onRead(resume.slug)
                 : first != null
                 ? () => onRead(first.slug)
                 : null,
