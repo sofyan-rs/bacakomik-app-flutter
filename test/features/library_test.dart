@@ -70,7 +70,13 @@ class RecordingNotifier implements ProgressNotifier {
     required String title,
     required int done,
     required int total,
+    bool cancelable = false,
   }) async => calls.add('$done/$total');
+
+  final cancels = StreamController<int>.broadcast();
+
+  @override
+  Stream<int> get cancelRequests => cancels.stream;
 
   @override
   Future<void> finish(int id, {String? title, String? body}) async =>
@@ -384,6 +390,20 @@ void main() {
       await cubit.updateBookmarkList(['a', 'b']);
 
       expect(notifier.calls.last, 'finish ${AppText.bookmarksUpdated}');
+    });
+
+    test('Cancel in the notification stops the run', () async {
+      when(() => comicDetails.getComicDetails('b'))
+          .thenAnswer((_) => Completer<Either<Failure, ComicDetails>>().future);
+
+      final run = cubit.updateBookmarkList(['a', 'b', 'c']);
+      await Future<void>.delayed(Duration.zero);
+      notifier.cancels.add(ProgressIds.bookmarkRefresh);
+      await run;
+
+      verifyNever(() => comicDetails.getComicDetails('a'));
+      verifyNever(() => comicDetails.getComicDetails('c'));
+      expect(notifier.calls.last, 'finish -');
     });
 
     test('refresh applies imported progress and reports it at once', () async {

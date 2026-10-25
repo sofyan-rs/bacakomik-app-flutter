@@ -29,7 +29,13 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     this._completeImportedComic,
     this._notifier,
     this._clock,
-  ) : super(const []);
+  ) : super(const []) {
+    _cancelRequests = _notifier.cancelRequests
+        .where((id) => id == ProgressIds.bookmarkRefresh)
+        .listen((_) => cancelRefresh());
+  }
+
+  late final StreamSubscription<int> _cancelRequests;
 
   final GetBookmarks _getBookmarks;
   final SaveBookmarks _saveBookmarks;
@@ -64,6 +70,7 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
 
   @override
   Future<void> close() async {
+    await _cancelRequests.cancel();
     await _historyChanges.close();
     return super.close();
   }
@@ -76,6 +83,20 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   var _refreshDone = 0;
   var _refreshUpdated = 0;
   Future<void>? _refreshRun;
+
+  /// Completed to stop the current run.
+  Completer<void>? _refreshCancel;
+
+  /// A comic that takes longer is skipped, so one stuck site cannot hold
+  /// up the rest.
+  static const refreshTimeout = Duration(seconds: 90);
+
+  /// Stops the refresh run: the comic being checked is abandoned and the
+  /// rest of the queue dropped. Comics checked so far keep their updates.
+  void cancelRefresh() {
+    _refreshQueue.clear();
+    if (!(_refreshCancel?.isCompleted ?? true)) _refreshCancel!.complete();
+  }
 
   /// Pull-to-refresh: checks [slugs] (the bookmarks of the open group) for
   /// new chapters, with a progress notification while it runs. Called again
@@ -98,16 +119,32 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
 
   Future<void> _drainRefreshQueue() async {
     const id = ProgressIds.bookmarkRefresh;
-    while (_refreshQueue.isNotEmpty) {
+    const skipped = Right<Failure, RefreshResult>((
+      updated: false,
+      historyChanged: false,
+    ));
+    final cancel = _refreshCancel = Completer<void>();
+    while (_refreshQueue.isNotEmpty && !cancel.isCompleted) {
       unawaited(
         _notifier.progress(
           id,
           title: AppText.updatingBookmarks,
           done: _refreshDone,
           total: _refreshDone + _refreshQueue.length,
+          cancelable: true,
         ),
       );
-      final result = await _refreshBookmark(_refreshQueue.removeFirst());
+      final bookmark = _refreshQueue.removeFirst();
+      final result = await Future.any([
+        _refreshBookmark(bookmark).timeout(
+          refreshTimeout,
+          onTimeout: () {
+            debugPrint('BookmarkCubit: ${bookmark.slug} timed out');
+            return skipped;
+          },
+        ),
+        cancel.future.then((_) => skipped),
+      ]);
       _refreshDone++;
       final (:updated, :historyChanged) = result.getOrElse((failure) {
         _log(failure);
