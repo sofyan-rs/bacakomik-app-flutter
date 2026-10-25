@@ -104,6 +104,7 @@ class _ChapterImgState extends State<ChapterImg> {
                 context: context,
                 img: widget.chapterImage,
                 headers: widget.headers,
+                cache: _cache,
               );
             },
           ),
