@@ -25,6 +25,7 @@ import 'package:bacakomik_app/features/history/domain/entities/read_history.dart
 import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
 import 'package:bacakomik_app/features/history/domain/usecases/history_usecases.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:bacakomik_app/features/migration/domain/usecases/apply_pending_reads.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
@@ -32,6 +33,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../fixtures/library_fixtures.dart';
 import '../helpers/hive.dart';
+import '../helpers/memory_pending_reads.dart';
 
 class FixedClock implements Clock {
   FixedClock(this.value);
@@ -255,6 +257,7 @@ void main() {
     late MockComicDetailRepository comicDetails;
     late BookmarkCubit cubit;
     late RecordingNotifier notifier;
+    late MemoryPendingReads pendingReads;
 
     setUp(() async {
       repo = BookmarkRepositoryImpl(
@@ -274,13 +277,23 @@ void main() {
         LibraryJournal(Hive.box<String>(HiveBoxes.libraryDeletions), clock),
       );
       comicDetails = MockComicDetailRepository();
+      pendingReads = MemoryPendingReads();
       notifier = RecordingNotifier();
       cubit = BookmarkCubit(
         GetBookmarks(repo),
         SaveBookmarks(repo),
         RemoveBookmarks(repo),
-        RefreshBookmark(repo, comicDetails, clock),
+        RefreshBookmark(
+          repo,
+          comicDetails,
+          ApplyPendingReads(pendingReads, historyRepo, clock),
+          clock,
+        ),
         MigrateComic(repo, historyRepo, noCategories(), clock),
+        CompleteImportedComic(
+          repo,
+          ApplyPendingReads(pendingReads, historyRepo, clock),
+        ),
         notifier,
         clock,
       );

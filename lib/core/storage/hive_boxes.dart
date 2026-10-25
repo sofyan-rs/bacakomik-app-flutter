@@ -39,6 +39,10 @@ abstract final class HiveBoxes {
 
   /// Extension repo URLs and the active source.
   static const sourceSettings = 'source_settings';
+
+  /// Imported reading progress waiting for a comic's chapter list: the last
+  /// read chapter number, keyed by series slug.
+  static const pendingReads = 'pending_reads';
 }
 
 @module
@@ -101,6 +105,11 @@ abstract class StorageModule {
   @Named(HiveBoxes.sourceSettings)
   Future<Box<String>> get sourceSettingsBox =>
       Hive.openBox<String>(HiveBoxes.sourceSettings);
+
+  @preResolve
+  @Named(HiveBoxes.pendingReads)
+  Future<Box<String>> get pendingReadsBox =>
+      Hive.openBox<String>(HiveBoxes.pendingReads);
 
   @preResolve
   @Named(HiveBoxes.settings)

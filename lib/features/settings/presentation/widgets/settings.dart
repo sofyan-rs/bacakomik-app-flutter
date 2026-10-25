@@ -14,6 +14,7 @@ import 'package:bacakomik_app/features/settings/presentation/widgets/app_info.da
 import 'package:bacakomik_app/features/settings/presentation/widgets/clear_cache_sheet.dart';
 import 'package:bacakomik_app/features/sync/presentation/widgets/sync_section.dart';
 import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
+import 'package:bacakomik_app/features/migration/presentation/pages/migration_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -98,6 +99,13 @@ class Settings extends StatelessWidget {
                 subtitle: AppText.groupByCategoryDescription,
                 showChevron: true,
                 onTap: () => CategoriesScreen.open(context),
+              ),
+              ListRow(
+                icon: LucideIcons300.arrowRightLeft,
+                title: AppText.migration,
+                subtitle: AppText.migrationDescription,
+                showChevron: true,
+                onTap: () => MigrationScreen.open(context),
               ),
               ListRow(
                 icon: LucideIcons300.download,

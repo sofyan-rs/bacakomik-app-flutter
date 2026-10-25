@@ -7,6 +7,7 @@ import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/deep_links.dart';
+import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_app_bar.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_chapters.dart';
@@ -14,6 +15,8 @@ import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_c
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_info.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
+import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
 import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
@@ -136,6 +139,18 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
+  /// Gives an imported bookmark its details and applies imported reading
+  /// progress.
+  Future<void> _onLoaded(BuildContext context, ComicDetailsState state) async {
+    if (state is! ComicDetailsLoaded) return;
+    final history = context.read<HistoryCubit>();
+    final changed = await context.read<BookmarkCubit>().comicLoaded(
+      widget.slug,
+      state.comicDetails,
+    );
+    if (changed) await history.load();
+  }
+
   void _share(String title) {
     final link = DeepLinks.comic(widget.slug);
     SharePlus.instance.share(
@@ -148,7 +163,9 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ComicDetailsBloc, ComicDetailsState>(
+    return BlocConsumer<ComicDetailsBloc, ComicDetailsState>(
+      listenWhen: (_, state) => state is ComicDetailsLoaded,
+      listener: _onLoaded,
       builder: (context, state) {
         final details = state is ComicDetailsLoaded ? state.comicDetails : null;
         return PopScope(
@@ -181,6 +198,18 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                         // Hidden until the source is installed.
                         actions: [
                           if (!_sourceMissing) ...[
+                            if (context.watch<BookmarkCubit>().isBookmark(
+                              widget.slug,
+                            ))
+                              RoundIconButton(
+                                icon: LucideIcons300.arrowRightLeft,
+                                semanticLabel: AppText.migrateSource,
+                                iconSize: DotSize.iconSmall,
+                                onTap: () => SourceMigrationScreen.open(
+                                  context,
+                                  keys: {widget.slug},
+                                ),
+                              ),
                             RoundIconButton(
                               icon: LucideIcons300.globe,
                               semanticLabel: AppText.openWebView,

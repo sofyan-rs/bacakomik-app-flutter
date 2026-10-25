@@ -340,4 +340,63 @@ class AppText {
   static const String migrate = 'Migrate';
   static const String addAnyway = 'Add anyway';
   static const String migrated = 'Migrated to this source';
+
+  // Migration
+  static const String migration = 'Migration';
+  static const String migrationDescription =
+      'Move series to another source, or import from other apps';
+  static const String migrateSource = 'Migrate source';
+  static const String migrateSourceDescription =
+      'Move bookmarks and reading history to another source';
+  static const String importMihon = 'Import from Mihon / Tachiyomi';
+  static const String importMihonDescription =
+      'Bookmarks from a .tachibk backup';
+  static const String importComix = 'Import from Comix.to';
+  static const String importComixDescription =
+      'Bookmarks and read chapters from a .csv export';
+  static const String migrateFrom = 'From';
+  static const String migrateTo = 'To';
+  static const String pickSource = 'Pick a source';
+  static const String noBookmarksToMigrate = 'No bookmarks to migrate';
+  static const String noBookmarksToMigrateHint =
+      'Bookmark comics first, then move them here.';
+  static const String noOtherSource = 'Install another source to migrate to.';
+  static const String findMatches = 'Find matches';
+  static const String selectNone = 'Select none';
+  static const String matchSearching = 'Searching…';
+  static const String matchWaiting = 'Waiting';
+  static const String matchNotFound = 'No match. Tap to search.';
+  static const String matchFailed = 'Search failed. Tap to retry.';
+  static const String matchSkipped = 'Skipped';
+  static const String matchMigrated = 'Migrated';
+  static const String matchMigrateFailed = 'Migration failed';
+  static const String matchesFound = 'found';
+  static const String searchingSlowly =
+      'Comics are searched one at a time, a few seconds apart, so the site '
+      'does not block you.';
+  static const String pickMatch = 'Pick the match';
+  static const String noResults = 'No results';
+  static const String migrateCount = 'Migrate';
+  static const String importCount = 'Import';
+  static const String migrating = 'Migrating…';
+  static const String importing = 'Importing…';
+  static const String migrationDone = 'Migration done';
+  static const String importDone = 'Import done';
+  static const String added = 'added';
+  static const String alreadyInLibrary = 'already in your library';
+  static const String failed = 'failed';
+  static const String importLoadHint =
+      'Covers and chapters load when you open a comic, or pull to refresh '
+      'in Bookmarks.';
+  static const String readTo = 'Read to ch.';
+  static const String chooseFile = 'Choose file';
+  static const String readingFile = 'Reading file…';
+  static const String mihonHint =
+      'In Mihon, open More → Backup and restore → Create backup, then pick '
+      'the .tachibk file here. Only bookmarked comics from sources BacaKomik '
+      'has are imported, with their categories.';
+  static const String notAvailableHere = 'Not available here';
+  static const String unreadableLinks = 'unreadable links';
+  static const String needsInstall = 'Not installed';
+  static const String done = 'Done';
 }

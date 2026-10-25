@@ -15,6 +15,7 @@ import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit
 import 'package:bacakomik_app/features/category/presentation/widgets/set_categories_sheet.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
@@ -149,6 +150,12 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     if (saved && mounted) setState(_selected.clear);
   }
 
+  Future<void> _migrate() async {
+    final keys = {..._selected};
+    setState(_selected.clear);
+    await SourceMigrationScreen.open(context, keys: keys);
+  }
+
   @override
   Widget build(BuildContext context) {
     final grouping = context.select(
@@ -187,11 +194,19 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             backgroundColor: Dotline.of(context).surface,
             // Not awaited: the notification shows progress, and pulling
             // again in another group adds that group to the running queue.
-            onRefresh: () async => unawaited(
-              context.read<BookmarkCubit>().updateBookmarkList([
-                for (final item in group) item.bookmark.slug,
-              ]),
-            ),
+            // Imported progress may be applied on the way: reload history
+            // after the run.
+            onRefresh: () async {
+              final history = context.read<HistoryCubit>();
+              unawaited(
+                context
+                    .read<BookmarkCubit>()
+                    .updateBookmarkList([
+                      for (final item in group) item.bookmark.slug,
+                    ])
+                    .then((_) => history.load()),
+              );
+            },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
@@ -318,6 +333,12 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               style: DotlineText.label.copyWith(color: c.ink),
             ),
           ),
+          RoundIconButton(
+            icon: LucideIcons300.arrowRightLeft,
+            semanticLabel: AppText.migrateSource,
+            onTap: _migrate,
+          ),
+          const SizedBox(width: DotSpace.s2),
           RoundIconButton(
             icon: LucideIcons300.folder,
             semanticLabel: AppText.setCategories,

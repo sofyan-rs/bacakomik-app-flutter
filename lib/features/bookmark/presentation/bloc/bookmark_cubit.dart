@@ -11,6 +11,7 @@ import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecases.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart';
+import 'package:bacakomik_app/features/migration/domain/usecases/apply_pending_reads.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
@@ -25,6 +26,7 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     this._removeBookmarks,
     this._refreshBookmark,
     this._migrateComic,
+    this._completeImportedComic,
     this._notifier,
     this._clock,
   ) : super(const []);
@@ -34,6 +36,7 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   final RemoveBookmarks _removeBookmarks;
   final RefreshBookmark _refreshBookmark;
   final MigrateComic _migrateComic;
+  final CompleteImportedComic _completeImportedComic;
   final ProgressNotifier _notifier;
   final Clock _clock;
 
@@ -124,6 +127,18 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     required String to,
     required ComicDetails details,
   }) => _thenReload(_migrateComic((from: from, to: to, details: details)));
+
+  /// Called when [key]'s details loaded from its source: an imported
+  /// bookmark gets them, and imported reading progress is applied. Returns
+  /// whether the history changed; the caller reloads it.
+  Future<bool> comicLoaded(String key, ComicDetails details) async {
+    final result = await _completeImportedComic((key: key, details: details));
+    await load();
+    return result.getOrElse((failure) {
+      _log(failure);
+      return false;
+    });
+  }
 
   /// Bookmarks whose title contains [keyword] (case-insensitive on title).
   List<Bookmark> searchBookmark(String keyword) => state

@@ -99,6 +99,7 @@ lib/
     ├── backup/        # export/import the library as a JSON file
     ├── sync/          # Google Drive sync of the library
     ├── download/      # local: chapters saved for offline reading, background download queue
+    ├── migration/     # migrate bookmarks between sources; import from Mihon/Tachiyomi and Comix.to
     ├── source/        # Extensions screen, source picker, WebView screen, source error states
     └── update/        # in-app updates from GitHub Releases
 ```
@@ -193,7 +194,7 @@ It must print nothing.
 ### 4.1 Startup
 
 1. `Hive.init` points Hive at the application documents directory.
-2. `configureDependencies()` registers everything and opens the thirteen Hive boxes (§7.1) before returning (`@preResolve` in `StorageModule`).
+2. `configureDependencies()` registers everything and opens the fourteen Hive boxes (§7.1) before returning (`@preResolve` in `StorageModule`).
 3. `ExtensionManager.installBundled()` installs or upgrades the extensions shipped in `assets/extensions/` (§8.2).
 4. `runApp`. `BookmarkCubit`, `CategoryCubit`, `HistoryCubit`, `SettingsCubit` and `DownloadCubit` call `load()` when they are first created. `SourcesCubit` and `SyncCubit` are created eagerly (`lazy: false`); `SyncCubit.start()` restores the Google account and syncs (§7.6).
 5. `ExtensionManager.catalog()` fetches every repo in the background to count extension updates.
@@ -259,6 +260,7 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 | sync | More → sync section | `SyncCubit` | §7.6. |
 | download | More → Downloads; detail selection bar | `DownloadCubit` | §7.5. |
 | update | On start; More → Check for updates | `UpdateCubit` | §1. |
+| migration | More → Migration; Bookmarks selection bar; comic page | `MatchCubit`, `MihonImportCubit` | §6.4. |
 
 ### 6.1 Checking bookmarks for new chapters
 
@@ -275,6 +277,18 @@ The Bookmarks tab groups by `AppSettings.bookmarkGrouping`: status (All / Update
 ### 6.3 One series in two sources
 
 The same title from two sources is two separate comics, because the key includes the source (§8.1). When the user bookmarks a series whose title matches a bookmark from another source (case, spacing and punctuation ignored), `DuplicateSheet` asks whether to move the old bookmark here or keep both. Moving runs `MigrateComic`: the bookmark is replaced, each read chapter moves to the chapter with the same number in the new source (chapters the new source lacks are dropped), and the comic keeps its categories.
+
+### 6.4 Migration
+
+More → Migration has three entries. All of them write through the normal repositories, so sync and the deletion journal see the changes.
+
+- **Migrate source** (`SourceMigrationScreen`): pick the bookmarks (every bookmark of one source, a selection from the Bookmarks tab, or the open comic from its page) and a target source. `MatchScreen` then searches each title in the target, one request at a time and `MatchCubit.gap` (3 s) apart, so sites do not block the user; manual searches from the pick sheet join the same queue. A result whose title equals the bookmark's (`exactMatch`: case, spacing and punctuation ignored, exactly one such result) is picked automatically. The user picks or skips the rest. `MigrateToSource` loads each picked comic and runs `MigrateComic` (§6.3).
+- **Import from Mihon / Tachiyomi** (`MihonImportScreen`): reads a `.tachibk` backup (gzipped protobuf, `parseMihonBackup` reads only the fields it needs) and imports the comics in the library (`favorite`), with their category names. Mihon sources match extensions by name (case, spacing and punctuation ignored); for a multi-language extension the language comes from the Mihon source id, the MD5 of `<name>/<lang>/<versionId>` (`mihonSourceId`). The link becomes a slug through the extension's `urlPatterns` (§8.2), so no script runs and no request is made. Sources without a match are listed as skipped. A matched extension that is not installed can be installed from the screen; its language is turned on.
+- **Import from Comix.to** (`MigrationScreen._importComix`): reads the site's CSV export (`parseComixCsv`). It has no Comix links, so `MatchScreen` searches each title in the `comix` source as above (offering `MissingSource` when it is not installed).
+
+Imports run `ImportLibrary`: comics already bookmarked are left alone; new ones are bookmarked with `placeholderDetails` (title only, no cover or chapters, `source` set so the legacy migration (§7.7) leaves them alone), in file order; missing categories are created by name. The last read chapter of a Comix row waits in the `pending_reads` box (local, not synced).
+
+An imported comic gets its details the first time they load from its source: pull-to-refresh in Bookmarks (`RefreshBookmark`, whose chapter count differs from the placeholder's zero) or opening its page (`BookmarkCubit.comicLoaded` → `CompleteImportedComic`, which keeps the bookmark's place). Either way `ApplyPendingReads` then marks every chapter numbered up to the pending one as read (chapters already in the history keep their entry) and removes it.
 
 ---
 
@@ -296,6 +310,7 @@ The same title from two sources is two separate comics, because the key includes
 | `extensions` | extension id | `ExtensionMeta` JSON of the installed extension (§8.2) |
 | `extension_storage` | `<sourceId>:<key>` | string an extension saved with `storage.set` |
 | `source_settings` | `repos`, `active`, `langs:<extensionId>` | JSON list of repo URLs; active source id; JSON list of enabled languages |
+| `pending_reads` | comic key | last read chapter number from an import, until the chapter list loads (§6.4); not synced |
 | `settings` | `settings` | `SettingsModel` JSON |
 
 Every box is a `Box<String>` that holds JSON or a plain string. There are no Hive type adapters, so stored data never depends on adapter type ids, and the backup and sync formats can reuse the same JSON. `JsonBox<T>` (`core/storage/json_box.dart`) gives typed `values()`, `get`, `put`, `putAll`, `deleteAll` and `clear`. An entry that fails to parse is skipped and logged, so one bad record cannot hide the rest.
@@ -416,7 +431,7 @@ The active source is picked in the source picker on Home and Explore. Without a 
 `ExtensionManager` (`core/source/extension_manager.dart`) owns installed extensions, the repos they come from, and their loaded runtimes.
 
 - **Repos** are `index.json` URLs: `{ name, extensions: [ExtensionMeta…] }`. The list is in `source_settings` → `repos`; without a saved list it is `ExtensionManager.defaultRepo`, `https://bacakomik-ext.kurodev.org/index.json`. That is the built `dist/` of the private `bacakomik-ext-source` repo, served by a Cloudflare Worker. Users can add and remove repos in the repos sheet; `addRepo` fetches the URL first and rejects anything that is not a repo index.
-- **`ExtensionMeta`** (`extension_meta.dart`) fields: `id` (lowercase, `[a-z0-9_-]`; becomes the file name and the key prefix), `name`, `lang` (ISO 639-1, or `all`), `version` (semver `major.minor.patch`; an integer from older builds reads as `N.0.0`), `apiVersion`, `baseUrl` (shown as the domain), `file` (relative to `index.json`), `sha256`, `nsfw`, and `languages` for multi-language extensions. The app implements `supportedExtensionApi = 1`; an extension with a higher `apiVersion` is listed but cannot be installed.
+- **`ExtensionMeta`** (`extension_meta.dart`) fields: `id` (lowercase, `[a-z0-9_-]`; becomes the file name and the key prefix), `name`, `lang` (ISO 639-1, or `all`), `version` (semver `major.minor.patch`; an integer from older builds reads as `N.0.0`), `apiVersion`, `baseUrl` (shown as the domain), `file` (relative to `index.json`), `sha256`, `nsfw`, `languages` for multi-language extensions, and optional `urlPatterns`: regexes whose one capture group is the slug in a series URL path (`ExtensionMeta.slugFromUrl`), used to import Mihon backups without running the script (§6.4). The app implements `supportedExtensionApi = 1`; an extension with a higher `apiVersion` is listed but cannot be installed.
 - **Install / update:** `install` downloads `file`, checks it against `sha256`, loads it once in a throwaway runtime (a script that does not load is not installed), then writes `<app support>/extensions/<id>.js` and the meta to the `extensions` box. Updating is installing the newer version. `catalog()` fetches all repos in parallel; a failing repo is returned as an error entry so the others still show. It also refreshes `updateCount` (badge on More → Extensions).
 - **Uninstall** deletes the script and meta, the enabled-languages setting, and for every source of the extension its cookies, stored values and hidden page.
 - **Bundled extensions:** `assets/extensions/index.json` and `assets/extensions/extensions/*.js` (currently `bacakomik` and `voratoon`) are installed on first run, and again whenever the app bundles a newer version, so the app works before any repo is reachable. They are produced by `bun scripts/bundle.ts` in the extension repo (CONTRIBUTION §2).
@@ -533,6 +548,7 @@ Upgrade these together, in their own PR, and run the full test suite after code 
 | Google Drive sync | Done |
 | Offline reading (chapter downloads) | Done (background downloads on Android) |
 | In-app updates from GitHub Releases | Done |
+| Migrate source (one or many), import from Mihon/Tachiyomi and Comix.to | Done |
 
 ---
 
