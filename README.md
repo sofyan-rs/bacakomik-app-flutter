@@ -8,19 +8,23 @@ Get the APK from the [Releases](https://github.com/sofyan-rs/bacakomik-app-flutt
 
 ## Screenshots
 
-| Splash | Home | Explore | Filter |
+| Splash | Home | Sources | Explore |
 |---|---|---|---|
-| <img src="screenshot/splash.png" width="200" alt="Splash screen"> | <img src="screenshot/home.png" width="200" alt="Home: continue reading, new series, latest chapters"> | <img src="screenshot/explore.png" width="200" alt="Explore: title search, type and cover grid"> | <img src="screenshot/filter.png" width="200" alt="Filter sheet: type, status, sort and genres"> |
+| <img src="screenshot/splash.png" width="200" alt="Splash screen"> | <img src="screenshot/home.png" width="200" alt="Home: continue reading, new series, latest updates"> | <img src="screenshot/sources.png" width="200" alt="Source picker with the installed sources"> | <img src="screenshot/explore.png" width="200" alt="Explore: title search, format and cover grid"> |
 
-| Detail | Reader | Bookmarks | History |
+| Filter | Detail | Reader | Bookmarks |
 |---|---|---|---|
-| <img src="screenshot/detail.png" width="200" alt="Comic details with stats, synopsis and genres"> | <img src="screenshot/reader.png" width="200" alt="Reader with chapter bar and page meter"> | <img src="screenshot/bookmark.png" width="200" alt="Bookmarks with new chapter badge and read meter"> | <img src="screenshot/history.png" width="200" alt="Reading history grouped by day"> |
+| <img src="screenshot/filter.png" width="200" alt="Filter sheet: sort, format, status and genres"> | <img src="screenshot/detail.png" width="200" alt="Comic details with source, stats and synopsis"> | <img src="screenshot/reader.png" width="200" alt="Reader with chapter bar and page meter"> | <img src="screenshot/bookmark.png" width="200" alt="Bookmarks with language and new chapter badges and read meter"> |
 
-| More | Download chapters | Downloads | Light theme |
+| History | Extensions | Import from Mihon | More |
 |---|---|---|---|
-| <img src="screenshot/more.png" width="200" alt="Stats, downloads, backup, Google Drive sync and theme"> | <img src="screenshot/download-select.png" width="200" alt="Selecting chapters to download for offline reading"> | <img src="screenshot/downloads.png" width="200" alt="Downloads grouped by comic with storage used"> | <img src="screenshot/home-light.png" width="200" alt="Home in the light theme"> |
+| <img src="screenshot/history.png" width="200" alt="Reading history grouped by day, with the source"> | <img src="screenshot/extensions.png" width="200" alt="Installed extensions"> | <img src="screenshot/mihon-import.png" width="200" alt="Import from a Mihon backup, per source"> | <img src="screenshot/more.png" width="200" alt="Stats, extensions, library, backup and sync"> |
 
-Screenshots were taken on a real device (iQOO I2218, Android 16) running v1.5.0, before sources and extensions.
+| Download chapters | Downloads | Light theme |
+|---|---|---|
+| <img src="screenshot/download-select.png" width="200" alt="Selecting chapters to download for offline reading"> | <img src="screenshot/downloads.png" width="200" alt="Download queue and downloads grouped by comic"> | <img src="screenshot/home-light.png" width="200" alt="Home in the light theme"> |
+
+Screenshots were taken on a real device (iQOO I2218, Android 16) running v2.0.0.
 
 ## Features
 
