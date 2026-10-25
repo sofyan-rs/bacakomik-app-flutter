@@ -74,40 +74,49 @@ class _MoreScreenState extends State<MoreScreen> {
               ),
             ),
           ],
-          child: ListView(
-            padding: EdgeInsets.only(
-              bottom: DotSpace.s4 + MediaQuery.paddingOf(context).bottom,
-            ),
+          child: Column(
             children: [
+              // Outside the list so the title stays put.
               const ScreenHeader(title: AppText.more),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
-                child: Row(
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.only(
+                    bottom: DotSpace.s4 + MediaQuery.paddingOf(context).bottom,
+                  ),
                   children: [
-                    Expanded(
-                      child: StatTile(
-                        value: '$bookmarks',
-                        label: AppText.bookmark,
-                        labelOnTop: true,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DotSpace.s4,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: StatTile(
+                              value: '$bookmarks',
+                              label: AppText.bookmark,
+                              labelOnTop: true,
+                            ),
+                          ),
+                          const SizedBox(width: DotSpace.s3),
+                          Expanded(
+                            child: StatTile(
+                              value: '$chaptersRead',
+                              label: AppText.chaptersRead,
+                              labelOnTop: true,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: DotSpace.s3),
-                    Expanded(
-                      child: StatTile(
-                        value: '$chaptersRead',
-                        label: AppText.chaptersRead,
-                        labelOnTop: true,
-                      ),
+                    const Settings(),
+                    const SizedBox(height: DotSpace.s5),
+                    Text(
+                      '${AppVariables.appName} $_appVersion'.toUpperCase(),
+                      style: DotlineText.label.copyWith(color: c.inkFaint),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
-              ),
-              const Settings(),
-              const SizedBox(height: DotSpace.s5),
-              Text(
-                '${AppVariables.appName} $_appVersion'.toUpperCase(),
-                style: DotlineText.label.copyWith(color: c.inkFaint),
-                textAlign: TextAlign.center,
               ),
             ],
           ),

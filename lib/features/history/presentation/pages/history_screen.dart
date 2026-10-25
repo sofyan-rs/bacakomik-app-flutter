@@ -61,62 +61,71 @@ class HistoryScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: SlidableAutoCloseBehavior(
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: ScreenHeader(
-                  title: AppText.historyTab,
-                  subtitle: latest.isEmpty
-                      ? null
-                      : '${AppText.count(latest.length, AppText.comic, AppText.comics)} · '
-                            '${AppText.swipeToDelete}',
-                  actions: [
-                    if (latest.isNotEmpty)
-                      RoundIconButton(
-                        icon: LucideIcons300.trash2,
-                        semanticLabel: AppText.clearHistory,
-                        iconSize: DotSize.iconSmall,
-                        onTap: () => _confirmClearAll(context),
+        child: Column(
+          children: [
+            // Outside the scroll view so the title stays put.
+            ScreenHeader(
+              title: AppText.historyTab,
+              subtitle: latest.isEmpty
+                  ? null
+                  : '${AppText.count(latest.length, AppText.comic, AppText.comics)} · '
+                        '${AppText.swipeToDelete}',
+              actions: [
+                if (latest.isNotEmpty)
+                  RoundIconButton(
+                    icon: LucideIcons300.trash2,
+                    semanticLabel: AppText.clearHistory,
+                    iconSize: DotSize.iconSmall,
+                    onTap: () => _confirmClearAll(context),
+                  ),
+              ],
+            ),
+            Expanded(
+              child: SlidableAutoCloseBehavior(
+                child: CustomScrollView(
+                  slivers: [
+                    if (latest.isEmpty)
+                      const SliverToBoxAdapter(
+                        child: EmptyState(
+                          icon: LucideIcons300.history,
+                          title: AppText.historyEmpty,
+                          message: AppText.historyEmptyHint,
+                        ),
                       ),
+                    for (final day in days) ...[
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(
+                          DotSpace.s4,
+                          0,
+                          DotSpace.s4,
+                          DotSpace.s3,
+                        ),
+                        sliver: SliverToBoxAdapter(
+                          child: Text(
+                            day.label.toUpperCase(),
+                            style: DotlineText.label.copyWith(
+                              color: c.inkFaint,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SliverListGroup(
+                        itemCount: day.items.length,
+                        itemBuilder: (context, index) =>
+                            HistoryComicCard(item: day.items[index]),
+                      ),
+                      const SliverPadding(
+                        padding: EdgeInsets.only(bottom: DotSpace.s5),
+                      ),
+                    ],
+                    SliverPadding(
+                      padding: EdgeInsets.only(bottom: bottomInset),
+                    ),
                   ],
                 ),
               ),
-              if (latest.isEmpty)
-                const SliverToBoxAdapter(
-                  child: EmptyState(
-                    icon: LucideIcons300.history,
-                    title: AppText.historyEmpty,
-                    message: AppText.historyEmptyHint,
-                  ),
-                ),
-              for (final day in days) ...[
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DotSpace.s4,
-                    0,
-                    DotSpace.s4,
-                    DotSpace.s3,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: Text(
-                      day.label.toUpperCase(),
-                      style: DotlineText.label.copyWith(color: c.inkFaint),
-                    ),
-                  ),
-                ),
-                SliverListGroup(
-                  itemCount: day.items.length,
-                  itemBuilder: (context, index) =>
-                      HistoryComicCard(item: day.items[index]),
-                ),
-                const SliverPadding(
-                  padding: EdgeInsets.only(bottom: DotSpace.s5),
-                ),
-              ],
-              SliverPadding(padding: EdgeInsets.only(bottom: bottomInset)),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

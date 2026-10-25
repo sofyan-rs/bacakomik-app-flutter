@@ -25,7 +25,7 @@ abstract final class DotlineText {
   );
 
   /// Uppercase screen title: `HOME`, `EXPLORE`.
-  static final dotM = _style(_doto, 32, 36, FontWeight.w700);
+  static final dotM = _style(_doto, 26, 30, FontWeight.w700);
 
   /// App name on the splash screen.
   static final dotBrand = _style(_doto, 40, 44, FontWeight.w900, .01);
