@@ -29,7 +29,7 @@ const ISSUES =
   'https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new';
 
 // Shown on the privacy page. Bump when the policy text changes.
-const PRIVACY_UPDATED = '21 Oktober 2026';
+const PRIVACY_UPDATED = '25 October 2026';
 
 // Display names of the extension sources the app ships; others show their id.
 const SOURCE_NAMES = { voratoon: 'VoraToon' };
@@ -192,13 +192,13 @@ function intentLink(url) {
 }
 
 export function page({ url, title, description, image, meta, missing = false }) {
-  const heading = missing ? 'Series tidak ditemukan' : (title ?? APP_NAME);
+  const heading = missing ? 'Series not found' : (title ?? APP_NAME);
   const docTitle = title ? `${title} — ${APP_NAME}` : APP_NAME;
   const desc = description
     ? clip(description, 200)
     : missing
-      ? 'Link ini tidak mengarah ke series yang ada.'
-      : `Baca komik di aplikasi ${APP_NAME}.`;
+      ? 'This link does not point to an existing series.'
+      : `Read comics in the ${APP_NAME} app.`;
   const og = [
     ['og:site_name', APP_NAME],
     ['og:type', 'website'],
@@ -211,7 +211,7 @@ export function page({ url, title, description, image, meta, missing = false }) 
     .join('\n  ');
 
   return `<!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -245,7 +245,7 @@ export function page({ url, title, description, image, meta, missing = false }) 
     ${meta ? `<div class="meta">${escape(meta)}</div>` : ''}
     <h1>${escape(heading)}</h1>
     <p>${escape(desc)}</p>
-    ${missing ? '' : `<a class="primary" href="${escape(intentLink(url))}">Buka di aplikasi</a>`}
+    ${missing ? '' : `<a class="primary" href="${escape(intentLink(url))}">Open in the app</a>`}
     <a class="secondary" href="${DOWNLOAD}">Download APK</a>
   </main>
 </body>
@@ -254,12 +254,12 @@ export function page({ url, title, description, image, meta, missing = false }) 
 
 export function privacyPage() {
   return `<!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kebijakan Privasi — ${APP_NAME}</title>
-  <meta name="description" content="Data apa yang disimpan ${APP_NAME} dan ke mana data itu dikirim.">
+  <title>Privacy Policy — ${APP_NAME}</title>
+  <meta name="description" content="What data ${APP_NAME} stores and where it is sent.">
   <style>
     body { margin: 0; background: #000; color: #fff;
       font-family: system-ui, sans-serif; line-height: 1.6; }
@@ -276,57 +276,69 @@ export function privacyPage() {
 <body>
   <main>
     <p class="brand">BACAKOMIK</p>
-    <h1>Kebijakan Privasi</h1>
-    <p class="updated">Terakhir diperbarui ${PRIVACY_UPDATED}</p>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated ${PRIVACY_UPDATED}</p>
 
-    <p>${APP_NAME} adalah aplikasi Android untuk membaca komik, dibuat oleh
-    Kurodev. Halaman ini menjelaskan data apa yang dipakai aplikasi dan ke
-    mana data itu dikirim.</p>
+    <p>${APP_NAME} is an Android app for reading comics, made by Kurodev.
+    This page explains what data the app uses and where that data is
+    sent.</p>
 
-    <h2>Data di perangkat</h2>
-    <p>Bookmark, riwayat baca (chapter dan halaman terakhir), pengaturan, dan
-    chapter yang diunduh disimpan di penyimpanan aplikasi di perangkat kamu.
-    Data ini tidak dikirim ke server kami.</p>
+    <h2>Data on your device</h2>
+    <p>Bookmarks, categories, reading history (the last chapter and page),
+    settings, installed extensions and downloaded chapters are kept in the
+    app's storage on your device. This data is not sent to our servers.</p>
 
-    <h2>Konten komik</h2>
-    <p>Daftar komik, detail, dan halaman chapter diambil dari server
-    <code>api-bacakomik.kurodev.org</code>. Permintaan ini tidak membawa
-    akun, bookmark, atau riwayat baca kamu. Seperti server web pada umumnya,
-    server dapat mencatat alamat IP dan waktu permintaan untuk keperluan
-    teknis.</p>
+    <h2>Comic content and sources</h2>
+    <p>Comic lists, details and chapter pages come from the source you pick.
+    The bundled BacaKomik source reads from our server
+    <code>api-bacakomik.kurodev.org</code>. Other sources are extensions:
+    small scripts the app installs from an extension repo (by default
+    <code>bacakomik-ext.kurodev.org</code>, or a repo you add) and that
+    connect directly to the comic site they read. These requests do not carry
+    your Google account, bookmarks or reading history. Like any web server,
+    our server and the comic sites can log your IP address and the time of a
+    request for technical purposes. Extensions from repos you add yourself
+    are not made or checked by us, so only add repos you trust.</p>
+    <p>When a site asks for a bot check, the app opens it in a built-in
+    WebView and keeps the cookies that site sets, so the next requests to that
+    site pass. You can clear these cookies from the WebView menu.</p>
 
-    <h2>Sinkron Google Drive (opsional)</h2>
-    <p>Jika kamu menyalakan sinkron, aplikasi meminta login Google dengan
-    akses <code>drive.appdata</code>. Akses ini hanya membuka folder data
-    aplikasi yang tersembunyi di Google Drive kamu, bukan file Drive
-    lainnya.</p>
+    <h2>Google Drive sync (optional)</h2>
+    <p>If you turn on sync, the app asks you to sign in with Google with
+    <code>drive.appdata</code> access. This access only opens a hidden app
+    data folder in your Google Drive, not your other Drive files.</p>
     <ul>
-      <li>Yang disimpan di folder itu: bookmark, riwayat baca, dan catatan
-      item yang kamu hapus, dalam satu file.</li>
-      <li>Alamat email akun Google dipakai untuk menampilkan akun yang
-      tersambung di aplikasi.</li>
-      <li>Data dikirim langsung antara perangkat kamu dan Google. Kami tidak
-      menerima, menyimpan, atau membagikan data tersebut.</li>
-      <li>Kamu bisa memutus sinkron kapan saja di menu Lainnya, dan mencabut
-      akses aplikasi di
-      <a href="https://myaccount.google.com/permissions">pengaturan akun
-      Google</a>. Data di Drive dapat dihapus dari Google Drive → Setelan →
-      Kelola aplikasi.</li>
+      <li>What is stored in that folder: your bookmarks, categories, reading
+      history and a record of items you deleted, in one file.</li>
+      <li>Your Google account email address is used to show the connected
+      account in the app.</li>
+      <li>Data is sent directly between your device and Google. We do not
+      receive, store or share it.</li>
+      <li>You can turn off sync at any time in the More menu, and revoke the
+      app's access in your
+      <a href="https://myaccount.google.com/permissions">Google account
+      settings</a>. The data in Drive can be deleted from Google Drive →
+      Settings → Manage apps.</li>
     </ul>
-    <p>Penggunaan data dari Google API mengikuti
+    <p>Use of data from Google APIs follows the
     <a href="https://developers.google.com/terms/api-services-user-data-policy">Google
-    API Services User Data Policy</a>, termasuk ketentuan Limited Use.</p>
+    API Services User Data Policy</a>, including the Limited Use
+    requirements.</p>
 
-    <h2>Pembaruan aplikasi</h2>
-    <p>Aplikasi memeriksa versi terbaru melalui GitHub. Permintaan ini tidak
-    membawa data pribadi.</p>
+    <h2>Backups and imports</h2>
+    <p>Backup files, Mihon / Tachiyomi backups and Comix.to exports are read
+    and written on your device only. A file leaves your device only if you
+    share or move it yourself.</p>
 
-    <h2>Iklan dan pelacakan</h2>
-    <p>${APP_NAME} tidak memuat iklan, analitik, atau pelacak pihak
-    ketiga.</p>
+    <h2>App updates</h2>
+    <p>The app checks for new versions and downloads them from GitHub. These
+    requests do not carry personal data.</p>
 
-    <h2>Kontak</h2>
-    <p>Pertanyaan tentang privasi bisa dikirim lewat
+    <h2>Ads and tracking</h2>
+    <p>${APP_NAME} has no ads, analytics or third-party trackers.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about privacy can be sent through
     <a href="${ISSUES}">GitHub Issues</a>.</p>
   </main>
 </body>
@@ -335,13 +347,13 @@ export function privacyPage() {
 
 export function homePage(origin) {
   const desc =
-    'Aplikasi Android untuk membaca komik, manhwa, dan manhua berbahasa Indonesia.';
+    'An Android app for reading manga, manhwa and manhua from several sources.';
   return `<!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${APP_NAME} — Baca komik di Android</title>
+  <title>${APP_NAME} — Read comics on Android</title>
   <meta name="description" content="${escape(desc)}">
   <meta property="og:site_name" content="${APP_NAME}">
   <meta property="og:type" content="website">
@@ -368,30 +380,38 @@ export function homePage(origin) {
   <main>
     <p class="brand">BACAKOMIK</p>
     <h1>${APP_NAME}</h1>
-    <p>${escape(desc)} Gratis, tanpa iklan, dibuat oleh Kurodev.</p>
+    <p>${escape(desc)} Free, without ads, made by Kurodev.</p>
     <a class="button" href="${DOWNLOAD}">Download APK</a>
 
-    <h2>Fitur</h2>
+    <h2>Features</h2>
     <ul>
-      <li>Jelajah komik terbaru dan populer, cari judul, dan filter genre.</li>
-      <li>Bookmark dengan penanda chapter baru, dan riwayat baca yang
-      menyimpan halaman terakhir.</li>
-      <li>Unduh chapter untuk dibaca offline.</li>
-      <li>Sinkron bookmark dan riwayat baca antar perangkat lewat Google
-      Drive (opsional). Data disimpan di folder aplikasi yang tersembunyi
-      di Drive milikmu; aplikasi tidak bisa melihat file Drive lainnya.</li>
-      <li>Cadangkan dan pulihkan data ke file.</li>
+      <li>Several sources: BacaKomik and VoraToon come bundled, and more
+      install as extensions, so new sites can be added without an app
+      update.</li>
+      <li>Browse the latest and popular comics, search by title and filter by
+      the source's own genres, type and status.</li>
+      <li>A reader with a vertical strip or page by page, zoom, auto-scroll,
+      and resume at the page you stopped at.</li>
+      <li>Bookmarks with your own categories and new chapter badges, and a
+      reading history that keeps the last page.</li>
+      <li>Download chapters to read offline.</li>
+      <li>Move your library to another source, or import it from a Mihon /
+      Tachiyomi backup or a Comix.to export.</li>
+      <li>Sync bookmarks, categories and reading history across devices
+      through Google Drive (optional). Data is kept in a hidden app folder in
+      your own Drive; the app cannot see your other Drive files.</li>
+      <li>Back up and restore your library to a file.</li>
     </ul>
 
-    <h2>Privasi</h2>
-    <p>Bookmark, riwayat, dan unduhan tersimpan di perangkat. Saat sinkron
-    dinyalakan, data hanya dikirim antara perangkatmu dan Google Drive.
-    Baca selengkapnya di <a href="/privacy-policy">Kebijakan Privasi</a>.</p>
+    <h2>Privacy</h2>
+    <p>Bookmarks, history and downloads stay on your device. When sync is
+    on, data is only sent between your device and Google Drive. Read more in
+    the <a href="/privacy-policy">Privacy Policy</a>.</p>
 
     <footer>
-      <a href="/privacy-policy">Kebijakan Privasi</a>
+      <a href="/privacy-policy">Privacy Policy</a>
       <a href="https://github.com/sofyan-rs/bacakomik-app-flutter">GitHub</a>
-      <a href="${ISSUES}">Kontak</a>
+      <a href="${ISSUES}">Contact</a>
     </footer>
   </main>
 </body>

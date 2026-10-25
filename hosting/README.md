@@ -11,7 +11,7 @@ shared series links (`https://bacakomik.kurodev.org/series/<slug>`).
 - `/series/<slug>` is the fallback page, shown when the app is not
   installed or the link is opened in a browser. It fetches the series from
   the API for the Open Graph preview (title, cover, synopsis) that chat
-  apps show, and offers "Buka di aplikasi" and "Download APK". Pages are
+  apps show, and offers "Open in the app" and "Download APK". Pages are
   cached at the edge for an hour.
 - `/` is the app's home page: what the app does, the APK download and a
   privacy link. It is the homepage URL of the Google OAuth consent screen.

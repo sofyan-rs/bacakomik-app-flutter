@@ -33,7 +33,7 @@ test('assetlinks.json names the app and its signing key', async () => {
 test('series page carries the Open Graph preview', async () => {
   mockApi(200, {
     title: 'Magic <Emperor>',
-    synopsis: 'Zhuo Yifan adalah seorang kaisar sihir.',
+    synopsis: 'Zhuo Yifan is a magic emperor.',
     cover: 'https://api-bacakomik.kurodev.org/img/x',
     format: 'manhua',
     status: 'ongoing',
@@ -66,7 +66,7 @@ test('unknown series is a 404 without an open-in-app button', async () => {
   mockApi(404, null);
   const res = await get('/series/magic-emperor');
   assert.equal(res.status, 404);
-  assert.doesNotMatch(await res.text(), /Buka di aplikasi/);
+  assert.doesNotMatch(await res.text(), /Open in the app/);
 });
 
 test('API failure still serves a page that opens the app', async () => {
@@ -78,7 +78,7 @@ test('API failure still serves a page that opens the app', async () => {
   assert.equal(res.status, 200);
   assert.equal(res.headers.get('Cache-Control'), 'no-store');
   assert.match(body, /<h1>Magic Emperor<\/h1>/);
-  assert.match(body, /Buka di aplikasi/);
+  assert.match(body, /Open in the app/);
 });
 
 test('privacy policy names the Drive scope', async () => {
@@ -87,7 +87,7 @@ test('privacy policy names the Drive scope', async () => {
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('Content-Type'), 'text/html; charset=utf-8');
     const body = await res.text();
-    assert.match(body, /<h1>Kebijakan Privasi<\/h1>/);
+    assert.match(body, /<h1>Privacy Policy<\/h1>/);
     assert.match(body, /drive\.appdata/);
     assert.match(body, /Limited Use/);
   }
