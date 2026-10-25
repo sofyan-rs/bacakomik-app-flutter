@@ -2,18 +2,17 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'explore_filter.freezed.dart';
 
-/// Explore filter and search. `all` (type/status), `default` (sortBy) and an
-/// empty [query] mean "no filter". The API applies the title search and the
-/// filters together.
+/// Explore filter and search for one [source]. [values] holds the picked
+/// values per filter group of the source; a group left out uses its
+/// default, and an empty [query] means no search. Groups differ per source,
+/// so changing source resets the filter.
 @freezed
 abstract class ExploreFilter with _$ExploreFilter {
   const factory ExploreFilter({
-    @Default('latest') String sortBy,
-    @Default('all') String type,
-    @Default('all') String status,
-    @Default([]) List<String> genres,
+    @Default('') String source,
+    @Default({}) Map<String, List<String>> values,
 
-    /// Title search, sent as `q`.
+    /// Title search.
     @Default('') String query,
   }) = _ExploreFilter;
 }

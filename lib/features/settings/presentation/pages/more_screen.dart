@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-/// Lainnya tab: library stats, data actions, theme, about.
+/// More tab: library stats, data actions, theme, about.
 class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});
 

@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// "Pengaturan baca": direction, page size, keep awake, page gap,
+/// "Reader settings": direction, page size, keep awake, page gap,
 /// auto-scroll speed. Saved
 /// right away through [SettingsCubit].
 class ReaderSettingsSheet extends StatelessWidget {

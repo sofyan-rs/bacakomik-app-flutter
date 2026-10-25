@@ -1,26 +1,42 @@
 # Architecture
 
-BacaKomik is a Flutter app for reading comics (manga, manhwa, manhua) from **bacakomik-api**. It is built with **feature-first clean architecture** and **BLoC**.
+How the app is built. Read it once before a non-trivial change. For step-by-step tasks (add a screen, release, test on a phone), use [CONTRIBUTION.md](CONTRIBUTION.md).
 
-Scope: **browse comics, read chapters, and keep a personal library** (bookmarks, reading history, settings, backup files). There are no accounts and no cloud sync. Library data lives only on the device and in backup files the user exports.
+§ numbers refer to this file; "CONTRIBUTION §n" to the other one.
 
-This file covers how the app is built. Section numbers (§) refer to this file.
+## The big picture
+
+```
+  extension repo                    the app on the phone                       user's Drive
+┌──────────────────┐  install  ┌───────────────────────────────────────────┐  sync  ┌──────────────┐
+│ index.json       │ ────────► │ ExtensionManager ─► ExtensionRuntime (JS)  │ ◄────► │ appDataFolder │
+│ <id>.v1.2.0.js   │           │                          │                 │        │ one .json.gz  │
+└──────────────────┘           │ screens ─► blocs ─► use cases ─► repos     │        └──────────────┘
+                               │                                  │         │
+  comic sites  ◄── http.fetch / hidden WebView ──────────────────┘         │
+  (mangafire.to, comix.to…)    │                  Hive boxes (library) ◄────│
+                               └───────────────────────────────────────────┘
+```
+
+- The app has **no content of its own**. Each site is a **source**, backed by a small JavaScript **extension** downloaded from a repo (§8.2) and run in an embedded JS engine on the phone (§8.3).
+- Screens talk to blocs, blocs call use cases, use cases call repositories. Only repositories know about sources, HTTP and storage (§3).
+- The library (bookmarks, categories, history, downloads, settings) lives **on the phone** in Hive (§7). It can be exported to a backup file (§7.4) or synced through one private file in the user's own Google Drive (§7.6). There is no BacaKomik account or server.
 
 ---
 
 ## 1. Goals and non-goals
 
-### Goals
-- **Never lose the user's library.** Bookmarks, history and settings survive updates, and backup files (§7.4) restore them. Storage starts fresh from this version: data from the pre-2026 app is not migrated, and its backup files are not read.
-- **Keep logic testable.** Domain code is plain Dart with no Flutter, Dio, Hive or file-picker imports. Repositories and blocs are tested without a device.
-- **Keep layers clear.** UI talks to blocs, blocs call use cases, use cases call repository interfaces. Only the data layer knows about HTTP and storage.
-- Work on phones and wide screens. A floating pill nav sits at the bottom on every width; cover grids add columns as the screen gets wider.
+**Goals**
+- **Never lose the user's library.** It survives updates; backups and sync restore it. Storage started fresh with the 2026 rewrite: pre-2026 data and backup files are not read.
+- **Testable logic.** Domain code is plain Dart; repositories and blocs are tested without a device, with fake sources (CONTRIBUTION §5).
+- **Clear layers** (§3) and **no site code in the app**: a site change ships as an extension update.
+- Phones and wide screens: floating pill nav on every width, cover grids add columns.
 
-### Non-goals
-- User accounts, cloud sync, or a server-side library.
-- iOS background downloads are untested (releases are Android APKs). Download tasks use absolute paths, which iOS can move between launches (§7.5).
-- Hosting or scraping comics. All content comes from bacakomik-api.
-- An app store listing. Releases are APKs on GitHub Releases; the app checks the latest release on start and from Lainnya, downloads the APK for the device's ABI and opens Android's installer (`features/update`, `ota_update`). Asset names and the `## Which APK?` heading are set by the release workflow (CONTRIBUTION §2).
+**Non-goals**
+- An account or server-side library. Sync only uses the user's Drive (`drive.appdata`).
+- Hosting comics. Extensions read the sites; the app only gives them host functions (§8.4).
+- iOS. The code mostly runs there, but background downloads, hidden-WebView rendering (§8.5) and notifications are Android-only or untested, and download paths are absolute (§7.5).
+- An app store. Releases are APKs on GitHub Releases; the app checks for a newer one on start and in More, downloads the APK for its ABI and opens the installer (`features/update`, `ota_update`). Asset names and the `## Which APK?` heading come from the release workflow (CONTRIBUTION §2).
 
 ---
 
@@ -28,209 +44,183 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 
 | Concern | Choice | Notes |
 |---|---|---|
-| Language / UI | Dart 3.13, Flutter (stable) | Material 3 widgets themed with the Dotline design system (§5). Bundled Geist, Geist Mono and Doto fonts, Lucide icons via `lucide_icons_flutter`. |
-| State | `flutter_bloc` (Bloc and Cubit) | States are freezed sealed unions (§4.3). |
-| Dependency wiring | `get_it` + `injectable` | Generated in `lib/core/di/injection.config.dart` (§10). |
-| Errors | `fpdart` `Either<Failure, T>` | Repositories never throw to callers (§9). |
-| Models | `freezed` + `json_serializable` | Entities, states and API DTOs use freezed; stored models use `@JsonSerializable` (§7.2). |
-| HTTP | `dio` behind `ApiClient` | Base URL from `--dart-define=API_BASE_URL`, default `https://api-bacakomik.kurodev.org`. |
-| Connectivity | `connectivity_plus` behind `NetworkInfo` | Checked before every remote call (§8.2). |
-| Local storage | `hive_ce` | Boxes of JSON strings, no type adapters (§7). |
-| Images | `cached_network_image`, `flutter_cache_manager` | "Clear cache" in settings empties the image cache. |
-| Backup files | `file_picker` + `dart:io` | Behind `BackupFileDataSource` (§7.4). |
-| Saving pages | `gal` | Saves a reader image to the gallery. |
-| Tests | `flutter_test`, `bloc_test`, `mocktail` | Hive tests use a temp directory (CONTRIBUTION §5). |
+| UI | Dart 3.13, Flutter stable | Material 3 themed as Dotline (§5); Geist, Geist Mono, Doto fonts; Lucide icons |
+| State / DI / errors | `flutter_bloc`, `get_it` + `injectable`, `fpdart` | `Either<Failure, T>` from repositories (§9) |
+| Models | `freezed`, `json_serializable` | Stored models use `@JsonSerializable` (§7.2) |
+| Sources | `flutter_js` | One QuickJS engine per source (§8.3); `crypto` checks script `sha256` |
+| Source HTTP | `dio` + `native_dio_adapter` (Cronet), `cookie_jar`, `html` | One cookie jar per source (§8.4) |
+| WebViews | `flutter_inappwebview` | Hidden pages and the visible WebView screen (§8.5) |
+| Images | `cached_network_image`, `flutter_cache_manager`, `cronet_http` | One `comicImageCache` (§8.6) |
+| Other HTTP | `dio` (`filesDio`) | Repos, scripts, Drive, GitHub releases (§8.8) |
+| Storage | `hive_ce` | JSON strings, no adapters (§7) |
+| Downloads | `background_downloader` | Outside the Dart isolate (§7.5) |
+| Notifications | `flutter_local_notifications` | Bookmark refresh progress with Cancel (§6.1); needs `ActionBroadcastReceiver` in the manifest |
+| Sync / backup | `google_sign_in` + Drive REST; `file_picker` | §7.6, §7.4 |
+| Links, share, gallery | `app_links`, `share_plus`, `gal` | Links `https://bacakomik.kurodev.org/series/<slug>` open the app (`DeepLinks`, host in `hosting/worker`) |
+| Tests | `flutter_test`, `bloc_test`, `mocktail` | CONTRIBUTION §5 |
 
-Exact versions live in `pubspec.yaml` and `pubspec.lock`. Read §10.1 before you change `freezed` or the generators.
-
-**Application id:** `org.kurodev.bacakomik`.
-
-**SDK levels:** `minSdk` and `targetSdk` come from Flutter (currently 24 and 36), `compileSdk 37`, Java 17.
+Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the generators. App id `org.kurodev.bacakomik`; `minSdk` 24, `targetSdk` 36 (from Flutter), `compileSdk 37`, Java 17.
 
 ---
 
 ## 3. Project structure
 
-```
-lib/
-├── main.dart                       # Hive.init → DI → runApp
-├── app/
-│   ├── app.dart                    # BacaKomikApp: app-wide BlocProviders, MaterialApp, theme mode
-│   ├── splash_screen.dart
-│   ├── root_screen.dart            # tabs: Home, Explore, Bookmark, History, More (floating nav)
-├── core/
-│   ├── assets/assets.gen.dart      # flutter_gen output
-│   ├── constants/                  # texts (UI strings), filters, variables
-│   ├── theme/                      # Dotline tokens: colors, text styles, spacing, ThemeData
-│   ├── di/                         # injection.dart, register_module.dart (Dio, Connectivity, Hive)
-│   ├── error/                      # exceptions.dart (data layer), failures.dart (domain)
-│   ├── network/                    # ApiClient, NetworkInfo, runRemote()
-│   ├── storage/                    # HiveBoxes + StorageModule, JsonBox<T>, runLocal()
-│   ├── usecase/usecase.dart        # UseCase<T, Params>, NoParams
-│   ├── domain/entities/            # Comic, ComicDetails, Genre, Chapter (shared by features)
-│   ├── data/
-│   │   ├── datasources/series_remote_data_source.dart  # every bacakomik-api endpoint
-│   │   └── models/                 # SeriesResponse… (API DTOs), ComicDetailsModel (stored)
-│   ├── presentation/
-│   │   ├── bloc/comic_list_state.dart  # paginated list state + ComicListLoader mixin
-│   │   └── widgets/                # comic card + grid, dotline/ (Dotline component library)
-│   └── utils/                      # ApiFormat, Clock, snackbar/save-image helpers
-└── features/
-    ├── home/          # new series + latest on the home tab
-    ├── latest/        # "see all" latest chapters, paginated
-    ├── explore/       # filter by sort/type/status/genre, paginated
-    ├── comic_detail/  # comic info + chapter list
-    ├── reader/        # chapter images, prev/next
-    ├── bookmark/      # local: bookmarked comics, "check for new chapters"
-    ├── history/       # local: read chapters
-    ├── settings/      # local: theme; the More tab
-    ├── backup/        # export/import the library as a JSON file
-    ├── download/      # local: chapters saved for offline reading, background download queue
-    └── update/        # in-app updates from GitHub Releases
-```
+| Path | What it is | Do you edit it? |
+|---|---|---|
+| `lib/main.dart` | `Hive.init` → DI → bundled extensions → `runApp` | Rarely |
+| `lib/app/` | `BacaKomikApp` (app-wide providers, listeners, theme), splash, `RootScreen` (5 tabs, update check), `RootTabs` | When wiring several features together |
+| `lib/core/` | Shared code: `constants/` (`AppText`), `theme/`, `di/`, `error/`, `network/`, `notifications/`, `source/` (§8), `storage/` (§7), `usecase/`, shared `domain/`, `data/`, `presentation/` widgets, `utils/` | When something is shared |
+| `lib/features/<name>/` | One folder per feature (table below) | Yes, most work |
+| `*.freezed.dart`, `*.g.dart`, `injection.config.dart`, `core/assets/*.gen.dart` | Generated (§10) | No |
+| `assets/extensions/` | Bundled extensions (§8.2) | Only via `bundle.ts` (CONTRIBUTION §2) |
+| `android/…/MainActivity.kt` | `bacakomik/hidden_webviews` channel (§8.5) | Rarely |
+| `android/app/src/main/AndroidManifest.xml` | Permissions, deep links, notification action receiver | Rarely |
+| `hosting/` | Cloudflare Worker for `bacakomik.kurodev.org` | Rarely |
+| `test/` | Mirrors `lib/` | Yes |
 
-Every feature uses the same layout. A layer folder exists only if the feature needs it:
+Features: `home`, `latest` ("See all"), `explore`, `comic_detail`, `reader`, `bookmark`, `category`, `history`, `settings` (More tab), `backup`, `sync`, `download`, `migration`, `source` (Extensions, source picker, WebView screen), `update`.
+
+Each feature has up to three layers (only the ones it needs):
 
 ```
 features/<name>/
-├── domain/
-│   ├── entities/        # freezed, plain Dart
-│   ├── repositories/    # abstract interface class
-│   └── usecases/        # one call() per use case
-├── data/
-│   ├── datasources/     # remote or local (Hive, files)
-│   ├── models/          # JSON shape on disk or on the wire
-│   └── repositories/    # *RepositoryImpl, registered with @LazySingleton(as: …)
-└── presentation/
-    ├── bloc/            # Bloc/Cubit + freezed state
-    ├── pages/           # screens pushed by Navigator
-    └── widgets/         # widgets used only by this feature
+├── domain/        entities (freezed) · repositories (interfaces) · usecases
+├── data/          datasources · models (JSON on disk/wire) · repositories (*Impl, @LazySingleton(as: …))
+└── presentation/  bloc · pages · widgets
 ```
 
-### Dependency rules
+**Dependency rules:** `presentation ──▶ domain ◀── data`.
+- **domain** imports no `data`, `presentation`, Flutter, Dio, Hive or file_picker. It may use `fpdart`, `freezed_annotation`, `injectable`, plain-Dart `core` helpers (`ComicKey`) and other features' domain code.
+- **data** may import other features' data models when a format is shared (`backup` and `sync` read `BookmarkModel`).
+- **presentation** reaches use cases through blocs; widgets may read other features' cubits (`comic_detail` reads `BookmarkCubit`).
+- **core** never imports `features/` (except generated DI). Cross-feature wiring lives in `lib/app/`.
 
-```
-presentation ──▶ domain ◀── data
-```
-
-- **domain** imports nothing from `data`, `presentation`, Flutter, Dio, Hive or file_picker. It may import `fpdart`, `freezed_annotation`, `injectable` and other features' **domain** code.
-- **data** implements domain interfaces. It may import other features' data models when a format is shared (for example `backup` reads `BookmarkModel`).
-- **presentation** calls use cases through blocs. Widgets may read cubits from other features (for example `comic_detail` reads `BookmarkCubit` and `HistoryCubit`).
-- **core** never imports from `features/`. Code that has to know several features (the app shell, root tabs) lives in `lib/app/`.
-
-Check the domain rule with:
+Check the domain rule; **it must print nothing**:
 
 ```bash
 grep -rn "^import" lib/core/domain lib/features/*/domain | grep -E "package:flutter|/data/|/presentation/|hive|dio|file_picker"
 ```
 
-It must print nothing.
-
-### Rules for adding code
-
-1. **Group by feature, then by layer.** Only shared things go in `core/`.
-2. **One main type per file, named after the file.** `bookmark_cubit.dart` → `BookmarkCubit`. Small groups of related use cases may share a file (`bookmark_usecases.dart`).
-3. **Use cases are thin.** If a use case only forwards to the repository, keep it one line. Put real rules in the domain (`ReadHistoryQueries`, `RefreshBookmarks`) so they can be tested.
-4. **Repositories return `Either`.** Wrap remote calls in `runRemote` and local calls in `runLocal` (§9).
-5. **Register with injectable.** Use cases, blocs and cubits use `@injectable`. Repositories and data sources use `@LazySingleton(as: Interface)`. Then run code generation (§10).
-6. **Keep files under ~400 lines.** Split by responsibility past that.
-
-### Where does my code go?
+**Rules for adding code**
+1. Group by feature, then layer. Only shared things go in `core/`.
+2. One main type per file, named after it (`bookmark_cubit.dart` → `BookmarkCubit`); related use cases may share a file.
+3. Use cases are thin; real rules live in the domain (`RefreshBookmark`, `MigrateComic`) so they can be tested.
+4. Repositories return `Either`, via `runRemote` / `runLocal` (§8.7, §9).
+5. Register with injectable: `@injectable` for use cases and blocs, `@LazySingleton(as: Interface)` for repositories and data sources.
+6. Keep files under ~400 lines.
 
 | I'm writing… | Put it in |
 |---|---|
-| A rule about comics, chapters, bookmarks or history | that feature's `domain/` + a test |
-| A new bacakomik-api call | `core/data/datasources/series_remote_data_source.dart` + a DTO in `core/data/models/` |
-| Data stored on the device | a feature `data/datasources/*_local_data_source.dart` over a `JsonBox` (§7) |
-| A screen | `features/<name>/presentation/pages/` |
+| A rule about comics, bookmarks, history | That feature's `domain/`, with a test |
+| Support for a new site | An extension in `bacakomik-ext-source`, not here |
+| A new source method | The contract in `bacakomik-ext-source`, then `SeriesRemoteDataSource` + a DTO in `core/data/models/` |
+| A new host function | `ExtensionBridge.handle` + the prelude in `ExtensionRuntime` (bump `supportedExtensionApi` if old apps can't run it) |
+| Data stored on the device | A feature `*_local_data_source.dart` over a `JsonBox` (§7) |
 | A widget used by several features | `core/presentation/widgets/` |
-| A UI string | `core/constants/texts.dart` (`AppText`) |
-| Something that wires several features together | `lib/app/` |
+| A UI string | `AppText` in `core/constants/texts.dart` |
 
 ---
 
 ## 4. Runtime model
 
 ```
-   main() ── Hive.init(app documents dir)
-          ── configureDependencies()      # opens Hive boxes (preResolve)
-          ── runApp(BacaKomikApp)
+main() ─ Hive.init ─ configureDependencies() (opens boxes) ─ installBundled() ─ runApp ─ catalog() (background)
 
-   BacaKomikApp ─ MultiBlocProvider (app scope)
-   │   HomeBloc · ExploreBloc · FilterCubit · BookmarkCubit · HistoryCubit · SettingsCubit · DownloadCubit · BackupCubit
-   └─ MaterialApp ─ SplashScreen ─▶ RootScreen (tabs)
-                                      │ Navigator.push
-                                      ▼
-            route-scoped blocs: LatestBloc · ComicDetailsBloc · ReaderBloc
-
-   Bloc/Cubit ─▶ UseCase ─▶ Repository (interface) ─▶ RepositoryImpl
-                                                       ├─ SeriesRemoteDataSource ─▶ ApiClient (Dio)
-                                                       └─ *LocalDataSource ─▶ JsonBox ─▶ Hive box
+Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
+                                        ├─ SeriesRemoteDataSource ─▶ SourceRegistry (ExtensionManager)
+                                        │     └─ ExtensionRuntime (QuickJS) ─▶ ExtensionBridge ─▶ Dio (Cronet) / HeadlessPages
+                                        └─ *LocalDataSource ─▶ JsonBox ─▶ Hive box
 ```
 
 ### 4.1 Startup
-
-1. `Hive.init` points Hive at the application documents directory.
-2. `configureDependencies()` registers everything and opens the six Hive boxes before returning (`@preResolve` in `StorageModule`).
-3. `runApp`. `BookmarkCubit`, `HistoryCubit` and `SettingsCubit` call `load()` when they are first created.
+1. `Hive.init` uses the app documents directory.
+2. `configureDependencies()` registers everything and opens the fourteen boxes (§7.1) before returning (`@preResolve` in `StorageModule`).
+3. `ExtensionManager.installBundled()` installs or upgrades the bundled extensions (§8.2).
+4. `runApp`. Library cubits (`BookmarkCubit`, `CategoryCubit`, `HistoryCubit`, `SettingsCubit`, `DownloadCubit`) `load()` when created. `SourcesCubit` and `SyncCubit` are eager; `SyncCubit.start()` restores the Google account and syncs.
+5. `ExtensionManager.catalog()` fetches the repos in the background for the update badge.
 
 ### 4.2 Bloc scope
-
-- **App scope** (`lib/app/app.dart`): the bottom-tab blocs (`HomeBloc`, `ExploreBloc`, `FilterCubit`) and the library (`BookmarkCubit`, `HistoryCubit`, `SettingsCubit`, `DownloadCubit`, `BackupCubit`). Several screens read them, and they have to outlive navigation.
-- **Route scope:** `LatestChapterScreen`, `ComicDetailsScreen` and `ReadChapterScreen` each create their own bloc with `BlocProvider(create: (_) => getIt<…>())`. The public screen widget is a thin wrapper and the stateful view underneath is private (`_ComicDetailsView`). Opening a second comic or moving to the next chapter therefore always starts from a fresh state.
+- **App scope** (`lib/app/app.dart`): `HomeBloc`, `ExploreBloc`, `FilterCubit`, `SourcesCubit`, the library cubits, `BackupCubit`, `SyncCubit`, `UpdateCubit`. They outlive navigation.
+- Two app-level listeners: a new active source resets `FilterCubit` and reloads `HomeBloc`; a new `SyncCubit.libraryRevision` reloads the bookmark, category and history cubits.
+- **Route scope:** `LatestBloc`, `ComicDetailsBloc`, `ReaderBloc`, `ExtensionsCubit` are created by their screen (`BlocProvider(create: (_) => getIt<…>())`). The public screen is a thin wrapper over a private view (`_ComicDetailsView`), so each opening starts fresh.
 
 ### 4.3 State shapes
-
-- Remote screens use a freezed sealed state: `initial`, `loading`, `loaded(...)`, `error(message)`, `noInternet`. The generated classes are public (`HomeLoaded`, `ComicDetailsNoInternet`), so widgets use `state is HomeLoaded`.
-- The paginated lists (latest, search, explore) share `ComicListState` and the `ComicListLoader` mixin: `loadFirstPage` and `loadNextPage`. A next-page event is ignored until the first page has loaded. While a page is loading, `ComicListLoaded.isLoadMore` is true.
-- Library cubits hold plain lists (`List<Bookmark>`, `List<ReadHistory>`) or `AppSettings`. After every write they reload from the repository, so the state always matches storage.
-- Events are plain `final class`es named after what happened: `HomeStarted`, `HomeRefreshed`, `ExploreRequested`, `ChapterRequested`.
+- Remote screens: freezed sealed `initial / loading / loaded / error / noInternet`; widgets test `state is HomeLoaded`; errors render `SourceError` (§9).
+- Paginated lists share `ComicListState` and the `ComicListLoader` mixin (`loadFirstPage`, `loadNextPage`). Next page is ignored until the first loaded; `ComicListLoaded.isLoadMore` is true while loading.
+- Library cubits hold plain lists or `AppSettings` and reload from the repository after every write.
+- `SourcesState` mirrors `ExtensionManager`: installed and known sources (incl. languages turned off), active source and its `SourceFeatures`, update count.
+- Events are `final class`es named after what happened (`HomeStarted`, `ChapterRequested`).
 
 ### 4.4 Settings
-
-`AppSettings` holds `themeMode` (`AppThemeMode.system | light | dark`, mapped to Flutter's `ThemeMode` in `BacaKomikApp`) and the reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`). `SettingsModel` gives every field a default and falls back on unknown enum values, so a field added later never breaks loading.
+`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `autoScrollSpeed`), `bookmarkGrouping` (`status | source | category`). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
 
 ---
 
 ## 5. Theme and UI
 
-The UI uses **Dotline**, a monochrome, dark-first design system: pure black background in dark mode (`#F2F2F2` in light), flat surfaces with hairlines, pills and dot motifs. Rules worth keeping:
+**Dotline** is a monochrome, dark-first design system: pure black (light: `#F2F2F2`), flat surfaces, hairlines, pills, dots.
 
-- **Red is a signal, not a colour.** `accent` appears at most once or twice per screen (NEW dot, `+N` badge, delete actions). Selected chips, switches and segments use `ink`.
-- **Doto only for screen titles** (`BERANDA`, `JELAJAH`) and the app name, never below 24 px. Numbers use `DotlineText.stat` / `statS` (Geist 600). Labels and overlines use Geist Mono, uppercase.
-- **No gradients or glass.** The one exception is the bottom fade behind the nav. Depth comes from `bg` → `surface` → `surfaceRaised`; `shadowFloat` is only for menus and the reader's chapter pill (the main nav has none).
-- **Comic types are labels, not colours.** Manga, manhwa and manhua get the same black label pill.
-- Motion: 140 ms presses (scale to 0.97, no ripple), about 320 ms sliding selection indicators. Respect `MediaQuery.disableAnimationsOf`.
-
-- `core/theme/` holds the tokens: `DotlineColors` (a `ThemeExtension`, read with `Dotline.of(context)`), `DotlineText`, `DotSpace` / `DotRadius` / `DotSize` / `DotMotion`, and `dotlineTheme()` for light and dark.
-- Build screens from `core/presentation/widgets/dotline/` (`ScreenHeader`, `ListGroup` + `ListRow`, `SegmentedControl`, `DotButton`, `DotChip`, `DotSwitch`, `showDotSheet`, `DotMeter`, `ComicCover`, `EmptyState`…) instead of raw Material widgets. There is no ripple; taps scale through `Pressable`.
-- Icons are Lucide from `lucide_icons_flutter`, weight 300 only (`LucideIcons300`, stroke ≈ 1.5). Do not use Material `Icons`.
-- All user-facing text is Indonesian and lives in `AppText` (`core/constants/texts.dart`). No inline strings in widgets. The library is called "Bookmark" in the UI, never "Favorit".
-- `RootScreen` stacks the five tabs under a floating pill nav and a bottom fade. Tabs get the nav height as bottom `MediaQuery` padding; scrollables add `MediaQuery.paddingOf(context).bottom`.
-- Cover grids (`CoverGridSliver`) use 3 columns on phones and more on wide screens (cells about 150 dp).
-- Pull-to-refresh on Home plays the "kuru kururin" animation and sound (`assets/images`, `assets/sounds`).
-- Assets are typed through `flutter_gen` (`Assets.images.…`).
+- **Red is a signal, not a colour.** `accent` at most once or twice per screen (NEW dot, `+N` badge, delete). Selected chips and switches use `ink`.
+- **Doto only for screen titles** and the app name, never under 24 px. Numbers use `DotlineText.stat` / `statS`; labels use uppercase Geist Mono.
+- **No gradients or glass**, except the bottom fade behind the nav. Depth is `bg` → `surface` → `surfaceRaised`; `shadowFloat` only for menus and the reader's chapter pill.
+- **Comic types are labels, not colours** (same black pill for all).
+- **Motion:** 140 ms presses (scale 0.97, no ripple), ~320 ms sliding indicators; respect `MediaQuery.disableAnimationsOf`.
+- Tokens in `core/theme/` (`Dotline.of(context)`, `DotlineText`, `DotSpace`/`DotRadius`/`DotSize`/`DotMotion`). Build screens from `core/presentation/widgets/dotline/` (`ScreenHeader`, `ListGroup`/`ListRow`, `DotButton`, `showDotSheet`, `ComicCover`, `EmptyState`…); taps scale through `Pressable`.
+- Icons: `LucideIcons300` only, no Material `Icons`.
+- Text: English, in `AppText`. The library is **"Bookmarks"**, never "Favorites". Home's second list (and its "See all" screen) is **"Latest updates"**. Source text is shown as sent.
+- Tabs get the nav height as bottom padding; scrollables add `MediaQuery.paddingOf(context).bottom`. Cover grids: 3 columns on phones, more on wide screens (~150 dp cells). Home's pull-to-refresh plays "kuru kururin".
 
 ---
 
 ## 6. Features
 
-| Feature | Screens / entry | Bloc | Notes |
+| Feature | Entry | Bloc | Behaviour |
 |---|---|---|---|
-| home | Home tab | `HomeBloc` | New series (`/series?sort=newseries`, 10) + latest (`/series?sort=latest`, 20), loaded in parallel. Also shows the last read comic. |
-| latest | "Lihat Semua" | `LatestBloc` | Infinite scroll, up to 10 pages. |
-| explore | Jelajah tab: title search + filter sheet | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (search `query` + filters) goes to `/series` in one request; the API applies them together. `default` sort, `all` type/status and an empty query are sent as "no filter". Beranda's search button and the genre chips on a comic page switch to this tab through `RootTabs`, which `BacaKomikApp` provides above the navigator so pushed routes can use it. A genre chip replaces the filter with that genre alone (`FilterCubit.showGenre`). Requests run in order so an older search cannot overwrite a newer one. |
-| comic_detail | Comic card tap | `ComicDetailsBloc` | Series and chapters fetched in parallel. Bookmark toggle, continue reading, and multi-select of chapters to download or mark read/unread. When the request fails, a comic in the library opens from its stored details (downloads, then bookmarks, then history). Genre chips open Jelajah filtered by that genre. |
-| reader | Chapter tap | `ReaderBloc` | Chapter slug is `seriesSlug/number`. Prev/next replace the route. Writes history when a chapter loads. A downloaded chapter is read from files, online or not. |
-| bookmark | Bookmark tab | `BookmarkCubit` | Search by title. Pull-to-refresh runs `RefreshBookmarks` (§6.1). |
-| history | More → History | `HistoryCubit` | Shows the newest chapter per comic. Remove one chapter, one comic, or everything. |
-| settings | More tab | `SettingsCubit` | Theme, clear image cache, bug report link, app info. |
-| backup | Lainnya → Cadangkan / Pulihkan | `BackupCubit` | §7.4. |
-| download | Lainnya → Unduhan; detail selection bar | `DownloadCubit` | §7.5. |
+| home | Home tab | `HomeBloc` | Two parallel `browse` calls: slider with `home.featured` (10) and "Latest updates" with `home.latest` (20); last read comic; header opens the source picker |
+| latest | "See all" | `LatestBloc` | Infinite scroll, up to 10 pages |
+| explore | Explore tab | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (source, query, values per group) goes to one `browse`. Sheet built from `filters()`; a `quick` group shows above the grid. Changing source resets it. Genre chips on a comic page open Explore with that genre alone (`FilterCubit.showGenre`). Requests run in order |
+| comic_detail | Card tap, shared link | `ComicDetailsBloc` | Series and chapters in parallel; bookmark (then categories, §6.2), continue, WebView, share, multi-select to download or mark read. Offline: opens from stored details (downloads, bookmarks, history). Missing source: `MissingSource` offers to install it |
+| reader | Chapter tap | `ReaderBloc` | Chapter slug `<comicKey>/<number>`; prev/next replace the route; writes history with the page reached; uses `imageHeaders`; downloaded chapters read from files |
+| bookmark | Bookmarks tab | `BookmarkCubit` | Search, group tabs (§6.2), refresh (§6.1) |
+| category | More → Categories | `CategoryCubit` | §6.2 |
+| history | History tab | `HistoryCubit` | Newest chapter per comic by day; remove one, a comic, or all |
+| source | Header; More → Extensions | `SourcesCubit`, `ExtensionsCubit` | §8 |
+| settings, backup, sync, download, update | More | own cubits | §4.4, §7.4, §7.6, §7.5, §1 |
+| migration | More → Backup & sync → Migration; Bookmarks selection; comic page | `MatchCubit`, `MihonImportCubit` | §6.4 |
 
 ### 6.1 Checking bookmarks for new chapters
+1. Pull-to-refresh calls `BookmarkCubit.updateBookmarkList` with the comics **on screen** (open group, narrowed by search). Pulling in another group during a run adds to the queue.
+2. `RefreshBookmark` reloads each comic in turn. A changed chapter count saves the new details with `updatedDate = now` (moves it to the top). A failure leaves it unchanged and logs `Refresh <key>: <failure>`.
+3. `ProgressNotifier` (Android) shows `done / total`, then "Bookmarks updated" with the count, or nothing.
 
-`RefreshBookmarks` loads every bookmarked comic again, one at a time so the API load stays the same as before. When the chapter count changed, it saves the new details with `updatedDate = now`, which moves the bookmark to the top. A comic that fails to load is left unchanged.
+| Stop | How |
+|---|---|
+| Cancel in the notification | Reaches `progressActionInBackground` in a background isolate, which forwards via `IsolateNameServer`; `BookmarkCubit.cancelRefresh` drops the queue. **Needs `ActionBroadcastReceiver` in `AndroidManifest.xml`** |
+| Stop button in the Bookmarks header | Shown while `BookmarkCubit.refreshing`; same cancel |
+| A comic over `refreshTimeout` (90 s) | Skipped, so one stuck site can't block the run |
+| Notification swiped away | Stays away; **the run continues** |
+
+Imported reading progress written during a refresh (§6.4) reloads the history at once through `BookmarkCubit.historyChanges`.
+
+### 6.2 Categories and grouping
+User-made `LibraryCategory` (id, name, order, `updatedDate`), managed in More → Categories. A comic can be in many (`ComicCategories`: key → ids). Bookmarking opens `SetCategoriesSheet` (skippable; with several comics, partly-applied categories start half-checked and stay unless tapped). Bookmarks group by status (All / Updated / Completed), source, or category (+ Uncategorized).
+
+### 6.3 One series in two sources
+Keys include the source (§8.1), so `westmanga:oreaku` and `voratoon:oreaku` would be two bookmarks. Bookmarking a title that matches one from another source (case, spacing, punctuation ignored) opens `DuplicateSheet`: move or keep both. Moving runs `MigrateComic`: replaces the bookmark, moves each read chapter to the same number in the new source (missing ones dropped), and joins both comics' categories.
+
+### 6.4 Migration
+Three entries under More → Migration. **All write through the normal repositories**, so sync and the journal see them.
+
+| Entry | Input | How comics are found |
+|---|---|---|
+| Migrate source (`SourceMigrationScreen` → `MatchScreen`) | Bookmarks of one source, a selection, or the open comic | Title search in the target; then `MigrateToSource` runs `MigrateComic` (§6.3) |
+| Mihon / Tachiyomi (`MihonImportScreen`) | `.tachibk` (gzipped protobuf, `parseMihonBackup`) | The backup link, read with the extension's `urlPatterns` (§8.2); no request |
+| Comix.to (`MatchScreen`) | CSV export (`parseComixCsv`), no links | Title search in `comix` (`MissingSource` if not installed) |
+
+- **Title search** (`MatchCubit`): one request at a time, `gap` 3 s apart, manual searches join the queue. A single result with the same normalized title is picked automatically (`exactMatch`); the user picks or skips the rest.
+- **Mihon:** only library comics (`favorite`), with category names and the highest chapter marked read. Sources match by name; a multi-language extension's language comes from the Mihon source id (MD5 of `<name>/<lang>/<versionId>`, `mihonSourceId`). Unmatched sources are listed as skipped; a matched but missing extension can be installed from the screen (its language is enabled). Re-importing adds no bookmarks but brings read chapters to earlier imports.
+- **`ImportLibrary`:** an existing key is left alone; a title already bookmarked from another source (`normalizeTitle`) is not added, and its progress goes to that bookmark (higher chapter wins); a new comic gets `placeholderDetails` (title only, `source` set so §7.7 leaves it alone), in file order. Missing categories are created; keys over `ComicKey.maxLength` are skipped (§7.1). The last read chapter waits in `pending_reads` (local only).
+- **Completing an import:** the first time the comic loads — refresh (`RefreshBookmark`) or opening it (`BookmarkCubit.comicLoaded` → `CompleteImportedComic`, which keeps its place) — the details are saved and `ApplyPendingReads` marks chapters up to the pending number read (existing history entries kept), then clears it.
 
 ---
 
@@ -238,150 +228,196 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 
 ### 7.1 Boxes
 
+Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup and sync reuse the same JSON).
+
 | Box | Key | Value |
 |---|---|---|
-| `bookmarks` | series slug | `BookmarkModel` JSON (includes the comic's details) |
-| `history_entries` | chapter slug (`series/number`) | `ReadHistoryModel` JSON |
-| `history_comics` | series slug | `HistoryComicModel` JSON (the comic's details) |
-| `downloads` | chapter slug | `DownloadedChapterModel` JSON (status, saved page paths, size) |
-| `download_comics` | series slug | `DownloadComicModel` JSON (the comic's details, saved cover path) |
-| `settings` | `settings` | `SettingsModel` JSON |
+| `bookmarks` | comic key | `BookmarkModel` (with details) |
+| `history_entries` | chapter slug | `ReadHistoryModel` |
+| `history_comics` | comic key | `HistoryComicModel` (details) |
+| `downloads` | chapter slug | `DownloadedChapterModel` (status, page paths, size) |
+| `download_comics` | comic key | `DownloadComicModel` (details, cover path) |
+| `categories` | category id | `CategoryModel` |
+| `comic_categories` | comic key | `ComicCategoriesModel` |
+| `library_deletions` | `bookmark:` / `history:` / `category:` + id | deletion time in ms (`LibraryJournal`, for sync) |
+| `sync` | `account`, `lastSyncedAt` | email; last sync ms |
+| `extensions` | extension id | `ExtensionMeta` |
+| `extension_storage` | `<sourceId>:<key>` | value from `storage.set` |
+| `source_settings` | `repos`, `active`, `langs:<id>` | repo URLs; active source; enabled languages |
+| `pending_reads` | comic key | last read chapter from an import (§6.4); not synced |
+| `settings` | `settings` | `SettingsModel` |
 
-Every box is a `Box<String>` that holds JSON. There are no Hive type adapters, so stored data never depends on adapter type ids, and the backup format can reuse the same JSON. `JsonBox<T>` (`core/storage/json_box.dart`) gives typed `values()`, `get`, `put`, `putAll`, `deleteAll` and `clear`. An entry that fails to parse is skipped and logged, so one bad record cannot hide the rest.
-
-Hive keys must be ASCII and at most 255 characters. API slugs meet this.
+- `JsonBox<T>` gives typed access; an entry that fails to parse is skipped and logged.
+- **Hive keys must be ASCII and at most 255 characters.** Hive stores the length in one byte and release builds skip the check, so a longer key corrupts the whole file. `JsonBox`, `LibraryJournal` and pending reads skip keys failing `isValidHiveKey`; imports skip comic keys over `ComicKey.maxLength` (240, room for `/<number>`). Extensions must return short, URL-safe slugs.
+- Boxes open through `openStringBox`: if Hive can't read a file, it keeps `<name>.corrupt-<ms>.hive.bak`, salvages entries frame by frame (an overflowed key is replaced by the value's JSON `slug` or `id`) into a fresh box, and the app still starts.
+- Not in Hive: scripts in `<app support>/extensions/<id>.js`, cookies in `<app support>/cookies/<sourceId>/`.
 
 ### 7.2 Stored JSON shape
 
 ```jsonc
 // bookmark
-{ "slug": "solo-leveling", "updatedDate": 1700000000000,   // ms since epoch
+{ "slug": "voratoon:solo-leveling", "updatedDate": 1700000000000,   // ms since epoch
   "comicDetails": { "title", "coverImg", "alternativeTitle", "released", "status",
                     "totalChapter", "author", "type", "rating", "synopsis",
                     "genres": [{ "name", "slug" }],
-                    "chapters": [{ "number", "slug", "date" }] } }
+                    "chapters": [{ "number", "slug", "date" }],
+                    "source": "voratoon" } }       // absent in data stored before sources
 // history entry (one per read chapter)
-{ "slug": "solo-leveling/2", "chapterNumber": "2", "readDate": 1700000100000,
-  "comicSlug": "solo-leveling" }
-// history comic (one per comic that has history entries)
-{ "slug": "solo-leveling", "comicDetails": { … } }
+{ "slug": "voratoon:solo-leveling/2", "chapterNumber": "2", "readDate": 1700000100000,
+  "comicSlug": "voratoon:solo-leveling",
+  "page": 12, "pageCount": 40 }                    // absent once the chapter is finished
+// history comic
+{ "slug": "voratoon:solo-leveling", "comicDetails": { … } }
+// category / comic categories
+{ "id": "…", "name": "Reading", "order": 0, "updatedDate": "2026-10-20T10:00:00.000" }
+{ "slug": "voratoon:solo-leveling", "categoryIds": ["…"], "updatedDate": "2026-10-20T10:00:00.000" }
 // settings
 { "themeMode": "system", "readingDirection": "vertical", "pageFit": "width",
-  "keepScreenOn": true, "pageGap": false }
+  "keepScreenOn": true, "pageGap": false, "autoScrollSpeed": 3, "bookmarkGrouping": "status" }
 ```
 
-A history entry does not carry the comic's details: they are stored once per comic in `history_comics`, so marking a whole comic as read writes one copy of its chapter list instead of one per chapter. `HistoryRepositoryImpl` joins the two when it reads (entries whose comic record is missing are skipped), writes the latest details it is given, and deletes a comic record once its last entry is removed.
-
-Stored models (`ComicDetailsModel`, `BookmarkModel`, `ReadHistoryModel`, `HistoryComicModel`, `SettingsModel`) map to and from entities with `fromEntity` and `toEntity`. Entities never carry JSON code. The `ReadHistory` entity still includes `comicDetails`, so the UI does not know about the split.
+- Categories store ISO 8601 dates; bookmarks and history store epoch ms (`EpochMillisConverter`).
+- History details are stored once per comic in `history_comics`, so marking a whole comic read writes one chapter list. `HistoryRepositoryImpl` joins on read (entries without a comic record are skipped) and deletes the comic record with its last entry. The `ReadHistory` entity still carries `comicDetails`.
+- Stored models map to entities with `fromEntity` / `toEntity`; entities carry no JSON code.
+- User writes go through `LibraryJournal` (records deletions, fires a change for sync). Sync's own writes bypass it.
 
 ### 7.3 Ordering
-
-Boxes have no order. Repositories sort when they read: bookmarks by `updatedDate` and history by `readDate`, newest first. Because writes are keyed by slug, saving an entry that already exists replaces it.
+Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and history by `readDate` (newest first), categories by `order`. Saving an existing key replaces it.
 
 ### 7.4 Backup files
-
-`bacakomik-backup-<y>-<m>-<d>-<h><min><s>.json`, written to a folder the user picks:
+`bacakomik-backup-<y>-<m>-<d>-<h><min><s>.json`, in a folder the user picks:
 
 ```jsonc
-{ "version": 2,
-  "bookmarks":     [ <bookmark JSON>, … ],
-  "history":       [ <history entry JSON>, … ],
-  "historyComics": [ <history comic JSON>, … ] }
+{ "version": 2, "bookmarks": [ … ], "history": [ … ], "historyComics": [ … ],
+  "categories": [ … ], "comicCategories": [ … ] }
 ```
 
-Entries are plain JSON objects, in the same shapes as §7.2. A file with another `version` (including files from the pre-2026 app, which had none) is rejected with a `FileFailure`. When you change the format, bump `BackupRepositoryImpl.formatVersion` and decide whether to keep reading the previous version.
-
-- **Backup:** if the library is empty, nothing happens and the folder picker does not open. Cancelling the picker does nothing.
-- **Restore:** merges into the library. Entries with the same slug are replaced. After a restore, the Lainnya screen reloads `BookmarkCubit` and `HistoryCubit`.
-- Downloads are not part of backups.
+- Same entry shapes as §7.2. Category fields were added without a version bump (older apps ignore them).
+- Another `version` (including pre-2026 files) is rejected with `FileFailure`. **Changing the format bumps `BackupRepositoryImpl.formatVersion`.**
+- Backup does nothing when the library is empty. Restore merges (same key or id replaced), then More reloads the bookmark and history cubits.
+- Not backed up: downloads, extensions, source settings, pending reads.
 
 ### 7.5 Downloads
+- **Files:** `<root>/<comicKey>/<chapter>/000.<ext>` and `<root>/<comicKey>/cover.<ext>`; unsafe characters become `_` (`voratoon:slug` → `voratoon_slug`). Root: `getExternalStorageDirectory()/downloads` on Android (app-specific, removed on uninstall), else `getApplicationSupportDirectory()/downloads`. Records store relative paths.
+- **Background:** `background_downloader` (`PageDownloadQueue`) runs outside Dart, three pages at a time, through lock and process death, with `imageHeaders`, 10 retries with backoff, one grouped notification. `POST_NOTIFICATIONS` is asked on the first download.
+- **Blocked hosts:** on a page's first retry, `imageHostBlocks` (§8.6) checks the host once; a blocking host's pages are saved through `comicImageCache` instead (only while the app runs).
+- **Preparing:** `DownloadRepositoryImpl` takes one chapter at a time, gets fresh page URLs from `ReaderRepository`, records planned paths and queues missing pages. Covers come from `comicImageCache` via a `.part` file; a missing cover doesn't fail the chapter.
+- **Progress:** events update records while running; on start and resume `DownloadCubit.sync()` checks planned paths on disk. Nothing queued but pages missing → failed. Unprepared chapters are prepared again.
+- **Status:** `queued → downloading → completed`, or `failed`; retry keeps saved pages.
+- **Reading:** `GetChapterContent` tries `getOfflineChapter` first (`isOffline: true`, `Image.file`); `GetComicDetails` falls back to `getOfflineComic`. Clearing the image cache keeps downloads.
 
-Plan and reasoning: `docs/implementation/OFFLINE_DOWNLOAD_PLAN.md`.
+### 7.6 Sync
+One file, `bacakomik-sync.json.gz`, in the app's Drive `appDataFolder` (invisible to the user). `google_sign_in` + `filesDio`.
 
-- **Files:** `<root>/<seriesSlug>/<chapterNumber>/000.<ext>` and `<root>/<seriesSlug>/cover.<ext>`. The root is `getExternalStorageDirectory()/downloads` on Android (app-specific, no permission, removed on uninstall) and `getApplicationSupportDirectory()/downloads` elsewhere or when external storage is missing. Records store paths relative to the root.
-- **Background:** pages are downloaded by `background_downloader` (`PageDownloadQueue`), outside the Dart isolate, so they continue while the app is in the background, the phone is locked, or the process is gone. A native holding queue runs three pages at a time in enqueue order. One grouped notification shows `x/y halaman`, then done or failed. Notification permission (`POST_NOTIFICATIONS`) is asked on the first download. Each page gets 10 retries with backoff, so short connection drops do not fail a chapter.
-- **Preparing:** `DownloadRepositoryImpl` takes queued chapters one at a time, fetches fresh page URLs through `ReaderRepository` (needs a connection), records the planned page paths, and hands the missing pages to the queue. Covers are fetched directly with Dio.
-- **Progress:** page events update the record while the app runs. Pages finished while the app was suspended or closed are found on disk: on start and whenever the app resumes (`DownloadCubit` calls `sync()`), downloading chapters are checked against their planned paths. A chapter with no pages left in the queue and pages missing becomes failed. Chapters still waiting for their page list after a restart are prepared again.
-- **Status:** `queued → downloading → completed`, or `failed`. Retry keeps saved pages and fetches the rest.
-- **Reading:** `GetChapterContent` asks `DownloadRepository.getOfflineChapter` first; a completed chapter with all its files returns `ChapterContent(isOffline: true)` with file paths, and `ChapterImg` shows them with `Image.file`. `GetComicDetails` falls back to `getOfflineComic` when the request fails.
-- **Clearing the image cache** does not touch downloads.
+- **When:** on start, on resume (if last sync > 1 min ago), and 5 s after the last library edit (`LibraryJournal.changes`).
+- **What:** bookmarks, history, categories. Not downloads, settings, extensions or pending reads. An imported bookmark syncs as stored (title only until it loads somewhere).
+- **Format:** gzipped JSON `version: 1` (`SyncRepositoryImpl.formatVersion`): backup fields plus `deletedBookmarks`, `deletedHistory`, `deletedCategories` (id → ms).
+- **Merge** (`SyncSnapshot.merge`): newest wins per key (`updatedDate` / `readDate`); deleted at or after that time → dropped; deletions older than 180 days are forgotten; a side without category fields keeps the other's.
+- **Flow** (`SyncLibrary`): download → merge → migrate legacy (§7.7) → write locally → upload only if different. Local changes bump `libraryRevision` (§4.2). Auth errors become `AuthFailure`.
+
+### 7.7 Legacy keys
+Keys without a prefix belong to `ComicKey.defaultSource` (`bacakomik`), as all pre-sources keys do. Those came from the old API, now the `voratoon` source (`ComicSource.legacy`). `MigrateSnapshot` moves default-source entries with no `source` (or `"voratoon"`) to `voratoon:<slug>`, rewrites chapter slugs and records deletions for the old keys. It runs in sync, or via `MigrateLocalLibrary` on start/resume when signed out. No request is made.
 
 ---
 
-## 8. Networking
+## 8. Sources and networking
 
-### 8.1 API
+### 8.1 Sources and comic keys
+A source is one site; a multi-language extension (MangaDex) is one source per enabled language. Comics are addressed by a **comic key** (`ComicKey`):
 
-`SeriesRemoteDataSource` is the only class that knows the endpoints:
+| Kind | Format | Example |
+|---|---|---|
+| Comic | `sourceId:slug` (bare slug for `bacakomik`) | `westmanga:oreaku`, `solo-leveling` |
+| Chapter | `<comicKey>/<number>` | `westmanga:oreaku/14` |
 
-| Method | Endpoint |
+`SourceRegistry` (`ExtensionManager`) gives `activeSource` and `backend(sourceId)`. `SeriesRemoteDataSource` is the only caller of source methods: `browse`, `series`, `chapters`, `chapter` (plus optional `filters()`, `home`, `webUrl`; contract in `bacakomik-ext-source/types/bridge.d.ts`). DTOs convert with `ApiFormat` (`9.25` → `"9.3"`, missing format → `"-"`, dates → "3 h ago") and turn source slugs into comic keys. The active source defaults to `bacakomik`, else the first installed; with none, Home and Explore show `noSourceMessage` and lead to Extensions.
+
+### 8.2 Extensions and repos
+`ExtensionManager` owns installed extensions, repos and runtimes.
+
+- **Repos:** `index.json` URLs, stored in `source_settings` → `repos`; default `https://bacakomik-ext.kurodev.org/index.json` (the built `dist/` of `bacakomik-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
+- **`ExtensionMeta`:** `id` (`[a-z0-9_-]`, file name and key prefix), `name`, `lang`, semver `version`, `apiVersion` (app supports `supportedExtensionApi = 1`; higher is listed but not installable), `baseUrl`, `file`, `sha256`, `nsfw`, `languages`, and optional **`urlPatterns`**: regexes whose one capture group is the slug in a series URL path (`slugFromUrl`), used by the Mihon import (§6.4).
+- **Install:** download, check `sha256`, load once in a throwaway runtime (failing scripts aren't installed), save the script and meta. Updating = installing the newer version. `catalog()` fetches repos in parallel (a failing repo shows as an error) and sets `updateCount`.
+- **Uninstall** removes the script, meta, language setting, and each source's cookies, storage and hidden page.
+- **Bundled:** `bacakomik` and `voratoon` in `assets/extensions/`, installed on first run and when the app bundles a newer version (made with `bundle.ts`, CONTRIBUTION §2).
+- **Multi-language:** each enabled language is a source `<id>-<lang>`, named `<Name> (<LANG>)`. Enabled list in `source_settings` → `langs:<id>` (default English, else first). Turned-off languages still open.
+
+The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-bacakomik.kurodev.org`, serving bacakomik.my).
+
+### 8.3 Extension runtime
+`ExtensionRuntime` runs one source per `flutter_js` engine. It loads a prelude with the host globals (`http.fetch`, `html.select`, `storage.get/set`, `webview.run`, `log`, `qs`, `defineExtension`), then `var source = { id, lang }`, then the script (one `defineExtension`).
+
+- Calls are async both ways: JS host calls resolve via `__bkSettle`; Dart method calls run `__bkInvoke` and answer on `bk_result`. Host calls run outside the sending JS call (the engine isn't re-entrant).
+- A method fails with "did not respond" after **45 s without progress** (no host call running, starting or finishing); long chains of host calls are not cut off.
+- Errors starting with `404` become `ServerException` 404. `features()` caches `filters()` + `home` as `SourceFeatures`, retrying after a failure.
+
+### 8.4 Host side
+`ExtensionBridge`, everything per source id.
+
+| Function | Behaviour |
 |---|---|
-| `getSeriesList` | `GET /series?page&limit&q&genre&status&format&sort` |
-| `getCuratedList` | `GET /lists/{kind}?page&limit` |
-| `getSeries` | `GET /series/{slug}` |
-| `getChapters` | `GET /series/{slug}/chapters` |
-| `getChapter` | `GET /series/{slug}/chapters/{number}` |
+| `http.fetch` | One Dio per source with a persistent cookie jar. Cronet on Android / NSURLSession on iOS (`NativeAdapter`), because Cloudflare rejects `dart:io`'s TLS fingerprint. Chrome-on-Android User-Agent by default. Any status goes back to the script. Connection errors (TLS, reset, refused, `net::ERR_*`) retry 3 times, then `AppText.connectionFailed`. A Cloudflare challenge (`cf-mitigated: challenge`, or a 403/503 challenge page) throws `challenge: <url>`, which `SourceError` turns into "Verify in WebView" |
+| `html.select` | `package:html`; returns `{text, html, outerHtml, attrs}` per match |
+| `storage.get/set` | `extension_storage`, key `<sourceId>:<key>` |
+| `webview.run` | `HeadlessPages` (§8.5) |
 
-Responses are `{ "data": … }`. `ApiClient` drops null and empty query values and turns `DioException` into `ServerException`, using the API's `error` message when there is one. DTOs (`SeriesResponse`, `SeriesDetailResponse`, `ChapterResponse`, `ChapterDetailResponse`) convert to entities with `ApiFormat`. Examples: `rating 9.25` becomes `"9.3"`, `number 1.5` becomes `"1.5"`, a missing format becomes `"-"`, and `createdAt` becomes "3 jam lalu".
+### 8.5 WebViews
+**Hidden pages** (`HeadlessPages`) run `webview.run` for sites that only answer a real browser. One `HeadlessInAppWebView` per source, kept 3 minutes after its last run; runs queue per source and use the page that exists when they start.
 
-### 8.2 `runRemote`
+1. Load the URL (25 s) unless already shown. While the title says "Just a moment", wait up to 20 s; a check that needs the user becomes a `Challenge`.
+2. Run the script with `callAsyncJavaScript` (**3-minute timeout**).
+3. Copy the page's cookies into the source's jar.
 
-```dart
-runRemote(networkInfo, () async { … })
-```
+- **A failed run closes the page**, so the next run starts fresh with the cookies the user got in the visible WebView. A kept page showing "Just a moment" is reloaded.
+- Popups are refused; main-frame navigation to other hosts is cancelled (subdomains and `challenges.cloudflare.com` allowed).
+- **Rendering:** hidden WebViews don't render, so lazy pages load nothing. After creating one, Dart calls `render` on `bacakomik/hidden_webviews`; `MainActivity.kt` moves it into an `Untouchable` frame at alpha 0 and makes it visible, so Chromium renders it while the user can't see or touch it.
 
-1. Without a connection, returns `NetworkFailure` and makes no request.
-2. Otherwise runs the call. `ServerException` becomes `ServerFailure(message)`, and any other error becomes `ServerFailure(e.toString())`.
+**WebView screen** shows the site with the extension's User-Agent. `SourceError` opens it on a challenge URL, the comic page on `webUrl`. It copies cookies (e.g. `cf_clearance`) after every load; the failed screen retries when it closes; it can clear the source's cookies.
 
-When one call makes several requests in parallel, use `Future.wait` so the first error fails the whole call. Do not use the record `.wait` extension: it wraps errors in `ParallelWaitError`.
+### 8.6 Images
+`comicImageCache` serves covers, pages, prefetch, download covers and blocked-host pages (keeps `DefaultCacheManager`'s key).
+- Android downloads go through Cronet (`dart:io` if unavailable) with Chrome's `<img>` headers and the WebViews' cookies; the reader adds `imageHeaders`.
+- A host answering 403/503 is fetched inside a hidden page (`fetch` with credentials, base64) for 30 minutes. `imageHostBlocks` runs the same check for the download queue (§7.5).
+
+### 8.7 `runRemote`
+`runRemote(networkInfo, () async { … })` returns `NetworkFailure` without a connection; otherwise maps `ServerException` → `ServerFailure(message)` and other errors → `ServerFailure(e.toString())`. For parallel requests use `Future.wait`; **not** the record `.wait`, which wraps errors in `ParallelWaitError`.
+
+### 8.8 Other HTTP
+`filesDio` (no base URL, 15 s connect, 2 min receive) fetches repos and scripts, calls Drive (§7.6), and backs `ApiClient` for GitHub releases.
 
 ---
 
 ## 9. Errors and logging
 
-- **Data layer** throws `ServerException` or `CacheException`, or lets library errors through.
-- **Repositories** catch everything and return `Left(Failure)`: `ServerFailure`, `NetworkFailure`, `CacheFailure` or `FileFailure`.
-- **Blocs** map `NetworkFailure` to a `noInternet` state, which shows `ErrNoInternet`. Other failures become `error(message)`. Library cubits log failures with `debugPrint` and reload. Backup failures show a snackbar.
-- Use `debugPrint` for logging, never `print`. Never log full backup contents.
+| Layer | Errors |
+|---|---|
+| Data | Throws `ServerException` (optional `statusCode`) or `CacheException`. Source errors: script error, "did not respond", `challenge: <url>`, missing source |
+| Repositories | Return `Left`: `ServerFailure`, `NetworkFailure`, `CacheFailure`, `FileFailure`, `AuthFailure` |
+| Remote blocs | `NetworkFailure` → `noInternet` (`EmptyState.offline`); others → `SourceError` (challenge: "Verify in WebView" + retry; no source: link to Extensions; else message + retry) |
+| Library cubits / backup | Log with `debugPrint` and reload / show a snackbar |
+
+Log with `debugPrint`, never `print`. Extension `log()` prints `[<sourceId>] …`. Never log full backup or sync contents.
 
 ---
 
 ## 10. Code generation
 
-`build_runner` generates:
-
-- `*.freezed.dart` (freezed) and `*.g.dart` (json_serializable) next to their sources.
-- `lib/core/di/injection.config.dart` (injectable).
-- `lib/core/assets/assets.gen.dart` (flutter_gen).
-
-Generated files are committed and excluded from analysis (`analysis_options.yaml`). `build.yaml` turns on `explicit_to_json` so nested models are written as maps.
+`build_runner` writes `*.freezed.dart`, `*.g.dart`, `lib/core/di/injection.config.dart` and `lib/core/assets/*.gen.dart`. They are committed and excluded from analysis; `build.yaml` enables `explicit_to_json`.
 
 ### 10.1 Version pins
+- `freezed: ">=4.0.0 <4.0.2"`: 3.x emits `final` constructor parameters (rejected by Dart 3.13); 4.0.2+ needs a newer `test` than `flutter_test` pins.
+- `hive_ce_generator` is deliberately **not** used: boxes hold JSON, and its analyzer range conflicts with freezed.
 
-- `freezed: ">=4.0.0 <4.0.2"`. freezed 3.x generates `final` constructor parameters, which Dart 3.13 rejects. 4.0.2 and later need a newer `test` than the one `flutter_test` pins.
-- `hive_ce_generator` is intentionally **not** a dependency. Boxes store JSON strings (§7.1), and the generator's analyzer range conflicts with freezed.
-
-Upgrade these together, in their own PR, and run the full test suite after code generation.
+Upgrade these together in their own PR and run all tests after regenerating.
 
 ---
 
 ## 11. Feature summary
 
-| Area | Status |
-|---|---|
-| Home (new series, latest, last read) | Done |
-| Latest, search, explore with filters | Done (10-page cap) |
-| Comic detail, mark chapters read/unread | Done |
-| Reader (prev/next, zoom, save image) | Done |
-| Bookmarks with "new chapters" refresh | Done |
-| History | Done |
-| Theme setting (system/light/dark) | Done |
-| Backup / restore | Done |
-| Offline reading (chapter downloads) | Done (background downloads on Android) |
+All done: extensions with repos and updates, multi-language sources, Cloudflare handling (Android), Home / Latest (10-page cap) / Explore per source, comic detail, reader (zoom, auto-scroll, resume, save image), bookmarks with grouping and cancellable refresh, categories, moving a comic between sources, history, theme, backup / restore, Drive sync, offline downloads (background on Android), in-app updates, migrate source and Mihon / Comix.to import.
 
 ---
 
 ## 12. Open questions
 
-- **Formatting:** the code base predates the current `dart format` style. Reformatting everything in one commit would be a large, noisy diff. Decide whether to do it once.
+- **Formatting:** the code predates the current `dart format` style. Reformatting everything at once would be a large, noisy diff. Decide whether to do it.

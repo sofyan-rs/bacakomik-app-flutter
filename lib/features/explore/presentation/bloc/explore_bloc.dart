@@ -13,7 +13,7 @@ sealed class ExploreEvent {
 
 final class ExploreRequested extends ExploreEvent {
   const ExploreRequested({required ExploreFilter filter, int page = 1})
-      : super(filter, page);
+    : super(filter, page);
 }
 
 final class ExploreNextPageRequested extends ExploreEvent {

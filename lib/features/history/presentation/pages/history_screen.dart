@@ -11,7 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Riwayat tab: last read chapter per comic, grouped by day.
+/// History tab: last read chapter per comic, grouped by day.
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
@@ -69,7 +69,7 @@ class HistoryScreen extends StatelessWidget {
                   title: AppText.historyTab,
                   subtitle: latest.isEmpty
                       ? null
-                      : '${latest.length} ${AppText.comics} · '
+                      : '${AppText.count(latest.length, AppText.comic, AppText.comics)} · '
                             '${AppText.swipeToDelete}',
                   actions: [
                     if (latest.isNotEmpty)

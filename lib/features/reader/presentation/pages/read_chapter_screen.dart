@@ -16,12 +16,14 @@ import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settin
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
+import 'package:bacakomik_app/core/network/image_cache.dart';
 
 class ReadChapterScreen extends StatelessWidget {
   const ReadChapterScreen({
@@ -281,8 +283,13 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       final page = i;
       // Download into the disk cache only; decoding happens when the page
       // is shown, at screen width (see ChapterImg).
-      DefaultCacheManager()
-          .getSingleFile(_images[page], key: _images[page])
+      comicImageCache
+          .getSingleFile(
+            _images[page],
+            key: _images[page],
+            // Same headers as ChapterImg: it shares this download.
+            headers: _chapter?.imageHeaders ?? const {},
+          )
           .then((_) {}, onError: (_) {})
           .whenComplete(() => _onPageSettled(page));
     }
@@ -499,12 +506,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         onAction: () =>
             context.read<ReaderBloc>().add(ChapterRequested(widget.slug)),
       ),
-      ReaderError(:final message) => EmptyState(
-        icon: LucideIcons300.bug,
-        title: AppText.error,
+      ReaderError(:final message) => SourceError(
         message: message,
-        actionLabel: AppText.retry,
-        onAction: () =>
+        sourceId: ComicKey.sourceOf(widget.slug),
+        onRetry: () =>
             context.read<ReaderBloc>().add(ChapterRequested(widget.slug)),
       ),
       ReaderInitial() || ReaderLoading() => const Center(child: DotLoader()),
@@ -551,6 +556,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
             chapterImage: pages[index],
             isFile: chapter.isOffline,
             page: index + 1,
+            headers: chapter.imageHeaders,
             load: index < _loadLimit,
             fit: settings.pageFit,
             fitHeight: height,
@@ -591,6 +597,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
               chapterImage: pages[index],
               isFile: chapter.isOffline,
               page: index + 1,
+              headers: chapter.imageHeaders,
               load: index < _loadLimit,
               fit: settings.pageFit,
               fitHeight: settings.pageFit == PageFit.height

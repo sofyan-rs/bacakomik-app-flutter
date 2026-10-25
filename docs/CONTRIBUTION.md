@@ -1,162 +1,181 @@
-# Contributing
+# Contribution guide
 
-How to set up, build, and work on BacaKomik. Read [ARCHITECTURE.md](ARCHITECTURE.md) before a non-trivial change.
+Recipes for working on BacaKomik. Read [ARCHITECTURE.md](ARCHITECTURE.md) once first.
 
----
-
-## 1. Prerequisites
-
-- **Flutter** (current stable) with **Dart 3.13+**. Check with `flutter --version`.
-- **Android Studio** or the Android SDK command-line tools, with platform 37 and current build-tools. Run `flutter doctor` and fix what it reports.
-- **JDK 17** for Gradle.
-- A device or emulator on Android 7.0+ (API 24). Test on at least one recent Android (API 34+).
+§ numbers refer to this file; "ARCHITECTURE §n" to the other one.
 
 ---
 
-## 2. Build and run
+## 1. One-time setup
+
+1. Install **Flutter** stable with **Dart 3.13+**, the Android SDK (platform 37) and **JDK 17**. Run `flutter doctor` until it is clean.
+2. Use a device or emulator on Android 7.0+ (API 24); test on a recent one (API 34+) too. Cloudflare sources and Cronet need Google Play services.
+3. For extension work: [Bun](https://bun.sh) and access to the private `bacakomik-ext-source` repo.
+
+There is no server to configure. Content comes from the bundled extensions and the default repo `https://bacakomik-ext.kurodev.org/index.json`.
+
+---
+
+## 2. Build, run and recipes
 
 ```bash
 flutter pub get
-dart run build_runner build -d      # regenerate freezed / json / injectable / assets code
-flutter run                         # debug build on the connected device
-flutter analyze                     # must report "No issues found!"
-flutter test                        # unit and bloc tests, no device needed
+dart run build_runner build -d   # after changing @freezed, @JsonSerializable, injectable annotations or assets
+flutter run                      # emulator or test device only, see Recipe G
+flutter analyze                  # must say "No issues found!"
+flutter test
 ```
 
-`build_runner` has to run after you change anything annotated with `@freezed`, `@JsonSerializable`, `@injectable`/`@LazySingleton`/`@module`, or the assets. Generated files are committed, so commit them with the change that caused them.
+Generated files are committed: **commit them with the change that caused them.**
 
-Use a different API server with:
+### Recipe A: Add a screen or feature
+1. Create `lib/features/<name>/` with the layers it needs (ARCHITECTURE §3).
+2. Domain first: entity, repository interface, use cases. Put real rules here.
+3. Data: data source and `*RepositoryImpl` (`@LazySingleton(as: …)`, `runRemote` / `runLocal`).
+4. Presentation: bloc or cubit (`@injectable`), provided by its screen; page built from Dotline widgets, strings in `AppText` (ARCHITECTURE §5).
+5. Run `build_runner`, add tests (§5), run analyze, test and the domain grep.
+6. Update ARCHITECTURE.md (§3, §6, §7.1) if the design changed.
 
+Example: `migration` has `ImportLibrary` (domain), `PendingReadRepositoryImpl` (data), `MatchCubit` and `MatchScreen` (presentation).
+
+### Recipe B: Add a field to stored data
+1. Make it **nullable or defaulted**, so existing data still parses. Never rename or remove a field (§4).
+2. Add it to the model and entity, map it in `fromEntity` / `toEntity`, run `build_runner`.
+3. If the backup or sync format changes, bump its `formatVersion` (ARCHITECTURE §7.4, §7.6) and say in the PR whether old files still load.
+4. Test that old JSON without the field parses, then do the upgrade test (Recipe G).
+
+### Recipe C: Add a source method or host function
+- **Source method:** change the contract in `bacakomik-ext-source` (`types/bridge.d.ts`), then call it from `SeriesRemoteDataSource` with a DTO (`toEntity()`), passing comic keys. Test with `FakeSourceBackend`.
+- **Host function:** handle it in `ExtensionBridge.handle` and add it to the `ExtensionRuntime` prelude. **If old apps can't run scripts that use it, bump `supportedExtensionApi`.**
+
+### Recipe D: Try an unpublished extension in the app
+1. In the extension repo: `bun run build` (validates `src/`, writes `dist/`). `bun scripts/run.ts <id> smoke` tests one outside the app.
+2. Serve `dist/`:
+   ```bash
+   cd dist && bun -e "Bun.serve({port:8787, fetch(r){const p=new URL(r.url).pathname; return new Response(Bun.file('.'+(p==='/'?'/index.json':p)))}})"
+   ```
+3. `adb reverse tcp:8787 tcp:8787`, then in the app add the repo `http://localhost:8787/index.json` (More → Extensions → repos button) and install.
+
+**Bump the extension's `version` for every change** the app should pick up, including a new or changed `urlPatterns` (installed extensions keep the metadata they were installed with). Remove the local repo afterwards. Script `log()` shows in logcat as `[<sourceId>] …`.
+
+### Recipe E: Ship newer bundled extensions
 ```bash
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
+# in bacakomik-ext-source
+bun run build
+bun scripts/bundle.ts ../bacakomik-app-flutter/assets/extensions bacakomik voratoon
 ```
+`bundle.ts` replaces the folder and writes its `index.json`. Run `build_runner` (asset names change) and commit. Phones replace a bundled extension only when the bundled `version` is newer.
 
-(`10.0.2.2` is the host machine as seen from the Android emulator.) Without it, the app uses `https://api-bacakomik.kurodev.org`.
+### Recipe F: Publish a release
+1. Bump `version:` in `pubspec.yaml` (e.g. `1.6.0+13`); **the build number after `+` must increase.**
+2. Optionally write `.github/release-notes/v1.6.0.md` (otherwise notes come from commits).
+3. Commit, then `git tag v1.6.0 && git push origin v1.6.0`.
 
-### Release builds
+`.github/workflows/release.yml` checks the tag against the pubspec, runs analyze and tests, and publishes signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs as `BacaKomik-<version>-<abi>.apk` with a "Which APK?" table. **Don't rename the assets or that heading**: installed apps find updates through them.
 
-`flutter build apk --release` builds a signed APK and `flutter build appbundle --release` builds an `.aab`. Signing comes from `android/key.properties` (git-ignored) with `storeFile`, `storePassword`, `keyAlias`, `keyPassword`. Back up the keystore and its password: without them no update can be published for the same app id.
+Secrets (Settings → Secrets → Actions): `KEYSTORE_BASE64` (`base64 -w0 upload-keystore.jks`), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Local signing reads `android/key.properties` (git-ignored: `storeFile`, `storePassword`, `keyAlias`, `keyPassword`). **Back up the keystore and password**; without them no update can ship. By hand: `flutter build apk --release --split-per-abi` (per ABI), `flutter build apk --release` (universal), `flutter build appbundle --release`.
 
-Before a release, bump `version:` in `pubspec.yaml`. The build number after `+` must increase.
+### Recipe G: Test on a phone with real data
+> **Never `flutter run` on a phone whose library you want to keep.** On a versionCode mismatch it uninstalled the app first and wiped its bookmarks, history and downloads.
 
-### Publishing a release
+1. Install over the existing app; `-r` keeps the data:
+   ```bash
+   flutter build apk --release --split-per-abi
+   adb install -r build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+   ```
+   The APK must be signed with the same key (Recipe F). Drive sign-in only works with a key whose SHA-1 is registered as an Android OAuth client (`AppVariables.googleServerClientId`).
+2. **Upgrade test** (any storage, backup or sync change): install the current release, add bookmarks, categories and history, install the new build with `adb install -r`, check nothing is lost.
+3. **Logs:** release builds log `debugPrint` under the `flutter` tag. On phones with a small buffer, stream to a file before reproducing, and restart it after each reinstall:
+   ```bash
+   adb logcat -s flutter > flutter.log
+   ```
 
-Releases are built by `.github/workflows/release.yml` when a `v*` tag is pushed:
+---
 
-1. Bump `version:` in `pubspec.yaml` (for example `1.1.0+2`).
-2. Write the notes in `.github/release-notes/v1.1.0.md` (optional; without it GitHub generates notes from the commits).
-3. Commit, then `git tag v1.1.0 && git push origin v1.1.0`.
+## 3. Project map
 
-The workflow checks that the tag matches the pubspec version, runs analyze and tests, builds signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs, and publishes them as `BacaKomik-<version>-<abi>.apk` with an "Which APK?" table appended to the notes. Installed apps find the release through the GitHub API (ARCHITECTURE §1), so do not rename the assets or that heading.
+Folders are explained in ARCHITECTURE §3. Shared test fakes are in `test/helpers/`, sample data in `test/fixtures/`. Extensions live in the private `bacakomik-ext-source` repo.
 
-It needs these repository secrets (Settings → Secrets and variables → Actions):
+Reading order: run the app; ARCHITECTURE §3–§4; `features/home/` end to end (entity → repository → use case → `HomeBloc` → `HomeScreen`); ARCHITECTURE §8 with `core/source/`; `comic_list_state.dart` and `latest`; `features/bookmark/` and `core/storage/` with ARCHITECTURE §7.
 
-| Secret | Value |
+---
+
+## 4. Rules
+
+**Code**
+- `flutter analyze` clean (`flutter_lints`). `dart format` new files; in old files format only what you change (ARCHITECTURE §12).
+- `package:bacakomik_app/...` imports. Comment *why*; `///` on public and non-obvious things.
+- No `!` on values that can be null, no empty `catch`: return a `Failure` or `debugPrint`.
+- Strings in `AppText`, colours from `Dotline.of(context)`.
+
+**Layers and blocs**
+- Domain is plain Dart (ARCHITECTURE §3 grep). Repositories return `Either` via `runRemote` / `runLocal`.
+- Sources only through `SeriesRemoteDataSource` + DTOs; pass comic keys, never bare slugs. Site logic belongs in extensions.
+- Register with injectable (except tests and `lib/app/`).
+- Freezed sealed states (`initial / loading / loaded / error / noInternet`), errors via `SourceError`; events named after what happened.
+- Screen-only blocs are provided by the screen (ARCHITECTURE §4.2). Widgets call blocs, never use cases or repositories. No work in `build()`.
+
+**Data safety (non-negotiable)**
+
+| Rule | Why |
 |---|---|
-| `KEYSTORE_BASE64` | The keystore file, base64-encoded (`base64 -w0 upload-keystore.jks`) |
-| `KEYSTORE_PASSWORD` | `storePassword` |
-| `KEY_ALIAS` | `keyAlias` |
-| `KEY_PASSWORD` | `keyPassword` |
-
----
-
-## 3. Project structure
-
-See ARCHITECTURE §3. In short:
-
-- `lib/app/`: app shell, splash, root tabs (`RootTabs`).
-- `lib/core/`: DI, errors, network, Hive storage, shared entities/DTOs/widgets, constants.
-- `lib/features/<name>/{domain,data,presentation}`: one folder per feature.
-- `test/`: mirrors `lib/`. Shared fakes are in `test/helpers/` and sample data in `test/fixtures/`.
-- `docs/`: this guide and ARCHITECTURE.md.
-
-### Reading order for newcomers
-
-1. Run the app and click through every tab (what it does).
-2. ARCHITECTURE.md §3–§4.
-3. `features/home/` end to end: entity → repository → use case → `HomeBloc` → `HomeScreen`. Every remote feature follows this pattern.
-4. `core/presentation/bloc/comic_list_state.dart` and one of the paginated features (`latest`).
-5. `features/bookmark/` and `core/storage/` for local data, then ARCHITECTURE §7.
-
----
-
-## 4. Code conventions
-
-### General
-- Follow `flutter_lints` (`analysis_options.yaml`). `flutter analyze` must be clean.
-- Run `dart format` on new files. In existing files, format only what you change, so diffs stay readable (see ARCHITECTURE §12).
-- Use full `package:bacakomik_app/...` imports, not relative ones.
-- Comment *why*, not *what*. Use `///` docs on public types and on anything non-obvious (formats, ordering, compatibility).
-- Don't use `!` on values that can really be null, and don't swallow errors with an empty `catch`. Return a `Failure` or log with `debugPrint` (§6).
-- UI text goes in `AppText`, colours in `AppColors`. No inline strings or colour literals in widgets.
-
-### Layers
-- Domain code is plain Dart: no Flutter, Dio, Hive, `dart:io` or file_picker. Run the grep in ARCHITECTURE §3.
-- Repositories return `Either<Failure, T>`. Use `runRemote` for API calls and `runLocal` for storage.
-- New API endpoints go in `SeriesRemoteDataSource` with a DTO that has `toEntity()`. Widgets never see DTOs.
-- Register new classes with injectable annotations instead of building them by hand. The only exceptions are tests and `lib/app/`.
-
-### Bloc patterns
-- States are freezed sealed unions. Remote screens use `initial / loading / loaded / error / noInternet`.
-- Event names say what happened: `HomeStarted`, `SearchNextPageRequested`.
-- A bloc used by one screen is provided by that screen (ARCHITECTURE §4.2). Only add an app-wide provider in `lib/app/app.dart` when several screens share the state.
-- Widgets dispatch events or call cubit methods. They never call use cases or repositories directly.
-- Keep long-running work in blocs or use cases, never in `build()`.
-
-### Data safety (non-negotiable)
-- **Never rename or remove a stored JSON field** (ARCHITECTURE §7.2) without a migration. Adding a field is fine if it is nullable or has a default, so data already on the device still parses.
-- **Backup format changes bump `BackupRepositoryImpl.formatVersion`** (ARCHITECTURE §7.4), and the PR says whether files of the previous version can still be restored.
-- Any change to storage or backup needs a manual upgrade test: install the current release, add bookmarks and history, install the new build over it, and check that nothing was lost.
+| **Never rename or remove a stored JSON field** without a migration; new fields are nullable or defaulted (ARCHITECTURE §7.2) | Existing data must parse |
+| **Never change the comic key format** or an extension `id` (ARCHITECTURE §8.1) | Keys are in the library, history, downloads, backups, sync |
+| **Never write a Hive key that is non-ASCII or over 255 characters**; use `JsonBox` or `isValidHiveKey` (ARCHITECTURE §7.1) | Release builds corrupt the whole box. Keys from source data (slugs, titles) are the usual culprit |
+| **Backup format change → bump `BackupRepositoryImpl.formatVersion`**; say whether old files restore | Old files must not restore wrongly |
+| **Sync format change → bump `SyncRepositoryImpl.formatVersion`** | Other devices may run the old version |
+| User writes go through repositories; sync writes through data sources | `LibraryJournal` records user writes for sync |
+| Storage, backup or sync change → upgrade test (Recipe G) | Only proof nothing is lost |
 
 ---
 
 ## 5. Testing
 
-| Layer | How |
+| What | How |
 |---|---|
-| Repositories (remote) | Mock `ApiClient` with mocktail, use `FakeNetworkInfo`, feed JSON from `test/fixtures/api_fixtures.dart`. Assert the entity fields and the query sent. |
-| Repositories (local) | Real Hive in a temp directory via `setUpTempHive()` (`test/helpers/hive.dart`). |
-| Use cases | Mock the repository interfaces. |
-| Blocs / cubits | `bloc_test`, with mocked use cases or real ones over temp Hive. |
-| Storage / backup | History storage and the backup format are covered in `test/features/library_test.dart` and `test/features/backup_test.dart` (sample data in `test/fixtures/library_fixtures.dart`). |
-| Manual | Every tab and screen on a recent Android before each release, plus the upgrade test above when storage changed. |
+| Remote repositories | `FakeSourceRegistry` / `FakeSourceBackend` (`test/helpers/fake_source.dart`) with `test/fixtures/api_fixtures.dart` and `FakeNetworkInfo`; assert entities and recorded calls |
+| Local repositories | Real Hive in a temp dir: `setUpTempHive()` (`test/helpers/hive.dart`) |
+| Use cases / blocs | mocktail; `bloc_test` with mocked or real use cases |
+| Sources | `test/core/source_test.dart` |
+| Storage, backup, sync | `library_test`, `backup_test`, `sync_test`, `migrate_library_test` (`test/fixtures/library_fixtures.dart`); `test/core/box_recovery_test.dart` salvages a hand-built corrupt box |
+| Migration | `test/features/migration_test.dart` (Mihon protobuf, `urlPatterns`, CSV, `ImportLibrary`, pending reads) with `MemoryPendingReads` |
+| Manual | Every screen on a recent Android before a release, one Cloudflare source, one download, plus the upgrade test when storage changed |
 
-Every bug fix gets a regression test where it can be tested without a device.
+**Every bug fix gets a regression test** where possible. The JS engine, WebViews and Cronet don't run in `flutter test`: fake them, and test scripts in the extension repo.
 
 ---
 
 ## 6. Errors and logging
 
-- The data layer throws `ServerException` or `CacheException`. Repositories turn every error into a `Failure` (ARCHITECTURE §9).
-- Blocs show `NetworkFailure` as the no-internet placeholder and other failures as their message.
-- Log with `debugPrint`, never `print`. Never log full backup contents.
+Data layer throws, repositories return `Failure`, blocs show `noInternet` or `SourceError` (ARCHITECTURE §9). Log with `debugPrint`, never `print`, and **never log full backup or sync contents**. Phone logs: Recipe G.
 
 ---
 
 ## 7. Dependencies
 
-- Versions live in `pubspec.yaml`. Before adding a package, check that it is maintained, works on Android 7.0+, and is really needed.
-- `freezed`, the code generators (`injectable_generator`, `json_serializable`) and `hive_ce` are pinned for compatibility (ARCHITECTURE §10.1). Upgrade them in their own PR, then regenerate code and run all tests.
-- Upgrades of Flutter itself also go in their own PR, with a smoke test on a device.
+- Add a package only if it is maintained, works on Android 7.0+, and is needed.
+- `freezed`, the generators and `hive_ce` are pinned (ARCHITECTURE §10.1): upgrade in their own PR, regenerate, run all tests. Same for Flutter itself.
+- `flutter_inappwebview` (6.2 beta), `flutter_js`, `native_dio_adapter`, `cronet_http`: upgrades need a device test on a Cloudflare source.
+- **`flutter_local_notifications` needs `ActionBroadcastReceiver` declared in `android/app/src/main/AndroidManifest.xml`.** Without it the refresh Cancel button does nothing.
 
 ---
 
-## 8. Git workflow
+## 8. Git and pull requests
 
-- Branch from `main`: `feat/…`, `fix/…`, `refactor/…`, `docs/…`, `chore/…`.
-- Use [Conventional Commits](https://www.conventionalcommits.org/): `feat(reader): remember scroll position`, `fix(backup): accept missing history`.
-- Keep PRs small: one feature or fix per PR.
+- Branch from `main` (`feat/…`, `fix/…`, `refactor/…`, `docs/…`, `chore/…`). [Conventional Commits](https://www.conventionalcommits.org/): `feat(reader): remember scroll position`, `fix(backup): accept missing history`. One feature or fix per PR.
 
-### PR checklist
+PR checklist (also in `.github/pull_request_template.md`):
+
 - [ ] `flutter analyze` and `flutter test` pass.
 - [ ] Code regenerated with `build_runner` and committed, if annotations changed.
 - [ ] New domain logic and repositories have tests.
-- [ ] Data-safety rules (§4) respected; storage/backup changes tested with an upgrade install.
+- [ ] Data-safety rules (§4) respected; storage/backup/sync changes tested with an upgrade install.
 - [ ] UI checked in light and dark theme, on a phone and on a wide screen if layout changed.
+- [ ] Bundled extensions updated (§2) if the change needs newer extension versions.
 - [ ] ARCHITECTURE.md updated if the design changed.
 
 ---
 
 ## 9. Scope guard
 
-BacaKomik is a reader: **browse comics, read chapters, keep a local library.** Proposals for accounts, cloud sync or offline downloads start as a discussion issue, not a PR. Anything that changes stored data or backup files needs a migration plan first.
+BacaKomik is a reader: **browse comics from installed sources, read chapters, keep a library on the device** (optionally synced via the user's Drive). New sites are extensions. Accounts, a server-side library or site code in the app start as a discussion issue, not a PR. Changes to stored data, backup or sync need a migration plan first.

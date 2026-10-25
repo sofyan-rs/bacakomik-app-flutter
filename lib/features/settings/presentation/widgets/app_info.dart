@@ -10,7 +10,7 @@ import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// "Tentang aplikasi" sheet: version, description and a link to the
+/// "About the app" sheet: version, description and a link to the
 /// developer site.
 class AppInfo extends StatefulWidget {
   const AppInfo({super.key});

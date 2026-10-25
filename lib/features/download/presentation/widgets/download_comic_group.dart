@@ -89,7 +89,8 @@ class _DownloadComicGroupState extends State<DownloadComicGroup> {
             ),
             title: details.title,
             subtitleWidget: Text(
-              '${chapters.length} ${AppText.chapter} · ${formatBytes(size)}'
+              '${AppText.count(chapters.length, AppText.chapter, AppText.chapters)} · '
+                      '${formatBytes(size)}'
                   .toUpperCase(),
               style: DotlineText.data.copyWith(color: c.inkMuted),
             ),

@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 
 /// Selected main tab, shared so a screen can send the user to another tab
-/// (Beranda's search button opens Jelajah with the search field focused; a
-/// genre chip on a comic opens Jelajah filtered by that genre). Provided
+/// (Home's search button opens Explore with the search field focused; a
+/// genre chip on a comic opens Explore filtered by that genre). Provided
 /// above the [Navigator], so pushed routes can use it too.
 class RootTabs extends ChangeNotifier {
   static const home = 0;
@@ -13,13 +13,13 @@ class RootTabs extends ChangeNotifier {
 
   var _searchRequests = 0;
 
-  /// Bumped each time search is requested; Jelajah focuses its field when
+  /// Bumped each time search is requested; Explore focuses its field when
   /// this changes.
   int get searchRequests => _searchRequests;
 
   var _filterRequests = 0;
 
-  /// Bumped each time another screen sets Jelajah's filter; Jelajah loads
+  /// Bumped each time another screen sets Explore's filter; Explore loads
   /// again when this changes.
   int get filterRequests => _filterRequests;
 
@@ -35,7 +35,7 @@ class RootTabs extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Shows Jelajah after its filter was set elsewhere.
+  /// Shows Explore after its filter was set elsewhere.
   void openExploreFiltered() {
     _index = explore;
     _filterRequests++;
@@ -44,11 +44,8 @@ class RootTabs extends ChangeNotifier {
 }
 
 class RootTabsScope extends InheritedNotifier<RootTabs> {
-  const RootTabsScope({
-    super.key,
-    required RootTabs tabs,
-    required super.child,
-  }) : super(notifier: tabs);
+  const RootTabsScope({super.key, required RootTabs tabs, required super.child})
+    : super(notifier: tabs);
 
   /// Rebuilds the caller when the tab changes.
   static RootTabs of(BuildContext context) =>

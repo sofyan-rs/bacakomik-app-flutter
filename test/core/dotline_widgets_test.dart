@@ -34,7 +34,7 @@ void main() {
     await tester.pumpWidget(_wrap(const DotMeter(value: 12, total: 24)));
     expect(
       tester.getSemantics(find.byType(DotMeter)),
-      matchesSemantics(value: '12 dari 24'),
+      matchesSemantics(value: '12 of 24'),
     );
   });
 
@@ -59,9 +59,9 @@ void main() {
           selectedIndex: 0,
           onSelected: (i) => tapped = i,
           items: const [
-            FloatingNavItem(icon: LucideIcons300.house, label: 'Beranda'),
-            FloatingNavItem(icon: LucideIcons300.compass, label: 'Jelajah'),
-            FloatingNavItem(icon: LucideIcons300.history, label: 'Riwayat'),
+            FloatingNavItem(icon: LucideIcons300.house, label: 'Home'),
+            FloatingNavItem(icon: LucideIcons300.compass, label: 'Explore'),
+            FloatingNavItem(icon: LucideIcons300.history, label: 'History'),
           ],
         ),
       ),
@@ -69,7 +69,7 @@ void main() {
 
     await tester.tap(find.byIcon(LucideIcons300.history));
     expect(tapped, 2);
-    expect(find.bySemanticsLabel('Jelajah'), findsOneWidget);
+    expect(find.bySemanticsLabel('Explore'), findsOneWidget);
   });
 
   testWidgets('FloatingNavBar as a rail stacks tabs vertically', (
@@ -83,9 +83,9 @@ void main() {
           selectedIndex: 0,
           onSelected: (i) => tapped = i,
           items: const [
-            FloatingNavItem(icon: LucideIcons300.house, label: 'Beranda'),
-            FloatingNavItem(icon: LucideIcons300.compass, label: 'Jelajah'),
-            FloatingNavItem(icon: LucideIcons300.history, label: 'Riwayat'),
+            FloatingNavItem(icon: LucideIcons300.house, label: 'Home'),
+            FloatingNavItem(icon: LucideIcons300.compass, label: 'Explore'),
+            FloatingNavItem(icon: LucideIcons300.history, label: 'History'),
           ],
         ),
       ),
@@ -108,16 +108,16 @@ void main() {
           selected: 'system',
           onChanged: (v) => changed = v,
           segments: const [
-            Segment(value: 'system', label: 'Sistem'),
-            Segment(value: 'light', label: 'Terang'),
-            Segment(value: 'dark', label: 'Gelap'),
+            Segment(value: 'system', label: 'System'),
+            Segment(value: 'light', label: 'Light'),
+            Segment(value: 'dark', label: 'Dark'),
           ],
         ),
       ),
     );
 
-    expect(find.text('SISTEM'), findsOneWidget);
-    await tester.tap(find.text('GELAP'));
+    expect(find.text('SYSTEM'), findsOneWidget);
+    await tester.tap(find.text('DARK'));
     expect(changed, 'dark');
   });
 
@@ -156,16 +156,16 @@ void main() {
         const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ScreenHeader(title: 'Jelajah', subtitle: '6 komik'),
+            ScreenHeader(title: 'Explore', subtitle: '6 comics'),
             StatTile(value: '431', label: 'Chapter dibaca'),
             UpdateBadge(count: 3),
-            NewBadge(label: 'Baru'),
+            NewBadge(label: 'New'),
           ],
         ),
       ),
     );
-    expect(find.text('JELAJAH'), findsOneWidget);
-    expect(find.text('+3'), findsOneWidget);
-    expect(find.text('BARU'), findsOneWidget);
+    expect(find.text('EXPLORE'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('NEW'), findsOneWidget);
   });
 }

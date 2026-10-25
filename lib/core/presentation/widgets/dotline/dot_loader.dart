@@ -39,7 +39,7 @@ class _DotLoaderState extends State<DotLoader>
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     return Semantics(
-      label: 'Memuat',
+      label: 'Loading',
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {

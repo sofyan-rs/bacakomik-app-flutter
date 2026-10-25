@@ -17,6 +17,7 @@ export 'list_group.dart';
 export 'pressable.dart';
 export 'round_icon_button.dart';
 export 'screen_header.dart';
+export 'scrollable_tabs.dart';
 export 'search_field.dart';
 export 'section_label.dart';
 export 'segmented_control.dart';

@@ -19,7 +19,7 @@ class ReaderRepositoryImpl implements ReaderRepository {
   Future<Either<Failure, ChapterContent>> getChapter(String chapterSlug) async {
     final separator = chapterSlug.lastIndexOf('/');
     if (separator <= 0) {
-      return left(ServerFailure('Chapter tidak valid: $chapterSlug'));
+      return left(ServerFailure('Invalid chapter: $chapterSlug'));
     }
     final seriesSlug = chapterSlug.substring(0, separator);
     final number = chapterSlug.substring(separator + 1);
@@ -38,6 +38,7 @@ class ReaderRepositoryImpl implements ReaderRepository {
             ? ApiFormat.chapterSlug(seriesSlug, res.next!)
             : null,
         images: res.images,
+        imageHeaders: res.headers,
       );
     });
   }

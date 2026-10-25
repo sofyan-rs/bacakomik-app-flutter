@@ -7,6 +7,7 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/widgets/duplicate_sheet.dart';
 import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
 import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
@@ -15,6 +16,8 @@ import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.d
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
+import 'package:bacakomik_app/features/category/presentation/widgets/set_categories_sheet.dart';
 
 /// Detail bottom bar: bookmark toggle + continue/start reading. While
 /// chapters are selected it switches to download / mark read / unread /
@@ -214,19 +217,46 @@ class ComicAppBar extends StatelessWidget {
     unselectAllChapter();
     showSnackBar(
       context: context,
-      message: '${chapters.length} ${AppText.downloadQueued}',
+      message:
+          '${AppText.count(chapters.length, AppText.chapterLower, AppText.chaptersLower)} '
+          '${AppText.downloadQueued}',
     );
   }
 
-  void _toggleBookmark(BuildContext context, bool bookmarked) {
+  Future<void> _toggleBookmark(BuildContext context, bool bookmarked) async {
     final cubit = context.read<BookmarkCubit>();
     if (bookmarked) {
       cubit.removeBookmark(comicSlug);
       showSnackBar(context: context, message: AppText.removedFromBookmark);
-    } else {
-      cubit.addBookmark(comicDetails, comicSlug);
-      showSnackBar(context: context, message: AppText.addedToBookmark);
+      return;
     }
+    final existing = cubit.sameSeriesAs(comicSlug, comicDetails.title);
+    if (existing.isEmpty) return _add(context);
+    final choice = await showDuplicateSheet(context, existing.first);
+    if (!context.mounted || choice == null) return;
+    switch (choice) {
+      case DuplicateChoice.migrate:
+        await cubit.migrate(
+          from: existing.first.slug,
+          to: comicSlug,
+          details: comicDetails,
+        );
+        if (!context.mounted) return;
+        context.read<HistoryCubit>().load();
+        showSnackBar(context: context, message: AppText.migrated);
+      case DuplicateChoice.add:
+        await _add(context);
+    }
+  }
+
+  /// Bookmarks the comic, then offers to put it in categories when there
+  /// are any.
+  Future<void> _add(BuildContext context) async {
+    await context.read<BookmarkCubit>().addBookmark(comicDetails, comicSlug);
+    if (!context.mounted) return;
+    showSnackBar(context: context, message: AppText.addedToBookmark);
+    if (context.read<CategoryCubit>().state.categories.isEmpty) return;
+    await showSetCategoriesSheet(context, {comicSlug}, skippable: true);
   }
 }
 

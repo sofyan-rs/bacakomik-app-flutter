@@ -6,6 +6,7 @@ import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:bacakomik_app/core/network/image_cache.dart';
 
 /// 2:3 cover with a faint dot grid while loading (no shimmer). Optional
 /// type label pinned top-left and an [overlay] (badge, rank number).
@@ -46,6 +47,7 @@ class ComicCover extends StatelessWidget {
               // Decode at the size shown, not the source size: list
               // thumbnails are 44 wide while covers are often 600+.
               builder: (context, constraints) => CachedNetworkImage(
+                cacheManager: comicImageCache,
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 memCacheWidth: _decodeWidth(context, constraints.maxWidth),
@@ -54,11 +56,12 @@ class ComicCover extends StatelessWidget {
                 errorWidget: (_, _, _) => const DotGridPlaceholder(),
               ),
             ),
-          if (typeLabel != null)
+          // "-" is what a source without a format maps to.
+          if (typeLabel case final label? when label != '-' && label.isNotEmpty)
             Positioned(
               top: DotSpace.s2,
               left: DotSpace.s2,
-              child: TypeLabel(typeLabel!),
+              child: TypeLabel(label),
             ),
           ?overlay,
         ],

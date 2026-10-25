@@ -5,7 +5,7 @@ import 'package:bacakomik_app/features/history/domain/entities/read_history.dart
 class HistoryDay {
   const HistoryDay(this.label, this.items);
 
-  /// "Hari ini", "Kemarin" or `19 Okt 2026`.
+  /// "Today", "Yesterday" or `19 Oct 2026`.
   final String label;
   final List<ComicLatestHistory> items;
 
@@ -14,14 +14,14 @@ class HistoryDay {
     'Feb',
     'Mar',
     'Apr',
-    'Mei',
+    'May',
     'Jun',
     'Jul',
-    'Agu',
+    'Aug',
     'Sep',
-    'Okt',
+    'Oct',
     'Nov',
-    'Des',
+    'Dec',
   ];
 
   /// Groups [latest] (newest first, one entry per comic) by local day.

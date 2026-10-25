@@ -1,4 +1,3 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
@@ -7,7 +6,8 @@ import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_
 import 'package:bacakomik_app/features/latest/presentation/bloc/latest_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 
 /// Paginated latest chapters, in the same list group rows as the home tab.
 class LatestChapterMore extends StatefulWidget {
@@ -98,12 +98,10 @@ class _LatestChapterMoreState extends State<LatestChapterMore> {
             ),
           ),
           ComicListNoInternet() => EmptyState.offline(onAction: _refresh),
-          ComicListError(:final message) => EmptyState(
-            icon: LucideIcons300.bug,
-            title: AppText.error,
+          ComicListError(:final message) => SourceError(
             message: message,
-            actionLabel: AppText.retry,
-            onAction: _refresh,
+            sourceId: context.read<SourcesCubit>().state.activeId,
+            onRetry: _refresh,
           ),
           ComicListInitial() ||
           ComicListLoading() => const Center(child: DotLoader()),

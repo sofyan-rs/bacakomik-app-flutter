@@ -45,7 +45,7 @@ class DotMenuButton extends StatelessWidget {
         fixedSize: const WidgetStatePropertyAll(Size.fromWidth(248)),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DotRadius.l),
+            borderRadius: BorderRadius.circular(DotRadius.m),
             side: BorderSide(color: c.line),
           ),
         ),

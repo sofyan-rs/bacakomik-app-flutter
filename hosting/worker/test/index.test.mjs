@@ -114,3 +114,18 @@ test('other paths', async () => {
   );
   assert.equal(post.status, 405);
 });
+
+test('comics from other sources get a page without an API call', async () => {
+  globalThis.fetch = async () => assert.fail('no API call expected');
+  for (const path of [
+    '/series/voratoon:solo-leveling',
+    '/series/voratoon%3Asolo-leveling',
+  ]) {
+    const res = await get(path);
+    assert.equal(res.status, 200);
+    const body = await res.text();
+    assert.match(body, /Solo Leveling/);
+    assert.match(body, /VoraToon/);
+    assert.match(body, /series\/voratoon:solo-leveling/);
+  }
+});

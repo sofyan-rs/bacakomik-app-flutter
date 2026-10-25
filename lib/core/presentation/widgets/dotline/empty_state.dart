@@ -20,9 +20,9 @@ class EmptyState extends StatelessWidget {
   /// No connection, with a retry button.
   const EmptyState.offline({
     super.key,
-    this.title = 'Tidak ada koneksi',
-    this.message = 'Periksa internet kamu, lalu coba lagi.',
-    this.actionLabel = 'Coba lagi',
+    this.title = 'No connection',
+    this.message = 'Check your internet, then try again.',
+    this.actionLabel = 'Try again',
     required this.onAction,
   }) : icon = LucideIcons300.wifiOff;
 

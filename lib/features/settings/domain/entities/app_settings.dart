@@ -20,6 +20,18 @@ enum ReadingDirection {
 /// How a page is scaled in the reader.
 enum PageFit { width, height }
 
+/// What the tabs on the Bookmarks screen split bookmarks by.
+enum BookmarkGrouping {
+  /// All / Updated / Completed.
+  status,
+
+  /// One tab per source.
+  source,
+
+  /// One tab per user category, plus Uncategorized.
+  category,
+}
+
 /// Auto-scroll speed levels; each level scrolls [autoScrollStep] px/s.
 const autoScrollMin = 1;
 const autoScrollMax = 10;
@@ -40,5 +52,6 @@ abstract class AppSettings with _$AppSettings {
 
     /// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
     @Default(3) int autoScrollSpeed,
+    @Default(BookmarkGrouping.status) BookmarkGrouping bookmarkGrouping,
   }) = _AppSettings;
 }

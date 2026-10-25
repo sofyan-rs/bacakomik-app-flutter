@@ -72,7 +72,7 @@ class _RootScreenState extends State<RootScreen> {
     );
   }
 
-  /// Reacts to the end of an update check, from app start or from Lainnya.
+  /// Reacts to the end of an update check, from app start or from More.
   void _onUpdateChecked(BuildContext context, UpdateState state) {
     switch (state) {
       case UpdateAvailable(:final release):

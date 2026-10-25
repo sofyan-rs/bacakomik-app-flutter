@@ -37,7 +37,7 @@ class DotTopBar extends StatelessWidget {
         children: [
           RoundIconButton(
             icon: LucideIcons300.chevronLeft,
-            semanticLabel: 'Kembali',
+            semanticLabel: 'Back',
             onTap: onBack ?? () => Navigator.of(context).maybePop(),
           ),
           const SizedBox(width: DotSpace.s3),

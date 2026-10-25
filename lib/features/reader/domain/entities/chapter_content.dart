@@ -12,6 +12,9 @@ abstract class ChapterContent with _$ChapterContent {
     String? nextChapterSlug,
     required List<String> images,
 
+    /// Headers the source requires on image requests.
+    @Default({}) Map<String, String> imageHeaders,
+
     /// True when [images] are file paths of a downloaded chapter.
     @Default(false) bool isOffline,
   }) = _ChapterContent;

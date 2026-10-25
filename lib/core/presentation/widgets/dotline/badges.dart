@@ -32,7 +32,7 @@ class NewBadge extends StatelessWidget {
   }
 }
 
-/// `accent` pill with the new chapter count: "+3".
+/// `accent` pill with the new chapter count: "3".
 class UpdateBadge extends StatelessWidget {
   const UpdateBadge({super.key, required this.count});
 
@@ -48,7 +48,7 @@ class UpdateBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(DotRadius.pill),
       ),
       child: Text(
-        '+$count',
+        '$count',
         style: DotlineText.data.copyWith(color: c.onAccent),
       ),
     );
@@ -76,6 +76,31 @@ class CountBadge extends StatelessWidget {
       child: Text(
         '$count',
         style: DotlineText.data.copyWith(color: c.onInk, height: 1),
+      ),
+    );
+  }
+}
+
+/// Small `ink` pill with a language code over a cover: "ID", "EN".
+class LangBadge extends StatelessWidget {
+  const LangBadge({super.key, required this.lang});
+
+  /// ISO 639-1 code, shown upper-case.
+  final String lang;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    return Container(
+      // Same size as [UpdateBadge], which sits next to it on covers.
+      padding: const EdgeInsets.symmetric(horizontal: DotSpace.s2, vertical: 3),
+      decoration: BoxDecoration(
+        color: c.ink,
+        borderRadius: BorderRadius.circular(DotRadius.pill),
+      ),
+      child: Text(
+        lang.toUpperCase(),
+        style: DotlineText.data.copyWith(color: c.onInk),
       ),
     );
   }

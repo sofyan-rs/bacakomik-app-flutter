@@ -5,7 +5,7 @@ import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider_card.dart';
 import 'package:flutter/material.dart';
 
-/// "SERI BARU" horizontal strip.
+/// "NEW SERIES" horizontal strip.
 class ComicSlider extends StatelessWidget {
   const ComicSlider({super.key, required this.state});
 

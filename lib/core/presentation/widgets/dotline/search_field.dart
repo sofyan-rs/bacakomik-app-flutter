@@ -8,7 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 /// 52-high `surfaceRaised` search pill.
 ///
 /// With [onTap] and no [controller] it is a button that opens search
-/// (Jelajah); otherwise it is a text input.
+/// (Explore); otherwise it is a text input.
 class SearchField extends StatelessWidget {
   const SearchField({
     super.key,
@@ -79,7 +79,7 @@ class SearchField extends StatelessWidget {
                       onTap: onClear,
                       child: Semantics(
                         button: true,
-                        label: 'Hapus',
+                        label: 'Clear',
                         child: Icon(
                           LucideIcons300.x,
                           size: DotSize.iconSmall,

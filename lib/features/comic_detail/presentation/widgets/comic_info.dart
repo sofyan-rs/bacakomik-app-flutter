@@ -7,11 +7,19 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:flutter/material.dart';
 
-/// Meta line, title, author, three stat tiles, synopsis and genres.
+/// Meta line, title, author, source, three stat tiles, synopsis and genres.
 class ComicInfo extends StatefulWidget {
-  const ComicInfo({super.key, required this.details, this.onGenreTap});
+  const ComicInfo({
+    super.key,
+    required this.details,
+    this.source,
+    this.onGenreTap,
+  });
 
   final ComicDetails details;
+
+  /// Where the series comes from, e.g. `VoraToon · ID`; hidden when null.
+  final String? source;
 
   /// Tapping a genre chip; null leaves the chips inert.
   final void Function(Genre genre)? onGenreTap;
@@ -37,7 +45,11 @@ class _ComicInfoState extends State<ComicInfo> {
     final c = Dotline.of(context);
     final d = widget.details;
     final year = ComicInfo.year(d.released);
-    final meta = [d.type, d.status, if (year != '-') year].join(' · ');
+    final meta = [
+      if (d.type != '-') d.type,
+      d.status,
+      if (year != '-') year,
+    ].join(' · ');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,6 +67,14 @@ class _ComicInfoState extends State<ComicInfo> {
           Text(
             d.author,
             style: DotlineText.bodyS.copyWith(color: c.inkMuted),
+            textAlign: TextAlign.center,
+          ),
+        ],
+        if (widget.source case final source?) ...[
+          const SizedBox(height: DotSpace.s2),
+          Text(
+            '${AppText.sourceFrom} $source'.toUpperCase(),
+            style: DotlineText.label.copyWith(color: c.inkFaint),
             textAlign: TextAlign.center,
           ),
         ],

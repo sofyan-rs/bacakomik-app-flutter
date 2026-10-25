@@ -1,7 +1,7 @@
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
-import 'package:bacakomik_app/features/update/domain/entities/app_version.dart';
+import 'package:bacakomik_app/core/utils/version.dart';
 import 'package:bacakomik_app/features/update/domain/entities/update_progress.dart';
 import 'package:bacakomik_app/features/update/domain/repositories/update_repository.dart';
 import 'package:fpdart/fpdart.dart';

@@ -6,7 +6,7 @@ import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_
 import 'package:bacakomik_app/features/latest/presentation/pages/latest_chapter_screen.dart';
 import 'package:flutter/material.dart';
 
-/// "CHAPTER TERBARU" section of the home tab.
+/// "LATEST CHAPTERS" section of the home tab.
 class LatestChapter extends StatelessWidget {
   const LatestChapter({super.key, required this.state});
 

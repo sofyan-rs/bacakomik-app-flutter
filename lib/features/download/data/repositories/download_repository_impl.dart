@@ -272,6 +272,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
               index: i,
               url: images[i],
               path: planned[i],
+              headers: content.imageHeaders,
             ),
           );
         }

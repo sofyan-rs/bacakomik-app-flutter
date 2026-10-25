@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LibraryBackup {
 
- List<Bookmark> get bookmarks; List<ReadHistory> get history;
+ List<Bookmark> get bookmarks; List<ReadHistory> get history; List<LibraryCategory> get categories; List<ComicCategories> get comicCategories;
 /// Create a copy of LibraryBackup
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $LibraryBackupCopyWith<LibraryBackup> get copyWith => _$LibraryBackupCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as LibraryBackup;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LibraryBackup&&const DeepCollectionEquality().equals(other.bookmarks, _this.bookmarks)&&const DeepCollectionEquality().equals(other.history, _this.history));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LibraryBackup&&const DeepCollectionEquality().equals(other.bookmarks, _this.bookmarks)&&const DeepCollectionEquality().equals(other.history, _this.history)&&const DeepCollectionEquality().equals(other.categories, _this.categories)&&const DeepCollectionEquality().equals(other.comicCategories, _this.comicCategories));
 }
 
 
 @override
 int get hashCode {
   final _this = this as LibraryBackup;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.bookmarks),const DeepCollectionEquality().hash(_this.history));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.bookmarks),const DeepCollectionEquality().hash(_this.history),const DeepCollectionEquality().hash(_this.categories),const DeepCollectionEquality().hash(_this.comicCategories));
 }
 
 @override
 String toString() {
   final _this = this as LibraryBackup;
-  return 'LibraryBackup(bookmarks: ${_this.bookmarks}, history: ${_this.history})';
+  return 'LibraryBackup(bookmarks: ${_this.bookmarks}, history: ${_this.history}, categories: ${_this.categories}, comicCategories: ${_this.comicCategories})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $LibraryBackupCopyWith<$Res>  {
   factory $LibraryBackupCopyWith(LibraryBackup value, $Res Function(LibraryBackup) _then) = _$LibraryBackupCopyWithImpl;
 @useResult
 $Res call({
- List<Bookmark> bookmarks, List<ReadHistory> history
+ List<Bookmark> bookmarks, List<ReadHistory> history, List<LibraryCategory> categories, List<ComicCategories> comicCategories
 });
 
 
@@ -68,11 +68,13 @@ class _$LibraryBackupCopyWithImpl<$Res>
 
 /// Create a copy of LibraryBackup
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? bookmarks = null,Object? history = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? bookmarks = null,Object? history = null,Object? categories = null,Object? comicCategories = null,}) {
   return _then(LibraryBackup(
 bookmarks: null == bookmarks ? _self.bookmarks : bookmarks // ignore: cast_nullable_to_non_nullable
 as List<Bookmark>,history: null == history ? _self.history : history // ignore: cast_nullable_to_non_nullable
-as List<ReadHistory>,
+as List<ReadHistory>,categories: null == categories ? _self.categories : categories // ignore: cast_nullable_to_non_nullable
+as List<LibraryCategory>,comicCategories: null == comicCategories ? _self.comicCategories : comicCategories // ignore: cast_nullable_to_non_nullable
+as List<ComicCategories>,
   ));
 }
 
@@ -157,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Bookmark> bookmarks,  List<ReadHistory> history)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  List<LibraryCategory> categories,  List<ComicCategories> comicCategories)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LibraryBackup() when $default != null:
-return $default(_that.bookmarks,_that.history);case _:
+return $default(_that.bookmarks,_that.history,_that.categories,_that.comicCategories);case _:
   return orElse();
 
 }
@@ -178,10 +180,10 @@ return $default(_that.bookmarks,_that.history);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Bookmark> bookmarks,  List<ReadHistory> history)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  List<LibraryCategory> categories,  List<ComicCategories> comicCategories)  $default,) {final _that = this;
 switch (_that) {
 case _LibraryBackup():
-return $default(_that.bookmarks,_that.history);case _:
+return $default(_that.bookmarks,_that.history,_that.categories,_that.comicCategories);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +200,10 @@ return $default(_that.bookmarks,_that.history);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Bookmark> bookmarks,  List<ReadHistory> history)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Bookmark> bookmarks,  List<ReadHistory> history,  List<LibraryCategory> categories,  List<ComicCategories> comicCategories)?  $default,) {final _that = this;
 switch (_that) {
 case _LibraryBackup() when $default != null:
-return $default(_that.bookmarks,_that.history);case _:
+return $default(_that.bookmarks,_that.history,_that.categories,_that.comicCategories);case _:
   return null;
 
 }
@@ -213,7 +215,7 @@ return $default(_that.bookmarks,_that.history);case _:
 
 
 class _LibraryBackup extends LibraryBackup {
-  const _LibraryBackup({ List<Bookmark> bookmarks = const [],  List<ReadHistory> history = const []}): _bookmarks = bookmarks,_history = history,super._();
+  const _LibraryBackup({ List<Bookmark> bookmarks = const [],  List<ReadHistory> history = const [],  List<LibraryCategory> categories = const [],  List<ComicCategories> comicCategories = const []}): _bookmarks = bookmarks,_history = history,_categories = categories,_comicCategories = comicCategories,super._();
   
 
  final  List<Bookmark> _bookmarks;
@@ -230,6 +232,20 @@ class _LibraryBackup extends LibraryBackup {
   return EqualUnmodifiableListView(_history);
 }
 
+ final  List<LibraryCategory> _categories;
+@override@JsonKey() List<LibraryCategory> get categories {
+  if (_categories is EqualUnmodifiableListView) return _categories;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_categories);
+}
+
+ final  List<ComicCategories> _comicCategories;
+@override@JsonKey() List<ComicCategories> get comicCategories {
+  if (_comicCategories is EqualUnmodifiableListView) return _comicCategories;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_comicCategories);
+}
+
 
 /// Create a copy of LibraryBackup
 /// with the given fields replaced by the non-null parameter values.
@@ -241,18 +257,18 @@ _$LibraryBackupCopyWith<_LibraryBackup> get copyWith => __$LibraryBackupCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LibraryBackup&&const DeepCollectionEquality().equals(other.bookmarks, _bookmarks)&&const DeepCollectionEquality().equals(other.history, _history));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LibraryBackup&&const DeepCollectionEquality().equals(other.bookmarks, _bookmarks)&&const DeepCollectionEquality().equals(other.history, _history)&&const DeepCollectionEquality().equals(other.categories, _categories)&&const DeepCollectionEquality().equals(other.comicCategories, _comicCategories));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_bookmarks),const DeepCollectionEquality().hash(_history));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_bookmarks),const DeepCollectionEquality().hash(_history),const DeepCollectionEquality().hash(_categories),const DeepCollectionEquality().hash(_comicCategories));
 }
 
 @override
 String toString() {
-    return 'LibraryBackup(bookmarks: $bookmarks, history: $history)';
+    return 'LibraryBackup(bookmarks: $bookmarks, history: $history, categories: $categories, comicCategories: $comicCategories)';
 }
 
 
@@ -263,7 +279,7 @@ abstract mixin class _$LibraryBackupCopyWith<$Res> implements $LibraryBackupCopy
   factory _$LibraryBackupCopyWith(_LibraryBackup value, $Res Function(_LibraryBackup) _then) = __$LibraryBackupCopyWithImpl;
 @override @useResult
 $Res call({
- List<Bookmark> bookmarks, List<ReadHistory> history
+ List<Bookmark> bookmarks, List<ReadHistory> history, List<LibraryCategory> categories, List<ComicCategories> comicCategories
 });
 
 
@@ -280,11 +296,13 @@ class __$LibraryBackupCopyWithImpl<$Res>
 
 /// Create a copy of LibraryBackup
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? bookmarks = null,Object? history = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? bookmarks = null,Object? history = null,Object? categories = null,Object? comicCategories = null,}) {
   return _then(_LibraryBackup(
 bookmarks: null == bookmarks ? _self._bookmarks : bookmarks // ignore: cast_nullable_to_non_nullable
 as List<Bookmark>,history: null == history ? _self._history : history // ignore: cast_nullable_to_non_nullable
-as List<ReadHistory>,
+as List<ReadHistory>,categories: null == categories ? _self._categories : categories // ignore: cast_nullable_to_non_nullable
+as List<LibraryCategory>,comicCategories: null == comicCategories ? _self._comicCategories : comicCategories // ignore: cast_nullable_to_non_nullable
+as List<ComicCategories>,
   ));
 }
 

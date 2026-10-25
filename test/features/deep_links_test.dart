@@ -36,5 +36,6 @@ void main() {
   test('placeholder title from the slug', () {
     expect(DeepLinks.titleFromSlug('magic-emperor'), 'Magic Emperor');
     expect(DeepLinks.titleFromSlug('one--piece'), 'One Piece');
+    expect(DeepLinks.titleFromSlug('voratoon:magic-emperor'), 'Magic Emperor');
   });
 }

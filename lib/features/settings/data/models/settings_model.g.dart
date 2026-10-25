@@ -32,6 +32,13 @@ SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
       keepScreenOn: json['keepScreenOn'] as bool? ?? true,
       pageGap: json['pageGap'] as bool? ?? false,
       autoScrollSpeed: (json['autoScrollSpeed'] as num?)?.toInt() ?? 3,
+      bookmarkGrouping:
+          $enumDecodeNullable(
+            _$BookmarkGroupingEnumMap,
+            json['bookmarkGrouping'],
+            unknownValue: BookmarkGrouping.status,
+          ) ??
+          BookmarkGrouping.status,
     );
 
 Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
@@ -42,6 +49,7 @@ Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
       'keepScreenOn': instance.keepScreenOn,
       'pageGap': instance.pageGap,
       'autoScrollSpeed': instance.autoScrollSpeed,
+      'bookmarkGrouping': _$BookmarkGroupingEnumMap[instance.bookmarkGrouping]!,
     };
 
 const _$AppThemeModeEnumMap = {
@@ -57,3 +65,9 @@ const _$ReadingDirectionEnumMap = {
 };
 
 const _$PageFitEnumMap = {PageFit.width: 'width', PageFit.height: 'height'};
+
+const _$BookmarkGroupingEnumMap = {
+  BookmarkGrouping.status: 'status',
+  BookmarkGrouping.source: 'source',
+  BookmarkGrouping.category: 'category',
+};

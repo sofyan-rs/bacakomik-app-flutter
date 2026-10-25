@@ -3,9 +3,11 @@
 //
 // - /.well-known/assetlinks.json lets Android verify the App Link, so the
 //   link opens BacaKomik directly when it is installed.
-// - /series/<slug> is the fallback page when it is not (or when the link
-//   is opened in a browser). It carries Open Graph tags with the series
-//   title, cover and synopsis so chat apps show a preview.
+// - /series/<key> is the fallback page when it is not (or when the link
+//   is opened in a browser). <key> is a slug for the default BacaKomik
+//   source, which gets Open Graph tags with the series title, cover and
+//   synopsis so chat apps show a preview; other sources' comics are
+//   `<source>:<slug>` and only get a title made from the slug.
 // - / is the app's home page (what the app does, download, privacy link),
 //   also the homepage URL of the Google sign-in consent screen.
 // - /privacy-policy is the privacy policy, linked from the Google sign-in consent
@@ -29,6 +31,9 @@ const ISSUES =
 // Shown on the privacy page. Bump when the policy text changes.
 const PRIVACY_UPDATED = '21 Oktober 2026';
 
+// Display names of the extension sources the app ships; others show their id.
+const SOURCE_NAMES = { voratoon: 'VoraToon' };
+
 // Series pages are cached at the edge for this long, in seconds.
 const PAGE_TTL = 60 * 60;
 
@@ -43,8 +48,16 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/.well-known/assetlinks.json') return assetLinks();
 
-    const match = url.pathname.match(/^\/series\/([a-z0-9-]+)\/?$/i);
-    if (match) return cached(request, ctx, () => seriesPage(match[1], url));
+    // Some apps percent-encode the `:` of `<source>:<slug>`.
+    const match = decodeURIComponent(url.pathname).match(
+      /^\/series\/(?:([a-z0-9][a-z0-9_-]*):)?([a-z0-9-]+)\/?$/i,
+    );
+    if (match) {
+      const [, source, slug] = match;
+      return cached(request, ctx, () =>
+        source ? otherSourcePage(source, slug, url) : seriesPage(slug, url),
+      );
+    }
 
     if (/^\/privacy(-policy)?\/?$/.test(url.pathname)) {
       return html(privacyPage());
@@ -122,6 +135,18 @@ async function seriesPage(slug, url) {
   // Without the details, ask the API again on the next visit.
   if (!series) response.headers.set('Cache-Control', 'no-store');
   return response;
+}
+
+// A comic from another source: the API only knows BacaKomik's, so the page
+// has a title from the slug and the source name.
+function otherSourcePage(source, slug, url) {
+  return html(
+    page({
+      url: `${url.origin}/series/${source}:${slug}`,
+      title: titleFromSlug(slug),
+      meta: SOURCE_NAMES[source] ?? source,
+    }),
+  );
 }
 
 // `magic-emperor` → `Magic Emperor`, the same placeholder as the app.

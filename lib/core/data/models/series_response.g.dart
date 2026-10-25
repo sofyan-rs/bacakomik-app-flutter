@@ -92,6 +92,11 @@ _ChapterDetailResponse _$ChapterDetailResponseFromJson(
   images:
       (json['images'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
+  headers:
+      (json['headers'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ) ??
+      const {},
 );
 
 Map<String, dynamic> _$ChapterDetailResponseToJson(
@@ -102,4 +107,5 @@ Map<String, dynamic> _$ChapterDetailResponseToJson(
   'prev': instance.prev,
   'next': instance.next,
   'images': instance.images,
+  'headers': instance.headers,
 };

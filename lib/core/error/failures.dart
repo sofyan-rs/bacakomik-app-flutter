@@ -13,7 +13,7 @@ final class ServerFailure extends Failure {
 }
 
 final class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'Tidak ada koneksi internet']);
+  const NetworkFailure([super.message = 'No internet connection']);
 }
 
 final class CacheFailure extends Failure {

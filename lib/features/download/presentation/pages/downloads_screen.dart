@@ -14,7 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Unduhan (from Lainnya): storage used, the download queue, then the
+/// Downloads (from More): storage used, the download queue, then the
 /// downloaded chapters grouped by comic.
 class DownloadsScreen extends StatelessWidget {
   const DownloadsScreen({super.key});

@@ -36,8 +36,12 @@ class LatestChapterCard extends StatelessWidget {
         ),
       ),
       title: title,
-      subtitle: '$type · ${isCompleted ? 'Selesai' : 'Ongoing'}',
-      value: 'CH. $chapter',
+      subtitle: [
+        // "-" is what a source without a format maps to.
+        if (type != '-' && type.isNotEmpty) type,
+        isCompleted ? 'Completed' : 'Ongoing',
+      ].join(' · '),
+      value: chapter == '-' ? null : 'CH. $chapter',
       onTap: () => ComicDetailsScreen.open(
         context,
         slug: slug,

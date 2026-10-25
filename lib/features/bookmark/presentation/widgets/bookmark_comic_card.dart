@@ -3,11 +3,12 @@ import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Bookmark grid cell: cover with the `+N` new-chapter badge, title, read
-/// meter and `read / total` chapters.
+/// Bookmark grid cell: cover with the source language and new-chapter count
+/// badges, title, read meter and `read / total` chapters.
 class BookmarkComicCard extends StatelessWidget {
   const BookmarkComicCard({
     super.key,
@@ -30,6 +31,7 @@ class BookmarkComicCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final details = item.bookmark.comicDetails;
+    final lang = context.sourceOf(item.bookmark.slug)?.lang;
 
     return Semantics(
       selected: isSelected,
@@ -47,6 +49,12 @@ class BookmarkComicCard extends StatelessWidget {
                 children: [
                   if (isSelected)
                     ColoredBox(color: c.bg.withValues(alpha: 0.55)),
+                  if (lang != null && !isSelected)
+                    Positioned(
+                      top: DotSpace.s2,
+                      left: DotSpace.s2,
+                      child: LangBadge(lang: lang),
+                    ),
                   if (item.hasUpdate)
                     Positioned(
                       top: DotSpace.s2,

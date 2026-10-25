@@ -11,10 +11,13 @@ import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/source_picker_sheet.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,12 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
   var _spinning = false;
   var _minSpinDone = true;
   Timer? _spinTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<HomeBloc>().add(HomeStarted());
-  }
 
   @override
   void dispose() {
@@ -104,19 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.only(bottom: bottomInset),
                 children: [
-                  ScreenHeader(
-                    overline: HomeScreen.greeting(DateTime.now()),
-                    title: AppVariables.appName,
-                    actions: [
-                      RoundIconButton(
-                        icon: LucideIcons300.search,
-                        semanticLabel: AppText.searchHint,
-                        onTap: _openSearch,
-                      ),
-                    ],
-                  ),
+                  _header(state),
                   const LastReadComic(),
-                  const SizedBox(height: DotSpace.s5),
                   ..._content(state),
                 ],
               ),
@@ -124,6 +110,32 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _header(HomeState state) {
+    final source = context.watch<SourcesCubit>().state.active;
+    return ScreenHeader(
+      overline: HomeScreen.greeting(DateTime.now()),
+      title: source?.baseName ?? AppVariables.appName,
+      titleSemanticLabel: AppText.changeSource,
+      onTitleTap: () => showSourcePicker(context),
+      subtitleWidget: SourceSubtitle(
+        source: source,
+        status: switch (state) {
+          HomeLoaded() => SourceStatus.online,
+          HomeNoInternet() => SourceStatus.offline,
+          HomeError() => SourceStatus.error,
+          HomeInitial() || HomeLoading() => SourceStatus.connecting,
+        },
+      ),
+      actions: [
+        RoundIconButton(
+          icon: LucideIcons300.search,
+          semanticLabel: AppText.searchHint,
+          onTap: _openSearch,
+        ),
+      ],
     );
   }
 
@@ -137,12 +149,10 @@ class _HomeScreenState extends State<HomeScreen> {
       EmptyState.offline(onAction: () => _refreshData(state)),
     ],
     HomeError(:final message) => [
-      EmptyState(
-        icon: LucideIcons300.bug,
-        title: AppText.error,
+      SourceError(
         message: message,
-        actionLabel: AppText.retry,
-        onAction: () => _refreshData(state),
+        sourceId: context.read<SourcesCubit>().state.activeId,
+        onRetry: () => _refreshData(state),
       ),
     ],
     HomeInitial() || HomeLoading() => [
