@@ -16,7 +16,8 @@ typedef MigrateComicParams = ({String from, String to, ComicDetails details});
 /// like Mihon's migrate: the bookmark under [MigrateComicParams.from] is
 /// replaced by one under [MigrateComicParams.to], and each read chapter
 /// moves to the chapter with the same number in the new source. Chapters
-/// the new source lacks are dropped. The comic keeps its categories.
+/// the new source lacks are dropped. The comic keeps its categories, joined
+/// with those of a bookmark it replaces under [MigrateComicParams.to].
 @injectable
 class MigrateComic implements UseCase<Unit, MigrateComicParams> {
   const MigrateComic(
@@ -38,8 +39,12 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
     if (history case Left(value: final failure)) return left(failure);
     final categories = await _categories.getComicCategories();
     if (categories case Left(value: final failure)) return left(failure);
-    final categoryIds =
-        categories.getOrElse((_) => const {})[from]?.categoryIds ?? const [];
+    // A comic already bookmarked in the new source keeps its categories too.
+    final byComic = categories.getOrElse((_) => const {});
+    final categoryIds = {
+      ...?byComic[to]?.categoryIds,
+      ...?byComic[from]?.categoryIds,
+    }.toList();
 
     final chapters = {for (final c in details.chapters) c.number: c.slug};
     final moved = [

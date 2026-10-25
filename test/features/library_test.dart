@@ -534,6 +534,29 @@ void main() {
       expect(saved.single.categoryIds, ['x']);
     });
 
+    test('joins the categories of a bookmark it replaces', () async {
+      when(() => historyRepo.getHistory()).thenAnswer((_) async => right([]));
+      when(() => categories.getComicCategories()).thenAnswer(
+        (_) async => right({
+          'a': ComicCategories(slug: 'a', categoryIds: ['x'], updatedDate: at(1)),
+          'v:a': ComicCategories(
+            slug: 'v:a',
+            categoryIds: ['y', 'x'],
+            updatedDate: at(1),
+          ),
+        }),
+      );
+
+      await migrate((from: 'a', to: 'v:a', details: target));
+
+      final saved =
+          verify(() => categories.saveComicCategories(captureAny()))
+                  .captured
+                  .single
+              as List<ComicCategories>;
+      expect(saved.single.categoryIds, ['y', 'x']);
+    });
+
     test('history read failure changes nothing', () async {
       when(() => historyRepo.getHistory())
           .thenAnswer((_) async => left(const CacheFailure('broken')));

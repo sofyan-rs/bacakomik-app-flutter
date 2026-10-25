@@ -252,7 +252,8 @@ class _MatchViewState extends State<_MatchView> {
       MatchPhase.finished => switch (state.result) {
         final result? =>
           '${AppText.importDone} · ${result.added} ${AppText.added}'
-              '${result.existing > 0 ? ' · ${result.existing} ${AppText.alreadyInLibrary}' : ''}',
+              '${result.existing > 0 ? ' · ${result.existing} ${AppText.alreadyInLibrary}' : ''}'
+              '${result.sameTitle > 0 ? ' · ${result.sameTitle} ${AppText.sameTitleElsewhere}' : ''}',
         null =>
           '${AppText.migrationDone} · ${state.count(MatchStatus.done)} / $total'
               '${state.count(MatchStatus.error) > 0 ? ' · ${state.count(MatchStatus.error)} ${AppText.failed}' : ''}',

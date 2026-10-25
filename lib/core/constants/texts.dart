@@ -385,6 +385,7 @@ class AppText {
   static const String importDone = 'Import done';
   static const String added = 'added';
   static const String alreadyInLibrary = 'already in your library';
+  static const String sameTitleElsewhere = 'bookmarked from another source';
   static const String failed = 'failed';
   static const String importLoadHint =
       'Covers and chapters load when you open a comic, or pull to refresh '

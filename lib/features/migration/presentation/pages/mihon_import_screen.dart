@@ -71,7 +71,8 @@ class _MihonImportView extends StatelessWidget {
                         MihonImportPhase.finished => switch (state.result) {
                           final r? =>
                             '${AppText.importDone} · ${r.added} ${AppText.added}'
-                                '${r.existing > 0 ? ' · ${r.existing} ${AppText.alreadyInLibrary}' : ''}. '
+                                '${r.existing > 0 ? ' · ${r.existing} ${AppText.alreadyInLibrary}' : ''}'
+                                '${r.sameTitle > 0 ? ' · ${r.sameTitle} ${AppText.sameTitleElsewhere}' : ''}. '
                                 '${AppText.importLoadHint}',
                           null => AppText.importDone,
                         },

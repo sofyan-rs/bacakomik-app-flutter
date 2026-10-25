@@ -22,11 +22,18 @@ class ImportEntry {
 
 /// What an import did.
 class ImportResult {
-  const ImportResult({required this.added, required this.existing});
+  const ImportResult({
+    required this.added,
+    required this.existing,
+    this.sameTitle = 0,
+  });
 
   /// Comics added to the library.
   final int added;
 
   /// Comics already in the library, left as they were.
   final int existing;
+
+  /// Series already bookmarked from another source; not added again.
+  final int sameTitle;
 }

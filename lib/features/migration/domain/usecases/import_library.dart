@@ -7,6 +7,7 @@ import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/category/domain/entities/category.dart';
 import 'package:bacakomik_app/features/category/domain/repositories/category_repository.dart';
 import 'package:bacakomik_app/features/migration/domain/entities/library_import.dart';
@@ -16,10 +17,12 @@ import 'package:injectable/injectable.dart';
 
 /// Bookmarks comics found in another app's library, without loading them:
 /// each gets [placeholderDetails] until it is opened or refreshed. Comics
-/// already bookmarked are left alone. Categories are matched by name
-/// (case ignored) and created when missing, and each entry's
-/// [ImportEntry.lastRead] waits in [PendingReadRepository], also for comics
-/// already bookmarked.
+/// already bookmarked are left alone, and so is a series already bookmarked
+/// from another source (same title once case, spacing and punctuation are
+/// ignored; see [normalizeTitle]): its progress goes to that bookmark.
+/// Categories are matched by name (case ignored) and created when missing,
+/// and each entry's [ImportEntry.lastRead] waits in
+/// [PendingReadRepository], also for comics already bookmarked.
 ///
 /// The first entry ends up at the top of the bookmarks.
 @injectable
@@ -36,45 +39,73 @@ class ImportLibrary implements UseCase<ImportResult, List<ImportEntry>> {
   Future<Either<Failure, ImportResult>> call(List<ImportEntry> entries) async {
     final bookmarks = await _bookmarks.getBookmarks();
     if (bookmarks case Left(value: final failure)) return left(failure);
-    final existing = {
-      for (final b in bookmarks.getOrElse((_) => const [])) b.slug,
+    final library = bookmarks.getOrElse((_) => const []);
+    final existing = {for (final b in library) b.slug};
+    // The key each series lives under: the library's first, then this
+    // import's.
+    final byTitle = {
+      for (final b in library.reversed)
+        if (normalizeTitle(b.comicDetails.title) case final t when t.isNotEmpty)
+          t: b.slug,
     };
     final added = <String, ImportEntry>{};
+    final lastRead = <String, String>{};
+    var already = 0;
+    var sameTitle = 0;
     for (final entry in entries) {
-      if (!existing.contains(entry.key) && ComicKey.storable(entry.key)) {
-        added.putIfAbsent(entry.key, () => entry);
+      if (!ComicKey.storable(entry.key)) continue;
+      final title = normalizeTitle(entry.title);
+      final String target;
+      if (existing.contains(entry.key) || added.containsKey(entry.key)) {
+        if (existing.contains(entry.key)) already++;
+        target = entry.key;
+      } else if (byTitle[title] case final other? when title.isNotEmpty) {
+        // The same series from another source: its progress goes there.
+        sameTitle++;
+        target = other;
+      } else {
+        added[entry.key] = entry;
+        if (title.isNotEmpty) byTitle[title] = entry.key;
+        target = entry.key;
+      }
+      if (entry.lastRead case final read?) {
+        lastRead[target] = _later(lastRead[target], read);
       }
     }
     final result = ImportResult(
       added: added.length,
-      existing: entries.length - added.length,
+      existing: already,
+      sameTitle: sameTitle,
     );
-    if (added.isEmpty) return (await _saveLastRead(entries)).map((_) => result);
 
-    final now = _clock.now();
-    final list = added.values.toList();
-    final saved = await _bookmarks.saveBookmarks([
-      for (final (i, entry) in list.indexed)
-        Bookmark(
-          slug: entry.key,
-          comicDetails: placeholderDetails(entry.key, entry.title),
-          // One ms apart, so the import keeps its order.
-          updatedDate: now.subtract(Duration(milliseconds: i)),
-        ),
-    ]);
-    if (saved.isLeft()) return saved.map((_) => result);
+    if (added.isNotEmpty) {
+      final now = _clock.now();
+      final list = added.values.toList();
+      final saved = await _bookmarks.saveBookmarks([
+        for (final (i, entry) in list.indexed)
+          Bookmark(
+            slug: entry.key,
+            comicDetails: placeholderDetails(entry.key, entry.title),
+            // One ms apart, so the import keeps its order.
+            updatedDate: now.subtract(Duration(milliseconds: i)),
+          ),
+      ]);
+      if (saved.isLeft()) return saved.map((_) => result);
 
-    final categorized = await _saveCategories(list, now);
-    if (categorized.isLeft()) return categorized.map((_) => result);
+      final categorized = await _saveCategories(list, now);
+      if (categorized.isLeft()) return categorized.map((_) => result);
+    }
 
-    return (await _saveLastRead(entries)).map((_) => result);
+    // Progress of comics already bookmarked waits too.
+    if (lastRead.isEmpty) return right(result);
+    return (await _pending.save(lastRead)).map((_) => result);
   }
 
-  /// Progress of comics already bookmarked waits too.
-  Future<Either<Failure, Unit>> _saveLastRead(List<ImportEntry> entries) async {
-    final lastRead = {for (final entry in entries) entry.key: ?entry.lastRead};
-    if (lastRead.isEmpty) return right(unit);
-    return _pending.save(lastRead);
+  /// The higher of two chapter numbers.
+  static String _later(String? a, String b) {
+    if (a == null) return b;
+    final (x, y) = (num.tryParse(a), num.tryParse(b));
+    return x != null && y != null && x > y ? a : b;
   }
 
   Future<Either<Failure, Unit>> _saveCategories(

@@ -213,10 +213,10 @@ void main() {
       expect(parsed.sourceNames, {6084907896154116083: 'MangaFire'});
       expect(parsed.categories, {1: 'Manhwa'});
       expect(parsed.manga.map((m) => m.lastRead), ['42.2', null]);
-      expect(parsed.manga.map((m) => (m.title, m.favorite, m.categories.join(','))), [
-        ('A', true, '1'),
-        ('B', false, ''),
-      ]);
+      expect(
+        parsed.manga.map((m) => (m.title, m.favorite, m.categories.join(','))),
+        [('A', true, '1'), ('B', false, '')],
+      );
     });
 
     test('rejects other files', () {
@@ -268,9 +268,10 @@ void main() {
         ('Doujindesu', null, false),
       ]);
       final west = groups.first;
-      expect(west.entries.map((e) => (e.key, e.title, e.categories.join(','))), [
-        ('westmanga:a', 'A', 'Manga'),
-      ]);
+      expect(
+        west.entries.map((e) => (e.key, e.title, e.categories.join(','))),
+        [('westmanga:a', 'A', 'Manga')],
+      );
       expect(west.unreadable, 1);
       expect(
         groups[1].entries.single.key,
@@ -398,6 +399,40 @@ void main() {
       expect(bySlug['comix:a']!.categoryIds, [made.first.id]);
       expect(bySlug['b']!.categoryIds, [made.first.id, made.last.id]);
     });
+
+    test(
+      'ImportLibrary skips a series bookmarked from another source',
+      () async {
+        await bookmarks.saveBookmarks([
+          Bookmark(
+            slug: 'voratoon:oreaku',
+            comicDetails: sampleComicDetails.copyWith(title: 'OreAku, Ore wa!'),
+            updatedDate: DateTime(2020),
+          ),
+        ]);
+
+        final result =
+            await ImportLibrary(bookmarks, categories, pending, clock)(const [
+              ImportEntry(
+                key: 'westmanga:oreaku',
+                title: 'OreAku Ore wa',
+                lastRead: '48',
+              ),
+              ImportEntry(key: 'comix:x', title: 'X', lastRead: '3'),
+              ImportEntry(key: 'mangafire:x', title: 'x!', lastRead: '9'),
+            ]);
+
+        final r = result.getOrElse((f) => fail('$f'));
+        expect((r.added, r.existing, r.sameTitle), (1, 0, 2));
+        final keys = (await bookmarks.getBookmarks())
+            .getOrElse((_) => const [])
+            .map((b) => b.slug)
+            .toSet();
+        expect(keys, {'voratoon:oreaku', 'comix:x'});
+        // Progress goes to the bookmark the series lives under, highest wins.
+        expect(pending.values, {'voratoon:oreaku': '48', 'comix:x': '9'});
+      },
+    );
 
     test('ApplyPendingReads marks chapters up to the last read', () async {
       const details = ComicDetails(
