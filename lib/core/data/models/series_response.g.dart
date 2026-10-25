@@ -15,6 +15,9 @@ _SeriesResponse _$SeriesResponseFromJson(Map<String, dynamic> json) =>
       status: json['status'] as String?,
       rating: json['rating'] as num?,
       totalChapters: json['totalChapters'] as num?,
+      altTitles: (json['altTitles'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
     );
 
 Map<String, dynamic> _$SeriesResponseToJson(_SeriesResponse instance) =>
@@ -26,6 +29,7 @@ Map<String, dynamic> _$SeriesResponseToJson(_SeriesResponse instance) =>
       'status': instance.status,
       'rating': instance.rating,
       'totalChapters': instance.totalChapters,
+      'altTitles': instance.altTitles,
     };
 
 _SeriesDetailResponse _$SeriesDetailResponseFromJson(

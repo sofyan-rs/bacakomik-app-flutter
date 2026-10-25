@@ -13,5 +13,9 @@ abstract class Comic with _$Comic {
     required bool completed,
     required String rating,
     required String latestChapter,
+
+    /// Other titles the source knows the comic by; used to match comics
+    /// between sources. Empty when the source lists none.
+    @Default([]) List<String> altTitles,
   }) = _Comic;
 }

@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/core/utils/alt_titles.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:flutter/material.dart';
 
@@ -32,46 +33,10 @@ class ComicInfo extends StatefulWidget {
     return match?.group(0) ?? '-';
   }
 
-  /// Separators sites put between alternative titles; ` / ` but not `1/2`.
-  /// A line break is how [SeriesDetailResponse] stores a source's list.
-  static final _altStrongSeparator = RegExp(r'\s*[•|;\n]\s*|\s+/\s+');
-
-  /// Titles have commas too, so `, ` splits only when nothing else does.
-  /// A comma without a space stays (`10,000 Years`).
-  static final _altCommaSeparator = RegExp(r'\s*,\s+');
-
-  /// Separators left at either end of a part (`Title ,`).
-  static final _altEdges = RegExp(r'^[\s,;•|]+|[\s,;•|]+$');
-
-  /// Values sources send for "no alternative title". `Field Kosong` is
-  /// VoraToon's.
-  static const _altPlaceholders = {'', '-', '?', 'n/a', 'none', 'field kosong'};
-
   /// The alternative titles to show, joined with ` · `, or null when there
-  /// are none.
-  ///
-  /// Newer extensions send a list (stored one per line). Older ones and stored
-  /// details send one string: a native title, or a list that mixes English,
-  /// romaji and native titles and may repeat the main title. Placeholders,
-  /// repeats and the main title are dropped; the source's order stays.
+  /// are none. See [splitAltTitles].
   static String? altTitles(String title, String alternativeTitle) {
-    String key(String s) => s
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp('[‘’`]'), "'");
-    final separator = _altStrongSeparator.hasMatch(alternativeTitle)
-        ? _altStrongSeparator
-        : _altCommaSeparator;
-    final seen = {key(title)};
-    final parts = [
-      for (final part in alternativeTitle.split(separator))
-        if (part.replaceAll(RegExp(r'\s+'), ' ').replaceAll(_altEdges, '')
-            case final p
-            when !_altPlaceholders.contains(p.toLowerCase()) &&
-                seen.add(key(p)))
-          p,
-    ];
+    final parts = splitAltTitles(title, alternativeTitle);
     return parts.isEmpty ? null : parts.join(' · ');
   }
 

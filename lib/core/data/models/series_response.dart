@@ -1,6 +1,7 @@
 import 'package:bacakomik_app/core/domain/entities/comic.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/source/comic_key.dart';
+import 'package:bacakomik_app/core/utils/alt_titles.dart';
 import 'package:bacakomik_app/core/utils/api_format.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -20,6 +21,9 @@ abstract class SeriesResponse with _$SeriesResponse {
     String? status,
     num? rating,
     num? totalChapters,
+
+    /// Optional in the contract; only some lists have them.
+    List<String>? altTitles,
   }) = _SeriesResponse;
 
   factory SeriesResponse.fromJson(Map<String, dynamic> json) =>
@@ -33,6 +37,7 @@ abstract class SeriesResponse with _$SeriesResponse {
     completed: status == 'completed',
     rating: ApiFormat.rating(rating),
     latestChapter: ApiFormat.number(totalChapters),
+    altTitles: splitAltTitles(title, (altTitles ?? const []).join('\n')),
   );
 }
 

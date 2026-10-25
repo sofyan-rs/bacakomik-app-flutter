@@ -54,7 +54,7 @@
     const s = v == null ? '' : String(v)
     return s.split(STRONG_SEP.test(s) ? STRONG_SEP : /\s*,\s+/)
   }
-  const NONE = /^(-|\?|n\/a|none|field kosong)$/i
+  const NONE = /^(-|\?|n\/a|none|unknown|updating|tba|tbd|field kosong)$/i
   function altTitles(title, list) {
     const key = (t) => t.toLowerCase().replace(/[‘’`]/g, "'")
     const seen = new Set([key(String(title || '').replace(/\s+/g, ' ').trim())])
@@ -78,6 +78,7 @@
     return {
       slug: String(d.slug),
       title: String(d.title),
+      altTitles: altTitles(d.title, splitAlts(d.nativeTitle)),
       cover: str(d.coverImage),
       format: lower(d.format),
       status: lower(d.status),

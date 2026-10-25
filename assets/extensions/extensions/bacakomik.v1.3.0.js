@@ -27,6 +27,8 @@
     return {
       slug: String(d.slug),
       title: String(d.title),
+      // The API has one alternative title.
+      altTitles: str(d.nativeTitle) && d.nativeTitle.trim() !== d.title ? [d.nativeTitle.trim()] : [],
       cover: str(d.cover),
       format: lower(d.format),
       status: lower(d.status),

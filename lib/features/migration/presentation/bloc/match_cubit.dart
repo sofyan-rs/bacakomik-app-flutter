@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bacakomik_app/core/domain/entities/comic.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/migration/domain/entities/library_import.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/source_migration.dart';
@@ -33,6 +34,7 @@ enum MatchStatus {
 class MatchItem {
   const MatchItem({
     required this.title,
+    this.altTitles = const [],
     this.fromKey,
     this.lastRead,
     this.status = MatchStatus.waiting,
@@ -41,6 +43,9 @@ class MatchItem {
   });
 
   final String title;
+
+  /// Other titles of the comic, tried when [title] finds nothing.
+  final List<String> altTitles;
 
   /// Bookmark to move, in [MatchMode.migrate].
   final String? fromKey;
@@ -59,6 +64,7 @@ class MatchItem {
   MatchItem copyWith({MatchStatus? status, Comic? match, String? message}) =>
       MatchItem(
         title: title,
+        altTitles: altTitles,
         fromKey: fromKey,
         lastRead: lastRead,
         status: status ?? this.status,
@@ -158,25 +164,53 @@ class MatchCubit extends Cubit<MatchState> {
 
   Future<void> _searchItem(int i) async {
     _update(i, state.items[i].copyWith(status: MatchStatus.searching));
-    final result = await search(state.items[i].title);
-    if (isClosed) return;
+    final first = state.items[i];
+    Either<Failure, List<Comic>>? firstResult;
+    Comic? found;
+    for (final query in [first.title, ...altQueries(first)]) {
+      final result = await search(query);
+      if (isClosed) return;
+      // The user may have picked or skipped it meanwhile.
+      if (state.items[i].status != MatchStatus.searching) return;
+      firstResult ??= result;
+      found = result.fold(
+        (_) => null,
+        (comics) => exactMatch(first.title, comics, altTitles: first.altTitles),
+      );
+      // A failed first search is reported; alternative titles won't help.
+      if (found != null || result.isLeft()) break;
+    }
     final item = state.items[i];
-    // The user may have picked or skipped it meanwhile.
-    if (item.status != MatchStatus.searching) return;
-    _update(
-      i,
-      result.fold(
-        (failure) =>
-            item.copyWith(status: MatchStatus.failed, message: failure.message),
-        (comics) => switch (exactMatch(item.title, comics)) {
-          final comic? => item.copyWith(
-            status: MatchStatus.found,
-            match: comic,
-          ),
-          null => item.copyWith(status: MatchStatus.notFound),
-        },
+    _update(i, switch ((found, firstResult)) {
+      (final comic?, _) => item.copyWith(
+        status: MatchStatus.found,
+        match: comic,
       ),
-    );
+      (_, Left(value: final failure)) => item.copyWith(
+        status: MatchStatus.failed,
+        message: failure.message,
+      ),
+      _ => item.copyWith(status: MatchStatus.notFound),
+    });
+  }
+
+  /// Most alternative titles searched for an item whose title finds nothing.
+  static const maxAltQueries = 2;
+
+  static final _latin = RegExp('[A-Za-z]');
+
+  /// The alternative titles to search when [item]'s title finds nothing:
+  /// those in Latin letters first, which sites index most often.
+  static List<String> altQueries(MatchItem item) {
+    final title = normalizeTitle(item.title);
+    final alts = [
+      for (final t in item.altTitles)
+        if (normalizeTitle(t) case final n when n.isNotEmpty && n != title) t,
+    ];
+    return [
+      ...alts.where(_latin.hasMatch),
+      ...alts.where((t) => !_latin.hasMatch(t)),
+    ].take(maxAltQueries).toList();
   }
 
   /// A title search in [target]. Requests run one at a time, [gap] apart,
