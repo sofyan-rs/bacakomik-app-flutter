@@ -8,24 +8,51 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 /// Hidden WebViews that run extension scripts inside a site, for sites that
 /// only answer a real browser (strict Cloudflare rules, tokens their own
-/// JavaScript makes). One page per extension, kept a few minutes between
-/// runs so the site does not load again each time.
+/// JavaScript makes). One page per extension, kept [keepAlive] after its
+/// last run so the site does not load again each time.
+///
+/// Flutter runs Dart on Android's main thread and a rendered WebView draws
+/// on it too, so pages are small ([viewport]), paused and hidden between
+/// runs, and render only while a run needs it ([renders]).
 class HeadlessPages {
-  HeadlessPages({required this.userAgent, required this.onCookies});
+  HeadlessPages({
+    required this.userAgent,
+    this.onCookies,
+    this.renders = true,
+    this.keepAlive = const Duration(seconds: 60),
+  });
 
   final String userAgent;
 
   /// Called after each run with the cookies the page holds for its site.
+  /// Without it the cookies are not read: that is a blocking CookieManager
+  /// call on the main thread.
   final Future<void> Function(
     String extensionId,
     Uri url,
     List<io.Cookie> cookies,
-  )
+  )?
   onCookies;
+
+  /// Whether the page renders while a script runs in it (see MainActivity):
+  /// lazy-loading pages only load what an IntersectionObserver or a scroll
+  /// reveals. Pages that only `fetch` leave it off. Every page renders while
+  /// it shows a Cloudflare check.
+  final bool renders;
+
+  /// How long a page stays loaded after its last run. An idle page is
+  /// paused and hidden, but its site's timers (ads) still run, so this is
+  /// short: long enough for the calls of one screen (a comic, then its
+  /// chapter list), not for a whole reading session.
+  final Duration keepAlive;
+
+  /// Page size in logical pixels: a common phone viewport, so sites lay out
+  /// for mobile and lazy loaders see a real viewport, but less to render
+  /// than the full screen the plugin defaults to.
+  static const viewport = Size(360, 640);
 
   final _pages = <String, _Page>{};
 
-  static const _keepAlive = Duration(minutes: 3);
   static const _loadTimeout = Duration(seconds: 25);
   static const _challengeTimeout = Duration(seconds: 20);
 
@@ -51,7 +78,8 @@ class HeadlessPages {
     page.idle?.cancel();
     try {
       final controller = await _open(page, url);
-      await _passChallenge(controller, url);
+      await _wake(page);
+      await _passChallenge(page, url);
       final result = await controller
           .callAsyncJavaScript(functionBody: script)
           .timeout(
@@ -70,7 +98,9 @@ class HeadlessPages {
       rethrow;
     } finally {
       if (identical(_pages[extensionId], page)) {
-        page.idle = Timer(_keepAlive, () => _close(extensionId));
+        // Awaited: the next run of this extension starts after it.
+        await _sleep(page);
+        page.idle = Timer(keepAlive, () => _close(extensionId));
       }
     }
   }
@@ -91,6 +121,7 @@ class HeadlessPages {
       await controller.loadUrl(urlRequest: URLRequest(url: WebUri.uri(url)));
     } else {
       final view = page.view = HeadlessInAppWebView(
+        initialSize: viewport,
         initialUrlRequest: URLRequest(url: WebUri.uri(url)),
         initialSettings: InAppWebViewSettings(
           userAgent: userAgent,
@@ -124,7 +155,6 @@ class HeadlessPages {
         },
       );
       await view.run();
-      await _render();
     }
     await loaded.future.timeout(
       _loadTimeout,
@@ -137,9 +167,13 @@ class HeadlessPages {
   static Future<bool> _onCheck(InAppWebViewController c) async =>
       (await c.getTitle() ?? '').contains('Just a moment');
 
-  /// Waits while Cloudflare's "Just a moment" page solves itself; a check
-  /// that needs the user becomes a [Challenge] for the visible WebView.
-  Future<void> _passChallenge(InAppWebViewController c, Uri url) async {
+  /// Waits while Cloudflare's "Just a moment" page solves itself, rendered
+  /// so its checks run as they would on screen; a check that needs the user
+  /// becomes a [Challenge] for the visible WebView.
+  Future<void> _passChallenge(_Page page, Uri url) async {
+    final c = page.controller!;
+    if (!await _onCheck(c)) return;
+    await _show(page, true);
     final deadline = DateTime.now().add(_challengeTimeout);
     while (await _onCheck(c)) {
       if (DateTime.now().isAfter(deadline)) {
@@ -147,9 +181,30 @@ class HeadlessPages {
       }
       await Future<void>.delayed(const Duration(seconds: 1));
     }
+    if (!renders) await _show(page, false);
+  }
+
+  /// Resumes a page paused by [_sleep]; renders it when [renders].
+  Future<void> _wake(_Page page) async {
+    if (page.paused) {
+      page.paused = false;
+      await _platform(() => page.controller?.resume());
+    }
+    if (renders) await _show(page, true);
+  }
+
+  /// Between runs: no rendering and no animations (`WebView.onPause`). Not
+  /// `pauseTimers`, which would pause every WebView in the app.
+  Future<void> _sleep(_Page page) async {
+    await _show(page, false);
+    if (page.paused || page.controller == null) return;
+    page.paused = true;
+    await _platform(() => page.controller?.pause());
   }
 
   Future<void> _saveCookies(String extensionId, Uri url) async {
+    final onCookies = this.onCookies;
+    if (onCookies == null) return;
     final cookies = await CookieManager.instance().getCookies(
       url: WebUri.uri(url),
     );
@@ -177,14 +232,30 @@ class HeadlessPages {
 
   static const _hiddenWebViews = MethodChannel('bacakomik/hidden_webviews');
 
-  /// Lets the hidden pages render (see MainActivity): lazy-loading pages
-  /// only load what an IntersectionObserver or a scroll reveals.
-  static Future<void> _render() async {
-    if (!io.Platform.isAndroid) return;
+  /// Lets [page] render at alpha 0, or hides it again (see MainActivity).
+  static Future<void> _show(_Page page, bool render) async {
+    final view = page.view;
+    if (view == null || page.rendering == render || !io.Platform.isAndroid) {
+      return;
+    }
+    page.rendering = render;
+    await _platform(
+      () => _hiddenWebViews.invokeMethod<bool>(render ? 'render' : 'hide', {
+        'id': view.id,
+      }),
+    );
+  }
+
+  /// Runs a platform call that is missing in tests and on some platforms.
+  static Future<void> _platform(Future<void>? Function() call) async {
     try {
-      await _hiddenWebViews.invokeMethod<int>('render');
+      await call();
     } on MissingPluginException {
       // Tests and other platforms.
+    } on UnimplementedError {
+      // No pause/resume on this platform.
+    } on PlatformException catch (e) {
+      debugPrint('Hidden WebView: $e');
     }
   }
 
@@ -207,4 +278,10 @@ class _Page {
   String? host;
   Completer<void>? loaded;
   Timer? idle;
+
+  /// Shown at alpha 0 so Chromium renders it.
+  var rendering = false;
+
+  /// Paused with `WebView.onPause` after its last run.
+  var paused = false;
 }

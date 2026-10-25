@@ -16,6 +16,13 @@ abstract interface class SourceBackend {
   Future<Object?> call(String method, List<Object?> args);
 }
 
+/// A loaded source engine that can be unloaded.
+abstract interface class LoadedSource implements SourceBackend {
+  ExtensionMeta get meta;
+
+  void dispose();
+}
+
 /// Host functions an extension can call (`http.fetch`, `html.select`,
 /// `storage.get/set`). [args] is the decoded JSON the script passed.
 typedef BridgeHandler = Future<Object?> Function(
@@ -31,7 +38,7 @@ typedef BridgeHandler = Future<Object?> Function(
 /// whose resolver is kept by id in [_prelude]; Dart runs the call and settles
 /// it with `__bkSettle`. Method calls work the same way in the other
 /// direction through `__bkInvoke` and the `bk_result` channel.
-class ExtensionRuntime implements SourceBackend {
+class ExtensionRuntime implements LoadedSource {
   ExtensionRuntime._(this.meta, this._js, this._bridge);
 
   /// Throws [ServerException] when the script does not load or does not call
@@ -57,6 +64,7 @@ class ExtensionRuntime implements SourceBackend {
   /// read page by page in a WebView) is not cut off.
   static const callTimeout = Duration(seconds: 45);
 
+  @override
   final ExtensionMeta meta;
   final JavascriptRuntime _js;
   final BridgeHandler _bridge;
@@ -117,9 +125,7 @@ class ExtensionRuntime implements SourceBackend {
     final id = ++_nextCall;
     final completer = _calls[id] = Completer<Object?>();
     _lastProgress = DateTime.now();
-    _run(
-      '__bkInvoke($id, ${jsonEncode(method)}, ${jsonEncode(jsonEncode(args))})',
-    );
+    _run('__bkInvoke($id, ${jsonEncode(method)}, ${jsLiteral(args)})');
     final idle = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_hostCalls > 0 ||
           DateTime.now().difference(_lastProgress) < callTimeout) {
@@ -155,14 +161,34 @@ class ExtensionRuntime implements SourceBackend {
           _lastProgress = DateTime.now();
         })
         .then(
-          (value) => _settle(id, true, jsonEncode(value)),
+          (value) => _settle(id, true, value),
           onError: (Object e) => _settle(id, false, '$e'),
         );
   }
 
-  void _settle(Object? id, bool ok, String payload) {
+  /// Resolves the script's promise with [value], or rejects it with the
+  /// message [value].
+  void _settle(Object? id, bool ok, Object? value) {
     if (_disposed) return;
-    _run('__bkSettle($id, $ok, ${jsonEncode(payload)})');
+    _run('__bkSettle($id, $ok, ${jsLiteral(value)})');
+  }
+
+  /// [value] as a JavaScript expression evaluating to what
+  /// `JSON.parse(jsonEncode(value))` gives, encoded once: a response body
+  /// goes into the engine at its own size, not escaped twice and parsed
+  /// twice.
+  ///
+  /// JSON is a JavaScript literal, except that a `"__proto__"` key in an
+  /// object literal sets the prototype instead of a property; such values
+  /// (e.g. from a site's own JSON) go through `JSON.parse` as before. U+2028
+  /// and U+2029, legal in JSON strings, are escaped for engines older than
+  /// ES2019.
+  @visibleForTesting
+  static String jsLiteral(Object? value) {
+    final json = jsonEncode(value);
+    if (json.contains('"__proto__"')) return 'JSON.parse(${jsonEncode(json)})';
+    if (!json.contains(' ') && !json.contains(' ')) return json;
+    return json.replaceAll(' ', r' ').replaceAll(' ', r' ');
   }
 
   /// Evaluates [code] and drains the promise jobs it queued.
@@ -191,6 +217,7 @@ class ExtensionRuntime implements SourceBackend {
     );
   }
 
+  @override
   void dispose() {
     if (_disposed) return;
     _disposed = true;
@@ -212,12 +239,13 @@ function __bkCall(method, args) {
   });
 }
 
-function __bkSettle(id, ok, payload) {
+// [value] is the result itself, or the error message.
+function __bkSettle(id, ok, value) {
   var p = __bk.pending[id];
   if (!p) return;
   delete __bk.pending[id];
-  if (ok) p.resolve(JSON.parse(payload));
-  else p.reject(new Error(payload));
+  if (ok) p.resolve(value);
+  else p.reject(new Error(value));
 }
 
 var http = {
@@ -278,12 +306,12 @@ function __bkDescribe() {
   });
 }
 
-function __bkInvoke(id, method, argsJson) {
+function __bkInvoke(id, method, args) {
   Promise.resolve()
     .then(function () {
       var fn = __bk.ext && __bk.ext[method];
       if (typeof fn !== 'function') throw new Error('Unknown method ' + method);
-      return fn.apply(__bk.ext, JSON.parse(argsJson));
+      return fn.apply(__bk.ext, args);
     })
     .then(
       function (value) {

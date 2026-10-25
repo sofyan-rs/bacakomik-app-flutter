@@ -1,13 +1,18 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/source/headless_pages.dart';
+import 'package:bacakomik_app/core/storage/box_recovery.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:injectable/injectable.dart';
@@ -36,15 +41,16 @@ class ExtensionBridge {
   Future<Object?> handle(String extensionId, String method, Object? args) =>
       switch (method) {
         'http.fetch' => _fetch(extensionId, (args as Map).cast()),
-        'html.select' => Future.value(
-          _select((args as List)[0] as String, args[1] as String),
-        ),
+        'html.select' => select((args as List)[0] as String, args[1] as String),
         'storage.get' => Future.value(
-          _storage.get('$extensionId:${(args as List)[0]}'),
+          _storage.get(storageKey(extensionId, '${(args as List)[0]}')),
         ),
         'storage.set' =>
           _storage
-              .put('$extensionId:${(args as List)[0]}', '${args[1]}')
+              .put(
+                storageKey(extensionId, '${(args as List)[0]}'),
+                '${args[1]}',
+              )
               .then((_) => null),
         'webview.run' => _pages.run(
           extensionId,
@@ -183,6 +189,32 @@ class ExtensionBridge {
     await _storage.deleteAll(
       _storage.keys.cast<String>().where((k) => k.startsWith('$extensionId:')),
     );
+  }
+
+  /// The Hive key of an extension's stored [key]: `<id>:<key>`, or
+  /// `<id>:#<sha256 of key>` when that is too long or not ASCII, which
+  /// would corrupt the box ([isValidHiveKey]). Keys stored before stay
+  /// where they are; both forms start with `<id>:` for [reset].
+  @visibleForTesting
+  static String storageKey(String extensionId, String key) {
+    final plain = '$extensionId:$key';
+    if (isValidHiveKey(plain)) return plain;
+    return '$extensionId:#${sha256.convert(utf8.encode(key))}';
+  }
+
+  /// Pages at least this long are parsed on another isolate: a site page
+  /// of a few hundred KB takes tens of milliseconds to parse, a frame or
+  /// more on the main thread. Below it, starting an isolate costs more.
+  static const offThreadSelectLength = 32 * 1024;
+
+  /// `html.select`: the elements of [source] matching [selector].
+  @visibleForTesting
+  static Future<List<Map<String, Object?>>> select(
+    String source,
+    String selector,
+  ) async {
+    if (source.length < offThreadSelectLength) return _select(source, selector);
+    return Isolate.run(() => _select(source, selector));
   }
 
   static List<Map<String, Object?>> _select(String source, String selector) => [

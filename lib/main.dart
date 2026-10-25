@@ -26,6 +26,8 @@ Future<void> main() async {
   // In the background: finds extension updates for the badge in More.
   unawaited(extensions.catalog());
   unawaited(_moveCoversToCoverCache());
+  // Starts Chromium while idle, so the first cookie read is not mid-scroll.
+  unawaited(warmUpWebView());
 }
 
 /// Once, a little after start: library covers cached before the cover cache
