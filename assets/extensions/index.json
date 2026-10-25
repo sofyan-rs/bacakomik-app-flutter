@@ -19,15 +19,15 @@
       "id": "voratoon",
       "name": "VoraToon",
       "lang": "id",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "apiVersion": 1,
       "baseUrl": "https://voratoon.co",
       "urlPatterns": [
         "^/(?:series|comic)/([^/?#]+)"
       ],
       "nsfw": false,
-      "file": "extensions/voratoon.v1.2.0.js",
-      "sha256": "59bfb93a96bc59e85ef73c75c9220406a6d1d0e8d9d47e066d5e3964bfd9cfb7"
+      "file": "extensions/voratoon.v1.3.0.js",
+      "sha256": "ac9e612791208734241567bc158af74dfbd72f6923a4a87eab440be1cbd9cf09"
     }
   ]
 }

@@ -32,6 +32,49 @@ class ComicInfo extends StatefulWidget {
     return match?.group(0) ?? '-';
   }
 
+  /// Separators sites put between alternative titles; ` / ` but not `1/2`.
+  /// A line break is how [SeriesDetailResponse] stores a source's list.
+  static final _altStrongSeparator = RegExp(r'\s*[•|;\n]\s*|\s+/\s+');
+
+  /// Titles have commas too, so `, ` splits only when nothing else does.
+  /// A comma without a space stays (`10,000 Years`).
+  static final _altCommaSeparator = RegExp(r'\s*,\s+');
+
+  /// Separators left at either end of a part (`Title ,`).
+  static final _altEdges = RegExp(r'^[\s,;•|]+|[\s,;•|]+$');
+
+  /// Values sources send for "no alternative title". `Field Kosong` is
+  /// VoraToon's.
+  static const _altPlaceholders = {'', '-', '?', 'n/a', 'none', 'field kosong'};
+
+  /// The alternative titles to show, joined with ` · `, or null when there
+  /// are none.
+  ///
+  /// Newer extensions send a list (stored one per line). Older ones and stored
+  /// details send one string: a native title, or a list that mixes English,
+  /// romaji and native titles and may repeat the main title. Placeholders,
+  /// repeats and the main title are dropped; the source's order stays.
+  static String? altTitles(String title, String alternativeTitle) {
+    String key(String s) => s
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp('[‘’`]'), "'");
+    final separator = _altStrongSeparator.hasMatch(alternativeTitle)
+        ? _altStrongSeparator
+        : _altCommaSeparator;
+    final seen = {key(title)};
+    final parts = [
+      for (final part in alternativeTitle.split(separator))
+        if (part.replaceAll(RegExp(r'\s+'), ' ').replaceAll(_altEdges, '')
+            case final p
+            when !_altPlaceholders.contains(p.toLowerCase()) &&
+                seen.add(key(p)))
+          p,
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
+  }
+
   @override
   State<ComicInfo> createState() => _ComicInfoState();
 }
@@ -39,12 +82,14 @@ class ComicInfo extends StatefulWidget {
 class _ComicInfoState extends State<ComicInfo> {
   static const _collapsedLines = 4;
   var _expanded = false;
+  var _altExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final d = widget.details;
     final year = ComicInfo.year(d.released);
+    final alt = ComicInfo.altTitles(d.title, d.alternativeTitle);
     final meta = [
       if (d.type != '-') d.type,
       d.status,
@@ -61,6 +106,19 @@ class _ComicInfoState extends State<ComicInfo> {
         ),
         const SizedBox(height: DotSpace.s3),
         ComicTitle(d.title),
+        if (alt != null) ...[
+          const SizedBox(height: DotSpace.s2),
+          GestureDetector(
+            onTap: () => setState(() => _altExpanded = !_altExpanded),
+            child: Text(
+              alt,
+              style: DotlineText.bodyS.copyWith(color: c.inkFaint),
+              textAlign: TextAlign.center,
+              maxLines: _altExpanded ? null : 2,
+              overflow: _altExpanded ? null : TextOverflow.ellipsis,
+            ),
+          ),
+        ],
         // The API sends `?` (or nothing) when the author is unknown.
         if (!const {'', '-', '?'}.contains(d.author.trim())) ...[
           const SizedBox(height: DotSpace.s2),

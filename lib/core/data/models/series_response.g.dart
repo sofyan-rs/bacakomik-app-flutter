@@ -35,6 +35,9 @@ _SeriesDetailResponse _$SeriesDetailResponseFromJson(
   slug: json['slug'] as String,
   cover: json['cover'] as String?,
   nativeTitle: json['nativeTitle'] as String?,
+  altTitles: (json['altTitles'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
   releaseDate: json['releaseDate'] as String?,
   status: json['status'] as String?,
   author: json['author'] as String?,
@@ -55,6 +58,7 @@ Map<String, dynamic> _$SeriesDetailResponseToJson(
   'slug': instance.slug,
   'cover': instance.cover,
   'nativeTitle': instance.nativeTitle,
+  'altTitles': instance.altTitles,
   'releaseDate': instance.releaseDate,
   'status': instance.status,
   'author': instance.author,

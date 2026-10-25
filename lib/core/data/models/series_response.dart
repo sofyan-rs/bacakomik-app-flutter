@@ -46,6 +46,10 @@ abstract class SeriesDetailResponse with _$SeriesDetailResponse {
     required String slug,
     String? cover,
     String? nativeTitle,
+
+    /// Every alternative title, already split. Optional in the contract; older
+    /// extensions send only [nativeTitle].
+    List<String>? altTitles,
     String? releaseDate,
     String? status,
     String? author,
@@ -61,7 +65,10 @@ abstract class SeriesDetailResponse with _$SeriesDetailResponse {
   ComicDetails toEntity(List<ChapterResponse> chapters) => ComicDetails(
     title: title,
     coverImg: cover ?? '',
-    alternativeTitle: nativeTitle ?? '-',
+    // One per line when the source lists them; see ComicInfo.altTitles.
+    alternativeTitle: altTitles?.isNotEmpty == true
+        ? altTitles!.join('\n')
+        : nativeTitle ?? '-',
     released: releaseDate ?? '-',
     status: ApiFormat.capitalize(status),
     totalChapter: chapters.length.toString(),
