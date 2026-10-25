@@ -260,7 +260,7 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 | sync | More → sync section | `SyncCubit` | §7.6. |
 | download | More → Downloads; detail selection bar | `DownloadCubit` | §7.5. |
 | update | On start; More → Check for updates | `UpdateCubit` | §1. |
-| migration | More → Migration; Bookmarks selection bar; comic page | `MatchCubit`, `MihonImportCubit` | §6.4. |
+| migration | More → Backup & sync → Migration; Bookmarks selection bar; comic page | `MatchCubit`, `MihonImportCubit` | §6.4. |
 
 ### 6.1 Checking bookmarks for new chapters
 

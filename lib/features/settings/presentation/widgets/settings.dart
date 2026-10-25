@@ -101,13 +101,6 @@ class Settings extends StatelessWidget {
                 onTap: () => CategoriesScreen.open(context),
               ),
               ListRow(
-                icon: LucideIcons300.arrowRightLeft,
-                title: AppText.migration,
-                subtitle: AppText.migrationDescription,
-                showChevron: true,
-                onTap: () => MigrationScreen.open(context),
-              ),
-              ListRow(
                 icon: LucideIcons300.download,
                 title: AppText.downloads,
                 subtitle: AppText.downloadsDescription,
@@ -139,6 +132,13 @@ class Settings extends StatelessWidget {
               title: AppText.restoreData,
               subtitle: AppText.restoreDataDescription,
               onTap: busy ? null : () => context.read<BackupCubit>().restore(),
+            ),
+            ListRow(
+              icon: LucideIcons300.arrowRightLeft,
+              title: AppText.migration,
+              subtitle: AppText.migrationDescription,
+              showChevron: true,
+              onTap: () => MigrationScreen.open(context),
             ),
           ],
         ),

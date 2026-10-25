@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// More BACKUP & SYNC group: connect Google Drive, or sync now and
-/// disconnect, then the [backup] rows (backup file, restore).
+/// disconnect, then the [backup] rows (backup file, restore, migration).
 class SyncSection extends StatelessWidget {
   const SyncSection({super.key, this.backup = const []});
 
