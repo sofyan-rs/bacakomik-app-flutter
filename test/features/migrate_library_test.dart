@@ -124,19 +124,22 @@ void main() {
       expect(result.history.single.slug, 'voratoon:solo-leveling/2');
     });
 
-    test('leaves comics of the default source and prefixed keys alone', () async {
-      final snapshot = SyncSnapshot(
-        bookmarks: [
-          bookmark('solo-leveling', 5, details: current),
-          bookmark('voratoon:other', 6, details: moved),
-          // A prefixed key is never moved, whatever its details say.
-          bookmark('voratoon:third', 6),
-        ],
-        history: [read('solo-leveling/1', 7, details: current)],
-      );
+    test(
+      'leaves comics of the default source and prefixed keys alone',
+      () async {
+        final snapshot = SyncSnapshot(
+          bookmarks: [
+            bookmark('solo-leveling', 5, details: current),
+            bookmark('voratoon:other', 6, details: moved),
+            // A prefixed key is never moved, whatever its details say.
+            bookmark('voratoon:third', 6),
+          ],
+          history: [read('solo-leveling/1', 7, details: current)],
+        );
 
-      expect(await run(snapshot), snapshot);
-    });
+        expect(await run(snapshot), snapshot);
+      },
+    );
 
     test('moves only the legacy entries of a mixed library', () async {
       final result = await run(
@@ -201,13 +204,45 @@ void main() {
     late MockSyncRepository repo;
     late MigrateLocalLibrary useCase;
 
-    setUpAll(() => registerFallbackValue(const SyncSnapshot()));
+    setUpAll(() {
+      registerFallbackValue(const SyncSnapshot());
+      registerFallbackValue((String _) => false);
+      registerFallbackValue((String _, ComicDetails _) => false);
+    });
+
+    void storedComicsLegacy(bool legacy) => when(
+      () => repo.anyLocalComic(
+        where: any(named: 'where'),
+        test: any(named: 'test'),
+      ),
+    ).thenAnswer((_) async => right(legacy));
 
     setUp(() {
       repo = MockSyncRepository();
       final clock = FixedClock(now);
       useCase = MigrateLocalLibrary(repo, MigrateSnapshot(clock), clock);
       when(() => repo.writeLocal(any())).thenAnswer((_) async => right(unit));
+      storedComicsLegacy(true);
+    });
+
+    test('without a legacy comic the library is not read', () async {
+      storedComicsLegacy(false);
+
+      expect(await useCase(const NoParams()), right(false));
+      verifyNever(() => repo.readLocal());
+      verifyNever(() => repo.writeLocal(any()));
+      final [where as bool Function(String), test as Function] = verify(
+        () => repo.anyLocalComic(
+          where: captureAny(named: 'where'),
+          test: captureAny(named: 'test'),
+        ),
+      ).captured;
+      // Only default-source keys are worth decoding.
+      expect(where('solo-leveling'), isTrue);
+      expect(where('voratoon:solo-leveling'), isFalse);
+      expect(test('solo-leveling', legacy), isTrue);
+      expect(test('solo-leveling', current), isFalse);
+      expect(test('voratoon:solo-leveling', legacy), isFalse);
     });
 
     test('writes only when something changed', () async {
@@ -239,11 +274,13 @@ void main() {
     });
 
     test('read failure is returned', () async {
-      when(
-        () => repo.readLocal(),
-      ).thenAnswer((_) async => left(const CacheFailure('broken')));
+      when(() => repo.readLocal())
+          .thenAnswer((_) async => left(const CacheFailure('broken')));
 
-      expect(await useCase(const NoParams()), left(const CacheFailure('broken')));
+      expect(
+        await useCase(const NoParams()),
+        left(const CacheFailure('broken')),
+      );
       verifyNever(() => repo.writeLocal(any()));
     });
   });

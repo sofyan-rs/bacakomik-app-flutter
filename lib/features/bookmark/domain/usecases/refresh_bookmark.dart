@@ -34,7 +34,7 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
     final details = await _comicDetails.getComicDetails(bookmark.slug);
     return details.fold(
       (failure) async =>
-          right((updated: false, historyChanged: false, failure: failure)),
+          right((saved: null, historyChanged: false, failure: failure)),
       (fresh) async {
         final imported = bookmark.comicDetails.isPlaceholder;
         final applied = await _applyPendingReads((
@@ -52,27 +52,31 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
             : grew;
         if (!grew && !imported) {
           return right((
-            updated: false,
+            saved: null,
             historyChanged: historyChanged,
             failure: null,
           ));
         }
-        final saved = await _bookmarks.saveBookmarks([
-          bookmark.copyWith(
-            comicDetails: fresh,
-            updatedDate: moved ? _clock.now() : bookmark.updatedDate,
-          ),
-        ]);
+        final updated = bookmark.copyWith(
+          comicDetails: fresh,
+          updatedDate: moved ? _clock.now() : bookmark.updatedDate,
+        );
+        final saved = await _bookmarks.saveBookmarks([updated]);
         return saved.map(
-          (_) => (updated: true, historyChanged: historyChanged, failure: null),
+          (_) =>
+              (saved: updated, historyChanged: historyChanged, failure: null),
         );
       },
     );
   }
 }
 
-/// [updated]: the bookmark changed: new chapters were found, or an imported
-/// comic got its details. [historyChanged]: imported reading progress was
-/// written to the history. [failure]: why the comic did not load; it is
-/// left as it was.
-typedef RefreshResult = ({bool updated, bool historyChanged, Failure? failure});
+/// [saved]: the bookmark as saved when it changed (new chapters were found,
+/// or an imported comic got its details); null when unchanged.
+/// [historyChanged]: imported reading progress was written to the history.
+/// [failure]: why the comic did not load; it is left as it was.
+typedef RefreshResult = ({
+  Bookmark? saved,
+  bool historyChanged,
+  Failure? failure,
+});

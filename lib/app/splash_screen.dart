@@ -15,7 +15,7 @@ import 'package:flutter/services.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
-  static const duration = Duration(milliseconds: 3000);
+  static const duration = Duration(milliseconds: 2000);
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();

@@ -19,8 +19,12 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
   Future<Either<Failure, List<Bookmark>>> getBookmarks() => runLocal(
     () =>
         _local.getAll().map((m) => m.toEntity()).toList()
-          ..sort((a, b) => b.updatedDate.compareTo(a.updatedDate)),
+          ..sort(compareBookmarksNewestFirst),
   );
+
+  @override
+  Future<Either<Failure, Bookmark?>> getBookmark(String slug) =>
+      runLocal(() => _local.get(slug)?.toEntity());
 
   @override
   Future<Either<Failure, Unit>> saveBookmarks(List<Bookmark> bookmarks) =>

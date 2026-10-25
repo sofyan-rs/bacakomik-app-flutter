@@ -32,6 +32,9 @@ class ExtensionRepo {
   final List<ExtensionMeta> extensions;
 }
 
+/// Starts the engine of one source; tests give a fake.
+typedef SourceLoader = Future<LoadedSource> Function(ExtensionMeta meta);
+
 /// Gives the [SourceBackend] of a source id. Implemented by
 /// [ExtensionManager]; tests use fakes.
 abstract interface class SourceRegistry {
@@ -56,8 +59,9 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     @Named(HiveBoxes.extensions) this._installed,
     @Named(HiveBoxes.sourceSettings) this._settings,
     @Named(filesDio) this._dio,
-    this._bridge,
-  );
+    this._bridge, {
+    @ignoreParam this._loader,
+  });
 
   /// Added on first run: the built `dist/` of the private extension source
   /// repo, served from a Cloudflare Worker.
@@ -77,7 +81,18 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   final Box<String> _settings;
   final Dio _dio;
   final ExtensionBridge _bridge;
-  final _runtimes = <String, ExtensionRuntime>{};
+  final SourceLoader? _loader;
+
+  /// Loaded engines by source id.
+  final _runtimes = <String, LoadedSource>{};
+
+  /// Engines being loaded, by source id, so callers asking at the same time
+  /// share one engine instead of each starting their own.
+  final _loading = <String, Future<LoadedSource>>{};
+
+  /// Bumped per extension when its engines are unloaded (update,
+  /// uninstall): a load that started before is dropped, not kept.
+  final _unloads = <String, int>{};
 
   /// Newest version of each extension in the repos, from the last
   /// [catalog] fetch.
@@ -237,23 +252,52 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     notifyListeners();
   }
 
+  /// The loaded engine of [sourceId], loading it on first use. Callers
+  /// asking while it loads get the same engine; a failed load is not kept,
+  /// so the next call tries again.
   @override
-  Future<SourceBackend> backend(String sourceId) async {
+  Future<SourceBackend> backend(String sourceId) => _engine(sourceId);
+
+  Future<LoadedSource> _engine(String sourceId) async {
     if (_runtimes[sourceId] case final runtime?) return runtime;
+    if (_loading[sourceId] case final loading?) return loading;
+    final loading = _load(sourceId);
+    _loading[sourceId] = loading;
+    try {
+      return await loading;
+    } finally {
+      if (identical(_loading[sourceId], loading)) _loading.remove(sourceId);
+    }
+  }
+
+  Future<LoadedSource> _load(String sourceId) async {
     final meta = this.meta(sourceId);
     if (meta == null) {
       throw ServerException('Source "$sourceId" is not installed');
     }
+    final extensionId = meta.extensionId;
+    final unloads = _unloads[extensionId] ?? 0;
+    final runtime = await (_loader ?? _loadScript)(meta);
+    if ((_unloads[extensionId] ?? 0) != unloads) {
+      // Updated or uninstalled while loading: this engine runs the old
+      // script. Drop it and load what is installed now.
+      runtime.dispose();
+      _loading.remove(sourceId);
+      return _engine(sourceId);
+    }
+    return _runtimes[sourceId] = runtime;
+  }
+
+  Future<LoadedSource> _loadScript(ExtensionMeta meta) async {
     final file = await _scriptFile(meta.extensionId);
     if (!await file.exists()) {
       throw ServerException('${meta.name} is not installed');
     }
-    final runtime = ExtensionRuntime.load(
+    return ExtensionRuntime.load(
       meta,
       await file.readAsString(),
       _bridge.handle,
     );
-    return _runtimes[sourceId] = runtime;
   }
 
   /// Fetches every repo. A repo that fails is returned as an error entry so
@@ -351,8 +395,10 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     notifyListeners();
   }
 
-  /// Unloads the engines of an extension's sources.
+  /// Unloads the engines of an extension's sources; engines still loading
+  /// are dropped when they finish.
   void _disposeRuntimes(String extensionId) {
+    _unloads.update(extensionId, (n) => n + 1, ifAbsent: () => 1);
     _runtimes.removeWhere((id, runtime) {
       if (runtime.meta.extensionId != extensionId) return false;
       runtime.dispose();

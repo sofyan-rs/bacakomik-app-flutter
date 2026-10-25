@@ -16,7 +16,8 @@ class GetHistory implements UseCase<List<ReadHistory>, NoParams> {
       _repository.getHistory();
 }
 
-/// Inserts or replaces entries by chapter slug.
+/// Inserts or replaces entries by chapter slug. A [quiet] save does not ask
+/// sync to run (see [HistoryRepository.saveHistory]).
 @injectable
 class SaveHistory implements UseCase<Unit, List<ReadHistory>> {
   const SaveHistory(this._repository);
@@ -24,8 +25,10 @@ class SaveHistory implements UseCase<Unit, List<ReadHistory>> {
   final HistoryRepository _repository;
 
   @override
-  Future<Either<Failure, Unit>> call(List<ReadHistory> history) =>
-      _repository.saveHistory(history);
+  Future<Either<Failure, Unit>> call(
+    List<ReadHistory> history, {
+    bool quiet = false,
+  }) => _repository.saveHistory(history, quiet: quiet);
 }
 
 /// Params: chapter slugs to remove.
@@ -50,6 +53,10 @@ class RemoveComicHistory implements UseCase<Unit, String> {
   @override
   Future<Either<Failure, Unit>> call(String comicSlug) =>
       _repository.removeComicHistory(comicSlug);
+
+  /// Removes the history of each comic in one write.
+  Future<Either<Failure, Unit>> many(List<String> comicSlugs) =>
+      _repository.removeComicsHistory(comicSlugs);
 }
 
 @injectable

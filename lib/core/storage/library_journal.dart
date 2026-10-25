@@ -46,12 +46,19 @@ class LibraryJournal {
     _changes.add(null);
   }
 
-  /// A saved entry is no longer deleted.
-  Future<void> recordSaved(LibraryKind kind, Iterable<String> slugs) async {
+  /// A saved entry is no longer deleted. A [quiet] save (the reader keeping
+  /// its page) fires no [changes]: whoever saves quietly makes a normal save
+  /// later (the reader does when it closes or the app pauses), so sync still
+  /// picks the edit up without syncing on every page.
+  Future<void> recordSaved(
+    LibraryKind kind,
+    Iterable<String> slugs, {
+    bool quiet = false,
+  }) async {
     await _box.deleteAll(
       slugs.map((slug) => _key(kind, slug)).where(isValidHiveKey),
     );
-    _changes.add(null);
+    if (!quiet) _changes.add(null);
   }
 
   /// Replaces every deletion of [kind], without firing [changes].

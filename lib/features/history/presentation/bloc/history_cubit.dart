@@ -9,7 +9,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
-/// Read chapters, newest first.
+/// Read chapters, newest first ([ReadHistoryQueries.newestFirst]).
+///
+/// Edits made through the cubit update the list in memory to what [load]
+/// would read back, instead of rereading the whole history; a failed edit
+/// reloads. Call [load] after the history changed elsewhere (sync, import,
+/// restore, migration).
 @injectable
 class HistoryCubit extends Cubit<List<ReadHistory>> {
   HistoryCubit(
@@ -28,14 +33,24 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
   final ClearHistory _clearHistory;
   final Clock _clock;
 
+  /// Counts in-memory edits, so a [load] that read the boxes before an edit
+  /// landed reads again instead of dropping it.
+  var _edits = 0;
+
   Future<void> load() async {
-    final result = await _getHistory(const NoParams());
-    result.fold(_log, emit);
+    while (true) {
+      final edits = _edits;
+      final result = await _getHistory(const NoParams());
+      if (isClosed) return;
+      if (edits != _edits) continue;
+      return result.fold(_log, emit);
+    }
   }
 
   /// Records [page] (0-based) as the reading position of a chapter with
   /// [pageCount] pages. Reaching the last page finishes the chapter; a
-  /// finished chapter stays finished when read again.
+  /// finished chapter stays finished when read again. A [quiet] save does
+  /// not ask sync to run; the reader makes a normal save when it closes.
   Future<void> addHistory({
     required String slug,
     required String chapterNumber,
@@ -43,24 +58,93 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     required String comicSlug,
     required int page,
     required int pageCount,
+    bool quiet = false,
   }) {
     final finished =
         page >= pageCount - 1 || (index.chapter(slug)?.isFinished ?? false);
-    return addHistoryList([
-      ReadHistory(
-        slug: slug,
-        chapterNumber: chapterNumber,
-        readDate: _clock.now(),
-        comicDetails: comicDetails,
-        comicSlug: comicSlug,
-        page: finished ? null : page,
-        pageCount: finished ? null : pageCount,
-      ),
-    ]);
+    final entry = ReadHistory(
+      slug: slug,
+      chapterNumber: chapterNumber,
+      readDate: _clock.now(),
+      comicDetails: comicDetails,
+      comicSlug: comicSlug,
+      page: finished ? null : page,
+      pageCount: finished ? null : pageCount,
+    );
+    if (quiet) {
+      _quiet[slug] = entry;
+    } else {
+      _quiet.remove(slug);
+    }
+    return addHistoryList([entry], quiet: quiet);
   }
 
-  Future<void> addHistoryList(List<ReadHistory> history) =>
-      _thenReload(_saveHistory([...history]));
+  /// Entries saved quietly and not announced to sync yet, by chapter slug.
+  final _quiet = <String, ReadHistory>{};
+
+  /// Saves the last quiet [addHistory] of chapter [slug] again, unchanged,
+  /// as a normal save so sync sends it. Nothing when there is none.
+  Future<void> announce(String slug) async {
+    if (_quiet.remove(slug) case final entry?) {
+      await addHistoryList([entry]);
+    }
+  }
+
+  Future<void> addHistoryList(
+    List<ReadHistory> history, {
+    bool quiet = false,
+  }) async {
+    final saved = [...history];
+    final result = await _saveHistory(saved, quiet: quiet);
+    if (result case Left(value: final failure)) {
+      _log(failure);
+      return load();
+    }
+    if (saved.isNotEmpty) _edit(withSaved(state, saved));
+  }
+
+  /// [current] (newest first) after [saved] was stored, as the repository
+  /// reads it back: entries replaced by slug (the last one given wins),
+  /// every entry of a saved comic with that comic's last given details,
+  /// read dates to the millisecond.
+  @visibleForTesting
+  static List<ReadHistory> withSaved(
+    List<ReadHistory> current,
+    List<ReadHistory> saved,
+  ) {
+    final details = {for (final h in saved) h.comicSlug: h.comicDetails};
+    final bySlug = {for (final h in saved) h.slug: h};
+    final added = [
+      for (final h in bySlug.values)
+        h.copyWith(
+          readDate: DateTime.fromMillisecondsSinceEpoch(
+            h.readDate.millisecondsSinceEpoch,
+          ),
+          comicDetails: details[h.comicSlug]!,
+        ),
+    ]..sort(compareNewestFirst);
+    final kept = [
+      for (final h in current)
+        if (!bySlug.containsKey(h.slug))
+          switch (details[h.comicSlug]) {
+            final d? when !identical(d, h.comicDetails) => h.copyWith(
+              comicDetails: d,
+            ),
+            _ => h,
+          },
+    ];
+    // Both lists are newest first: merge them.
+    final merged = <ReadHistory>[];
+    var i = 0, j = 0;
+    while (i < kept.length && j < added.length) {
+      merged.add(
+        compareNewestFirst(kept[i], added[j]) <= 0 ? kept[i++] : added[j++],
+      );
+    }
+    return merged
+      ..addAll(kept.skip(i))
+      ..addAll(added.skip(j));
+  }
 
   /// Marks every chapter of each comic read, keyed by series slug. Finished
   /// chapters keep their entry; unread and half-read ones are finished. The
@@ -84,22 +168,32 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
 
   Future<void> removeHistory(String slug) => removeHistoryList([slug]);
 
-  Future<void> removeHistoryList(List<String> slugs) =>
-      _thenReload(_removeHistory([...slugs]));
-
-  /// Removes every read chapter of one comic.
-  Future<void> removeHistoryBySlug(String comicSlug) =>
-      _thenReload(_removeComicHistory(comicSlug));
-
-  /// Removes every read chapter of each comic, reloading once.
-  Future<void> markAllUnread(Iterable<String> comicSlugs) async {
-    for (final slug in comicSlugs) {
-      (await _removeComicHistory(slug)).fold(_log, (_) {});
-    }
-    await load();
+  Future<void> removeHistoryList(List<String> slugs) {
+    final removed = slugs.toSet();
+    return _thenRemove(
+      _removeHistory([...slugs]),
+      (h) => removed.contains(h.slug),
+    );
   }
 
-  Future<void> clearHistory() => _thenReload(_clearHistory(const NoParams()));
+  /// Removes every read chapter of one comic.
+  Future<void> removeHistoryBySlug(String comicSlug) => _thenRemove(
+    _removeComicHistory(comicSlug),
+    (h) => h.comicSlug == comicSlug,
+  );
+
+  /// Removes every read chapter of each comic, in one write.
+  Future<void> markAllUnread(Iterable<String> comicSlugs) {
+    final comics = comicSlugs.toSet();
+    if (comics.isEmpty) return Future.value();
+    return _thenRemove(
+      _removeComicHistory.many(comics.toList()),
+      (h) => comics.contains(h.comicSlug),
+    );
+  }
+
+  Future<void> clearHistory() =>
+      _thenRemove(_clearHistory(const NoParams()), (_) => true);
 
   /// Lookups for the current state, rebuilt only when the state changes.
   HistoryIndex get index {
@@ -128,9 +222,27 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
 
   List<ComicLatestHistory> get latestHistories => index.perComic;
 
-  Future<void> _thenReload(Future<Either<Failure, Unit>> action) async {
-    (await action).fold(_log, (_) {});
-    await load();
+  /// Drops the entries matching [removed] once [action] succeeded; reloads
+  /// when it failed.
+  Future<void> _thenRemove(
+    Future<Either<Failure, Unit>> action,
+    bool Function(ReadHistory entry) removed,
+  ) async {
+    if ((await action) case Left(value: final failure)) {
+      _log(failure);
+      return load();
+    }
+    final kept = [
+      for (final h in state)
+        if (!removed(h)) h,
+    ];
+    if (kept.length != state.length) _edit(kept);
+  }
+
+  void _edit(List<ReadHistory> history) {
+    if (isClosed) return;
+    _edits++;
+    emit(history);
   }
 
   void _log(Failure failure) => debugPrint('HistoryCubit: $failure');

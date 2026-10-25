@@ -2,6 +2,7 @@ import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
+import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
@@ -80,32 +81,39 @@ class ApplyPendingReads implements UseCase<bool, ComicLoadedParams> {
 
 /// Run when a comic's details load from its source. A bookmark stored by an
 /// import ([ComicDetailsX.isPlaceholder]) gets the loaded details, keeping
-/// its place, and pending reads are applied. Returns whether the history
-/// changed.
+/// its place, and pending reads are applied. Returns the bookmark as saved
+/// when it was completed, and whether the history changed.
 @injectable
-class CompleteImportedComic implements UseCase<bool, ComicLoadedParams> {
+class CompleteImportedComic
+    implements UseCase<CompletedComic, ComicLoadedParams> {
   const CompleteImportedComic(this._bookmarks, this._applyPendingReads);
 
   final BookmarkRepository _bookmarks;
   final ApplyPendingReads _applyPendingReads;
 
   @override
-  Future<Either<Failure, bool>> call(ComicLoadedParams params) async {
+  Future<Either<Failure, CompletedComic>> call(ComicLoadedParams params) async {
     final (:key, :details) = params;
-    if (details.isPlaceholder) return right(false);
-    final bookmarks = await _bookmarks.getBookmarks();
-    if (bookmarks case Left(value: final failure)) return left(failure);
-    final bookmark = bookmarks
-        .getOrElse((_) => const [])
-        .where((b) => b.slug == key)
-        .firstOrNull;
+    if (details.isPlaceholder) {
+      return right((bookmark: null, historyChanged: false));
+    }
+    final stored = await _bookmarks.getBookmark(key);
+    if (stored case Left(value: final failure)) return left(failure);
+    final bookmark = stored.getOrElse((_) => null);
     final imported = bookmark?.comicDetails.isPlaceholder ?? false;
+    Bookmark? completed;
     if (bookmark != null && imported) {
-      final saved = await _bookmarks.saveBookmarks([
-        bookmark.copyWith(comicDetails: details),
-      ]);
+      completed = bookmark.copyWith(comicDetails: details);
+      final saved = await _bookmarks.saveBookmarks([completed]);
       if (saved case Left(value: final failure)) return left(failure);
     }
-    return _applyPendingReads(params, imported: imported);
+    final applied = await _applyPendingReads(params, imported: imported);
+    return applied.map(
+      (historyChanged) => (bookmark: completed, historyChanged: historyChanged),
+    );
   }
 }
+
+/// [bookmark]: the imported bookmark as saved with its loaded details; null
+/// when no bookmark changed. [historyChanged]: the history was written.
+typedef CompletedComic = ({Bookmark? bookmark, bool historyChanged});

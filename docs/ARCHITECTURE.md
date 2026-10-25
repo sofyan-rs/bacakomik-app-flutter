@@ -147,7 +147,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 ### 4.3 State shapes
 - Remote screens: freezed sealed `initial / loading / loaded / error / noInternet`; widgets test `state is HomeLoaded`; errors render `SourceError` (§9).
 - Paginated lists share `ComicListState` and the `ComicListLoader` mixin (`loadFirstPage`, `loadNextPage`). Next page is ignored until the first loaded; `ComicListLoaded.isLoadMore` is true while loading.
-- Library cubits hold plain lists or `AppSettings` and reload from the repository after every write.
+- Library cubits hold plain lists or `AppSettings`. `HistoryCubit` and `BookmarkCubit` update their list in memory after their own writes, to exactly what a reload would read (dates to the millisecond, ties by slug; a failed write reloads); the other cubits reload after every write. `load()` is for changes made elsewhere (sync, import, restore, migration); a `load()` that read the boxes before an in-memory edit landed reads again.
 - `SourcesState` mirrors `ExtensionManager`: installed and known sources (incl. languages turned off), active source and its `SourceFeatures`, update count.
 - Events are `final class`es named after what happened (`HomeStarted`, `ChapterRequested`).
 
@@ -279,12 +279,12 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 ```
 
 - Categories store ISO 8601 dates; bookmarks and history store epoch ms (`EpochMillisConverter`).
-- History details are stored once per comic in `history_comics`, so marking a whole comic read writes one chapter list. `HistoryRepositoryImpl` joins on read (entries without a comic record are skipped) and deletes the comic record with its last entry. The `ReadHistory` entity still carries `comicDetails`.
+- History details are stored once per comic in `history_comics`, so marking a whole comic read writes one chapter list. `HistoryRepositoryImpl` joins on read (entries without a comic record are skipped) and deletes the comic record with its last entry. The `ReadHistory` entity still carries `comicDetails`, one object shared by a comic's entries; a comic record whose JSON would not change is not written again. Entry keys are `<comicKey>/<number>`, so a comic's entries are found and removed by key, without decoding the history.
 - Stored models map to entities with `fromEntity` / `toEntity`; entities carry no JSON code.
 - User writes go through `LibraryJournal` (records deletions, fires a change for sync). Sync's own writes bypass it.
 
 ### 7.3 Ordering
-Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and history by `readDate` (newest first), categories by `order`. Bookmarks re-sorts by the chosen `BookmarkSort` (`sortBookmarks`, stable). Saving an existing key replaces it.
+Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and history by `readDate` (newest first, equal dates by slug), categories by `order`. `HistoryIndex` uses a list already in that order as is. Bookmarks re-sorts by the chosen `BookmarkSort` (`sortBookmarks`, stable). Saving an existing key replaces it.
 
 ### 7.4 Backup files
 `bacakomik-backup-<y>-<m>-<d>-<h><min><s>.json`, in a folder the user picks:
@@ -311,14 +311,15 @@ Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and h
 ### 7.6 Sync
 One file, `bacakomik-sync.json.gz`, in the app's Drive `appDataFolder` (invisible to the user). `google_sign_in` + `filesDio`.
 
-- **When:** on start, on resume (if last sync > 1 min ago), and 5 s after the last library edit (`LibraryJournal.changes`).
+- **When:** on start, on resume (if last sync > 1 min ago), and 5 s after the last library edit (`LibraryJournal.changes`). The reader saves its page quietly (`recordSaved(quiet: true)`: deletion records still cleared, no change event) and announces the position with one normal save when it closes or the app pauses.
 - **What:** bookmarks, history, categories. Not downloads, settings, extensions or pending reads. An imported bookmark syncs as stored (title only until it loads somewhere).
 - **Format:** gzipped JSON `version: 1` (`SyncRepositoryImpl.formatVersion`): backup fields plus `deletedBookmarks`, `deletedHistory`, `deletedCategories` (id → ms).
 - **Merge** (`SyncSnapshot.merge`): newest wins per key (`updatedDate` / `readDate`); deleted at or after that time → dropped; deletions older than 180 days are forgotten; a side without category fields keeps the other's.
 - **Flow** (`SyncLibrary`): download → merge → migrate legacy (§7.7) → write locally → upload only if different. Local changes bump `libraryRevision` (§4.2). Auth errors become `AuthFailure`.
+- **Off the UI isolate:** gzip + JSON of the sync file, decoding the local boxes (read as raw JSON strings) and encoding them for `writeLocal` run in `Isolate.run`; `writeLocal` writes only records whose JSON changed. `merge` walks two slug-sorted lists in one pass; `sameAs` compares each pair of details objects deeply once.
 
 ### 7.7 Legacy keys
-Keys without a prefix belong to `ComicKey.defaultSource` (`bacakomik`), as all pre-sources keys do. Those came from the old API, now the `voratoon` source (`ComicSource.legacy`). `MigrateSnapshot` moves default-source entries with no `source` (or `"voratoon"`) to `voratoon:<slug>`, rewrites chapter slugs and records deletions for the old keys. It runs in sync, or via `MigrateLocalLibrary` on start/resume when signed out. No request is made.
+Keys without a prefix belong to `ComicKey.defaultSource` (`bacakomik`), as all pre-sources keys do. Those came from the old API, now the `voratoon` source (`ComicSource.legacy`). `MigrateSnapshot` moves default-source entries with no `source` (or `"voratoon"`) to `voratoon:<slug>`, rewrites chapter slugs and records deletions for the old keys. It runs in sync, or via `MigrateLocalLibrary` on start/resume when signed out, which first checks stored keys (`SyncRepository.anyLocalComic`): only default-source comics are decoded, and without a legacy one the library is not read. No request is made.
 
 ---
 
@@ -347,7 +348,7 @@ A source is one site; a multi-language extension (MangaDex) is one source per en
 The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-bacakomik.kurodev.org`, serving bacakomik.my).
 
 ### 8.3 Extension runtime
-`ExtensionRuntime` runs one source per `flutter_js` engine. It loads a prelude with the host globals (`http.fetch`, `html.select`, `storage.get/set`, `webview.run`, `log`, `qs`, `defineExtension`), then `var source = { id, lang }`, then the script (one `defineExtension`).
+`ExtensionRuntime` runs one source per `flutter_js` engine. `ExtensionManager.backend` loads it once: callers asking during the load share it, a failed load is not kept, and an engine whose extension was updated or uninstalled while loading is disposed and loaded again. It loads a prelude with the host globals (`http.fetch`, `html.select`, `storage.get/set`, `webview.run`, `log`, `qs`, `defineExtension`), then `var source = { id, lang }`, then the script (one `defineExtension`).
 
 - Calls are async both ways: JS host calls resolve via `__bkSettle`; Dart method calls run `__bkInvoke` and answer on `bk_result`. Host calls run outside the sending JS call (the engine isn't re-entrant).
 - A method fails with "did not respond" after **45 s without progress** (no host call running, starting or finishing); long chains of host calls are not cut off.
@@ -364,7 +365,7 @@ The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-ba
 | `webview.run` | `HeadlessPages` (§8.5) |
 
 ### 8.5 WebViews
-**Hidden pages** (`HeadlessPages`) run `webview.run` for sites that only answer a real browser. One `HeadlessInAppWebView` per source, kept 3 minutes after its last run; runs queue per source and use the page that exists when they start.
+**Hidden pages** (`HeadlessPages`) run `webview.run` for sites that only answer a real browser. One 360×640 `HeadlessInAppWebView` per source, kept 60 s after its last run (image-host pages 3 minutes); runs queue per source and use the page that exists when they start. Between runs a page is hidden and paused (`WebView.onPause`).
 
 1. Load the URL (25 s) unless already shown. While the title says "Just a moment", wait up to 20 s; a check that needs the user becomes a `Challenge`.
 2. Run the script with `callAsyncJavaScript` (**3-minute timeout**).
@@ -372,15 +373,15 @@ The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-ba
 
 - **A failed run closes the page**, so the next run starts fresh with the cookies the user got in the visible WebView. A kept page showing "Just a moment" is reloaded.
 - Popups are refused; main-frame navigation to other hosts is cancelled (subdomains and `challenges.cloudflare.com` allowed).
-- **Rendering:** hidden WebViews don't render, so lazy pages load nothing. After creating one, Dart calls `render` on `bacakomik/hidden_webviews`; `MainActivity.kt` moves it into an `Untouchable` frame at alpha 0 and makes it visible, so Chromium renders it while the user can't see or touch it.
+- **Rendering:** hidden WebViews don't render, so lazy pages load nothing. Extension pages are rendered only while a script runs, and any page while it shows a "Just a moment" check: Dart calls `render` / `hide` with the WebView's id on `bacakomik/hidden_webviews`; `MainActivity.kt` moves it into an `Untouchable` frame at alpha 0 and makes it visible, so Chromium renders it while the user can't see or touch it. Image-host pages never render.
 
 **WebView screen** shows the site with the extension's User-Agent. `SourceError` opens it on a challenge URL, the comic page on `webUrl`. It copies cookies (e.g. `cf_clearance`) after every load; the failed screen retries when it closes; it can clear the source's cookies.
 
 ### 8.6 Images
 Two caches share one downloader. `coverImageCache` (key `bacakomikCovers`, 5000 files, 365 days) serves every cover, cover saving and download covers; Clear cache keeps it. `comicImageCache` (`DefaultCacheManager`'s key, 500 files, 14 days) serves pages, prefetch and blocked-host pages; Clear cache empties it.
 - `CoverCacheMigration` (started from `main`, once, flag `coverCacheMigrated` in the `settings` box) copies covers of bookmarks, history and downloads from `comicImageCache` with `putFile` (same extension, eTag and expiry).
-- Android downloads go through Cronet (`dart:io` if unavailable) with Chrome's `<img>` headers and the WebViews' cookies; the reader adds `imageHeaders`.
-- A host answering 403/503 is fetched inside a hidden page (`fetch` with credentials, base64) for 30 minutes. `imageHostBlocks` runs the same check for the download queue (§7.5).
+- Android downloads go through Cronet (`dart:io` if unavailable) with Chrome's `<img>` headers; the reader adds `imageHeaders`. WebView cookies are sent only to hosts that once answered 403/503 (`ImageHostCookies`, read at most every 10 minutes); `warmUpWebView` (from `main`) starts Chromium while idle.
+- A host still answering 403/503 is fetched inside a hidden page on `<origin>/robots.txt` (site root if that is turned away) with `fetch` and credentials, for 30 minutes; bodies of 64 KB or more are base64-decoded on another isolate. `imageHostBlocks` runs the same check for the download queue (§7.5).
 
 ### 8.7 `runRemote`
 `runRemote(networkInfo, () async { … })` returns `NetworkFailure` without a connection; otherwise maps `ServerException` → `ServerFailure(message)` and other errors → `ServerFailure(e.toString())`. For parallel requests use `Future.wait`; **not** the record `.wait`, which wraps errors in `ParallelWaitError`.

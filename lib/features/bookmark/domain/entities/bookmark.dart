@@ -18,3 +18,10 @@ abstract class Bookmark with _$Bookmark {
     DateTime? addedDate,
   }) = _Bookmark;
 }
+
+/// Repository order: newest [Bookmark.updatedDate] first, equal dates by
+/// slug.
+int compareBookmarksNewestFirst(Bookmark a, Bookmark b) {
+  final byDate = b.updatedDate.compareTo(a.updatedDate);
+  return byDate != 0 ? byDate : a.slug.compareTo(b.slug);
+}

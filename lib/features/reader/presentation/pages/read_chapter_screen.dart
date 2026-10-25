@@ -117,6 +117,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   Timer? _saveTimer;
   int? _savedPage;
 
+  /// Saves while reading are quiet (no sync per page); closing the reader
+  /// or sending the app to the background announces the position to sync.
+  late final AppLifecycleListener _lifecycle;
+
   @override
   void initState() {
     super.initState();
@@ -127,14 +131,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     _itemPositions.itemPositions.addListener(_onItemPositions);
     _zoom.addListener(_onZoomChanged);
     _syncWakelock(context.read<SettingsCubit>().state.keepScreenOn);
+    _lifecycle = AppLifecycleListener(onPause: _announceProgress);
   }
 
   @override
   void dispose() {
     _autoHide?.cancel();
     _autoScrollResume?.cancel();
-    _saveTimer?.cancel();
-    _saveProgress();
+    _lifecycle.dispose();
+    _announceProgress();
     _itemPositions.itemPositions.removeListener(_onItemPositions);
     _pageController?.dispose();
     _zoomAnimation.dispose();
@@ -145,10 +150,17 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     super.dispose();
   }
 
-  void _saveProgress() {
+  /// Saves the page on screen if it changed. While reading the save is
+  /// quiet; with [announce] it is a normal save that lets sync run, and an
+  /// unchanged page re-announces the last quiet save.
+  void _saveProgress({bool announce = false}) {
     final chapter = _chapter;
     final page = _page.value;
-    if (chapter == null || page == _savedPage) return;
+    if (chapter == null) return;
+    if (page == _savedPage) {
+      if (announce) _history.announce(widget.slug);
+      return;
+    }
     _savedPage = page;
     _history.addHistory(
       slug: widget.slug,
@@ -157,7 +169,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       comicDetails: widget.comicDetails,
       page: page,
       pageCount: chapter.images.length,
+      quiet: !announce,
     );
+  }
+
+  /// The reader closes or the app goes to the background: save now, so
+  /// sync sends the position to other devices.
+  void _announceProgress() {
+    _saveTimer?.cancel();
+    _saveProgress(announce: true);
   }
 
   void _scheduleSave() {

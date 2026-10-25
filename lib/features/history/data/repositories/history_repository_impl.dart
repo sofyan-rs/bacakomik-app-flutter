@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
+import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/storage/library_journal.dart';
 import 'package:bacakomik_app/core/storage/local_call.dart';
@@ -11,78 +12,117 @@ import 'package:injectable/injectable.dart';
 
 @LazySingleton(as: HistoryRepository)
 class HistoryRepositoryImpl implements HistoryRepository {
-  const HistoryRepositoryImpl(this._local, this._journal);
+  HistoryRepositoryImpl(this._local, this._journal);
 
   final HistoryLocalDataSource _local;
   final LibraryJournal _journal;
 
+  /// Per comic, the details object last saved and the stored JSON it was
+  /// saved as. Saving the same object again while the record is unchanged
+  /// skips encoding it (the reader saves its page with the same details).
+  final _saved = <String, (ComicDetails, String?)>{};
+
   /// Joins entries with their comic. An entry whose comic record is missing
-  /// cannot be shown and is skipped.
+  /// cannot be shown and is skipped. Each comic's details are converted
+  /// once and shared by its entries.
   @override
   Future<Either<Failure, List<ReadHistory>>> getHistory() => runLocal(() {
     final comics = _local.getComics();
+    final details = <String, ComicDetails>{};
     return [
       for (final entry in _local.getEntries())
         if (comics[entry.comicSlug] case final comic?)
-          entry.toEntity(comic.comicDetails.toEntity()),
+          entry.toEntity(
+            details[entry.comicSlug] ??= comic.comicDetails.toEntity(),
+          ),
     ].newestFirst;
   });
 
   /// Stores the entries, and each comic's details once (the last given).
+  /// A comic record that would not change is not written again.
   @override
   Future<Either<Failure, Unit>> saveHistory(
-    List<ReadHistory> history,
-  ) => runLocal(() async {
+    List<ReadHistory> history, {
+    bool quiet = false,
+  }) => runLocal(() async {
     await _local.putEntries(history.map(ReadHistoryModel.fromEntity).toList());
-    final comics = {
-      for (final h in history)
-        h.comicSlug: HistoryComicModel(
-          slug: h.comicSlug,
-          comicDetails: ComicDetailsModel.fromEntity(h.comicDetails),
-        ),
-    };
-    await _local.putComics(comics.values.toList());
-    await _journal.recordSaved(LibraryKind.history, history.map((h) => h.slug));
+    final comics = {for (final h in history) h.comicSlug: h.comicDetails};
+    await _local.putComics([
+      for (final MapEntry(key: slug, value: details) in comics.entries)
+        if (!_isStored(slug, details))
+          HistoryComicModel(
+            slug: slug,
+            comicDetails: ComicDetailsModel.fromEntity(details),
+          ),
+    ]);
+    for (final MapEntry(key: slug, value: details) in comics.entries) {
+      _saved[slug] = (details, _local.comicJson(slug));
+    }
+    await _journal.recordSaved(
+      LibraryKind.history,
+      history.map((h) => h.slug),
+      quiet: quiet,
+    );
     return unit;
   });
 
+  bool _isStored(String slug, ComicDetails details) {
+    final (savedDetails, json) = _saved[slug] ?? (null, null);
+    return identical(savedDetails, details) &&
+        json != null &&
+        identical(json, _local.comicJson(slug));
+  }
+
+  /// Comic records left without entries are deleted; only the comics of
+  /// the removed entries are checked.
   @override
   Future<Either<Failure, Unit>> removeHistory(List<String> slugs) =>
       runLocal(() async {
+        final comics = {
+          for (final slug in slugs)
+            if (_local.getEntry(slug) case final entry?) entry.comicSlug,
+        };
         await _local.deleteEntries(slugs);
-        await _pruneComics();
+        await _pruneComics(comics);
         await _journal.recordDeleted(LibraryKind.history, slugs);
         return unit;
       });
 
   @override
   Future<Either<Failure, Unit>> removeComicHistory(String comicSlug) =>
+      removeComicsHistory([comicSlug]);
+
+  /// Finds the entries by key (`<comicSlug>/<number>`), without decoding
+  /// the history.
+  @override
+  Future<Either<Failure, Unit>> removeComicsHistory(List<String> comicSlugs) =>
       runLocal(() async {
-        final slugs = [
-          for (final entry in _local.getEntries())
-            if (entry.comicSlug == comicSlug) entry.slug,
-        ];
+        final slugs = _local.entryKeysOf(comicSlugs.toSet());
         await _local.deleteEntries(slugs);
-        await _local.deleteComics([comicSlug]);
+        await _local.deleteComics(comicSlugs);
+        comicSlugs.forEach(_saved.remove);
         await _journal.recordDeleted(LibraryKind.history, slugs);
         return unit;
       });
 
   @override
   Future<Either<Failure, Unit>> clearHistory() => runLocal(() async {
-    final slugs = [for (final entry in _local.getEntries()) entry.slug];
+    final slugs = _local.entryKeys();
     await _local.clear();
+    _saved.clear();
     await _journal.recordDeleted(LibraryKind.history, slugs);
     return unit;
   });
 
-  /// Drops comic records that no entry refers to any more.
-  Future<void> _pruneComics() async {
-    final used = {for (final e in _local.getEntries()) e.comicSlug};
+  /// Drops the records of [comics] that no entry refers to any more.
+  Future<void> _pruneComics(Set<String> comics) async {
+    if (comics.isEmpty) return;
+    final used = _local.comicsWithEntries(comics);
     final unused = [
-      for (final slug in _local.getComics().keys)
+      for (final slug in comics)
         if (!used.contains(slug)) slug,
     ];
+    unused.forEach(_saved.remove);
     if (unused.isNotEmpty) await _local.deleteComics(unused);
   }
 }

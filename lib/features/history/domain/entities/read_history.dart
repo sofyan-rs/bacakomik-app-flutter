@@ -42,8 +42,19 @@ abstract class ComicLatestHistory with _$ComicLatestHistory {
 /// Read-only queries over a history list in any order. Each call scans the
 /// list once; screens that query often should use [HistoryIndex].
 extension ReadHistoryQueries on List<ReadHistory> {
-  List<ReadHistory> get newestFirst =>
-      [...this]..sort((a, b) => b.readDate.compareTo(a.readDate));
+  /// Newest [ReadHistory.readDate] first; entries read at the same time by
+  /// slug, so the order does not depend on how the list was built.
+  List<ReadHistory> get newestFirst => isNewestFirst ? [...this] : _sorted();
+
+  List<ReadHistory> _sorted() => [...this]..sort(compareNewestFirst);
+
+  /// Whether the list is already in [newestFirst] order (one pass).
+  bool get isNewestFirst {
+    for (var i = 1; i < length; i++) {
+      if (compareNewestFirst(this[i - 1], this[i]) > 0) return false;
+    }
+    return true;
+  }
 
   ReadHistory? get latest => _newest(this);
 
@@ -59,6 +70,12 @@ extension ReadHistoryQueries on List<ReadHistory> {
   List<ComicLatestHistory> get latestPerComic => HistoryIndex(this).perComic;
 }
 
+/// The order of [ReadHistoryQueries.newestFirst].
+int compareNewestFirst(ReadHistory a, ReadHistory b) {
+  final byDate = b.readDate.compareTo(a.readDate);
+  return byDate != 0 ? byDate : a.slug.compareTo(b.slug);
+}
+
 ReadHistory? _newest(Iterable<ReadHistory> history) {
   ReadHistory? newest;
   for (final h in history) {
@@ -68,10 +85,13 @@ ReadHistory? _newest(Iterable<ReadHistory> history) {
 }
 
 /// Lookups over one history list, built in a single pass so `build` methods
-/// can query per row without rescanning or resorting the history.
+/// can query per row without rescanning or resorting the history. A list
+/// already newest first (as `HistoryRepository.getHistory` and
+/// `HistoryCubit` keep it) is used as is; any other order is sorted first.
 class HistoryIndex {
   HistoryIndex(List<ReadHistory> history) {
-    for (final h in history.newestFirst) {
+    final ordered = history.isNewestFirst ? history : history._sorted();
+    for (final h in ordered) {
       _chapters[h.slug] = h;
       _counts.update(h.comicSlug, (n) => n + 1, ifAbsent: () => 1);
       if (!_latest.containsKey(h.comicSlug)) {

@@ -6,8 +6,7 @@ enum BookmarkFilter { all, updated, finished }
 /// A bookmark with how many of its chapters are in the history, and the
 /// dates it can be sorted by (see `sortBookmarks`).
 class BookmarkProgress {
-  BookmarkProgress(this.bookmark, this.read, {this.lastRead})
-    : latestChapter = latestChapterOf(bookmark);
+  BookmarkProgress(this.bookmark, this.read, {this.lastRead});
 
   final Bookmark bookmark;
 
@@ -18,8 +17,13 @@ class BookmarkProgress {
   /// When a chapter of the comic was last opened; null if never.
   final DateTime? lastRead;
 
-  /// Release time of the newest chapter, see [latestChapterOf].
-  final DateTime latestChapter;
+  /// Release time of the newest chapter, see [latestChapterOf]. Worked out
+  /// on first use (only the latest-chapter sort needs it) and kept per
+  /// bookmark object, which stays the same until the bookmark changes.
+  DateTime get latestChapter =>
+      _latestChapters[bookmark] ??= latestChapterOf(bookmark);
+
+  static final _latestChapters = Expando<DateTime>('latestChapter');
 
   /// When the comic was bookmarked; [Bookmark.updatedDate] for bookmarks
   /// saved before that was stored.
@@ -63,17 +67,10 @@ class BookmarkProgress {
   /// [Bookmark.updatedDate], when the stored list was saved. With no
   /// readable date (e.g. `-`, or no chapters yet) it is
   /// [Bookmark.updatedDate] itself.
-  static DateTime latestChapterOf(Bookmark bookmark) {
-    DateTime? latest;
-    for (final chapter in bookmark.comicDetails.chapters) {
-      final date = ChapterDate.parse(
-        chapter.date,
+  static DateTime latestChapterOf(Bookmark bookmark) =>
+      ChapterDate.latest(
+        bookmark.comicDetails.chapters.map((c) => c.date),
         madeAt: bookmark.updatedDate,
-      );
-      if (date != null && (latest == null || date.isAfter(latest))) {
-        latest = date;
-      }
-    }
-    return latest ?? bookmark.updatedDate;
-  }
+      ) ??
+      bookmark.updatedDate;
 }

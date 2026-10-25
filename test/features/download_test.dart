@@ -183,6 +183,10 @@ class FakeBookmarks implements BookmarkRepository {
       right(bookmarks);
 
   @override
+  Future<Either<Failure, Bookmark?>> getBookmark(String slug) async =>
+      right(bookmarks.where((b) => b.slug == slug).firstOrNull);
+
+  @override
   Future<Either<Failure, Unit>> saveBookmarks(List<Bookmark> b) async =>
       right(unit);
 
@@ -199,8 +203,10 @@ class FakeHistory implements HistoryRepository {
       right(history);
 
   @override
-  Future<Either<Failure, Unit>> saveHistory(List<ReadHistory> h) async =>
-      right(unit);
+  Future<Either<Failure, Unit>> saveHistory(
+    List<ReadHistory> h, {
+    bool quiet = false,
+  }) async => right(unit);
 
   @override
   Future<Either<Failure, Unit>> removeHistory(List<String> s) async =>
@@ -208,6 +214,10 @@ class FakeHistory implements HistoryRepository {
 
   @override
   Future<Either<Failure, Unit>> removeComicHistory(String s) async =>
+      right(unit);
+
+  @override
+  Future<Either<Failure, Unit>> removeComicsHistory(List<String> s) async =>
       right(unit);
 
   @override

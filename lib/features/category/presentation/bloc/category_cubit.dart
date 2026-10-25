@@ -21,11 +21,16 @@ class CategoryState {
   /// Ids of the existing categories the comic [slug] is in.
   Set<String> idsOf(String slug) {
     final ids = bySlug[slug]?.categoryIds ?? const [];
+    if (ids.isEmpty || categories.isEmpty) return {};
+    final existing = _ids[categories] ??= {for (final c in categories) c.id};
     return {
       for (final id in ids)
-        if (categories.any((c) => c.id == id)) id,
+        if (existing.contains(id)) id,
     };
   }
+
+  /// Ids of [categories], made once per list.
+  static final _ids = Expando<Set<String>>('categoryIds');
 }
 
 @injectable

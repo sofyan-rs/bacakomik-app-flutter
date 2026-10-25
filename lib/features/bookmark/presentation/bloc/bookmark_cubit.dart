@@ -17,7 +17,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
-/// Bookmarked comics, newest [Bookmark.updatedDate] first.
+/// Bookmarked comics, newest [Bookmark.updatedDate] first
+/// ([compareBookmarksNewestFirst]).
+///
+/// Adding, removing, refreshing and completing an import update the list in
+/// memory to what [load] would read back; a failed write reloads. Call
+/// [load] after the library changed elsewhere (sync, import, restore).
 @injectable
 class BookmarkCubit extends Cubit<List<Bookmark>> {
   BookmarkCubit(
@@ -46,29 +51,88 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   final ProgressNotifier _notifier;
   final Clock _clock;
 
+  /// Counts in-memory edits, so a [load] that read the box before an edit
+  /// landed reads again instead of dropping it.
+  var _edits = 0;
+
   Future<void> load() async {
-    final result = await _getBookmarks(const NoParams());
-    result.fold(_log, emit);
+    while (true) {
+      final edits = _edits;
+      final result = await _getBookmarks(const NoParams());
+      if (isClosed) return;
+      if (edits != _edits) continue;
+      return result.fold(_log, emit);
+    }
   }
 
-  Future<void> addBookmark(ComicDetails comic, String slug) {
+  Future<void> addBookmark(ComicDetails comic, String slug) async {
     final now = _clock.now();
-    return _thenReload(
-      _saveBookmarks([
-        Bookmark(
-          slug: slug,
-          comicDetails: comic,
-          updatedDate: now,
-          addedDate: now,
-        ),
-      ]),
+    final bookmark = Bookmark(
+      slug: slug,
+      comicDetails: comic,
+      updatedDate: now,
+      addedDate: now,
     );
+    final result = await _saveBookmarks([bookmark]);
+    if (result case Left(value: final failure)) {
+      _log(failure);
+      return load();
+    }
+    _put(bookmark);
   }
 
   Future<void> removeBookmark(String slug) => removeBookmarkList([slug]);
 
-  Future<void> removeBookmarkList(List<String> slugs) =>
-      _thenReload(_removeBookmarks([...slugs]));
+  Future<void> removeBookmarkList(List<String> slugs) async {
+    final result = await _removeBookmarks([...slugs]);
+    if (result case Left(value: final failure)) {
+      _log(failure);
+      return load();
+    }
+    final removed = slugs.toSet();
+    final kept = [
+      for (final b in state)
+        if (!removed.contains(b.slug)) b,
+    ];
+    if (kept.length != state.length) _edit(kept);
+  }
+
+  /// [state] with [saved] stored: replaced by slug and placed in order,
+  /// dates to the millisecond as they are read back.
+  @visibleForTesting
+  static List<Bookmark> withSaved(List<Bookmark> current, Bookmark saved) {
+    DateTime ms(DateTime d) =>
+        DateTime.fromMillisecondsSinceEpoch(d.millisecondsSinceEpoch);
+    final bookmark = saved.copyWith(
+      updatedDate: ms(saved.updatedDate),
+      addedDate: switch (saved.addedDate) {
+        final added? => ms(added),
+        null => null,
+      },
+    );
+    final list = [
+      for (final b in current)
+        if (b.slug != bookmark.slug) b,
+    ];
+    var low = 0, high = list.length;
+    while (low < high) {
+      final mid = (low + high) >> 1;
+      if (compareBookmarksNewestFirst(list[mid], bookmark) < 0) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return list..insert(low, bookmark);
+  }
+
+  void _put(Bookmark saved) => _edit(withSaved(state, saved));
+
+  void _edit(List<Bookmark> bookmarks) {
+    if (isClosed) return;
+    _edits++;
+    emit(bookmarks);
+  }
 
   final _historyChanges = StreamController<void>.broadcast();
 
@@ -134,7 +198,7 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   Future<void> _drainRefreshQueue() async {
     const id = ProgressIds.bookmarkRefresh;
     const skipped = Right<Failure, RefreshResult>((
-      updated: false,
+      saved: null,
       historyChanged: false,
       failure: null,
     ));
@@ -161,14 +225,14 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
         cancel.future.then((_) => skipped),
       ]);
       _refreshDone++;
-      final (:updated, :historyChanged, :failure) = result.getOrElse(
-        (failure) => (updated: false, historyChanged: false, failure: failure),
+      final (:saved, :historyChanged, :failure) = result.getOrElse(
+        (failure) => (saved: null, historyChanged: false, failure: failure),
       );
       if (failure != null) debugPrint('Refresh ${bookmark.slug}: $failure');
       if (historyChanged) _historyChanges.add(null);
-      if (updated) {
+      if (saved != null) {
         _refreshUpdated++;
-        await load();
+        _put(saved);
       }
     }
     await _notifier.finish(
@@ -196,14 +260,19 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
 
   /// Called when [key]'s details loaded from its source: an imported
   /// bookmark gets them, and imported reading progress is applied. Returns
-  /// whether the history changed; the caller reloads it.
+  /// whether the history changed; the caller reloads it. The bookmarks
+  /// change only when an imported one was completed.
   Future<bool> comicLoaded(String key, ComicDetails details) async {
     final result = await _completeImportedComic((key: key, details: details));
-    await load();
-    return result.getOrElse((failure) {
-      _log(failure);
-      return false;
-    });
+    switch (result) {
+      case Left(value: final failure):
+        _log(failure);
+        await load();
+        return false;
+      case Right(value: (:final bookmark, :final historyChanged)):
+        if (bookmark != null) _put(bookmark);
+        return historyChanged;
+    }
   }
 
   /// Bookmarks whose title contains [keyword] (case-insensitive on title).

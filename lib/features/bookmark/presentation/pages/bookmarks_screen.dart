@@ -183,6 +183,33 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     };
   }
 
+  /// Comics per tab of [grouping] (as [_inGroup] counts them, except the
+  /// All tab, which holds every comic), in one pass over [all].
+  Map<String, int> _counts(
+    BookmarkGrouping grouping,
+    List<BookmarkProgress> all,
+    CategoryState categories,
+  ) {
+    final counts = <String, int>{};
+    void add(String tab) => counts.update(tab, (n) => n + 1, ifAbsent: () => 1);
+    for (final item in all) {
+      final slug = item.bookmark.slug;
+      switch (grouping) {
+        case BookmarkGrouping.status:
+          for (final filter in BookmarkFilter.values) {
+            if (item.matches(filter)) add(filter.name);
+          }
+        case BookmarkGrouping.source:
+          add(ComicKey.sourceOf(slug));
+        case BookmarkGrouping.category:
+          final ids = categories.idsOf(slug);
+          if (ids.isEmpty) add(_uncategorizedTab);
+          ids.forEach(add);
+      }
+    }
+    return counts;
+  }
+
   Future<void> _setCategories() async {
     final saved = await showSetCategoriesSheet(context, {..._selected});
     if (saved && mounted) setState(_selected.clear);
@@ -254,14 +281,13 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       order,
     );
     final updated = all.where((i) => i.hasUpdate).length;
+    final counts = _counts(grouping, all, categories);
     final tabs = [
       for (final tab in _tabs(grouping, all, categories))
         Segment(
           value: tab.value,
           label: tab.label,
-          count: all
-              .where((i) => _inGroup(grouping, i, categories, tab.value))
-              .length,
+          count: tab.value == _allTab ? all.length : counts[tab.value] ?? 0,
         ),
     ];
     // The tab is gone (grouping changed, category deleted): show the first.

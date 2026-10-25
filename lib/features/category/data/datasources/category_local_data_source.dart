@@ -16,6 +16,10 @@ abstract interface class CategoryLocalDataSource {
   Future<void> putComicCategories(List<ComicCategoriesModel> entries);
 
   Future<void> deleteComicCategories(List<String> slugs);
+
+  RawJsonStore get rawCategories;
+
+  RawJsonStore get rawComicCategories;
 }
 
 @LazySingleton(as: CategoryLocalDataSource)
@@ -59,4 +63,10 @@ class CategoryLocalDataSourceImpl implements CategoryLocalDataSource {
   @override
   Future<void> deleteComicCategories(List<String> slugs) =>
       _comicCategories.deleteAll(slugs);
+
+  @override
+  RawJsonStore get rawCategories => _categories;
+
+  @override
+  RawJsonStore get rawComicCategories => _comicCategories;
 }

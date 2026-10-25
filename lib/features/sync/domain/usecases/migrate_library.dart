@@ -23,8 +23,14 @@ class MigrateSnapshot {
 
   final Clock _clock;
 
-  static bool _isLegacy(String key, ComicDetails details) =>
-      ComicKey.sourceOf(key) == ComicKey.defaultSource &&
+  /// Whether a comic stored under [key] could be legacy: only keys of the
+  /// default source can be ([isLegacy] also needs its details).
+  static bool isLegacyKey(String key) =>
+      ComicKey.sourceOf(key) == ComicKey.defaultSource;
+
+  /// Whether the comic stored under [key] with [details] is moved.
+  static bool isLegacy(String key, ComicDetails details) =>
+      isLegacyKey(key) &&
       (details.source == null || details.source == ComicSource.legacy);
 
   static String _legacyKey(String slug) =>
@@ -44,10 +50,10 @@ class MigrateSnapshot {
     required DateTime keepDeletionsSince,
   }) async {
     final legacyBookmarks = snapshot.bookmarks.where(
-      (b) => _isLegacy(b.slug, b.comicDetails),
+      (b) => isLegacy(b.slug, b.comicDetails),
     );
     final legacyHistory = snapshot.history.where(
-      (h) => _isLegacy(h.comicSlug, h.comicDetails),
+      (h) => isLegacy(h.comicSlug, h.comicDetails),
     );
     if (legacyBookmarks.isEmpty && legacyHistory.isEmpty) return snapshot;
 
@@ -55,7 +61,7 @@ class MigrateSnapshot {
     final migrated = snapshot.copyWith(
       bookmarks: [
         for (final b in snapshot.bookmarks)
-          if (_isLegacy(b.slug, b.comicDetails))
+          if (isLegacy(b.slug, b.comicDetails))
             b.copyWith(
               slug: _legacyKey(b.slug),
               comicDetails: _legacyDetails(b.slug, b.comicDetails),
@@ -65,7 +71,7 @@ class MigrateSnapshot {
       ],
       history: [
         for (final h in snapshot.history)
-          if (_isLegacy(h.comicSlug, h.comicDetails))
+          if (isLegacy(h.comicSlug, h.comicDetails))
             h.copyWith(
               slug: '${_legacyKey(h.comicSlug)}/${h.chapterNumber}',
               comicSlug: _legacyKey(h.comicSlug),
@@ -103,8 +109,17 @@ class MigrateLocalLibrary implements UseCase<bool, NoParams> {
   final MigrateSnapshot _migrate;
   final Clock _clock;
 
+  /// Runs on every start and resume while signed out, so it first checks
+  /// the stored keys: only default-source comics are decoded, and without a
+  /// legacy one the library is not read at all.
   @override
   Future<Either<Failure, bool>> call(NoParams params) async {
+    final legacy = await _repository.anyLocalComic(
+      where: MigrateSnapshot.isLegacyKey,
+      test: MigrateSnapshot.isLegacy,
+    );
+    if (legacy case Left(value: final failure)) return left(failure);
+    if (!legacy.getOrElse((_) => true)) return right(false);
     final keepSince = _clock.now().subtract(SyncLibrary.keepDeletionsFor);
     final local = await _repository.readLocal();
     return local.fold((failure) async => left(failure), (local) async {
