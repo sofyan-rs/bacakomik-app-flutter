@@ -17,10 +17,12 @@ import 'package:bacakomik_app/features/history/data/datasources/history_local_da
 import 'package:bacakomik_app/features/history/data/repositories/history_repository_impl.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/migration/data/datasources/mihon_backup_parser.dart';
+import 'package:bacakomik_app/features/migration/data/repositories/pending_read_repository_impl.dart';
 import 'package:bacakomik_app/features/migration/domain/entities/comix_csv.dart';
 import 'package:bacakomik_app/features/migration/domain/entities/library_import.dart';
 import 'package:bacakomik_app/features/migration/domain/entities/mihon_backup.dart';
 import 'package:bacakomik_app/features/migration/domain/entities/mihon_import_plan.dart';
+import 'package:bacakomik_app/features/migration/domain/entities/pending_read.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/apply_pending_reads.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/source_migration.dart';
@@ -121,6 +123,8 @@ List<int> manga(
   bool? favorite,
   List<int> categories = const [],
   List<(double, bool)> chapters = const [],
+  List<List<int>> fullChapters = const [],
+  List<(String, DateTime)> history = const [],
 }) {
   final p = _Proto()
     ..int64(1, source)
@@ -132,11 +136,42 @@ List<int> manga(
     c.float(9, number);
     p.bytes(16, c.value);
   }
+  for (final c in fullChapters) {
+    p.bytes(16, c);
+  }
+  for (final (chapter, date) in history) {
+    final h = _Proto()
+      ..string(1, chapter)
+      ..int64(2, date.millisecondsSinceEpoch)
+      ..int64(3, 60000);
+    p.bytes(104, h.value);
+  }
   for (final c in categories) {
     p.int64(17, c);
   }
   if (favorite != null) p.int64(100, favorite ? 1 : 0);
   return p.value;
+}
+
+/// A `BackupChapter` with the fields the import reads, and some it skips.
+List<int> backupChapter(
+  String url,
+  double? number, {
+  bool read = false,
+  DateTime? fetched,
+  DateTime? uploaded,
+}) {
+  final c = _Proto()
+    ..string(1, url)
+    ..string(2, 'Chapter $number')
+    ..string(3, 'Group');
+  if (read) c.int64(4, 1);
+  c.int64(6, 12); // lastPageRead: skipped
+  if (fetched != null) c.int64(7, fetched.millisecondsSinceEpoch);
+  if (uploaded != null) c.int64(8, uploaded.millisecondsSinceEpoch);
+  if (number != null) c.float(9, number);
+  c.int64(10, 3);
+  return c.value;
 }
 
 void main() {
@@ -224,6 +259,102 @@ void main() {
         () => parseMihonBackup(utf8.encode('{"version": 2}')),
         throwsFormatException,
       );
+    });
+
+    test('parses chapters and their history', () {
+      final t = DateTime(2026, 10, 1, 12);
+      // Legacy history (field 102) numbers its fields from 0.
+      final legacy = _Proto()
+        ..string(0, '/c/0')
+        ..int64(1, t.subtract(const Duration(days: 1)).millisecondsSinceEpoch);
+      final backup = _Proto()
+        ..bytes(1, [
+          ...manga(
+            1,
+            '/manga/a/',
+            'A',
+            fullChapters: [
+              backupChapter(
+                '/c/2',
+                2,
+                read: true,
+                fetched: t,
+                uploaded: t.subtract(const Duration(days: 3)),
+              ),
+              // Chapter number 0 is left out of the file, like any default.
+              backupChapter('/c/0', null),
+            ],
+            history: [('/c/2', t.add(const Duration(hours: 1)))],
+          ),
+          ...(_Proto()..bytes(102, legacy.value)).value,
+        ]);
+
+      final m = parseMihonBackup(gzip.encode(backup.value)).manga.single;
+
+      expect(m.chapters.map((c) => (c.url, c.numberText, c.read, c.fetched)), [
+        ('/c/2', '2', true, t),
+        ('/c/0', '0', false, null),
+      ]);
+      expect(m.chapters.first.uploaded, t.subtract(const Duration(days: 3)));
+      expect(m.history, {
+        '/c/2': t.add(const Duration(hours: 1)),
+        '/c/0': t.subtract(const Duration(days: 1)),
+      });
+      expect(m.lastRead, '2');
+    });
+
+    test('importChapters: newest first, one per number, dates like Mihon', () {
+      final t = DateTime(2026, 10, 1);
+      final fetched = DateTime(2026, 9, 1);
+      MihonChapter ch(String url, double n, {bool read = true}) =>
+          MihonChapter(url: url, number: n, read: read, fetched: fetched);
+      final manga = MihonManga(
+        sourceId: 1,
+        url: '/manga/a/',
+        title: 'A',
+        chapters: [
+          ch('/1', 1),
+          ch('/2', 2),
+          ch('/2b', 2, read: false),
+          ch('/3', 3, read: false),
+          ch('/4', 4),
+          ch('/5', 5),
+          ch('/6', 6, read: false),
+          ch('/x', -1),
+        ],
+        history: {'/4': t, '/1': t.subtract(const Duration(days: 10))},
+      );
+
+      final list = importChapters(manga, DateTime(2026, 10, 25));
+
+      expect(list.map((c) => c.number), ['6', '5', '4', '3', '2', '1']);
+      expect(
+        {for (final c in list) c.number: ?c.readDate},
+        {
+          // Newer than the newest chapter in the history: right after it.
+          '5': t.add(const Duration(milliseconds: 1)),
+          '4': t,
+          // No history: right before the next newer read chapter.
+          '2': t.subtract(const Duration(milliseconds: 1)),
+          '1': t.subtract(const Duration(days: 10)),
+        },
+      );
+
+      // No history at all: counted from when the newest was fetched.
+      final plain = importChapters(
+        MihonManga(
+          sourceId: 1,
+          url: '/manga/b/',
+          title: 'B',
+          chapters: [ch('/1', 1), ch('/2', 2), ch('/3', 3, read: false)],
+        ),
+        DateTime(2026, 10, 25),
+      );
+      expect(plain.map((c) => c.readDate), [
+        null,
+        fetched,
+        fetched.subtract(const Duration(milliseconds: 1)),
+      ]);
     });
 
     test('plans per source: matched first, languages by id', () {
@@ -367,13 +498,14 @@ void main() {
         ),
       ]);
 
-      final result = await ImportLibrary(bookmarks, categories, pending, clock)(
-        const [
-          ImportEntry(key: 'comix:a', title: 'A', categories: ['Manhwa']),
-          ImportEntry(key: 'comix:old', title: 'Old', lastRead: '3'),
-          ImportEntry(key: 'b', title: 'B', categories: ['manhwa', 'New']),
-        ],
-      );
+      final result =
+          await ImportLibrary(bookmarks, categories, pending, history, clock)(
+            const [
+              ImportEntry(key: 'comix:a', title: 'A', categories: ['Manhwa']),
+              ImportEntry(key: 'comix:old', title: 'Old', lastRead: '3'),
+              ImportEntry(key: 'b', title: 'B', categories: ['manhwa', 'New']),
+            ],
+          );
 
       final r = result.getOrElse((f) => fail('$f'));
       expect((r.added, r.existing), (2, 1));
@@ -387,7 +519,7 @@ void main() {
       // legacy migration.
       expect(list[1].comicDetails.source, 'bacakomik');
       expect(list.last.comicDetails, sampleComicDetails);
-      expect(pending.values, {'comix:old': '3'});
+      expect(pending.values, {'comix:old': PendingRead.upTo('3')});
 
       final made = (await categories.getCategories()).getOrElse(
         (_) => const [],
@@ -412,15 +544,17 @@ void main() {
         ]);
 
         final result =
-            await ImportLibrary(bookmarks, categories, pending, clock)(const [
-              ImportEntry(
-                key: 'westmanga:oreaku',
-                title: 'OreAku Ore wa',
-                lastRead: '48',
-              ),
-              ImportEntry(key: 'comix:x', title: 'X', lastRead: '3'),
-              ImportEntry(key: 'mangafire:x', title: 'x!', lastRead: '9'),
-            ]);
+            await ImportLibrary(bookmarks, categories, pending, history, clock)(
+              const [
+                ImportEntry(
+                  key: 'westmanga:oreaku',
+                  title: 'OreAku Ore wa',
+                  lastRead: '48',
+                ),
+                ImportEntry(key: 'comix:x', title: 'X', lastRead: '3'),
+                ImportEntry(key: 'mangafire:x', title: 'x!', lastRead: '9'),
+              ],
+            );
 
         final r = result.getOrElse((f) => fail('$f'));
         expect((r.added, r.existing, r.sameTitle), (1, 0, 2));
@@ -430,7 +564,10 @@ void main() {
             .toSet();
         expect(keys, {'voratoon:oreaku', 'comix:x'});
         // Progress goes to the bookmark the series lives under, highest wins.
-        expect(pending.values, {'voratoon:oreaku': '48', 'comix:x': '9'});
+        expect(pending.values, {
+          'voratoon:oreaku': PendingRead.upTo('48'),
+          'comix:x': PendingRead.upTo('9'),
+        });
       },
     );
 
@@ -473,7 +610,7 @@ void main() {
           pageCount: 10,
         ),
       ]);
-      await pending.save({'comix:a': '7'});
+      await pending.save({'comix:a': PendingRead.upTo('7')});
       // An empty chapter list keeps it waiting.
       await apply((
         key: 'comix:a',
@@ -493,6 +630,297 @@ void main() {
       // The last read chapter is the newest entry.
       expect(read.newestFirst.first.slug, 'comix:a/7');
     });
+
+    group('Mihon chapters', () {
+      const westId = 77;
+      final t = DateTime(2026, 10, 20, 8);
+
+      /// A: 3 read, 2 and 1.5 not, 1 read (in the history at [t]).
+      /// B: 2 read (in the history an hour later), 1 read without history.
+      List<ImportEntry> plan() {
+        final source = _Proto()
+          ..string(1, 'West Manga')
+          ..int64(2, westId);
+        final backup = _Proto()
+          ..bytes(
+            1,
+            manga(
+              westId,
+              '/manga/a/',
+              'A',
+              fullChapters: [
+                backupChapter(
+                  '/a/3',
+                  3,
+                  read: true,
+                  uploaded: DateTime(2026, 10, 24),
+                ),
+                backupChapter('/a/2', 2),
+                backupChapter('/a/1.5', 1.5),
+                backupChapter('/a/1', 1, read: true),
+              ],
+              history: [('/a/1', t)],
+            ),
+          )
+          ..bytes(
+            1,
+            manga(
+              westId,
+              '/manga/b/',
+              'B',
+              fullChapters: [
+                backupChapter('/b/2', 2, read: true),
+                backupChapter('/b/1', 1, read: true),
+              ],
+              history: [('/b/2', t.add(const Duration(hours: 1)))],
+            ),
+          )
+          ..bytes(101, source.value);
+        return planMihonImport(parseMihonBackup(gzip.encode(backup.value)), [
+          westmanga,
+        ], now: clock.value).single.entries;
+      }
+
+      Future<List<ReadHistory>> readHistory() async =>
+          (await history.getHistory()).getOrElse((_) => const []);
+
+      Future<Map<String, Bookmark>> library() async => {
+        for (final b in (await bookmarks.getBookmarks()).getOrElse(
+          (_) => const [],
+        ))
+          b.slug: b,
+      };
+
+      test(
+        'placeholders get the chapter list and the exact read set',
+        () async {
+          final result = await ImportLibrary(
+            bookmarks,
+            categories,
+            pending,
+            history,
+            clock,
+          )(plan());
+
+          final r = result.getOrElse((f) => fail('$f'));
+          expect((r.added, r.chaptersRead), (2, 4));
+          final a = (await library())['westmanga:a']!;
+          expect(a.comicDetails.isPlaceholder, isTrue);
+          expect(
+            a.comicDetails.chapters.map((c) => (c.number, c.slug, c.date)),
+            [
+              ('3', 'westmanga:a/3', '1 day ago'),
+              ('2', 'westmanga:a/2', '-'),
+              ('1.5', 'westmanga:a/1.5', '-'),
+              ('1', 'westmanga:a/1', '-'),
+            ],
+          );
+
+          final read = await readHistory();
+          // 2 and 1.5 stay unread: a gap, not "everything up to 3".
+          expect(read.map((h) => (h.slug, h.page)).toSet(), {
+            ('westmanga:a/3', null),
+            ('westmanga:a/1', null),
+            ('westmanga:b/2', null),
+            ('westmanga:b/1', null),
+          });
+          expect(pending.values, isEmpty);
+          // Comics order by their last read in Mihon; within one, the newest
+          // read chapter is the latest.
+          final index = HistoryIndex(read);
+          expect(index.perComic.map((c) => c.latestHistory.slug), [
+            'westmanga:b/2',
+            'westmanga:a/3',
+          ]);
+          expect(
+            index.chapter('westmanga:a/3')!.readDate,
+            t.add(const Duration(milliseconds: 1)),
+          );
+          expect(index.chapter('westmanga:a/1')!.readDate, t);
+          expect(
+            index.chapter('westmanga:b/1')!.readDate,
+            t.add(const Duration(hours: 1) - const Duration(milliseconds: 1)),
+          );
+
+          // Loading the comic swaps in the source's list; the history stays
+          // and gets the loaded details (the cover).
+          final loaded = sampleComicDetails.copyWith(
+            title: 'A',
+            totalChapter: '4',
+            chapters: [
+              for (final n in ['3', '2', '1.5', '1'])
+                Chapter(number: n, slug: 'westmanga:a/$n', date: '-'),
+            ],
+          );
+          await CompleteImportedComic(
+            bookmarks,
+            ApplyPendingReads(pending, history, clock),
+          )((key: 'westmanga:a', details: loaded));
+          expect((await library())['westmanga:a']!.comicDetails, loaded);
+          final after = HistoryIndex(await readHistory());
+          expect(after.countOf('westmanga:a'), 2);
+          expect(
+            after.latestOf('westmanga:a')!.comicDetails.coverImg,
+            sampleComicDetails.coverImg,
+          );
+        },
+      );
+
+      test('re-import fills placeholders and never unreads', () async {
+        final loaded = sampleComicDetails.copyWith(
+          title: 'B',
+          totalChapter: '3',
+          chapters: [
+            for (final n in ['3', '2', '1'])
+              Chapter(number: n, slug: 'westmanga:b/$n', date: '-'),
+          ],
+        );
+        await bookmarks.saveBookmarks([
+          // Imported by an older version: no chapters.
+          Bookmark(
+            slug: 'westmanga:a',
+            comicDetails: placeholderDetails('westmanga:a', 'A'),
+            updatedDate: DateTime(2025),
+            addedDate: DateTime(2025),
+          ),
+          Bookmark(
+            slug: 'westmanga:b',
+            comicDetails: loaded,
+            updatedDate: DateTime(2024),
+          ),
+        ]);
+        final later = t.add(const Duration(hours: 2));
+        await history.saveHistory([
+          // Read here only.
+          ReadHistory(
+            slug: 'westmanga:b/3',
+            chapterNumber: '3',
+            readDate: DateTime(2026, 10, 22),
+            comicDetails: loaded,
+            comicSlug: 'westmanga:b',
+          ),
+          // Half read here after Mihon.
+          ReadHistory(
+            slug: 'westmanga:a/1',
+            chapterNumber: '1',
+            readDate: later,
+            comicDetails: placeholderDetails('westmanga:a', 'A'),
+            comicSlug: 'westmanga:a',
+            page: 2,
+            pageCount: 20,
+          ),
+        ]);
+        final import = ImportLibrary(
+          bookmarks,
+          categories,
+          pending,
+          history,
+          clock,
+        );
+
+        final first = (await import(plan())).getOrElse((f) => fail('$f'));
+        final second = (await import(plan())).getOrElse((f) => fail('$f'));
+
+        expect((first.added, first.existing, first.chaptersRead), (0, 2, 4));
+        expect((second.added, second.existing, second.chaptersRead), (0, 2, 0));
+        final saved = await library();
+        expect(saved.keys, unorderedEquals(['westmanga:a', 'westmanga:b']));
+        final a = saved['westmanga:a']!;
+        expect(a.comicDetails.chapters.map((c) => c.number), [
+          '3',
+          '2',
+          '1.5',
+          '1',
+        ]);
+        expect((a.updatedDate, a.addedDate), (DateTime(2025), DateTime(2025)));
+        // A loaded list is not replaced by the backup's.
+        expect(saved['westmanga:b']!.comicDetails, loaded);
+
+        final read = HistoryIndex(await readHistory());
+        expect(read.isFinished('westmanga:b/3'), isTrue);
+        expect(read.isFinished('westmanga:b/2'), isTrue);
+        expect(read.isFinished('westmanga:a/3'), isTrue);
+        // Finished, keeping the later date from here.
+        expect(read.chapter('westmanga:a/1')!.isFinished, isTrue);
+        expect(read.chapter('westmanga:a/1')!.readDate, later);
+        expect(read.containsChapter('westmanga:a/2'), isFalse);
+      });
+
+      test('read chapters missing from the list wait', () async {
+        // B is bookmarked from another source with a shorter list.
+        final other = sampleComicDetails.copyWith(
+          title: 'B',
+          chapters: const [Chapter(number: '1', slug: 'comix:b/1', date: '-')],
+        );
+        await bookmarks.saveBookmarks([
+          Bookmark(slug: 'comix:b', comicDetails: other, updatedDate: t),
+        ]);
+        await pending.save({'comix:b': PendingRead.upTo('0.5')});
+
+        await ImportLibrary(bookmarks, categories, pending, history, clock)(
+          plan().where((e) => e.title == 'B').toList(),
+        );
+
+        final read = await readHistory();
+        expect(read.map((h) => h.slug), ['comix:b/1']);
+        expect(pending.values, {
+          'comix:b': PendingRead(
+            upTo: '0.5',
+            chapters: {'2': t.add(const Duration(hours: 1))},
+          ),
+        });
+      });
+    });
+
+    test(
+      'pending reads: the old format still works, the new is exact',
+      () async {
+        final box = await Hive.openBox<String>(HiveBoxes.pendingReads);
+        // Stored by an older version: the highest chapter read.
+        await box.put('comix:old', '2');
+        final repo = PendingReadRepositoryImpl(box);
+        expect(
+          (await repo.pendingOf('comix:old')).getOrElse((_) => null),
+          PendingRead.upTo('2'),
+        );
+        final d9 = DateTime(2026, 10, 3);
+        final d7 = DateTime(2026, 10, 1);
+        final exact = PendingRead(chapters: {'9': d9, '7': d7});
+        await repo.save({'comix:new': exact});
+        expect(
+          (await repo.pendingOf('comix:new')).getOrElse((_) => null),
+          exact,
+        );
+
+        ComicDetails details(String key, List<String> numbers) =>
+            sampleComicDetails.copyWith(
+              chapters: [
+                for (final n in numbers)
+                  Chapter(number: n, slug: '$key/$n', date: '-'),
+              ],
+            );
+        final apply = ApplyPendingReads(repo, history, clock);
+        await apply((
+          key: 'comix:old',
+          details: details('comix:old', ['3', '2', '1']),
+        ));
+        await apply((
+          key: 'comix:new',
+          details: details('comix:new', ['9', '8', '7.0']),
+        ));
+
+        final read = HistoryIndex(
+          (await history.getHistory()).getOrElse((_) => const []),
+        );
+        expect(read.containsChapter('comix:old/2'), isTrue);
+        expect(read.containsChapter('comix:old/1'), isTrue);
+        expect(read.containsChapter('comix:old/3'), isFalse);
+        expect(read.chapter('comix:new/9')!.readDate, d9);
+        expect(read.chapter('comix:new/7.0')!.readDate, d7);
+        expect(read.containsChapter('comix:new/8'), isFalse);
+        expect(box.isEmpty, isTrue);
+      },
+    );
 
     test(
       'CompleteImportedComic gives a placeholder bookmark its details',

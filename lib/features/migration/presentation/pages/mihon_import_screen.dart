@@ -7,6 +7,7 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
+import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/migration/domain/entities/mihon_import_plan.dart';
 import 'package:bacakomik_app/features/migration/presentation/bloc/mihon_import_cubit.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +39,7 @@ class _MihonImportView extends StatelessWidget {
     if (state.phase == MihonImportPhase.finished) {
       context.read<BookmarkCubit>().load();
       context.read<CategoryCubit>().load();
+      context.read<HistoryCubit>().load();
     }
   }
 
@@ -72,8 +74,9 @@ class _MihonImportView extends StatelessWidget {
                           final r? =>
                             '${AppText.importDone} · ${r.added} ${AppText.added}'
                                 '${r.existing > 0 ? ' · ${r.existing} ${AppText.alreadyInLibrary}' : ''}'
-                                '${r.sameTitle > 0 ? ' · ${r.sameTitle} ${AppText.sameTitleElsewhere}' : ''}. '
-                                '${AppText.importLoadHint}',
+                                '${r.sameTitle > 0 ? ' · ${r.sameTitle} ${AppText.sameTitleElsewhere}' : ''}'
+                                '${r.chaptersRead > 0 ? ' · ${r.chaptersRead} ${AppText.chaptersMarkedRead}' : ''}. '
+                                '${AppText.mihonLoadHint}',
                           null => AppText.importDone,
                         },
                         _ => AppText.mihonHint,

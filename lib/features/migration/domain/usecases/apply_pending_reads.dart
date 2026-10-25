@@ -12,10 +12,16 @@ import 'package:injectable/injectable.dart';
 
 typedef ComicLoadedParams = ({String key, ComicDetails details});
 
-/// Marks read the chapters an import said were read: every chapter of
-/// [ComicLoadedParams.details] numbered up to the pending last read one.
-/// Chapters already in the history keep their entry. Waits while the
-/// chapter list is empty. Returns whether history was written.
+/// Marks read the chapters an import said were read, matched by number
+/// onto the loaded chapter list of [ComicLoadedParams.details]: the exact
+/// chapters it listed, with their read dates, and every chapter up to its
+/// `upTo` number (the only form older versions stored). Chapters already in
+/// the history keep their entry. Waits while the chapter list is empty or
+/// a placeholder's. Returns whether history was written.
+///
+/// With `imported` (the comic's stored details were a placeholder), the
+/// comic's history, written at import with the placeholder, is given the
+/// loaded details too, so it shows the cover.
 @injectable
 class ApplyPendingReads implements UseCase<bool, ComicLoadedParams> {
   const ApplyPendingReads(this._pending, this._history, this._clock);
@@ -25,38 +31,49 @@ class ApplyPendingReads implements UseCase<bool, ComicLoadedParams> {
   final Clock _clock;
 
   @override
-  Future<Either<Failure, bool>> call(ComicLoadedParams params) async {
+  Future<Either<Failure, bool>> call(
+    ComicLoadedParams params, {
+    bool imported = false,
+  }) async {
     final (:key, :details) = params;
-    if (details.chapters.isEmpty) return right(false);
-    final pending = await _pending.lastReadOf(key);
-    if (pending case Left(value: final failure)) return left(failure);
-    final lastRead = pending.getOrElse((_) => null);
-    if (lastRead == null) return right(false);
+    if (details.chapters.isEmpty || details.isPlaceholder) return right(false);
+    final stored = await _pending.pendingOf(key);
+    if (stored case Left(value: final failure)) return left(failure);
+    final pending = stored.getOrElse((_) => null);
+    if (pending == null && !imported) return right(false);
 
-    final limit = num.tryParse(lastRead);
     final history = await _history.getHistory();
     if (history case Left(value: final failure)) return left(failure);
     final index = HistoryIndex(history.getOrElse((_) => const []));
     final now = _clock.now();
-    // Chapters come newest first; the last read one gets the newest time,
-    // so "Continue reading" points at it.
+    // Chapters come newest first; without a date the last read one gets the
+    // newest time, so "Continue reading" points at it.
     final read = [
-      if (limit != null)
+      if (pending != null)
         for (final (i, chapter) in details.chapters.indexed)
-          if (num.tryParse(chapter.number) case final n?
-              when n <= limit && !index.containsChapter(chapter.slug))
+          if (pending.covers(chapter.number) &&
+              !index.containsChapter(chapter.slug))
             ReadHistory(
               slug: chapter.slug,
               chapterNumber: chapter.number,
-              readDate: now.subtract(Duration(milliseconds: i)),
+              readDate:
+                  pending.readDateOf(chapter.number) ??
+                  now.subtract(Duration(milliseconds: i)),
               comicDetails: details,
               comicSlug: key,
             ),
     ];
+    // Entries saved with the placeholder get the loaded details (the
+    // history keeps one copy per comic, the last saved).
+    final latest = index.latestOf(key);
+    if (read.isEmpty && latest != null && latest.comicDetails.isPlaceholder) {
+      read.add(latest.copyWith(comicDetails: details));
+    }
     if (read.isNotEmpty) {
       final saved = await _history.saveHistory(read);
       if (saved case Left(value: final failure)) return left(failure);
     }
+    if (pending == null) return right(read.isNotEmpty);
     return (await _pending.remove(key)).map((_) => read.isNotEmpty);
   }
 }
@@ -82,12 +99,13 @@ class CompleteImportedComic implements UseCase<bool, ComicLoadedParams> {
         .getOrElse((_) => const [])
         .where((b) => b.slug == key)
         .firstOrNull;
-    if (bookmark != null && bookmark.comicDetails.isPlaceholder) {
+    final imported = bookmark?.comicDetails.isPlaceholder ?? false;
+    if (bookmark != null && imported) {
       final saved = await _bookmarks.saveBookmarks([
         bookmark.copyWith(comicDetails: details),
       ]);
       if (saved case Left(value: final failure)) return left(failure);
     }
-    return _applyPendingReads(params);
+    return _applyPendingReads(params, imported: imported);
   }
 }

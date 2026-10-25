@@ -1,18 +1,19 @@
 import 'package:bacakomik_app/core/error/failures.dart';
+import 'package:bacakomik_app/features/migration/domain/entities/pending_read.dart';
 import 'package:bacakomik_app/features/migration/domain/repositories/pending_read_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// [PendingReadRepository] over a map.
 class MemoryPendingReads implements PendingReadRepository {
-  final values = <String, String>{};
+  final values = <String, PendingRead>{};
 
   @override
-  Future<Either<Failure, String?>> lastReadOf(String key) async =>
+  Future<Either<Failure, PendingRead?>> pendingOf(String key) async =>
       right(values[key]);
 
   @override
-  Future<Either<Failure, Unit>> save(Map<String, String> lastRead) async {
-    values.addAll(lastRead);
+  Future<Either<Failure, Unit>> save(Map<String, PendingRead> pending) async {
+    values.addAll(pending);
     return right(unit);
   }
 

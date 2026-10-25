@@ -435,6 +435,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i851.BookmarkRepository>(),
         gh<_i866.CategoryRepository>(),
         gh<_i494.PendingReadRepository>(),
+        gh<_i55.HistoryRepository>(),
         gh<_i1011.Clock>(),
       ),
     );

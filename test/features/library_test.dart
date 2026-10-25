@@ -25,7 +25,9 @@ import 'package:bacakomik_app/features/history/domain/entities/read_history.dart
 import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
 import 'package:bacakomik_app/features/history/domain/usecases/history_usecases.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:bacakomik_app/features/migration/domain/entities/pending_read.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/apply_pending_reads.dart';
+import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
@@ -362,7 +364,51 @@ void main() {
       await cubit.addBookmark(details, 'd');
 
       expect(cubit.state.first.slug, 'd');
+      expect(cubit.state.first.addedDate, at(1000));
       expect(cubit.isBookmark('d'), isTrue);
+    });
+
+    test('refresh keeps when the comic was added', () async {
+      await cubit.addBookmark(details, 'd');
+      when(() => comicDetails.getComicDetails('d')).thenAnswer(
+        (_) async => right(
+          details.copyWith(
+            chapters: [
+              ...details.chapters,
+              const Chapter(number: '3', slug: 'x/3', date: '-'),
+            ],
+          ),
+        ),
+      );
+      clock.value = at(5000);
+
+      await cubit.updateBookmarkList(['d']);
+
+      expect(cubit.state.first.updatedDate, at(5000));
+      expect(cubit.state.first.addedDate, at(1000));
+    });
+
+    test('refresh gives an imported comic its details in place', () async {
+      final imported = Bookmark(
+        slug: 'd',
+        comicDetails: placeholderDetails(
+          'd',
+          'Delta',
+        ).copyWith(chapters: details.chapters),
+        updatedDate: at(50),
+      );
+      await repo.saveBookmarks([imported]);
+      await cubit.load();
+      when(() => comicDetails.getComicDetails('d'))
+          .thenAnswer((_) async => right(details));
+      clock.value = at(5000);
+
+      await cubit.updateBookmarkList(['d']);
+
+      final saved = cubit.state.firstWhere((b) => b.slug == 'd');
+      expect(saved.comicDetails, details);
+      // Same chapters as the imported list: nothing new, it stays put.
+      expect(saved.updatedDate, at(50));
     });
 
     test('searchBookmark filters by lowercase title, newest first', () {
@@ -456,7 +502,7 @@ void main() {
           .thenAnswer((_) async => right(details));
       when(() => comicDetails.getComicDetails('b'))
           .thenAnswer((_) async => right(details));
-      await pendingReads.save({'a': '1'});
+      await pendingReads.save({'a': PendingRead.upTo('1')});
       final changes = <void>[];
       final sub = cubit.historyChanges.listen(changes.add);
 
@@ -533,6 +579,7 @@ void main() {
       historyRepo = MockHistoryRepository();
       categories = noCategories();
       migrate = MigrateComic(bookmarks, historyRepo, categories, clock);
+      when(() => bookmarks.getBookmarks()).thenAnswer((_) async => right([]));
       when(() => bookmarks.saveBookmarks(any()))
           .thenAnswer((_) async => right(unit));
       when(() => bookmarks.removeBookmarks(any()))
@@ -559,6 +606,41 @@ void main() {
       verify(() => historyRepo.removeComicHistory('a')).called(1);
       verify(() => bookmarks.removeBookmarks(['a'])).called(1);
     });
+
+    test('keeps when the comic was added', () async {
+      when(() => historyRepo.getHistory()).thenAnswer((_) async => right([]));
+      when(() => bookmarks.getBookmarks()).thenAnswer(
+        (_) async => right([
+          bookmark('a', 'Alpha', 500).copyWith(addedDate: at(40)),
+          bookmark('v:a', 'Alpha', 300),
+          bookmark('b', 'Beta', 600).copyWith(addedDate: at(10)),
+        ]),
+      );
+
+      await migrate((from: 'a', to: 'v:a', details: target));
+
+      final saved =
+          verify(() => bookmarks.saveBookmarks(captureAny())).captured.single
+              as List<Bookmark>;
+      expect(saved.single.updatedDate, at(1000));
+      expect(saved.single.addedDate, at(40));
+    });
+
+    test(
+      'a comic added before dates were kept counts from its update',
+      () async {
+        when(() => historyRepo.getHistory()).thenAnswer((_) async => right([]));
+        when(() => bookmarks.getBookmarks())
+            .thenAnswer((_) async => right([bookmark('a', 'Alpha', 500)]));
+
+        await migrate((from: 'a', to: 'v:a', details: target));
+
+        final saved =
+            verify(() => bookmarks.saveBookmarks(captureAny())).captured.single
+                as List<Bookmark>;
+        expect(saved.single.addedDate, at(500));
+      },
+    );
 
     test('keeps the categories of the comic', () async {
       when(() => historyRepo.getHistory()).thenAnswer((_) async => right([]));

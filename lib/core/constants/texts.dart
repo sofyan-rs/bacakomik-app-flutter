@@ -241,13 +241,27 @@ class AppText {
   static const String toHome = 'Go home';
 
   // Bookmark groups and categories
-  static const String groupBy = 'Group by';
   static const String groupByStatus = 'Status';
   static const String groupByStatusDescription = 'All, updated, completed';
   static const String groupBySource = 'Source';
   static const String groupBySourceDescription = 'One tab per source';
   static const String groupByCategory = 'Category';
   static const String groupByCategoryDescription = 'Your own categories';
+  static const String groupAndSort = 'Group & sort';
+  static const String groupTab = 'Group';
+  static const String sortUpdated = 'Last updated';
+  static const String sortTitle = 'Title';
+  static const String sortChapters = 'Total chapters';
+  static const String sortLatestChapter = 'Latest chapter';
+  static const String sortAdded = 'Date added';
+  static const String sortLastRead = 'Last read';
+  static const String sortNewestFirst = 'Newest first';
+  static const String sortOldestFirst = 'Oldest first';
+  static const String sortAToZ = 'A to Z';
+  static const String sortZToA = 'Z to A';
+  static const String sortMostFirst = 'Most first';
+  static const String sortFewestFirst = 'Fewest first';
+  static const String sortReverseHint = 'Tap the selected order to reverse it.';
   static const String categories = 'Categories';
   static const String manageCategories = 'Manage categories';
   static const String categoriesDescription =
@@ -362,6 +376,7 @@ class AppText {
       'Bookmarks and read chapters from a .csv export';
   static const String migrateFrom = 'From';
   static const String migrateTo = 'To';
+  static const String importComixTo = 'Search the titles in';
   static const String pickSource = 'Pick a source';
   static const String noBookmarksToMigrate = 'No bookmarks to migrate';
   static const String noBookmarksToMigrateHint =
@@ -395,6 +410,9 @@ class AppText {
   static const String importLoadHint =
       'Covers and chapters load when you open a comic, or pull to refresh '
       'in Bookmarks.';
+  static const String chaptersMarkedRead = 'chapters marked read';
+  static const String mihonLoadHint =
+      'Covers load when you open a comic, or pull to refresh in Bookmarks.';
   static const String readTo = 'Read to ch.';
   static const String chooseFile = 'Choose file';
   static const String readingFile = 'Reading file…';

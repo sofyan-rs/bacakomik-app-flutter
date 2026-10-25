@@ -152,7 +152,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 - Events are `final class`es named after what happened (`HomeStarted`, `ChapterRequested`).
 
 ### 4.4 Settings
-`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `autoScrollSpeed`), `bookmarkGrouping` (`status | source | category`). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
+`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `autoScrollSpeed`), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
 
 ---
 
@@ -218,9 +218,9 @@ Three entries under More → Migration. **All write through the normal repositor
 | Comix.to (`MatchScreen`) | CSV export (`parseComixCsv`), no links | Title search in `comix` (`MissingSource` if not installed) |
 
 - **Title search** (`MatchCubit`): one request at a time, `gap` 3 s apart, manual searches join the queue. A single result with the same normalized title is picked automatically (`exactMatch`); the user picks or skips the rest.
-- **Mihon:** only library comics (`favorite`), with category names and the highest chapter marked read. Sources match by name; a multi-language extension's language comes from the Mihon source id (MD5 of `<name>/<lang>/<versionId>`, `mihonSourceId`). Unmatched sources are listed as skipped; a matched but missing extension can be installed from the screen (its language is enabled). Re-importing adds no bookmarks but brings read chapters to earlier imports.
-- **`ImportLibrary`:** an existing key is left alone; a title already bookmarked from another source (`normalizeTitle`) is not added, and its progress goes to that bookmark (higher chapter wins); a new comic gets `placeholderDetails` (title only, `source` set so §7.7 leaves it alone), in file order. Missing categories are created; keys over `ComicKey.maxLength` are skipped (§7.1). The last read chapter waits in `pending_reads` (local only).
-- **Completing an import:** the first time the comic loads — refresh (`RefreshBookmark`) or opening it (`BookmarkCubit.comicLoaded` → `CompleteImportedComic`, which keeps its place) — the details are saved and `ApplyPendingReads` marks chapters up to the pending number read (existing history entries kept), then clears it.
+- **Mihon:** only library comics (`favorite`), with category names and their chapters (`BackupChapter`: url, read, dates, number; `BackupHistory` field 104, legacy 102, for read dates). `importChapters` keeps numbered chapters, one per number, newest first; a read chapter takes its Mihon history date, others are placed 1 ms around the nearest dated one (or Mihon's fetch date) so the newest read chapter is the latest. Half-read pages are skipped. Sources match by name; a multi-language extension's language comes from the Mihon source id (MD5 of `<name>/<lang>/<versionId>`, `mihonSourceId`). Unmatched sources are listed as skipped; a matched but missing extension can be installed from the screen (its language is enabled). Re-importing adds no bookmarks but brings read chapters to earlier imports.
+- **`ImportLibrary`:** an existing key is left alone; a title already bookmarked from another source (`normalizeTitle`) is not added, and its progress goes to that bookmark (higher chapter wins); a new comic gets `placeholderDetails` (title and the imported chapter list, empty `totalChapter`, `source` set so §7.7 leaves it alone), in file order; an existing placeholder gets the imported list, a loaded list is never replaced. Missing categories are created; keys over `ComicKey.maxLength` are skipped (§7.1). Read chapters found in the target's list are written to the history at once (finished, imported dates; finished entries kept, nothing unread). The rest (Comix's last read number, or chapters missing from the target's list) waits in `pending_reads` (local only), merged with what waits.
+- **Completing an import:** the first time the comic loads — refresh (`RefreshBookmark`) or opening it (`BookmarkCubit.comicLoaded` → `CompleteImportedComic`, which keeps its place) — the details are saved and `ApplyPendingReads` marks the pending chapters read by number (exact set with dates, or every chapter up to `upTo`; existing history entries kept), then clears it; the comic's history gets the loaded details (cover). A refreshed placeholder moves up only if the source has more chapters than the imported list.
 
 ---
 
@@ -244,7 +244,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 | `extensions` | extension id | `ExtensionMeta` |
 | `extension_storage` | `<sourceId>:<key>` | value from `storage.set` |
 | `source_settings` | `repos`, `active`, `langs:<id>` | repo URLs; active source; enabled languages |
-| `pending_reads` | comic key | last read chapter from an import (§6.4); not synced |
+| `pending_reads` | comic key | `PendingRead` from an import (§6.4): JSON `{upTo, read: {number: ms}}`, or a bare number (older versions, read as `upTo`); not synced |
 | `settings` | `settings` | `SettingsModel` |
 
 - `JsonBox<T>` gives typed access; an entry that fails to parse is skipped and logged.
@@ -257,6 +257,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 ```jsonc
 // bookmark
 { "slug": "voratoon:solo-leveling", "updatedDate": 1700000000000,   // ms since epoch
+  "addedDate": 1690000000000,                      // absent before it was stored; kept on refresh, migrate, sync, restore
   "comicDetails": { "title", "coverImg", "alternativeTitle", "released", "status",
                     "totalChapter", "author", "type", "rating", "synopsis",
                     "genres": [{ "name", "slug" }],
@@ -273,7 +274,8 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 { "slug": "voratoon:solo-leveling", "categoryIds": ["…"], "updatedDate": "2026-10-20T10:00:00.000" }
 // settings
 { "themeMode": "system", "readingDirection": "vertical", "pageFit": "width",
-  "keepScreenOn": true, "pageGap": false, "autoScrollSpeed": 3, "bookmarkGrouping": "status" }
+  "keepScreenOn": true, "pageGap": false, "autoScrollSpeed": 3, "bookmarkGrouping": "status",
+  "bookmarkSort": "updated", "bookmarkSortDirection": "descending" }
 ```
 
 - Categories store ISO 8601 dates; bookmarks and history store epoch ms (`EpochMillisConverter`).
@@ -282,7 +284,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 - User writes go through `LibraryJournal` (records deletions, fires a change for sync). Sync's own writes bypass it.
 
 ### 7.3 Ordering
-Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and history by `readDate` (newest first), categories by `order`. Saving an existing key replaces it.
+Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and history by `readDate` (newest first), categories by `order`. Bookmarks re-sorts by the chosen `BookmarkSort` (`sortBookmarks`, stable). Saving an existing key replaces it.
 
 ### 7.4 Backup files
 `bacakomik-backup-<y>-<m>-<d>-<h><min><s>.json`, in a folder the user picks:

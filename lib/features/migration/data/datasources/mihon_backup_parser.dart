@@ -4,7 +4,8 @@ import 'dart:typed_data';
 
 import 'package:bacakomik_app/features/migration/domain/entities/mihon_backup.dart';
 
-/// Reads the parts of a Mihon/Tachiyomi backup the import needs. The file
+/// Reads the parts of a Mihon/Tachiyomi backup the import needs (forks such
+/// as TachiyomiSY add fields, which are skipped). The file
 /// is a gzipped protobuf `Backup` message; only these fields are read:
 ///
 /// ```proto
@@ -14,8 +15,14 @@ import 'package:bacakomik_app/features/migration/domain/entities/mihon_backup.da
 /// message BackupManga    { int64 source = 1; string url = 2; string title = 3;
 ///                          repeated BackupChapter chapters = 16;
 ///                          repeated int64 categories = 17;  // category orders
-///                          bool favorite = 100; }           // default true
-/// message BackupChapter  { bool read = 4; float chapterNumber = 9; }
+///                          bool favorite = 100;             // default true
+///                          repeated BrokenBackupHistory brokenHistory = 102;
+///                          repeated BackupHistory history = 104; }
+/// message BackupChapter  { string url = 1; bool read = 4;
+///                          int64 dateFetch = 7; int64 dateUpload = 8; // ms
+///                          float chapterNumber = 9; }       // default 0
+/// message BackupHistory  { string url = 1; int64 lastRead = 2; }  // ms
+/// message BrokenBackupHistory { string url = 0; int64 lastRead = 1; }
 /// message BackupCategory { string name = 1; int64 order = 2; }
 /// message BackupSource   { string name = 1; int64 sourceId = 2; }
 /// ```
@@ -56,12 +63,19 @@ MihonManga _manga(Uint8List bytes) {
   var title = '';
   var favorite = true;
   final categories = <int>[];
-  double? lastRead;
+  final chapters = <MihonChapter>[];
+  final history = <String, DateTime>{};
   for (final f in _Reader(bytes).fields()) {
     switch (f.number) {
       case 16:
-        if (_readChapter(f.bytes) case final n? when n > (lastRead ?? -1)) {
-          lastRead = n;
+        chapters.add(_chapter(f.bytes));
+      case 104 || 102:
+        if (_history(f.bytes, legacy: f.number == 102)
+            case (final chapter, final date) when chapter.isNotEmpty) {
+          if (history[chapter] case final seen? when seen.isAfter(date)) {
+            continue;
+          }
+          history[chapter] = date;
         }
       case 1:
         source = f.value;
@@ -89,28 +103,62 @@ MihonManga _manga(Uint8List bytes) {
     title: title,
     favorite: favorite,
     categories: categories,
-    lastRead: lastRead == null ? null : _number(lastRead),
+    chapters: chapters,
+    history: history,
   );
 }
 
-/// The number of a chapter marked read; null when unread or unnumbered.
-double? _readChapter(Uint8List bytes) {
+MihonChapter _chapter(Uint8List bytes) {
+  var url = '';
   var read = false;
-  double? number;
+  // Left out when 0, like every default value.
+  var number = 0.0;
+  DateTime? fetched;
+  DateTime? uploaded;
   for (final f in _Reader(bytes).fields()) {
-    if (f.number == 4) read = f.value != 0;
-    if (f.number == 9 && f.bytes.length == 4) {
-      number = ByteData.sublistView(f.bytes).getFloat32(0, Endian.little);
+    switch (f.number) {
+      case 1:
+        url = f.text;
+      case 4:
+        read = f.value != 0;
+      case 7:
+        fetched = _date(f.value);
+      case 8:
+        uploaded = _date(f.value);
+      case 9 when f.bytes.length == 4:
+        number = ByteData.sublistView(f.bytes).getFloat32(0, Endian.little);
     }
   }
-  return read && number != null && number >= 0 ? number : null;
+  return MihonChapter(
+    url: url,
+    number: number,
+    read: read,
+    fetched: fetched,
+    uploaded: uploaded,
+  );
 }
 
-/// `14.0` → `14`; a float's noise trimmed: `42.2000007` → `42.2`.
-String _number(double n) {
-  final text = n.toStringAsFixed(3).replaceFirst(RegExp(r'\.?0+$'), '');
-  return text.isEmpty ? '0' : text;
+/// A history entry: chapter url and when it was last read. The legacy
+/// form (field 102) numbered its fields from 0.
+(String, DateTime)? _history(Uint8List bytes, {required bool legacy}) {
+  var url = '';
+  DateTime? lastRead;
+  final (urlField, dateField) = legacy ? (0, 1) : (1, 2);
+  for (final f in _Reader(bytes).fields()) {
+    if (f.number == urlField && f.wireType == _Reader.lengthDelimited) {
+      url = f.text;
+    }
+    if (f.number == dateField && f.wireType == _Reader.varintType) {
+      lastRead = _date(f.value);
+    }
+  }
+  return lastRead == null ? null : (url, lastRead);
 }
+
+/// Epoch milliseconds; null for 0 or out of range.
+DateTime? _date(int ms) => ms > 0 && ms < 8640000000000000
+    ? DateTime.fromMillisecondsSinceEpoch(ms)
+    : null;
 
 ({String name, int order}) _category(Uint8List bytes) {
   var name = '';

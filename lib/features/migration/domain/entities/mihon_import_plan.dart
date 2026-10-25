@@ -43,10 +43,15 @@ class MihonSourceGroup {
 /// Sources match by name, ignoring case, spacing and punctuation. For a
 /// multi-language extension the language comes from the Mihon source id,
 /// which is the MD5 of `<name>/<lang>/<version>`.
+///
+/// Each entry carries the comic's chapters with read dates; see
+/// [importChapters]. [now] stands in for dates the backup lacks.
 List<MihonSourceGroup> planMihonImport(
   MihonBackup backup,
-  List<ExtensionMeta> extensions,
-) {
+  List<ExtensionMeta> extensions, {
+  DateTime? now,
+}) {
+  final at = now ?? DateTime.now();
   final byName = <String, ExtensionMeta>{};
   for (final e in extensions) {
     final key = normalizeName(e.name);
@@ -74,6 +79,7 @@ List<MihonSourceGroup> planMihonImport(
           name.isEmpty ? '$sourceId' : name,
           manga,
           _sourceFor(byName[normalizeName(name)], name, sourceId),
+          at,
         ),
   ];
   return groups..sort((a, b) {
@@ -87,6 +93,7 @@ MihonSourceGroup _group(
   String name,
   List<MihonManga> manga,
   ExtensionMeta? source,
+  DateTime now,
 ) {
   final entries = <String, ImportEntry>{};
   var unreadable = 0;
@@ -103,7 +110,7 @@ MihonSourceGroup _group(
     entries[key] ??= ImportEntry(
       key: key,
       title: m.title,
-      lastRead: m.lastRead,
+      chapters: importChapters(m, now),
       categories: [for (final order in m.categories) ?backup.categories[order]],
     );
   }
@@ -113,6 +120,84 @@ MihonSourceGroup _group(
     entries: entries.values.toList(),
     unreadable: unreadable,
   );
+}
+
+/// The numbered chapters of [manga], newest first, one per number, with
+/// when each read one was read, so the history orders like Mihon's:
+///
+/// * A chapter in Mihon's history keeps that date.
+/// * Read chapters newer than the newest one with a date (all of them when
+///   none has one) come right after it, 1 ms apart, the newest last. With
+///   no history at all they count from when Mihon fetched the newest of
+///   them, or [now].
+/// * Older read chapters without a date come right before the next newer
+///   one, 1 ms apart, so the newest read chapter stays the latest and the
+///   comic sorts by its real last read.
+List<ImportChapter> importChapters(MihonManga manga, DateTime now) {
+  final byNumber = <String, _Merged>{};
+  for (final c in manga.chapters) {
+    if (!c.numbered) continue;
+    final merged = byNumber[c.numberText] ??= _Merged(c);
+    merged.read |= c.read;
+    merged.uploaded ??= c.uploaded;
+    if (manga.history[c.url] case final date?
+        when merged.history?.isAfter(date) != true) {
+      merged.history = date;
+    }
+  }
+  final chapters = byNumber.values.toList()
+    ..sort((a, b) => b.chapter.number.compareTo(a.chapter.number));
+
+  final read = [
+    for (final c in chapters)
+      if (c.read) c,
+  ];
+  if (read.isNotEmpty) {
+    var anchor = read.indexWhere((c) => c.history != null);
+    final DateTime anchorDate;
+    if (anchor < 0) {
+      anchor = read.length - 1;
+      final fetched = read.first.chapter.fetched;
+      anchorDate = (fetched == null || fetched.isAfter(now) ? now : fetched)
+          .subtract(Duration(milliseconds: anchor));
+    } else {
+      anchorDate = read[anchor].history!;
+    }
+    for (var i = 0; i < anchor; i++) {
+      read[i].date = anchorDate.add(Duration(milliseconds: anchor - i));
+    }
+    read[anchor].date = anchorDate;
+    var floor = anchorDate;
+    for (final c in read.skip(anchor + 1)) {
+      if (c.history case final date?) {
+        if (date.isBefore(floor)) floor = date;
+        c.date = date;
+      } else {
+        floor = floor.subtract(const Duration(milliseconds: 1));
+        c.date = floor;
+      }
+    }
+  }
+  return [
+    for (final c in chapters)
+      ImportChapter(
+        number: c.chapter.numberText,
+        uploaded: c.uploaded,
+        readDate: c.date,
+      ),
+  ];
+}
+
+class _Merged {
+  _Merged(this.chapter);
+
+  final MihonChapter chapter;
+  bool read = false;
+  DateTime? uploaded;
+  DateTime? history;
+
+  /// Read date given by [importChapters].
+  DateTime? date;
 }
 
 /// [extension] itself, or the language of it whose Mihon id is [mihonId].

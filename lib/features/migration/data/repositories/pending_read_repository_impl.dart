@@ -2,12 +2,14 @@ import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/storage/box_recovery.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:bacakomik_app/core/storage/local_call.dart';
+import 'package:bacakomik_app/features/migration/domain/entities/pending_read.dart';
 import 'package:bacakomik_app/features/migration/domain/repositories/pending_read_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';
 
-/// [HiveBoxes.pendingReads]: chapter number strings keyed by comic key.
+/// [HiveBoxes.pendingReads]: [PendingRead.encode] keyed by comic key. Older
+/// versions stored a bare chapter number, which reads as [PendingRead.upTo].
 @LazySingleton(as: PendingReadRepository)
 class PendingReadRepositoryImpl implements PendingReadRepository {
   const PendingReadRepositoryImpl(@Named(HiveBoxes.pendingReads) this._box);
@@ -15,15 +17,18 @@ class PendingReadRepositoryImpl implements PendingReadRepository {
   final Box<String> _box;
 
   @override
-  Future<Either<Failure, String?>> lastReadOf(String key) =>
-      runLocal(() => _box.get(key));
+  Future<Either<Failure, PendingRead?>> pendingOf(String key) =>
+      runLocal(() => switch (_box.get(key)) {
+        final value? => PendingRead.decode(value),
+        null => null,
+      });
 
   @override
-  Future<Either<Failure, Unit>> save(Map<String, String> lastRead) =>
+  Future<Either<Failure, Unit>> save(Map<String, PendingRead> pending) =>
       runLocal(() async {
         await _box.putAll({
-          for (final MapEntry(:key, :value) in lastRead.entries)
-            if (isValidHiveKey(key)) key: value,
+          for (final MapEntry(:key, :value) in pending.entries)
+            if (isValidHiveKey(key) && !value.isEmpty) key: value.encode(),
         });
         return unit;
       });
