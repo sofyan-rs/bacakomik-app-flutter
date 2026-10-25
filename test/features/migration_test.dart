@@ -104,6 +104,13 @@ class _Proto {
 
   void string(int field, String value) => bytes(field, utf8.encode(value));
 
+  void float(int field, double value) {
+    _varint(field << 3 | 5);
+    _bytes.add(
+      (ByteData(4)..setFloat32(0, value, Endian.little)).buffer.asUint8List(),
+    );
+  }
+
   List<int> get value => _bytes.toBytes();
 }
 
@@ -113,11 +120,18 @@ List<int> manga(
   String title, {
   bool? favorite,
   List<int> categories = const [],
+  List<(double, bool)> chapters = const [],
 }) {
   final p = _Proto()
     ..int64(1, source)
     ..string(2, url)
     ..string(3, title);
+  for (final (number, read) in chapters) {
+    final c = _Proto();
+    if (read) c.int64(4, 1);
+    c.float(9, number);
+    p.bytes(16, c.value);
+  }
   for (final c in categories) {
     p.int64(17, c);
   }
@@ -180,7 +194,16 @@ void main() {
         ..string(1, 'MangaFire')
         ..int64(2, 6084907896154116083);
       final backup = _Proto()
-        ..bytes(1, manga(6084907896154116083, '/title/a', 'A', categories: [1]))
+        ..bytes(
+          1,
+          manga(
+            6084907896154116083,
+            '/title/a',
+            'A',
+            categories: [1],
+            chapters: [(43, false), (42.2, true), (7, true), (-1, true)],
+          ),
+        )
         ..bytes(1, manga(6084907896154116083, '/title/b', 'B', favorite: false))
         ..bytes(2, category.value)
         ..bytes(101, source.value);
@@ -189,6 +212,7 @@ void main() {
 
       expect(parsed.sourceNames, {6084907896154116083: 'MangaFire'});
       expect(parsed.categories, {1: 'Manhwa'});
+      expect(parsed.manga.map((m) => m.lastRead), ['42.2', null]);
       expect(parsed.manga.map((m) => (m.title, m.favorite, m.categories.join(','))), [
         ('A', true, '1'),
         ('B', false, ''),

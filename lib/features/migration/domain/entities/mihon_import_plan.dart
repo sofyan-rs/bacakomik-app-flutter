@@ -103,6 +103,7 @@ MihonSourceGroup _group(
     entries[key] ??= ImportEntry(
       key: key,
       title: m.title,
+      lastRead: m.lastRead,
       categories: [for (final order in m.categories) ?backup.categories[order]],
     );
   }

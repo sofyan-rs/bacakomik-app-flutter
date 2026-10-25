@@ -394,7 +394,8 @@ class AppText {
   static const String mihonHint =
       'In Mihon, open More → Backup and restore → Create backup, then pick '
       'the .tachibk file here. Only bookmarked comics from sources BacaKomik '
-      'has are imported, with their categories.';
+      'has are imported, with their categories and read chapters. Run it '
+      'again to bring read chapters to comics imported before.';
   static const String notAvailableHere = 'Not available here';
   static const String unreadableLinks = 'unreadable links';
   static const String needsInstall = 'Not installed';

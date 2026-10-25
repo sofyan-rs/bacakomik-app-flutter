@@ -1,6 +1,6 @@
 /// What the app reads from a Mihon/Tachiyomi backup (`.tachibk`): each
-/// comic's source, link and title, and the category names. Chapters,
-/// covers and history are left out; the comic's source loads them later.
+/// comic's source, link, title, categories and last read chapter. Covers
+/// and chapter lists are left out; the comic's source loads them later.
 class MihonBackup {
   const MihonBackup({
     required this.manga,
@@ -24,6 +24,7 @@ class MihonManga {
     required this.title,
     this.favorite = true,
     this.categories = const [],
+    this.lastRead,
   });
 
   /// Mihon source id: a hash of the source's name, language and version.
@@ -38,4 +39,8 @@ class MihonManga {
 
   /// Orders of the comic's categories.
   final List<int> categories;
+
+  /// Highest chapter number marked read, e.g. `14` or `10.5`; null when
+  /// none is.
+  final String? lastRead;
 }
