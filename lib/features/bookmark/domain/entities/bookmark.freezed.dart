@@ -17,7 +17,9 @@ mixin _$Bookmark {
 
 /// Series slug.
  String get slug; ComicDetails get comicDetails;/// Last time the bookmark was added or found new chapters.
- DateTime get updatedDate;
+ DateTime get updatedDate;/// When the comic was bookmarked. Null for bookmarks saved before this
+/// was stored; sorting uses [updatedDate] for them.
+ DateTime? get addedDate;
 /// Create a copy of Bookmark
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,20 +31,20 @@ $BookmarkCopyWith<Bookmark> get copyWith => _$BookmarkCopyWithImpl<Bookmark>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as Bookmark;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Bookmark&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.comicDetails, _this.comicDetails) || other.comicDetails == _this.comicDetails)&&(identical(other.updatedDate, _this.updatedDate) || other.updatedDate == _this.updatedDate));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Bookmark&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.comicDetails, _this.comicDetails) || other.comicDetails == _this.comicDetails)&&(identical(other.updatedDate, _this.updatedDate) || other.updatedDate == _this.updatedDate)&&(identical(other.addedDate, _this.addedDate) || other.addedDate == _this.addedDate));
 }
 
 
 @override
 int get hashCode {
   final _this = this as Bookmark;
-  return Object.hash(runtimeType,_this.slug,_this.comicDetails,_this.updatedDate);
+  return Object.hash(runtimeType,_this.slug,_this.comicDetails,_this.updatedDate,_this.addedDate);
 }
 
 @override
 String toString() {
   final _this = this as Bookmark;
-  return 'Bookmark(slug: ${_this.slug}, comicDetails: ${_this.comicDetails}, updatedDate: ${_this.updatedDate})';
+  return 'Bookmark(slug: ${_this.slug}, comicDetails: ${_this.comicDetails}, updatedDate: ${_this.updatedDate}, addedDate: ${_this.addedDate})';
 }
 
 
@@ -53,7 +55,7 @@ abstract mixin class $BookmarkCopyWith<$Res>  {
   factory $BookmarkCopyWith(Bookmark value, $Res Function(Bookmark) _then) = _$BookmarkCopyWithImpl;
 @useResult
 $Res call({
- String slug, ComicDetails comicDetails, DateTime updatedDate
+ String slug, ComicDetails comicDetails, DateTime updatedDate, DateTime? addedDate
 });
 
 
@@ -70,12 +72,13 @@ class _$BookmarkCopyWithImpl<$Res>
 
 /// Create a copy of Bookmark
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? slug = null,Object? comicDetails = null,Object? updatedDate = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? slug = null,Object? comicDetails = null,Object? updatedDate = null,Object? addedDate = freezed,}) {
   return _then(Bookmark(
 slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,comicDetails: null == comicDetails ? _self.comicDetails : comicDetails // ignore: cast_nullable_to_non_nullable
 as ComicDetails,updatedDate: null == updatedDate ? _self.updatedDate : updatedDate // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,addedDate: freezed == addedDate ? _self.addedDate : addedDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 /// Create a copy of Bookmark
@@ -169,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Bookmark() when $default != null:
-return $default(_that.slug,_that.comicDetails,_that.updatedDate);case _:
+return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate);case _:
   return orElse();
 
 }
@@ -190,10 +193,10 @@ return $default(_that.slug,_that.comicDetails,_that.updatedDate);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate)  $default,) {final _that = this;
 switch (_that) {
 case _Bookmark():
-return $default(_that.slug,_that.comicDetails,_that.updatedDate);case _:
+return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -210,10 +213,10 @@ return $default(_that.slug,_that.comicDetails,_that.updatedDate);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate)?  $default,) {final _that = this;
 switch (_that) {
 case _Bookmark() when $default != null:
-return $default(_that.slug,_that.comicDetails,_that.updatedDate);case _:
+return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate);case _:
   return null;
 
 }
@@ -225,7 +228,7 @@ return $default(_that.slug,_that.comicDetails,_that.updatedDate);case _:
 
 
 class _Bookmark implements Bookmark {
-  const _Bookmark({required this.slug, required this.comicDetails, required this.updatedDate});
+  const _Bookmark({required this.slug, required this.comicDetails, required this.updatedDate, this.addedDate});
   
 
 /// Series slug.
@@ -233,6 +236,9 @@ class _Bookmark implements Bookmark {
 @override final  ComicDetails comicDetails;
 /// Last time the bookmark was added or found new chapters.
 @override final  DateTime updatedDate;
+/// When the comic was bookmarked. Null for bookmarks saved before this
+/// was stored; sorting uses [updatedDate] for them.
+@override final  DateTime? addedDate;
 
 /// Create a copy of Bookmark
 /// with the given fields replaced by the non-null parameter values.
@@ -244,18 +250,18 @@ _$BookmarkCopyWith<_Bookmark> get copyWith => __$BookmarkCopyWithImpl<_Bookmark>
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Bookmark&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.comicDetails, comicDetails) || other.comicDetails == comicDetails)&&(identical(other.updatedDate, updatedDate) || other.updatedDate == updatedDate));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Bookmark&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.comicDetails, comicDetails) || other.comicDetails == comicDetails)&&(identical(other.updatedDate, updatedDate) || other.updatedDate == updatedDate)&&(identical(other.addedDate, addedDate) || other.addedDate == addedDate));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,slug,comicDetails,updatedDate);
+    return Object.hash(runtimeType,slug,comicDetails,updatedDate,addedDate);
 }
 
 @override
 String toString() {
-    return 'Bookmark(slug: $slug, comicDetails: $comicDetails, updatedDate: $updatedDate)';
+    return 'Bookmark(slug: $slug, comicDetails: $comicDetails, updatedDate: $updatedDate, addedDate: $addedDate)';
 }
 
 
@@ -266,7 +272,7 @@ abstract mixin class _$BookmarkCopyWith<$Res> implements $BookmarkCopyWith<$Res>
   factory _$BookmarkCopyWith(_Bookmark value, $Res Function(_Bookmark) _then) = __$BookmarkCopyWithImpl;
 @override @useResult
 $Res call({
- String slug, ComicDetails comicDetails, DateTime updatedDate
+ String slug, ComicDetails comicDetails, DateTime updatedDate, DateTime? addedDate
 });
 
 
@@ -283,12 +289,13 @@ class __$BookmarkCopyWithImpl<$Res>
 
 /// Create a copy of Bookmark
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? slug = null,Object? comicDetails = null,Object? updatedDate = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? slug = null,Object? comicDetails = null,Object? updatedDate = null,Object? addedDate = freezed,}) {
   return _then(_Bookmark(
 slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,comicDetails: null == comicDetails ? _self.comicDetails : comicDetails // ignore: cast_nullable_to_non_nullable
 as ComicDetails,updatedDate: null == updatedDate ? _self.updatedDate : updatedDate // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,addedDate: freezed == addedDate ? _self.addedDate : addedDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

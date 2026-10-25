@@ -68,6 +68,28 @@ void main() {
       );
     });
 
+    test('round-trips added dates', () {
+      final backup = sampleBackup.copyWith(
+        bookmarks: [
+          for (final b in sampleBackup.bookmarks)
+            b.copyWith(addedDate: at(1600000000000)),
+        ],
+      );
+
+      expect(
+        BackupRepositoryImpl.decode(BackupRepositoryImpl.encode(backup)),
+        backup,
+      );
+    });
+
+    test('bookmarks without an added date leave it out', () {
+      final json = jsonDecode(
+        BackupRepositoryImpl.encode(sampleBackup),
+      ) as Map<String, dynamic>;
+
+      expect((json['bookmarks'] as List).single, isNot(contains('addedDate')));
+    });
+
     test('writes each history comic once', () {
       final json = jsonDecode(
         BackupRepositoryImpl.encode(sampleBackup),
@@ -187,6 +209,7 @@ void main() {
     test('restore saves both lists', () async {
       when(() => backupRepo.importBackup())
           .thenAnswer((_) async => right(backup));
+      when(() => bookmarks.getBookmarks()).thenAnswer((_) async => right([]));
       when(() => bookmarks.saveBookmarks(any()))
           .thenAnswer((_) async => right(unit));
       when(() => history.saveHistory(any()))
@@ -202,6 +225,28 @@ void main() {
       expect(result, right(RestoreResult.restored));
       verify(() => bookmarks.saveBookmarks(backup.bookmarks)).called(1);
       verify(() => history.saveHistory(backup.history)).called(1);
+    });
+
+    test('restore keeps added dates the backup lacks', () async {
+      final stored = backup.bookmarks.single.copyWith(addedDate: at(5));
+      when(() => backupRepo.importBackup())
+          .thenAnswer((_) async => right(backup));
+      when(() => bookmarks.getBookmarks())
+          .thenAnswer((_) async => right([stored]));
+      when(() => bookmarks.saveBookmarks(any()))
+          .thenAnswer((_) async => right(unit));
+      when(() => history.saveHistory(any()))
+          .thenAnswer((_) async => right(unit));
+
+      await RestoreLibrary(backupRepo, bookmarks, history, categories)(
+        const NoParams(),
+      );
+
+      verify(
+        () => bookmarks.saveBookmarks([
+          backup.bookmarks.single.copyWith(addedDate: at(5)),
+        ]),
+      ).called(1);
     });
 
     test('restore cancelled', () async {

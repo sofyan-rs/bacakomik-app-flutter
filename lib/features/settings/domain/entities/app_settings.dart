@@ -32,6 +32,30 @@ enum BookmarkGrouping {
   category,
 }
 
+/// What the Bookmarks list is ordered by.
+enum BookmarkSort {
+  /// `Bookmark.updatedDate`: when added or new chapters were found. The
+  /// order bookmarks had before sorting was added.
+  updated,
+
+  /// Title, case ignored.
+  title,
+
+  /// Number of chapters.
+  chapters,
+
+  /// Release date of the newest chapter.
+  latestChapter,
+
+  /// When the comic was bookmarked.
+  added,
+
+  /// When a chapter of the comic was last read.
+  lastRead,
+}
+
+enum SortDirection { ascending, descending }
+
 /// Auto-scroll speed levels; each level scrolls [autoScrollStep] px/s.
 const autoScrollMin = 1;
 const autoScrollMax = 10;
@@ -53,5 +77,7 @@ abstract class AppSettings with _$AppSettings {
     /// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
     @Default(3) int autoScrollSpeed,
     @Default(BookmarkGrouping.status) BookmarkGrouping bookmarkGrouping,
+    @Default(BookmarkSort.updated) BookmarkSort bookmarkSort,
+    @Default(SortDirection.descending) SortDirection bookmarkSortDirection,
   }) = _AppSettings;
 }

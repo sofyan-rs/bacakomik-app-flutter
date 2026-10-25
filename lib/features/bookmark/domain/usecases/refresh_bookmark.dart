@@ -5,11 +5,14 @@ import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
 import 'package:bacakomik_app/features/comic_detail/domain/repositories/comic_detail_repository.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/apply_pending_reads.dart';
+import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
 /// Re-fetches one bookmarked comic. When its chapter count changed it gets
-/// the new details and moves to the top ([Bookmark.updatedDate] = now).
+/// the new details and moves to the top ([Bookmark.updatedDate] = now). An
+/// imported placeholder always gets the loaded details; it moves up only
+/// when the source has more chapters than the imported list.
 /// A comic that fails to load is left unchanged. Reading progress an import
 /// left for it is applied.
 @injectable
@@ -33,13 +36,21 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
       (failure) async =>
           right((updated: false, historyChanged: false, failure: failure)),
       (fresh) async {
+        final imported = bookmark.comicDetails.isPlaceholder;
         final applied = await _applyPendingReads((
           key: bookmark.slug,
           details: fresh,
-        ));
+        ), imported: imported);
         if (applied case Left(value: final failure)) return left(failure);
         final historyChanged = applied.getOrElse((_) => false);
-        if (fresh.chapters.length == bookmark.comicDetails.chapters.length) {
+        final grew =
+            fresh.chapters.length != bookmark.comicDetails.chapters.length;
+        // An imported comic may come with its chapter list already: it gets
+        // the loaded details anyway, moving up only for new chapters.
+        final moved = imported
+            ? fresh.chapters.length > bookmark.comicDetails.chapters.length
+            : grew;
+        if (!grew && !imported) {
           return right((
             updated: false,
             historyChanged: historyChanged,
@@ -47,7 +58,10 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
           ));
         }
         final saved = await _bookmarks.saveBookmarks([
-          bookmark.copyWith(comicDetails: fresh, updatedDate: _clock.now()),
+          bookmark.copyWith(
+            comicDetails: fresh,
+            updatedDate: moved ? _clock.now() : bookmark.updatedDate,
+          ),
         ]);
         return saved.map(
           (_) => (updated: true, historyChanged: historyChanged, failure: null),
@@ -57,7 +71,8 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
   }
 }
 
-/// [updated]: new chapters were found. [historyChanged]: imported reading
-/// progress was written to the history. [failure]: why the comic did not
-/// load; it is left as it was.
+/// [updated]: the bookmark changed: new chapters were found, or an imported
+/// comic got its details. [historyChanged]: imported reading progress was
+/// written to the history. [failure]: why the comic did not load; it is
+/// left as it was.
 typedef RefreshResult = ({bool updated, bool historyChanged, Failure? failure});

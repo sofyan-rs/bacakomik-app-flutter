@@ -35,6 +35,8 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
   @override
   Future<Either<Failure, Unit>> call(MigrateComicParams params) async {
     final (:from, :to, :details) = params;
+    final bookmarks = await _bookmarks.getBookmarks();
+    if (bookmarks case Left(value: final failure)) return left(failure);
     final history = await _history.getHistory();
     if (history case Left(value: final failure)) return left(failure);
     final categories = await _categories.getComicCategories();
@@ -54,18 +56,25 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
             h.copyWith(slug: slug, comicSlug: to, comicDetails: details),
     ];
 
+    final now = _clock.now();
     final steps = <Future<Either<Failure, Unit>> Function()>[
       () => _bookmarks.saveBookmarks([
-        Bookmark(slug: to, comicDetails: details, updatedDate: _clock.now()),
+        Bookmark(
+          slug: to,
+          comicDetails: details,
+          updatedDate: now,
+          addedDate:
+              _earliestAdded(bookmarks.getOrElse((_) => const []), {
+                from,
+                to,
+              }) ??
+              now,
+        ),
       ]),
       if (moved.isNotEmpty) () => _history.saveHistory(moved),
       if (categoryIds.isNotEmpty)
         () => _categories.saveComicCategories([
-          ComicCategories(
-            slug: to,
-            categoryIds: categoryIds,
-            updatedDate: _clock.now(),
-          ),
+          ComicCategories(slug: to, categoryIds: categoryIds, updatedDate: now),
         ]),
       () => _history.removeComicHistory(from),
       () => _bookmarks.removeBookmarks([from]),
@@ -76,6 +85,19 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
     }
     return right(unit);
   }
+}
+
+/// When the earliest of the bookmarks under [slugs] was added (its
+/// [Bookmark.updatedDate] if that was not stored), so a migrated comic keeps
+/// its place when sorted by date added.
+DateTime? _earliestAdded(List<Bookmark> bookmarks, Set<String> slugs) {
+  DateTime? earliest;
+  for (final b in bookmarks) {
+    if (!slugs.contains(b.slug)) continue;
+    final added = b.addedDate ?? b.updatedDate;
+    if (earliest == null || added.isBefore(earliest)) earliest = added;
+  }
+  return earliest;
 }
 
 /// Library entries that look like the same series as [title] in another

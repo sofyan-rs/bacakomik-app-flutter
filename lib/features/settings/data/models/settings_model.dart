@@ -14,6 +14,8 @@ class SettingsModel {
     this.pageGap = false,
     this.autoScrollSpeed = 3,
     this.bookmarkGrouping = BookmarkGrouping.status,
+    this.bookmarkSort = BookmarkSort.updated,
+    this.bookmarkSortDirection = SortDirection.descending,
   });
 
   factory SettingsModel.fromEntity(AppSettings e) => SettingsModel(
@@ -24,6 +26,8 @@ class SettingsModel {
     pageGap: e.pageGap,
     autoScrollSpeed: e.autoScrollSpeed,
     bookmarkGrouping: e.bookmarkGrouping,
+    bookmarkSort: e.bookmarkSort,
+    bookmarkSortDirection: e.bookmarkSortDirection,
   );
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) =>
@@ -45,6 +49,12 @@ class SettingsModel {
   @JsonKey(unknownEnumValue: BookmarkGrouping.status)
   final BookmarkGrouping bookmarkGrouping;
 
+  @JsonKey(unknownEnumValue: BookmarkSort.updated)
+  final BookmarkSort bookmarkSort;
+
+  @JsonKey(unknownEnumValue: SortDirection.descending)
+  final SortDirection bookmarkSortDirection;
+
   Map<String, dynamic> toJson() => _$SettingsModelToJson(this);
 
   AppSettings toEntity() => AppSettings(
@@ -55,5 +65,7 @@ class SettingsModel {
     pageGap: pageGap,
     autoScrollSpeed: autoScrollSpeed.clamp(autoScrollMin, autoScrollMax),
     bookmarkGrouping: bookmarkGrouping,
+    bookmarkSort: bookmarkSort,
+    bookmarkSortDirection: bookmarkSortDirection,
   );
 }

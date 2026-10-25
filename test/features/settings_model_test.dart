@@ -15,6 +15,8 @@ void main() {
       keepScreenOn: false,
       pageGap: true,
       autoScrollSpeed: 7,
+      bookmarkSort: BookmarkSort.lastRead,
+      bookmarkSortDirection: SortDirection.ascending,
     );
     final json = SettingsModel.fromEntity(settings).toJson();
 
@@ -40,10 +42,14 @@ void main() {
       'themeMode': 'sepia',
       'readingDirection': 'diagonal',
       'pageFit': 'stretch',
+      'bookmarkSort': 'rating',
+      'bookmarkSortDirection': 'sideways',
     }).toEntity();
 
     expect(settings.themeMode, AppThemeMode.system);
     expect(settings.readingDirection, ReadingDirection.vertical);
     expect(settings.pageFit, PageFit.width);
+    expect(settings.bookmarkSort, BookmarkSort.updated);
+    expect(settings.bookmarkSortDirection, SortDirection.descending);
   });
 }

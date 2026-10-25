@@ -36,6 +36,8 @@ abstract class SyncSnapshot with _$SyncSnapshot {
   /// side's. Deletions older than
   /// [keepDeletionsSince] are forgotten. On equal dates a migrated copy
   /// (with [ComicDetails.source]) wins over one stored before the switch.
+  /// A winning bookmark without [Bookmark.addedDate] (saved by an app
+  /// version before it) takes the other side's.
   factory SyncSnapshot.merge(
     SyncSnapshot a,
     SyncSnapshot b, {
@@ -57,12 +59,15 @@ abstract class SyncSnapshot with _$SyncSnapshot {
       keepDeletionsSince,
     );
 
-    final bookmarks = _newestBySlug(
+    final bookmarks = _keepAddedDates(
+      _newestBySlug(
+        [...a.bookmarks, ...b.bookmarks],
+        slugOf: (b) => b.slug,
+        dateOf: (b) => b.updatedDate,
+        detailsOf: (b) => b.comicDetails,
+        deleted: deletedBookmarks,
+      ),
       [...a.bookmarks, ...b.bookmarks],
-      slugOf: (b) => b.slug,
-      dateOf: (b) => b.updatedDate,
-      detailsOf: (b) => b.comicDetails,
-      deleted: deletedBookmarks,
     );
     final history = _newestBySlug(
       [...a.history, ...b.history],
@@ -121,6 +126,18 @@ Map<String, DateTime> _newestDates(
     if (current == null || value.isAfter(current)) result[key] = value;
   }
   return result;
+}
+
+/// [merged] with each missing [Bookmark.addedDate] taken from another copy
+/// of the same slug in [all].
+List<Bookmark> _keepAddedDates(List<Bookmark> merged, List<Bookmark> all) {
+  final added = {for (final b in all) b.slug: ?b.addedDate};
+  return [
+    for (final b in merged)
+      b.addedDate == null && added[b.slug] != null
+          ? b.copyWith(addedDate: added[b.slug])
+          : b,
+  ];
 }
 
 List<T> _newestBySlug<T>(

@@ -12,5 +12,9 @@ abstract class Bookmark with _$Bookmark {
 
     /// Last time the bookmark was added or found new chapters.
     required DateTime updatedDate,
+
+    /// When the comic was bookmarked. Null for bookmarks saved before this
+    /// was stored; sorting uses [updatedDate] for them.
+    DateTime? addedDate,
   }) = _Bookmark;
 }

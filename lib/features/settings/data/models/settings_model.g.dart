@@ -39,6 +39,20 @@ SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
             unknownValue: BookmarkGrouping.status,
           ) ??
           BookmarkGrouping.status,
+      bookmarkSort:
+          $enumDecodeNullable(
+            _$BookmarkSortEnumMap,
+            json['bookmarkSort'],
+            unknownValue: BookmarkSort.updated,
+          ) ??
+          BookmarkSort.updated,
+      bookmarkSortDirection:
+          $enumDecodeNullable(
+            _$SortDirectionEnumMap,
+            json['bookmarkSortDirection'],
+            unknownValue: SortDirection.descending,
+          ) ??
+          SortDirection.descending,
     );
 
 Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
@@ -50,6 +64,9 @@ Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
       'pageGap': instance.pageGap,
       'autoScrollSpeed': instance.autoScrollSpeed,
       'bookmarkGrouping': _$BookmarkGroupingEnumMap[instance.bookmarkGrouping]!,
+      'bookmarkSort': _$BookmarkSortEnumMap[instance.bookmarkSort]!,
+      'bookmarkSortDirection':
+          _$SortDirectionEnumMap[instance.bookmarkSortDirection]!,
     };
 
 const _$AppThemeModeEnumMap = {
@@ -70,4 +87,18 @@ const _$BookmarkGroupingEnumMap = {
   BookmarkGrouping.status: 'status',
   BookmarkGrouping.source: 'source',
   BookmarkGrouping.category: 'category',
+};
+
+const _$BookmarkSortEnumMap = {
+  BookmarkSort.updated: 'updated',
+  BookmarkSort.title: 'title',
+  BookmarkSort.chapters: 'chapters',
+  BookmarkSort.latestChapter: 'latestChapter',
+  BookmarkSort.added: 'added',
+  BookmarkSort.lastRead: 'lastRead',
+};
+
+const _$SortDirectionEnumMap = {
+  SortDirection.ascending: 'ascending',
+  SortDirection.descending: 'descending',
 };

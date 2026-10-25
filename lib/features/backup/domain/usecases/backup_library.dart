@@ -52,7 +52,8 @@ class BackupLibrary implements UseCase<BackupResult, NoParams> {
 }
 
 /// Merges a backup file into the library. Entries with the same slug (or
-/// category id) are replaced by the backup's version.
+/// category id) are replaced by the backup's version; a bookmark the backup
+/// has no added date for keeps the library's.
 @injectable
 class RestoreLibrary implements UseCase<RestoreResult, NoParams> {
   const RestoreLibrary(
@@ -74,7 +75,18 @@ class RestoreLibrary implements UseCase<RestoreResult, NoParams> {
       if (backup == null) return right(RestoreResult.cancelled);
 
       if (backup.bookmarks.isNotEmpty) {
-        final saved = await _bookmarks.saveBookmarks(backup.bookmarks);
+        // A backup made before added dates were stored keeps the library's.
+        final current = await _bookmarks.getBookmarks();
+        final added = {
+          for (final b in current.getOrElse((_) => const []))
+            b.slug: ?b.addedDate,
+        };
+        final saved = await _bookmarks.saveBookmarks([
+          for (final b in backup.bookmarks)
+            b.addedDate == null && added[b.slug] != null
+                ? b.copyWith(addedDate: added[b.slug])
+                : b,
+        ]);
         if (saved.isLeft()) return saved.map((_) => RestoreResult.restored);
       }
       if (backup.history.isNotEmpty) {

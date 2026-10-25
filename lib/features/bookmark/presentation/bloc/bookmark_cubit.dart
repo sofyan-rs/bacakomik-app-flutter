@@ -51,11 +51,19 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     result.fold(_log, emit);
   }
 
-  Future<void> addBookmark(ComicDetails comic, String slug) => _thenReload(
-    _saveBookmarks([
-      Bookmark(slug: slug, comicDetails: comic, updatedDate: _clock.now()),
-    ]),
-  );
+  Future<void> addBookmark(ComicDetails comic, String slug) {
+    final now = _clock.now();
+    return _thenReload(
+      _saveBookmarks([
+        Bookmark(
+          slug: slug,
+          comicDetails: comic,
+          updatedDate: now,
+          addedDate: now,
+        ),
+      ]),
+    );
+  }
 
   Future<void> removeBookmark(String slug) => removeBookmarkList([slug]);
 

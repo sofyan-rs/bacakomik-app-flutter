@@ -22,4 +22,28 @@ abstract final class ChapterDate {
     }
     return date;
   }
+
+  static final _relative = RegExp(r'^(\d+) (min|h|day|days) ago$');
+  static final _absolute = RegExp(r'^(\d{2})/(\d{2})/(\d{4})$');
+
+  /// The release time [date] stands for. Relative dates count back from
+  /// [madeAt], when the text was made (the chapter list was fetched).
+  /// Null for text in no known form, like `-`.
+  static DateTime? parse(String date, {required DateTime madeAt}) {
+    if (date == 'Just now') return madeAt;
+    if (_relative.firstMatch(date) case final m?) {
+      final n = int.parse(m[1]!);
+      return madeAt.subtract(switch (m[2]) {
+        'min' => Duration(minutes: n),
+        'h' => Duration(hours: n),
+        _ => Duration(days: n),
+      });
+    }
+    if (_absolute.firstMatch(date) case final m?) {
+      final (day, month) = (int.parse(m[1]!), int.parse(m[2]!));
+      if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+      return DateTime(int.parse(m[3]!), month, day);
+    }
+    return null;
+  }
 }

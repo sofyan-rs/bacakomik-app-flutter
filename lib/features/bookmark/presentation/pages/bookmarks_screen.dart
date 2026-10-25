@@ -11,6 +11,7 @@ import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit
 import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_comic_card.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_sort.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/group_by_sheet.dart';
 import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
 import 'package:bacakomik_app/features/category/presentation/widgets/set_categories_sheet.dart';
@@ -25,7 +26,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Bookmark tab: tabs split by status, source or category ([BookmarkGrouping]),
-/// local title search, long press to select, categorize and delete.
+/// ordered by [BookmarkSort], local title search, long press to select,
+/// categorize and delete.
 class BookmarksScreen extends StatefulWidget {
   const BookmarksScreen({super.key});
 
@@ -42,21 +44,35 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   var _group = _allTab;
   final _selected = <String>{};
 
-  /// Progress per bookmark, recomputed only when bookmarks or history
-  /// change (not on search keystrokes, filter or selection changes).
+  /// Progress per bookmark in the chosen order, recomputed only when
+  /// bookmarks, history or the order change (not on search keystrokes,
+  /// filter or selection changes). Grouping and search keep this order.
   List<BookmarkProgress> _all = const [];
   Object? _allBookmarks;
   Object? _allHistory;
+  (BookmarkSort, SortDirection)? _allOrder;
 
   List<BookmarkProgress> _progress(
     BookmarkCubit bookmarks,
     HistoryCubit history,
+    (BookmarkSort, SortDirection) order,
   ) {
-    if (!identical(_allBookmarks, bookmarks.state) ||
-        !identical(_allHistory, history.state)) {
+    final changed =
+        !identical(_allBookmarks, bookmarks.state) ||
+        !identical(_allHistory, history.state);
+    if (changed) {
       _allBookmarks = bookmarks.state;
       _allHistory = history.state;
-      _all = BookmarkProgress.of(bookmarks.state, history.index.isFinished);
+      final index = history.index;
+      _all = BookmarkProgress.of(
+        bookmarks.state,
+        index.isFinished,
+        lastReadOf: (slug) => index.latestOf(slug)?.readDate,
+      );
+    }
+    if (changed || order != _allOrder) {
+      _allOrder = order;
+      _all = sortBookmarks(_all, order.$1, order.$2);
     }
     return _all;
   }
@@ -227,10 +243,15 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     final grouping = context.select(
       (SettingsCubit s) => s.state.bookmarkGrouping,
     );
+    final order = context.select(
+      (SettingsCubit s) =>
+          (s.state.bookmarkSort, s.state.bookmarkSortDirection),
+    );
     final categories = context.watch<CategoryCubit>().state;
     final all = _progress(
       context.watch<BookmarkCubit>(),
       context.watch<HistoryCubit>(),
+      order,
     );
     final updated = all.where((i) => i.hasUpdate).length;
     final tabs = [
@@ -383,7 +404,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
         if (count > 0) ...[
           RoundIconButton(
             icon: LucideIcons300.layers,
-            semanticLabel: AppText.groupBy,
+            semanticLabel: AppText.groupAndSort,
             onTap: () => showGroupBySheet(context),
           ),
           RoundIconButton(

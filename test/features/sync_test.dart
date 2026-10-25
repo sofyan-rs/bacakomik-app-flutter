@@ -161,6 +161,17 @@ void main() {
       expect(merged.comicCategories, local.comicCategories);
     });
 
+    test('a copy from an app without added dates keeps them', () {
+      final merged = merge(
+        SyncSnapshot(bookmarks: [bookmark('a', 1).copyWith(addedDate: at(1))]),
+        // Refreshed later on an older app version, which drops the date.
+        SyncSnapshot(bookmarks: [bookmark('a', 5)]),
+      );
+
+      expect(merged.bookmarks.single.updatedDate, at(5));
+      expect(merged.bookmarks.single.addedDate, at(1));
+    });
+
     test('sameAs ignores list order', () {
       final a = SyncSnapshot(bookmarks: [bookmark('a', 1), bookmark('b', 1)]);
       final b = SyncSnapshot(bookmarks: [bookmark('b', 1), bookmark('a', 1)]);

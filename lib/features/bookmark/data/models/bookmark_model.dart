@@ -11,13 +11,15 @@ class BookmarkModel {
     required this.slug,
     required this.comicDetails,
     required this.updatedDate,
+    this.addedDate,
   });
 
   factory BookmarkModel.fromEntity(Bookmark e) => BookmarkModel(
-        slug: e.slug,
-        comicDetails: ComicDetailsModel.fromEntity(e.comicDetails),
-        updatedDate: e.updatedDate,
-      );
+    slug: e.slug,
+    comicDetails: ComicDetailsModel.fromEntity(e.comicDetails),
+    updatedDate: e.updatedDate,
+    addedDate: e.addedDate,
+  );
 
   factory BookmarkModel.fromJson(Map<String, dynamic> json) =>
       _$BookmarkModelFromJson(json);
@@ -27,11 +29,18 @@ class BookmarkModel {
   @EpochMillisConverter()
   final DateTime updatedDate;
 
+  /// Absent in bookmarks stored before it was kept; older app versions
+  /// ignore it.
+  @JsonKey(includeIfNull: false)
+  @EpochMillisConverter()
+  final DateTime? addedDate;
+
   Map<String, dynamic> toJson() => _$BookmarkModelToJson(this);
 
   Bookmark toEntity() => Bookmark(
-        slug: slug,
-        comicDetails: comicDetails.toEntity(),
-        updatedDate: updatedDate,
-      );
+    slug: slug,
+    comicDetails: comicDetails.toEntity(),
+    updatedDate: updatedDate,
+    addedDate: addedDate,
+  );
 }
