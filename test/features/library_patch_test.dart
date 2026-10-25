@@ -156,6 +156,73 @@ void main() {
       expect(cubit.state, isEmpty);
     });
 
+    test('edits update the index in place to what a rebuild holds', () async {
+      final index = cubit.index;
+      void matchesRebuild(String step) {
+        // Patched, not rebuilt.
+        expect(identical(cubit.index, index), isTrue, reason: step);
+        final rebuilt = HistoryIndex(cubit.state);
+        expect(cubit.index.perComic, rebuilt.perComic, reason: step);
+        expect(cubit.index.latest, rebuilt.latest, reason: step);
+        expect(cubit.index.comics.toSet(), rebuilt.comics.toSet());
+        for (final c in ['x:a', 'x:b', 'x:c', 'x:e', 'x:f']) {
+          expect(cubit.index.latestOf(c), rebuilt.latestOf(c), reason: step);
+          expect(cubit.index.countOf(c), rebuilt.countOf(c), reason: step);
+          expect(
+            cubit.index.finishedCountOf(c),
+            rebuilt.finishedCountOf(c),
+            reason: step,
+          );
+        }
+        for (final h in [...cubit.state, read('x:a', 9, 0)]) {
+          expect(cubit.index.chapter(h.slug), rebuilt.chapter(h.slug));
+        }
+      }
+
+      await cubit.addHistoryList([
+        read('x:a', 1, 100),
+        read('x:b', 1, 300),
+        read('x:a', 2, 200),
+        read('x:c', 1, 300),
+      ]);
+      matchesRebuild('add');
+
+      final renamed = comic('x:a', title: 'Renamed', chapters: 3);
+      await cubit.addHistoryList([read('x:a', 3, 50, details: renamed)]);
+      matchesRebuild('rename');
+
+      clock.value = micros(2000);
+      await cubit.addHistory(
+        slug: 'x:b/1',
+        chapterNumber: '1',
+        comicDetails: comic('x:b'),
+        comicSlug: 'x:b',
+        page: 3,
+        pageCount: 20,
+      );
+      matchesRebuild('page');
+
+      await cubit.markAllRead({
+        'x:b': comic('x:b'),
+        'x:e': comic('x:e', chapters: 3),
+        'x:f': comic('x:f'),
+      });
+      matchesRebuild('mark read');
+
+      await cubit.removeHistoryList(['x:a/1', 'x:e/2', 'missing/1']);
+      matchesRebuild('remove');
+
+      await cubit.removeHistoryBySlug('x:b');
+      matchesRebuild('remove comic');
+
+      await cubit.markAllUnread(['x:e', 'x:f', 'missing']);
+      matchesRebuild('mark unread');
+
+      await cubit.clearHistory();
+      matchesRebuild('clear');
+      expect(cubit.index.perComic, isEmpty);
+    });
+
     test('an edit landing while a load reads is kept', () async {
       final loading = cubit.load();
       await cubit.addHistoryList([read('x:a', 1, 100)]);
@@ -280,6 +347,8 @@ void main() {
   });
 
   group('BookmarkCubit edits in memory', () {
+    setUpAll(() => registerFallbackValue(<Chapter>[]));
+
     late BookmarkRepositoryImpl repo;
     late MockComicDetailRepository comicDetails;
     late MemoryPendingReads pendingReads;
@@ -351,10 +420,12 @@ void main() {
         expect(cubit.state.first.slug, 'x:d');
 
         clock.value = micros(5000);
-        when(() => comicDetails.getComicDetails('x:a'))
+        when(() => comicDetails.getChapters('x:a'))
+            .thenAnswer((_) async => right(comic('x:a', chapters: 5).chapters));
+        when(() => comicDetails.getSeries('x:a', any()))
             .thenAnswer((_) async => right(comic('x:a', chapters: 5)));
-        when(() => comicDetails.getComicDetails('x:c'))
-            .thenAnswer((_) async => right(comic('x:c')));
+        when(() => comicDetails.getChapters('x:c'))
+            .thenAnswer((_) async => right(comic('x:c').chapters));
         await cubit.updateBookmarkList(['x:a', 'x:c']);
         await matchesReload();
         expect(cubit.state.first.slug, 'x:a');

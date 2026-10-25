@@ -173,6 +173,16 @@ class FakeComicDetailRepository implements ComicDetailRepository {
   @override
   Future<Either<Failure, ComicDetails>> getComicDetails(String slug) async =>
       result;
+
+  @override
+  Future<Either<Failure, List<Chapter>>> getChapters(String slug) async =>
+      result.map((d) => d.chapters);
+
+  @override
+  Future<Either<Failure, ComicDetails>> getSeries(
+    String slug,
+    List<Chapter> chapters,
+  ) async => result.map((d) => d.copyWith(chapters: chapters));
 }
 
 class FakeBookmarks implements BookmarkRepository {
@@ -189,6 +199,15 @@ class FakeBookmarks implements BookmarkRepository {
   @override
   Future<Either<Failure, Unit>> saveBookmarks(List<Bookmark> b) async =>
       right(unit);
+
+  @override
+  Future<Either<Failure, Bookmark?>> updateBookmark(
+    String slug,
+    Bookmark? Function(Bookmark stored) update,
+  ) async {
+    final stored = bookmarks.where((b) => b.slug == slug).firstOrNull;
+    return right(stored == null ? null : update(stored));
+  }
 
   @override
   Future<Either<Failure, Unit>> removeBookmarks(List<String> s) async =>

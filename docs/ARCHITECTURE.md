@@ -134,10 +134,11 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 
 ### 4.1 Startup
 1. `Hive.init` uses the app documents directory.
-2. `configureDependencies()` registers everything and opens the fourteen boxes (§7.1) before returning (`@preResolve` in `StorageModule`).
+2. `configureDependencies()` registers everything and opens the fourteen boxes (§7.1) before returning (`@preResolve` in `StorageModule`); the first box asked for opens all of them in parallel (`Future.wait`), so file reads overlap.
 3. `ExtensionManager.installBundled()` installs or upgrades the bundled extensions (§8.2).
-4. `runApp`. Library cubits (`BookmarkCubit`, `CategoryCubit`, `HistoryCubit`, `SettingsCubit`, `DownloadCubit`) `load()` when created. `SourcesCubit` and `SyncCubit` are eager; `SyncCubit.start()` restores the Google account and syncs.
-5. `ExtensionManager.catalog()` fetches the repos in the background for the update badge.
+4. `runApp` shows `SplashScreen` for 2 s. Library cubits (`BookmarkCubit`, `CategoryCubit`, `HistoryCubit`, `SettingsCubit`, `DownloadCubit`) are non-lazy and `load()` when created, so the library loads during the splash. `SourcesCubit` and `SyncCubit` are eager too; `SyncCubit.start()` restores the Google account and syncs.
+5. `RootScreen` holds the tabs in a `LazyIndexedStack` (`lib/app/lazy_indexed_stack.dart`): a tab is built on its first visit, then kept alive. Startup builds and loads only Home.
+6. `ExtensionManager.catalog()` fetches the repos in the background for the update badge.
 
 ### 4.2 Bloc scope
 - **App scope** (`lib/app/app.dart`): `HomeBloc`, `ExploreBloc`, `FilterCubit`, `SourcesCubit`, the library cubits, `BackupCubit`, `SyncCubit`, `UpdateCubit`. They outlive navigation.
@@ -147,7 +148,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 ### 4.3 State shapes
 - Remote screens: freezed sealed `initial / loading / loaded / error / noInternet`; widgets test `state is HomeLoaded`; errors render `SourceError` (§9).
 - Paginated lists share `ComicListState` and the `ComicListLoader` mixin (`loadFirstPage`, `loadNextPage`). Next page is ignored until the first loaded; `ComicListLoaded.isLoadMore` is true while loading.
-- Library cubits hold plain lists or `AppSettings`. `HistoryCubit` and `BookmarkCubit` update their list in memory after their own writes, to exactly what a reload would read (dates to the millisecond, ties by slug; a failed write reloads); the other cubits reload after every write. `load()` is for changes made elsewhere (sync, import, restore, migration); a `load()` that read the boxes before an in-memory edit landed reads again.
+- Library cubits hold plain lists or `AppSettings`. `HistoryCubit` and `BookmarkCubit` update their list in memory after their own writes, to exactly what a reload would read (dates to the millisecond, ties by slug; a failed write reloads); the other cubits reload after every write. `load()` is for changes made elsewhere (sync, import, restore, migration); a `load()` that read the boxes before an in-memory edit landed reads again. `HistoryCubit.index` (`HistoryIndex`) is built in full on first use and after `load()`; the cubit's own edits patch it in place (`applySaved`, `applyRemoved`, `applyRemovedComics`, `applyCleared`), touching only the edited comics.
 - `SourcesState` mirrors `ExtensionManager`: installed and known sources (incl. languages turned off), active source and its `SourceFeatures`, update count.
 - Events are `final class`es named after what happened (`HomeStarted`, `ChapterRequested`).
 
@@ -178,7 +179,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 |---|---|---|---|
 | home | Home tab | `HomeBloc` | Two parallel `browse` calls: slider with `home.featured` (10) and "Latest updates" with `home.latest` (20); last read comic; header opens the source picker |
 | latest | "See all" | `LatestBloc` | Infinite scroll, up to 10 pages |
-| explore | Explore tab | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (source, query, values per group) goes to one `browse`. Sheet built from `filters()`; a `quick` group shows above the grid. Changing source resets it. Genre chips on a comic page open Explore with that genre alone (`FilterCubit.showGenre`). Requests run in order |
+| explore | Explore tab | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (source, query, values per group) goes to one `browse`. Sheet built from `filters()`; a `quick` group shows above the grid. Changing source resets it. Genre chips on a comic page open Explore with that genre alone (`FilterCubit.showGenre`). Requests run in order. The tab is built (and first asks its source) on its first visit, which may be Home's search button (focuses the field) |
 | comic_detail | Card tap, shared link | `ComicDetailsBloc` | Series and chapters in parallel; bookmark (then categories, §6.2), continue, WebView, share, multi-select to download or mark read. Offline: opens from stored details (downloads, bookmarks, history). Missing source: `MissingSource` offers to install it |
 | reader | Chapter tap | `ReaderBloc` | Chapter slug `<comicKey>/<number>`; prev/next replace the route; writes history with the page reached; uses `imageHeaders`; downloaded chapters read from files |
 | bookmark | Bookmarks tab | `BookmarkCubit` | Search, group tabs (§6.2), refresh (§6.1) |
@@ -190,7 +191,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 
 ### 6.1 Checking bookmarks for new chapters
 1. Pull-to-refresh calls `BookmarkCubit.updateBookmarkList` with the comics **on screen** (open group, narrowed by search). Pulling in another group during a run adds to the queue.
-2. `RefreshBookmark` reloads each comic in turn. A changed chapter count saves the new details with `updatedDate = now` (moves it to the top). A failure leaves it unchanged and logs `Refresh <key>: <failure>`.
+2. `BookmarkRefreshQueue` checks up to 3 comics at once, at most 1 per source (a site may block a burst). `RefreshBookmark` fetches the chapter list first, and the series details only when the count changed or the bookmark is an imported placeholder. A changed count saves the new details with `updatedDate = now` (moves it to the top). A failure leaves it unchanged and logs `Refresh <key>: <failure>`.
 3. `ProgressNotifier` (Android) shows `done / total`, then "Bookmarks updated" with the count, or nothing.
 
 | Stop | How |
@@ -199,6 +200,8 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 | Stop button in the Bookmarks header | Shown while `BookmarkCubit.refreshing`; same cancel |
 | A comic over `refreshTimeout` (90 s) | Skipped, so one stuck site can't block the run |
 | Notification swiped away | Stays away; **the run continues** |
+
+A comic abandoned (stop, timeout, bookmark removed) has its `RefreshCancelToken` cancelled and writes nothing more; a request already sent may still finish, and a result whose write had begun arrives `late` so the screen shows it. Comics pulled after a Stop, or while a run is ending, get a run of their own.
 
 Imported reading progress written during a refresh (§6.4) reloads the history at once through `BookmarkCubit.historyChanges`.
 
@@ -239,7 +242,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 | `download_comics` | comic key | `DownloadComicModel` (details, cover path) |
 | `categories` | category id | `CategoryModel` |
 | `comic_categories` | comic key | `ComicCategoriesModel` |
-| `library_deletions` | `bookmark:` / `history:` / `category:` + id | deletion time in ms (`LibraryJournal`, for sync) |
+| `library_deletions` | `bookmark:` / `history:` / `category:` + id; `saved:` + the same | deletion time in ms; when a deleted entry was saved again (`LibraryJournal`, for sync) |
 | `sync` | `account`, `lastSyncedAt` | email; last sync ms |
 | `extensions` | extension id | `ExtensionMeta` |
 | `extension_storage` | `<sourceId>:<key>` | value from `storage.set` |
@@ -311,12 +314,12 @@ Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and h
 ### 7.6 Sync
 One file, `bacakomik-sync.json.gz`, in the app's Drive `appDataFolder` (invisible to the user). `google_sign_in` + `filesDio`.
 
-- **When:** on start, on resume (if last sync > 1 min ago), and 5 s after the last library edit (`LibraryJournal.changes`). The reader saves its page quietly (`recordSaved(quiet: true)`: deletion records still cleared, no change event) and announces the position with one normal save when it closes or the app pauses.
+- **When:** on start, on resume (if last sync > 1 min ago), and 5 s after the last library edit (`LibraryJournal.changes`). The reader saves its page quietly (`recordSaved(quiet: true)`: deletion records still cleared, no change event) and announces the position with one normal save when it closes, the app pauses or another chapter opens (saved before the new one, so the previous chapter never ends up newer). The save on opening a chapter never finishes it: a one-page chapter is finished by the next save, 1 s later, if the reader is still on it. A chapter without pages is not recorded (the reader repository fails it with "This chapter has no pages").
 - **What:** bookmarks, history, categories. Not downloads, settings, extensions or pending reads. An imported bookmark syncs as stored (title only until it loads somewhere).
-- **Format:** gzipped JSON `version: 1` (`SyncRepositoryImpl.formatVersion`): backup fields plus `deletedBookmarks`, `deletedHistory`, `deletedCategories` (id → ms).
-- **Merge** (`SyncSnapshot.merge`): newest wins per key (`updatedDate` / `readDate`); deleted at or after that time → dropped; deletions older than 180 days are forgotten; a side without category fields keeps the other's.
-- **Flow** (`SyncLibrary`): download → merge → migrate legacy (§7.7) → write locally → upload only if different. Local changes bump `libraryRevision` (§4.2). Auth errors become `AuthFailure`.
-- **Off the UI isolate:** gzip + JSON of the sync file, decoding the local boxes (read as raw JSON strings) and encoding them for `writeLocal` run in `Isolate.run`; `writeLocal` writes only records whose JSON changed. `merge` walks two slug-sorted lists in one pass; `sameAs` compares each pair of details objects deeply once.
+- **Format:** gzipped JSON `version: 1` (`SyncRepositoryImpl.formatVersion`): backup fields plus `deletedBookmarks`, `deletedHistory`, `deletedCategories` (id → ms), and, only when not empty, `savedBookmarks`, `savedHistory`, `savedCategories` (id → ms, deleted entries saved again; older versions ignore them). An entry or date that does not parse is skipped, not the file.
+- **Merge** (`SyncSnapshot.merge`): newest wins per key (`updatedDate` / `readDate`); deleted at or after that time → dropped, unless saved again after the deletion (a restore or import keeps its old dates; `saved*` cancels that deletion everywhere); deletions and save-again times older than 180 days are forgotten; a side without category fields keeps the other's.
+- **Flow** (`SyncLibrary`): download → merge → migrate legacy (§7.7) → write locally → upload only if different. Local changes bump `libraryRevision` (§4.2). Only 401, or 403 with reason `insufficientPermissions` / `authError`, becomes `AuthFailure` (signed out); quota and rate limits are `ServerFailure`. A stored account that can't be restored at start stays signed in, shown as failed; the next sync (resume or tap) restores it first.
+- **Off the UI isolate:** gzip + JSON of the sync file, decoding the local boxes (read as raw JSON strings) and encoding them for `writeLocal` run in `Isolate.run`; `writeLocal` writes only records whose JSON changed, and only those unchanged since the last `readLocal` (an edit made during the sync is kept, a key added meanwhile is not deleted). `merge` walks two slug-sorted lists in one pass; `sameAs` compares each pair of details objects deeply once.
 
 ### 7.7 Legacy keys
 Keys without a prefix belong to `ComicKey.defaultSource` (`bacakomik`), as all pre-sources keys do. Those came from the old API, now the `voratoon` source (`ComicSource.legacy`). `MigrateSnapshot` moves default-source entries with no `source` (or `"voratoon"`) to `voratoon:<slug>`, rewrites chapter slugs and records deletions for the old keys. It runs in sync, or via `MigrateLocalLibrary` on start/resume when signed out, which first checks stored keys (`SyncRepository.anyLocalComic`): only default-source comics are decoded, and without a legacy one the library is not read. No request is made.

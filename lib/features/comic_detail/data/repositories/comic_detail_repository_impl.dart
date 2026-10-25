@@ -23,4 +23,22 @@ class ComicDetailRepositoryImpl implements ComicDetailRepository {
         await Future.wait([series, chapters]);
         return (await series).toEntity(await chapters);
       });
+
+  @override
+  Future<Either<Failure, List<Chapter>>> getChapters(String slug) =>
+      runRemote(_networkInfo, () async {
+        final chapters = await _remote.getChapters(slug);
+        return [for (final c in chapters) c.toEntity(slug)];
+      });
+
+  @override
+  Future<Either<Failure, ComicDetails>> getSeries(
+    String slug,
+    List<Chapter> chapters,
+  ) => runRemote(_networkInfo, () async {
+    final series = await _remote.getSeries(slug);
+    return series
+        .toEntity(const [])
+        .copyWith(chapters: chapters, totalChapter: '${chapters.length}');
+  });
 }

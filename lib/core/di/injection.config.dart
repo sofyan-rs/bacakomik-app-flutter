@@ -574,6 +574,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i55.HistoryRepository>(),
         gh<_i866.CategoryRepository>(),
         gh<_i1011.Clock>(),
+        gh<_i494.PendingReadRepository>(),
       ),
     );
     gh.factory<_i928.HistoryCubit>(

@@ -54,12 +54,19 @@ class BookmarkProgress {
     DateTime? Function(String comicSlug)? lastReadOf,
   }) => [
     for (final bookmark in bookmarks)
-      BookmarkProgress(
-        bookmark,
-        bookmark.comicDetails.chapters.where((c) => isRead(c.slug)).length,
-        lastRead: lastReadOf?.call(bookmark.slug),
-      ),
+      single(bookmark, isRead, lastRead: lastReadOf?.call(bookmark.slug)),
   ];
+
+  /// The progress of one [bookmark]; see [of].
+  static BookmarkProgress single(
+    Bookmark bookmark,
+    bool Function(String chapterSlug) isRead, {
+    DateTime? lastRead,
+  }) => BookmarkProgress(
+    bookmark,
+    bookmark.comicDetails.chapters.where((c) => isRead(c.slug)).length,
+    lastRead: lastRead,
+  );
 
   /// The newest release date among [bookmark]'s chapters. Chapter dates
   /// are text made when the chapter list was fetched ("3 h ago",

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:bacakomik_app/app/lazy_indexed_stack.dart';
 import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
@@ -44,6 +45,16 @@ class _RootScreenState extends State<RootScreen> {
     FloatingNavItem(icon: LucideIcons300.history, label: AppText.historyTab),
     FloatingNavItem(icon: LucideIcons300.settings2, label: AppText.more),
   ];
+
+  /// A tab's screen. Each is built on its first visit (startup builds and
+  /// loads only Home), then kept alive.
+  static Widget _tab(BuildContext context, int index) => switch (index) {
+    0 => const HomeScreen(),
+    1 => const ExploreScreen(),
+    2 => const BookmarksScreen(),
+    3 => const HistoryScreen(),
+    _ => const MoreScreen(),
+  };
 
   /// Comic links opened from outside the app, including the one that
   /// launched it.
@@ -123,15 +134,10 @@ class _RootScreenState extends State<RootScreen> {
                           bottom: keyboardOpen ? 0 : navInset,
                         ),
                 ),
-                child: IndexedStack(
+                child: LazyIndexedStack(
                   index: tabs.index,
-                  children: const [
-                    HomeScreen(),
-                    ExploreScreen(),
-                    BookmarksScreen(),
-                    HistoryScreen(),
-                    MoreScreen(),
-                  ],
+                  itemCount: _items.length,
+                  itemBuilder: _tab,
                 ),
               ),
               if (rail && !keyboardOpen)

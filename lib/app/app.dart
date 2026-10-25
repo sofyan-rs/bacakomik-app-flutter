@@ -46,11 +46,25 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
         BlocProvider(create: (_) => getIt<HomeBloc>()),
         BlocProvider(create: (_) => getIt<ExploreBloc>()),
         BlocProvider(create: (_) => getIt<FilterCubit>()),
-        BlocProvider(create: (_) => getIt<BookmarkCubit>()..load()),
-        BlocProvider(create: (_) => getIt<CategoryCubit>()..load()),
-        BlocProvider(create: (_) => getIt<HistoryCubit>()..load()),
-        BlocProvider(create: (_) => getIt<SettingsCubit>()..load()),
-        BlocProvider(create: (_) => getIt<DownloadCubit>()..load()),
+        // The library loads while the splash shows (not lazily on the first
+        // frame of the tabs), so it is ready when they appear.
+        BlocProvider(
+          create: (_) => getIt<BookmarkCubit>()..load(),
+          lazy: false,
+        ),
+        BlocProvider(
+          create: (_) => getIt<CategoryCubit>()..load(),
+          lazy: false,
+        ),
+        BlocProvider(create: (_) => getIt<HistoryCubit>()..load(), lazy: false),
+        BlocProvider(
+          create: (_) => getIt<SettingsCubit>()..load(),
+          lazy: false,
+        ),
+        BlocProvider(
+          create: (_) => getIt<DownloadCubit>()..load(),
+          lazy: false,
+        ),
         BlocProvider(create: (_) => getIt<BackupCubit>()),
         BlocProvider(create: (_) => getIt<UpdateCubit>()),
         BlocProvider(create: (_) => getIt<SyncCubit>()..start(), lazy: false),

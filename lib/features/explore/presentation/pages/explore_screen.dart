@@ -55,6 +55,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   void initState() {
     super.initState();
     _query.text = context.read<FilterCubit>().state.query;
+    // Built on the tab's first visit (RootScreen), so this is when Explore
+    // first asks its source.
     _load();
   }
 
@@ -63,8 +65,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.didChangeDependencies();
     final tabs = RootTabsScope.read(context);
     if (!identical(tabs, _tabs)) {
+      final first = _tabs == null;
       _tabs?.removeListener(_onTabs);
       _tabs = tabs..addListener(_onTabs);
+      // The tab is built on its first visit, which may be Home's search
+      // button: focus the field for it. initState already loaded the
+      // filter set elsewhere.
+      if (first && tabs.searchRequests != _searchRequests) _focusSearch();
       _searchRequests = tabs.searchRequests;
       _filterRequests = tabs.filterRequests;
     }
@@ -93,10 +100,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
     if (tabs.searchRequests == _searchRequests) return;
     _searchRequests = tabs.searchRequests;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _queryFocus.requestFocus();
-    });
+    _focusSearch();
   }
+
+  void _focusSearch() => WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (mounted) _queryFocus.requestFocus();
+  });
 
   void _onQueryChanged(String text) {
     _debounce?.cancel();

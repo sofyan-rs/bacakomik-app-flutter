@@ -38,6 +38,20 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
       });
 
   @override
+  Future<Either<Failure, Bookmark?>> updateBookmark(
+    String slug,
+    Bookmark? Function(Bookmark stored) update,
+  ) => runLocal(() async {
+    // Synchronous up to the write, which Hive applies in memory at once.
+    final stored = _local.get(slug)?.toEntity();
+    final updated = stored == null ? null : update(stored);
+    if (updated == null) return null;
+    await _local.putAll([BookmarkModel.fromEntity(updated)]);
+    await _journal.recordSaved(LibraryKind.bookmark, [updated.slug]);
+    return updated;
+  });
+
+  @override
   Future<Either<Failure, Unit>> removeBookmarks(List<String> slugs) =>
       runLocal(() async {
         await _local.deleteAll(slugs);

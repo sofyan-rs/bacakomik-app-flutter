@@ -7,6 +7,7 @@ import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
+import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_comic_card.dart';
@@ -16,6 +17,7 @@ import 'package:bacakomik_app/features/bookmark/presentation/widgets/group_by_sh
 import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
 import 'package:bacakomik_app/features/category/presentation/widgets/set_categories_sheet.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
@@ -52,23 +54,58 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   Object? _allHistory;
   (BookmarkSort, SortDirection)? _allOrder;
 
+  /// What each bookmark's progress was worked out from, by slug, so a
+  /// history change (a page saved while reading) recounts only the comics
+  /// whose history changed.
+  var _sources = <String, _ProgressSource>{};
+
   List<BookmarkProgress> _progress(
     BookmarkCubit bookmarks,
     HistoryCubit history,
     (BookmarkSort, SortDirection) order,
   ) {
-    final changed =
-        !identical(_allBookmarks, bookmarks.state) ||
-        !identical(_allHistory, history.state);
-    if (changed) {
+    final bookmarksChanged = !identical(_allBookmarks, bookmarks.state);
+    final historyChanged = !identical(_allHistory, history.state);
+    var changed = bookmarksChanged;
+    if (bookmarksChanged || historyChanged) {
       _allBookmarks = bookmarks.state;
       _allHistory = history.state;
       final index = history.index;
-      _all = BookmarkProgress.of(
-        bookmarks.state,
-        index.isFinished,
-        lastReadOf: (slug) => index.latestOf(slug)?.readDate,
-      );
+      final sources = <String, _ProgressSource>{};
+      final all = <BookmarkProgress>[];
+      for (final bookmark in bookmarks.state) {
+        final latest = index.latestOf(bookmark.slug);
+        final count = index.countOf(bookmark.slug);
+        final finished = index.finishedCountOf(bookmark.slug);
+        var source = _sources[bookmark.slug];
+        if (source == null ||
+            !identical(source.bookmark, bookmark) ||
+            !identical(source.latest, latest) ||
+            source.count != count ||
+            source.finished != finished) {
+          changed = true;
+          source = _ProgressSource(
+            bookmark,
+            latest,
+            count,
+            finished,
+            BookmarkProgress.single(
+              bookmark,
+              index.isFinished,
+              lastRead: latest?.readDate,
+            ),
+          );
+        }
+        sources[bookmark.slug] = source;
+        all.add(source.progress);
+      }
+      _sources = sources;
+      if (changed) _all = all;
+      if (bookmarksChanged) {
+        // Selected comics that were removed (deleted, migrated, synced
+        // away) leave the selection.
+        _selected.retainWhere(sources.containsKey);
+      }
     }
     if (changed || order != _allOrder) {
       _allOrder = order;
@@ -120,7 +157,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     );
     if (confirmed != true || !mounted) return;
     await context.read<BookmarkCubit>().removeBookmarkList(_selected.toList());
-    setState(_selected.clear);
+    if (mounted) setState(_selected.clear);
   }
 
   static const _allTab = 'all';
@@ -515,6 +552,23 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       message: _query.text.isEmpty ? null : AppText.comicNotFoundSearch,
     );
   }
+}
+
+/// The bookmark and history state one [BookmarkProgress] was made from.
+class _ProgressSource {
+  _ProgressSource(
+    this.bookmark,
+    this.latest,
+    this.count,
+    this.finished,
+    this.progress,
+  );
+
+  final Bookmark bookmark;
+  final ReadHistory? latest;
+  final int count;
+  final int finished;
+  final BookmarkProgress progress;
 }
 
 /// Confirms a destructive action on the selected bookmarks. Pops `true` to

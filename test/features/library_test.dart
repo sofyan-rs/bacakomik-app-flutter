@@ -98,6 +98,14 @@ ReadHistory history(String slug, String comicSlug, int readDate) => ReadHistory(
   comicSlug: comicSlug,
 );
 
+/// [details] with one chapter more.
+ComicDetails moreChapters() => details.copyWith(
+  chapters: [
+    ...details.chapters,
+    const Chapter(number: '3', slug: 'x/3', date: '-'),
+  ],
+);
+
 Bookmark bookmark(String slug, String title, int updatedDate) => Bookmark(
   slug: slug,
   comicDetails: details.copyWith(title: title),
@@ -303,6 +311,8 @@ void main() {
   });
 
   group('Bookmarks', () {
+    setUpAll(() => registerFallbackValue(<Chapter>[]));
+
     late BookmarkRepositoryImpl repo;
     late HistoryRepositoryImpl historyRepo;
     late MockComicDetailRepository comicDetails;
@@ -328,6 +338,23 @@ void main() {
         LibraryJournal(Hive.box<String>(HiveBoxes.libraryDeletions), clock),
       );
       comicDetails = MockComicDetailRepository();
+      // Tests stub getComicDetails as what the source returns; the
+      // chapters-first refresh reads it through these two.
+      when(() => comicDetails.getChapters(any())).thenAnswer(
+        (i) async => (await comicDetails.getComicDetails(
+          i.positionalArguments[0] as String,
+        )).map((d) => d.chapters),
+      );
+      when(() => comicDetails.getSeries(any(), any())).thenAnswer(
+        (i) async =>
+            (await comicDetails.getComicDetails(
+              i.positionalArguments[0] as String,
+            )).map(
+              (d) => d.copyWith(
+                chapters: i.positionalArguments[1] as List<Chapter>,
+              ),
+            ),
+      );
       pendingReads = MemoryPendingReads();
       notifier = RecordingNotifier();
       cubit = BookmarkCubit(
@@ -423,14 +450,8 @@ void main() {
     });
 
     test('refresh updates only comics with new chapters', () async {
-      final moreChapters = details.copyWith(
-        chapters: [
-          ...details.chapters,
-          const Chapter(number: '3', slug: 'x/3', date: '-'),
-        ],
-      );
       when(() => comicDetails.getComicDetails('a'))
-          .thenAnswer((_) async => right(moreChapters));
+          .thenAnswer((_) async => right(moreChapters()));
       when(() => comicDetails.getComicDetails('b'))
           .thenAnswer((_) async => left(const NetworkFailure()));
       when(() => comicDetails.getComicDetails('c'))
@@ -444,6 +465,110 @@ void main() {
       expect(cubit.state.first.comicDetails.chapters, hasLength(3));
       expect(cubit.state[1].updatedDate, at(300));
       expect(cubit.state[2].updatedDate, at(200));
+      // Chapters first: series details only for the comic whose count
+      // changed.
+      verify(() => comicDetails.getSeries('a', any())).called(1);
+      verifyNever(() => comicDetails.getSeries('c', any()));
+      verifyNever(() => comicDetails.getSeries('b', any()));
+    });
+
+    test('refresh does not bring back a comic deleted meanwhile', () async {
+      final source = Completer<Either<Failure, ComicDetails>>();
+      when(() => comicDetails.getComicDetails('a'))
+          .thenAnswer((_) => source.future);
+
+      final run = cubit.updateBookmarkList(['a']);
+      await pumpEventQueue();
+      await cubit.removeBookmarkList(['a']);
+      source.complete(right(moreChapters()));
+      await run;
+      await pumpEventQueue();
+
+      expect(cubit.isBookmark('a'), isFalse);
+      expect((await repo.getBookmark('a')).getOrElse((f) => throw f), isNull);
+    });
+
+    test('RefreshBookmark saves only while the comic is stored', () async {
+      final source = Completer<Either<Failure, ComicDetails>>();
+      when(() => comicDetails.getComicDetails('a'))
+          .thenAnswer((_) => source.future);
+      final refresh = RefreshBookmark(
+        repo,
+        comicDetails,
+        ApplyPendingReads(pendingReads, historyRepo, clock),
+        clock,
+      );
+
+      final result = refresh('a');
+      await pumpEventQueue();
+      // Removed elsewhere (sync, migration) while the request ran.
+      await repo.removeBookmarks(['a']);
+      source.complete(right(moreChapters()));
+
+      final (:saved, historyChanged: _, :failure) = (await result).getOrElse(
+        (f) => throw f,
+      );
+      expect(saved, isNull);
+      expect(failure, isNull);
+      expect((await repo.getBookmark('a')).getOrElse((f) => throw f), isNull);
+    });
+
+    test('a removed comic leaves the refresh queue', () async {
+      final first = Completer<Either<Failure, ComicDetails>>();
+      when(() => comicDetails.getComicDetails('b'))
+          .thenAnswer((_) => first.future);
+      when(() => comicDetails.getComicDetails('a'))
+          .thenAnswer((_) async => right(details));
+
+      // Queue order is the list order: b, c, a (one source: one at a time).
+      final run = cubit.updateBookmarkList(['a', 'b', 'c']);
+      await pumpEventQueue();
+      await cubit.removeBookmarkList(['c']);
+      first.complete(right(details));
+      await run;
+
+      verifyNever(() => comicDetails.getComicDetails('c'));
+      verify(() => comicDetails.getComicDetails('a')).called(1);
+    });
+
+    test('a result after Stop writes nothing', () async {
+      final late = Completer<Either<Failure, ComicDetails>>();
+      when(() => comicDetails.getComicDetails('b'))
+          .thenAnswer((_) => late.future);
+      clock.value = at(5000);
+
+      final run = cubit.updateBookmarkList(['b']);
+      await pumpEventQueue();
+      cubit.cancelRefresh();
+      await run;
+      expect(cubit.refreshing.value, isFalse);
+      late.complete(right(moreChapters()));
+      await pumpEventQueue();
+
+      verifyNever(() => comicDetails.getSeries('b', any()));
+      final stored = (await repo.getBookmark('b')).getOrElse((f) => throw f);
+      expect(stored!.updatedDate, at(300));
+      expect(cubit.state.firstWhere((b) => b.slug == 'b').updatedDate, at(300));
+    });
+
+    test('comics pulled after Stop get a run of their own', () async {
+      final hang = Completer<Either<Failure, ComicDetails>>();
+      when(() => comicDetails.getComicDetails('b'))
+          .thenAnswer((_) => hang.future);
+      when(() => comicDetails.getComicDetails('c'))
+          .thenAnswer((_) async => right(moreChapters()));
+      clock.value = at(5000);
+
+      final run = cubit.updateBookmarkList(['b']);
+      await pumpEventQueue();
+      cubit.cancelRefresh();
+      // Pulled again before the stopped run ended.
+      final again = cubit.updateBookmarkList(['c']);
+      await Future.wait([run, again]);
+
+      expect(cubit.state.first.slug, 'c');
+      expect(cubit.state.first.updatedDate, at(5000));
+      expect(notifier.calls.where((c) => c.startsWith('finish')), hasLength(2));
     });
 
     test(
@@ -462,7 +587,8 @@ void main() {
 
         verifyNever(() => comicDetails.getComicDetails('b'));
         verify(() => comicDetails.getComicDetails('a')).called(1);
-        expect(notifier.calls, ['0/1', '1/2', 'finish -']);
+        // The total grows when 'c' joins.
+        expect(notifier.calls, ['0/1', '0/2', '1/2', 'finish -']);
       },
     );
 

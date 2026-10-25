@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
@@ -9,14 +10,33 @@ import 'package:bacakomik_app/features/migration/domain/usecases/import_library.
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
-/// Re-fetches one bookmarked comic. When its chapter count changed it gets
-/// the new details and moves to the top ([Bookmark.updatedDate] = now). An
-/// imported placeholder always gets the loaded details; it moves up only
-/// when the source has more chapters than the imported list.
+/// Tells a running [RefreshBookmark] its result is no longer wanted (the
+/// run was stopped, the comic timed out or was removed): it then writes
+/// nothing. A request already sent cannot be taken back, so it may still
+/// finish; only its writes are skipped.
+class RefreshCancelToken {
+  var _cancelled = false;
+
+  bool get cancelled => _cancelled;
+
+  void cancel() => _cancelled = true;
+}
+
+/// Re-checks one bookmarked comic, by key. Reads the stored bookmark, so a
+/// comic removed since it was queued is skipped without a request.
+///
+/// Fetches the chapter list first; the series details are fetched only
+/// when the chapter count changed or the bookmark is an imported
+/// placeholder. A changed chapter count saves the new details and moves
+/// the comic to the top ([Bookmark.updatedDate] = now). An imported
+/// placeholder always gets the loaded details; it moves up only when the
+/// source has more chapters than the imported list.
 /// A comic that fails to load is left unchanged. Reading progress an import
-/// left for it is applied.
+/// left for it is applied. The save goes through
+/// [BookmarkRepository.updateBookmark], so a bookmark removed while the
+/// requests ran stays removed.
 @injectable
-class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
+class RefreshBookmark implements UseCase<RefreshResult, String> {
   const RefreshBookmark(
     this._bookmarks,
     this._comicDetails,
@@ -29,44 +49,71 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
   final ApplyPendingReads _applyPendingReads;
   final Clock _clock;
 
+  static const _unchanged = (saved: null, historyChanged: false, failure: null);
+
   @override
-  Future<Either<Failure, RefreshResult>> call(Bookmark bookmark) async {
-    final details = await _comicDetails.getComicDetails(bookmark.slug);
-    return details.fold(
-      (failure) async =>
-          right((saved: null, historyChanged: false, failure: failure)),
-      (fresh) async {
-        final imported = bookmark.comicDetails.isPlaceholder;
-        final applied = await _applyPendingReads((
-          key: bookmark.slug,
-          details: fresh,
-        ), imported: imported);
-        if (applied case Left(value: final failure)) return left(failure);
-        final historyChanged = applied.getOrElse((_) => false);
-        final grew =
-            fresh.chapters.length != bookmark.comicDetails.chapters.length;
-        // An imported comic may come with its chapter list already: it gets
-        // the loaded details anyway, moving up only for new chapters.
-        final moved = imported
-            ? fresh.chapters.length > bookmark.comicDetails.chapters.length
-            : grew;
-        if (!grew && !imported) {
-          return right((
-            saved: null,
-            historyChanged: historyChanged,
-            failure: null,
-          ));
-        }
-        final updated = bookmark.copyWith(
-          comicDetails: fresh,
-          updatedDate: moved ? _clock.now() : bookmark.updatedDate,
-        );
-        final saved = await _bookmarks.saveBookmarks([updated]);
-        return saved.map(
-          (_) =>
-              (saved: updated, historyChanged: historyChanged, failure: null),
-        );
-      },
+  Future<Either<Failure, RefreshResult>> call(
+    String key, {
+    RefreshCancelToken? token,
+  }) async {
+    bool cancelled() => token?.cancelled ?? false;
+
+    final stored = await _bookmarks.getBookmark(key);
+    if (stored case Left(value: final failure)) return left(failure);
+    final bookmark = stored.getOrElse((_) => null);
+    if (bookmark == null || cancelled()) return right(_unchanged);
+
+    final chapters = await _comicDetails.getChapters(key);
+    if (chapters case Left(value: final failure)) {
+      return right((saved: null, historyChanged: false, failure: failure));
+    }
+    if (cancelled()) return right(_unchanged);
+    final fresh = chapters.getOrElse((_) => const []);
+    final imported = bookmark.comicDetails.isPlaceholder;
+    final grew = fresh.length != bookmark.comicDetails.chapters.length;
+
+    final ComicDetails details;
+    if (grew || imported) {
+      final loaded = await _comicDetails.getSeries(key, fresh);
+      if (loaded case Left(value: final failure)) {
+        return right((saved: null, historyChanged: false, failure: failure));
+      }
+      details = loaded.getOrElse((f) => throw f);
+    } else {
+      // Unchanged: only the chapter list is needed, to apply progress.
+      details = bookmark.comicDetails.copyWith(chapters: fresh);
+    }
+    if (cancelled()) return right(_unchanged);
+
+    final applied = await _applyPendingReads((
+      key: key,
+      details: details,
+    ), imported: imported);
+    if (applied case Left(value: final failure)) return left(failure);
+    final historyChanged = applied.getOrElse((_) => false);
+    if ((!grew && !imported) || cancelled()) {
+      return right((
+        saved: null,
+        historyChanged: historyChanged,
+        failure: null,
+      ));
+    }
+
+    final now = _clock.now();
+    final saved = await _bookmarks.updateBookmark(key, (current) {
+      final placeholder = current.comicDetails.isPlaceholder;
+      final count = current.comicDetails.chapters.length;
+      // An imported comic may come with its chapter list already: it gets
+      // the loaded details anyway, moving up only for new chapters.
+      final moved = placeholder ? fresh.length > count : fresh.length != count;
+      if (!placeholder && fresh.length == count) return null;
+      return current.copyWith(
+        comicDetails: details,
+        updatedDate: moved ? now : current.updatedDate,
+      );
+    });
+    return saved.map(
+      (saved) => (saved: saved, historyChanged: historyChanged, failure: null),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:bacakomik_app/features/history/domain/entities/resume_chapter.dart';
 import 'package:bacakomik_app/features/history/domain/usecases/history_usecases.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -48,9 +49,11 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
   }
 
   /// Records [page] (0-based) as the reading position of a chapter with
-  /// [pageCount] pages. Reaching the last page finishes the chapter; a
+  /// [pageCount] pages. Reaching the last page finishes the chapter, unless
+  /// [canFinish] is false (the reader's save on opening a chapter); a
   /// finished chapter stays finished when read again. A [quiet] save does
   /// not ask sync to run; the reader makes a normal save when it closes.
+  /// A chapter without pages is not recorded.
   Future<void> addHistory({
     required String slug,
     required String chapterNumber,
@@ -58,10 +61,13 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     required String comicSlug,
     required int page,
     required int pageCount,
+    bool canFinish = true,
     bool quiet = false,
   }) {
+    if (pageCount <= 0) return Future.value();
     final finished =
-        page >= pageCount - 1 || (index.chapter(slug)?.isFinished ?? false);
+        (canFinish && page >= pageCount - 1) ||
+        (index.chapter(slug)?.isFinished ?? false);
     final entry = ReadHistory(
       slug: slug,
       chapterNumber: chapterNumber,
@@ -100,7 +106,9 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
       _log(failure);
       return load();
     }
-    if (saved.isNotEmpty) _edit(withSaved(state, saved));
+    if (saved.isNotEmpty) {
+      _edit(withSaved(state, saved), (index) => index.applySaved(saved));
+    }
   }
 
   /// [current] (newest first) after [saved] was stored, as the repository
@@ -148,17 +156,19 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
 
   /// Marks every chapter of each comic read, keyed by series slug. Finished
   /// chapters keep their entry; unread and half-read ones are finished. The
-  /// newest chapter gets the newest read date, so it shows as the latest.
+  /// highest numbered chapter gets the newest read date, so it shows as the
+  /// latest, whatever order the source lists chapters in.
   Future<void> markAllRead(Map<String, ComicDetails> comics) {
     final now = _clock.now();
     return addHistoryList([
       for (final MapEntry(key: comicSlug, value: details) in comics.entries)
-        for (final (i, chapter) in details.chapters.indexed)
+        for (final (i, chapter) in chaptersNewestFirst(
+          details.chapters,
+        ).indexed)
           if (!index.isFinished(chapter.slug))
             ReadHistory(
               slug: chapter.slug,
               chapterNumber: chapter.number,
-              // Chapters are newest first.
               readDate: now.subtract(Duration(milliseconds: i)),
               comicDetails: details,
               comicSlug: comicSlug,
@@ -173,6 +183,7 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     return _thenRemove(
       _removeHistory([...slugs]),
       (h) => removed.contains(h.slug),
+      (index) => index.applyRemoved(removed),
     );
   }
 
@@ -180,6 +191,7 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
   Future<void> removeHistoryBySlug(String comicSlug) => _thenRemove(
     _removeComicHistory(comicSlug),
     (h) => h.comicSlug == comicSlug,
+    (index) => index.applyRemovedComics([comicSlug]),
   );
 
   /// Removes every read chapter of each comic, in one write.
@@ -189,13 +201,18 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     return _thenRemove(
       _removeComicHistory.many(comics.toList()),
       (h) => comics.contains(h.comicSlug),
+      (index) => index.applyRemovedComics(comics),
     );
   }
 
-  Future<void> clearHistory() =>
-      _thenRemove(_clearHistory(const NoParams()), (_) => true);
+  Future<void> clearHistory() => _thenRemove(
+    _clearHistory(const NoParams()),
+    (_) => true,
+    (index) => index.applyCleared(),
+  );
 
-  /// Lookups for the current state, rebuilt only when the state changes.
+  /// Lookups for the current state. Built in full on first use and after
+  /// [load]; edits made here update it in place (see [_edit]).
   HistoryIndex get index {
     if (!identical(_indexed, state)) {
       _indexed = state;
@@ -222,11 +239,12 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
 
   List<ComicLatestHistory> get latestHistories => index.perComic;
 
-  /// Drops the entries matching [removed] once [action] succeeded; reloads
-  /// when it failed.
+  /// Drops the entries matching [removed] once [action] succeeded, with
+  /// [patch] doing the same to the index; reloads when it failed.
   Future<void> _thenRemove(
     Future<Either<Failure, Unit>> action,
     bool Function(ReadHistory entry) removed,
+    void Function(HistoryIndex index) patch,
   ) async {
     if ((await action) case Left(value: final failure)) {
       _log(failure);
@@ -236,12 +254,25 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
       for (final h in state)
         if (!removed(h)) h,
     ];
-    if (kept.length != state.length) _edit(kept);
+    if (kept.length != state.length) _edit(kept, patch);
   }
 
-  void _edit(List<ReadHistory> history) {
+  /// Emits [history], the state after an edit. An index built for the
+  /// current state is brought along by [patch] (the same edit, applied in
+  /// place) instead of being rebuilt from the whole history; one not built
+  /// yet is built on first use.
+  void _edit(
+    List<ReadHistory> history,
+    void Function(HistoryIndex index) patch,
+  ) {
     if (isClosed) return;
     _edits++;
+    if (identical(_indexed, state)) {
+      // Invalid until patched: should [patch] throw, the next use rebuilds.
+      _indexed = null;
+      patch(_index);
+      _indexed = history;
+    }
     emit(history);
   }
 

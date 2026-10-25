@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:collection';
 
-import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/notifications/progress_notifier.dart';
@@ -11,6 +9,7 @@ import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecases.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart';
+import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_refresh_queue.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/apply_pending_reads.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -143,105 +142,62 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   @override
   Future<void> close() async {
     await _cancelRequests.cancel();
-    refreshing.dispose();
+    _refreshes.dispose();
     await _historyChanges.close();
     return super.close();
   }
 
-  /// Bookmarks waiting to be refreshed, in order.
-  final _refreshQueue = Queue<Bookmark>();
-
-  /// Slugs queued or checked in the current run, so none is checked twice.
-  final _refreshSeen = <String>{};
-  var _refreshDone = 0;
-  var _refreshUpdated = 0;
-  Future<void>? _refreshRun;
+  /// Checks queued bookmarks for new chapters; see [updateBookmarkList].
+  late final _refreshes = BookmarkRefreshQueue(
+    refresh: (key, token) => _refreshBookmark(key, token: token),
+    notifier: _notifier,
+    onResult: _onRefreshed,
+    timeout: refreshTimeout,
+  );
 
   /// Whether a refresh run is going; Bookmarks shows a stop button.
-  final refreshing = ValueNotifier<bool>(false);
-
-  /// Completed to stop the current run.
-  Completer<void>? _refreshCancel;
+  ValueListenable<bool> get refreshing => _refreshes.refreshing;
 
   /// A comic that takes longer is skipped, so one stuck site cannot hold
   /// up the rest.
   static const refreshTimeout = Duration(seconds: 90);
 
-  /// Stops the refresh run: the comic being checked is abandoned and the
-  /// rest of the queue dropped. Comics checked so far keep their updates.
-  void cancelRefresh() {
-    _refreshQueue.clear();
-    if (!(_refreshCancel?.isCompleted ?? true)) _refreshCancel!.complete();
-  }
+  /// Stops the refresh run: the comics being checked are abandoned (they
+  /// write nothing more) and the rest of the queue dropped. Comics checked
+  /// so far keep their updates.
+  void cancelRefresh() => _refreshes.cancel();
 
   /// Pull-to-refresh: checks [slugs] (the bookmarks of the open group) for
-  /// new chapters, with a progress notification while it runs. Called again
-  /// before the run ends, the new slugs join the queue and the total grows.
-  /// Completes when the queue is empty.
+  /// new chapters, up to three comics at once and one per source, with a
+  /// progress notification while it runs. Called again before the run
+  /// ends, the new slugs join the queue and the total grows. Completes
+  /// when the queue is empty.
   Future<void> updateBookmarkList(Iterable<String> slugs) {
     final wanted = slugs.toSet();
-    for (final bookmark in state) {
-      if (wanted.contains(bookmark.slug) && _refreshSeen.add(bookmark.slug)) {
-        _refreshQueue.add(bookmark);
-      }
-    }
-    if (_refreshRun == null) refreshing.value = true;
-    return _refreshRun ??= _drainRefreshQueue().whenComplete(() {
-      refreshing.value = false;
-      _refreshRun = null;
-      _refreshSeen.clear();
-      _refreshDone = 0;
-      _refreshUpdated = 0;
-    });
+    return _refreshes.add([
+      for (final bookmark in state)
+        if (wanted.contains(bookmark.slug)) bookmark.slug,
+    ]);
   }
 
-  Future<void> _drainRefreshQueue() async {
-    const id = ProgressIds.bookmarkRefresh;
-    const skipped = Right<Failure, RefreshResult>((
-      saved: null,
-      historyChanged: false,
-      failure: null,
-    ));
-    final cancel = _refreshCancel = Completer<void>();
-    while (_refreshQueue.isNotEmpty && !cancel.isCompleted) {
-      unawaited(
-        _notifier.progress(
-          id,
-          title: AppText.updatingBookmarks,
-          done: _refreshDone,
-          total: _refreshDone + _refreshQueue.length,
-          cancelable: true,
-        ),
-      );
-      final bookmark = _refreshQueue.removeFirst();
-      final result = await Future.any([
-        _refreshBookmark(bookmark).timeout(
-          refreshTimeout,
-          onTimeout: () {
-            debugPrint('BookmarkCubit: ${bookmark.slug} timed out');
-            return skipped;
-          },
-        ),
-        cancel.future.then((_) => skipped),
-      ]);
-      _refreshDone++;
-      final (:saved, :historyChanged, :failure) = result.getOrElse(
-        (failure) => (saved: null, historyChanged: false, failure: failure),
-      );
-      if (failure != null) debugPrint('Refresh ${bookmark.slug}: $failure');
-      if (historyChanged) _historyChanges.add(null);
-      if (saved != null) {
-        _refreshUpdated++;
-        _put(saved);
-      }
-    }
-    await _notifier.finish(
-      id,
-      title: _refreshUpdated > 0 ? AppText.bookmarksUpdated : null,
-      body:
-          '${AppText.count(_refreshUpdated, AppText.comic, AppText.comics)} '
-          '${AppText.haveNewChapters}',
-    );
+  void _onRefreshed(String key, RefreshResult result, {required bool late}) {
+    final (:saved, :historyChanged, :failure) = result;
+    if (failure != null) debugPrint('Refresh $key: $failure');
+    if (isClosed) return;
+    if (historyChanged) _historyChanges.add(null);
+    // Saved only while the bookmark was stored; one removed since (by the
+    // time this runs) is not brought back on screen.
+    if (saved != null && isBookmark(saved.slug)) _put(saved);
+  }
+
+  /// Bookmarks removed (deleted, migrated, synced away) leave the refresh
+  /// queue, and a check of one under way is abandoned.
+  @override
+  void onChange(Change<List<Bookmark>> change) {
+    super.onChange(change);
+    if (!_refreshes.running) return;
+    final kept = {for (final b in change.nextState) b.slug};
+    _refreshes.drop((key) => !kept.contains(key));
   }
 
   bool isBookmark(String slug) => state.any((b) => b.slug == slug);
