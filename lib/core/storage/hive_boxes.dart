@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/storage/box_recovery.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';
 
@@ -50,69 +51,69 @@ abstract class StorageModule {
   @preResolve
   @Named(HiveBoxes.bookmarks)
   Future<Box<String>> get bookmarksBox =>
-      Hive.openBox<String>(HiveBoxes.bookmarks);
+      openStringBox(HiveBoxes.bookmarks);
 
   @preResolve
   @Named(HiveBoxes.historyEntries)
   Future<Box<String>> get historyEntriesBox =>
-      Hive.openBox<String>(HiveBoxes.historyEntries);
+      openStringBox(HiveBoxes.historyEntries);
 
   @preResolve
   @Named(HiveBoxes.historyComics)
   Future<Box<String>> get historyComicsBox =>
-      Hive.openBox<String>(HiveBoxes.historyComics);
+      openStringBox(HiveBoxes.historyComics);
 
   @preResolve
   @Named(HiveBoxes.downloads)
   Future<Box<String>> get downloadsBox =>
-      Hive.openBox<String>(HiveBoxes.downloads);
+      openStringBox(HiveBoxes.downloads);
 
   @preResolve
   @Named(HiveBoxes.downloadComics)
   Future<Box<String>> get downloadComicsBox =>
-      Hive.openBox<String>(HiveBoxes.downloadComics);
+      openStringBox(HiveBoxes.downloadComics);
 
   @preResolve
   @Named(HiveBoxes.categories)
   Future<Box<String>> get categoriesBox =>
-      Hive.openBox<String>(HiveBoxes.categories);
+      openStringBox(HiveBoxes.categories);
 
   @preResolve
   @Named(HiveBoxes.comicCategories)
   Future<Box<String>> get comicCategoriesBox =>
-      Hive.openBox<String>(HiveBoxes.comicCategories);
+      openStringBox(HiveBoxes.comicCategories);
 
   @preResolve
   @Named(HiveBoxes.libraryDeletions)
   Future<Box<String>> get libraryDeletionsBox =>
-      Hive.openBox<String>(HiveBoxes.libraryDeletions);
+      openStringBox(HiveBoxes.libraryDeletions);
 
   @preResolve
   @Named(HiveBoxes.sync)
-  Future<Box<String>> get syncBox => Hive.openBox<String>(HiveBoxes.sync);
+  Future<Box<String>> get syncBox => openStringBox(HiveBoxes.sync);
 
   @preResolve
   @Named(HiveBoxes.extensions)
   Future<Box<String>> get extensionsBox =>
-      Hive.openBox<String>(HiveBoxes.extensions);
+      openStringBox(HiveBoxes.extensions);
 
   @preResolve
   @Named(HiveBoxes.extensionStorage)
   Future<Box<String>> get extensionStorageBox =>
-      Hive.openBox<String>(HiveBoxes.extensionStorage);
+      openStringBox(HiveBoxes.extensionStorage);
 
   @preResolve
   @Named(HiveBoxes.sourceSettings)
   Future<Box<String>> get sourceSettingsBox =>
-      Hive.openBox<String>(HiveBoxes.sourceSettings);
+      openStringBox(HiveBoxes.sourceSettings);
 
   @preResolve
   @Named(HiveBoxes.pendingReads)
   Future<Box<String>> get pendingReadsBox =>
-      Hive.openBox<String>(HiveBoxes.pendingReads);
+      openStringBox(HiveBoxes.pendingReads);
 
   @preResolve
   @Named(HiveBoxes.settings)
   Future<Box<String>> get settingsBox =>
-      Hive.openBox<String>(HiveBoxes.settings);
+      openStringBox(HiveBoxes.settings);
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bacakomik_app/core/storage/box_recovery.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce/hive.dart';
 
@@ -38,10 +39,20 @@ class JsonBox<T> {
     return raw == null ? null : decode(raw);
   }
 
-  Future<void> put(T value) => _box.put(keyOf(value), encode(value));
+  /// A value whose key Hive cannot store ([isValidHiveKey]) is skipped:
+  /// writing it would corrupt the box file.
+  Future<void> put(T value) => putAll([value]);
 
-  Future<void> putAll(Iterable<T> values) =>
-      _box.putAll({for (final v in values) keyOf(v): encode(v)});
+  Future<void> putAll(Iterable<T> values) => _box.putAll({
+    for (final v in values)
+      if (_storable(keyOf(v))) keyOf(v): encode(v),
+  });
+
+  bool _storable(String key) {
+    if (isValidHiveKey(key)) return true;
+    debugPrint('Skipping ${_box.name} entry with an unstorable key: $key');
+    return false;
+  }
 
   Future<void> deleteAll(Iterable<String> keys) => _box.deleteAll(keys);
 

@@ -41,7 +41,7 @@ class ImportLibrary implements UseCase<ImportResult, List<ImportEntry>> {
     };
     final added = <String, ImportEntry>{};
     for (final entry in entries) {
-      if (!existing.contains(entry.key)) {
+      if (!existing.contains(entry.key) && ComicKey.storable(entry.key)) {
         added.putIfAbsent(entry.key, () => entry);
       }
     }

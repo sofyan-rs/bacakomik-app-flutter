@@ -92,11 +92,14 @@ MihonSourceGroup _group(
   var unreadable = 0;
   for (final m in manga) {
     final slug = source?.slugFromUrl(m.url);
-    if (source == null || slug == null) {
+    final key = source == null || slug == null
+        ? null
+        : ComicKey.of(source.id, slug);
+    // A key too long for storage would corrupt the library.
+    if (key == null || !ComicKey.storable(key)) {
       unreadable++;
       continue;
     }
-    final key = ComicKey.of(source.id, slug);
     entries[key] ??= ImportEntry(
       key: key,
       title: m.title,

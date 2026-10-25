@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
+import 'package:bacakomik_app/core/storage/box_recovery.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';
 
@@ -38,13 +39,18 @@ class LibraryJournal {
 
   Future<void> recordDeleted(LibraryKind kind, Iterable<String> slugs) async {
     final now = '${_clock.now().millisecondsSinceEpoch}';
-    await _box.putAll({for (final slug in slugs) _key(kind, slug): now});
+    await _box.putAll({
+      for (final slug in slugs)
+        if (isValidHiveKey(_key(kind, slug))) _key(kind, slug): now,
+    });
     _changes.add(null);
   }
 
   /// A saved entry is no longer deleted.
   Future<void> recordSaved(LibraryKind kind, Iterable<String> slugs) async {
-    await _box.deleteAll(slugs.map((slug) => _key(kind, slug)));
+    await _box.deleteAll(
+      slugs.map((slug) => _key(kind, slug)).where(isValidHiveKey),
+    );
     _changes.add(null);
   }
 
@@ -59,7 +65,8 @@ class LibraryJournal {
     );
     await _box.putAll({
       for (final MapEntry(:key, :value) in deleted.entries)
-        _key(kind, key): '${value.millisecondsSinceEpoch}',
+        if (isValidHiveKey(_key(kind, key)))
+          _key(kind, key): '${value.millisecondsSinceEpoch}',
     });
   }
 

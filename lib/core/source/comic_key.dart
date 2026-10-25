@@ -11,6 +11,14 @@ abstract final class ComicKey {
 
   static const _separator = ':';
 
+  /// Longest key the library can store: Hive keys hold at most 255 ASCII
+  /// characters, and chapter slugs add `/<number>`.
+  static const maxLength = 240;
+
+  /// Whether [key] fits in the library ([maxLength], ASCII).
+  static bool storable(String key) =>
+      key.length <= maxLength && key.codeUnits.every((c) => c < 128);
+
   static String of(String sourceId, String slug) =>
       sourceId == defaultSource ? slug : '$sourceId$_separator$slug';
 

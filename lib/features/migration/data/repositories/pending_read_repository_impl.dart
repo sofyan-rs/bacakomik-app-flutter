@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/error/failures.dart';
+import 'package:bacakomik_app/core/storage/box_recovery.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:bacakomik_app/core/storage/local_call.dart';
 import 'package:bacakomik_app/features/migration/domain/repositories/pending_read_repository.dart';
@@ -20,7 +21,10 @@ class PendingReadRepositoryImpl implements PendingReadRepository {
   @override
   Future<Either<Failure, Unit>> save(Map<String, String> lastRead) =>
       runLocal(() async {
-        await _box.putAll(lastRead);
+        await _box.putAll({
+          for (final MapEntry(:key, :value) in lastRead.entries)
+            if (isValidHiveKey(key)) key: value,
+        });
         return unit;
       });
 
