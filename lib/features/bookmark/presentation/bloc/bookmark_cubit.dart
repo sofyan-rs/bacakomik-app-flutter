@@ -71,6 +71,7 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   @override
   Future<void> close() async {
     await _cancelRequests.cancel();
+    refreshing.dispose();
     await _historyChanges.close();
     return super.close();
   }
@@ -83,6 +84,9 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   var _refreshDone = 0;
   var _refreshUpdated = 0;
   Future<void>? _refreshRun;
+
+  /// Whether a refresh run is going; Bookmarks shows a stop button.
+  final refreshing = ValueNotifier<bool>(false);
 
   /// Completed to stop the current run.
   Completer<void>? _refreshCancel;
@@ -109,7 +113,9 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
         _refreshQueue.add(bookmark);
       }
     }
+    if (_refreshRun == null) refreshing.value = true;
     return _refreshRun ??= _drainRefreshQueue().whenComplete(() {
+      refreshing.value = false;
       _refreshRun = null;
       _refreshSeen.clear();
       _refreshDone = 0;

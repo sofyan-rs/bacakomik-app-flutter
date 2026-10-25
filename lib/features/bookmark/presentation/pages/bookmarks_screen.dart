@@ -217,7 +217,16 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: _selected.isEmpty
-                      ? _header(all.length, updated)
+                      ? ValueListenableBuilder(
+                          valueListenable: context
+                              .read<BookmarkCubit>()
+                              .refreshing,
+                          builder: (_, refreshing, _) => _header(
+                            all.length,
+                            updated,
+                            refreshing: refreshing,
+                          ),
+                        )
                       : _selectionHeader(),
                 ),
                 if (_searching)
@@ -291,7 +300,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     );
   }
 
-  Widget _header(int count, int updated) {
+  Widget _header(int count, int updated, {required bool refreshing}) {
     return ScreenHeader(
       title: AppText.bookmark,
       subtitle: count == 0
@@ -299,6 +308,12 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           : '${AppText.count(count, AppText.comic, AppText.comics)} · '
                 '$updated ${AppText.hasUpdate}',
       actions: [
+        if (refreshing)
+          RoundIconButton(
+            icon: LucideIcons300.circleStop,
+            semanticLabel: AppText.stopRefresh,
+            onTap: context.read<BookmarkCubit>().cancelRefresh,
+          ),
         if (count > 0) ...[
           RoundIconButton(
             icon: LucideIcons300.layers,

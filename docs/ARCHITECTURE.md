@@ -268,7 +268,7 @@ Pull-to-refresh on the Bookmarks tab calls `BookmarkCubit.updateBookmarkList` wi
 
 While the run lasts, `ProgressNotifier` (`core/notifications`, Android only) shows an ongoing notification with `done / total`. Refreshing another group during a run adds its bookmarks to the queue and raises the total. At the end the notification is replaced by "Bookmarks updated" with the number of comics that have new chapters, or removed when none have.
 
-The notification has a Cancel button: the tap reaches a background isolate (`progressActionInBackground`), which passes it to the app's isolate through `IsolateNameServer`; `BookmarkCubit.cancelRefresh` abandons the comic being checked and drops the queue. A comic that takes longer than `BookmarkCubit.refreshTimeout` (90 s) is skipped, so one stuck site cannot hold up the run. A notification the user swipes away stays away until the run ends. When a refresh writes imported reading progress (§6.4), `BookmarkCubit.historyChanges` reloads the history right away.
+The notification has a Cancel button: the tap reaches a background isolate (`progressActionInBackground`), which passes it to the app's isolate through `IsolateNameServer`; `BookmarkCubit.cancelRefresh` abandons the comic being checked and drops the queue. A comic that takes longer than `BookmarkCubit.refreshTimeout` (90 s) is skipped, so one stuck site cannot hold up the run. A notification the user swipes away stays away until the run ends; the run goes on, and the stop button in the Bookmarks header (shown while `BookmarkCubit.refreshing`) cancels it the same way. When a refresh writes imported reading progress (§6.4), `BookmarkCubit.historyChanges` reloads the history right away.
 
 ### 6.2 Categories and grouping
 
