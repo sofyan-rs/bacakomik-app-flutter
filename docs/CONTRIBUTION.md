@@ -10,7 +10,7 @@ Recipes for working on BacaKomik. Read [ARCHITECTURE.md](ARCHITECTURE.md) once f
 
 1. Install **Flutter** stable with **Dart 3.13+**, the Android SDK (platform 37) and **JDK 17**. Run `flutter doctor` until it is clean.
 2. Use a device or emulator on Android 7.0+ (API 24); test on a recent one (API 34+) too. Cloudflare sources and Cronet need Google Play services.
-3. For extension work: [Bun](https://bun.sh) and access to the private `bacakomik-ext-source` repo. To write your own extension without that access, use the public copy, [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source), served at `https://sofyan-rs.github.io/bacakomik-ext-public-source/index.json`.
+3. For extension work: [Bun](https://bun.sh) and access to the private `bacakomik-ext-source` repo. To write your own extension without that access, use the public extension source, [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source), served at `https://sofyan-rs.github.io/bacakomik-ext-public-source/index.json`.
 
 There is no server to configure. Content comes from the bundled extensions and the default repo `https://bacakomik-ext.kurodev.org/index.json`.
 
@@ -94,7 +94,7 @@ Secrets (Settings → Secrets → Actions): `KEYSTORE_BASE64` (`base64 -w0 uploa
 
 ## 3. Project map
 
-Folders are explained in ARCHITECTURE §3. Shared test fakes are in `test/helpers/`, sample data in `test/fixtures/`. Extensions live in the private `bacakomik-ext-source` repo; a public copy is [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source).
+Folders are explained in ARCHITECTURE §3. Shared test fakes are in `test/helpers/`, sample data in `test/fixtures/`. Extensions live in the private `bacakomik-ext-source` repo; a public extension source with its own set of extensions is [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source).
 
 Reading order: run the app; ARCHITECTURE §3–§4; `features/home/` end to end (entity → repository → use case → `HomeBloc` → `HomeScreen`); ARCHITECTURE §8 with `core/source/`; `comic_list_state.dart` and `latest`; `features/bookmark/` and `core/storage/` with ARCHITECTURE §7.
 

@@ -49,7 +49,7 @@ The app reads extensions from this repo by default:
 https://bacakomik-ext.kurodev.org/index.json
 ```
 
-The same extensions are also published on GitHub Pages. Use this one if the default repo is unreachable on your network:
+A second repo is built from the public extension source (its extensions differ from the default repo's):
 
 ```
 https://sofyan-rs.github.io/bacakomik-ext-public-source/index.json
@@ -57,7 +57,7 @@ https://sofyan-rs.github.io/bacakomik-ext-public-source/index.json
 
 Add a repo in More → Extensions → Extension repos. Extensions run code and access the internet, so only add repos you trust.
 
-**Want to make your own extension?** Start from [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source): it has the source of every extension, the extension contract, and guides to write, test and publish one. Host the built `index.json` anywhere and add its URL as a repo in the app.
+**Want to make your own extension?** Start from [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source): it has example extensions, the extension contract, and guides to write, test and publish one. Host the built `index.json` anywhere and add its URL as a repo in the app.
 
 Some extensions are reimplemented from the Tachiyomi / Mihon extensions in [keiyoushi/extensions-source](https://github.com/keiyoushi/extensions-source) (Apache License 2.0); each one credits its source in its file.
 
