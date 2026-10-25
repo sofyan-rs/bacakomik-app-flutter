@@ -84,6 +84,11 @@ Release signing and testing extensions locally are described in [Contributing](d
 - [Contributing](docs/CONTRIBUTION.md): setup, build, conventions, testing, PR checklist
 - [Link hosting](hosting/README.md): Cloudflare Worker for shared links, the website and the privacy policy
 
+## Credits
+
+- [Mihon](https://github.com/mihonapp/mihon) (Apache License 2.0), the successor of Tachiyomi: BacaKomik uses it as a reference for features and behavior, such as extensions and extension repos, the library and categories, the reader, migration and the `.tachibk` backup format read by the Mihon import.
+- [keiyoushi/extensions-source](https://github.com/keiyoushi/extensions-source) (Apache License 2.0): reference for some extensions (see [Extensions](#extensions)).
+
 ## License
 
 BacaKomik is free software under the [GNU General Public License v3.0](LICENSE): you can use, study, change and share it, and apps built from it must stay open source under the same license.
