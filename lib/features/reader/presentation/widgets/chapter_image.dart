@@ -10,14 +10,16 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:bacakomik_app/core/network/image_cache.dart';
 
 /// One chapter page. Long press to save it to the gallery.
 ///
 /// The reader loads pages in batches; until [load] is true only the dotted
-/// placeholder with the page number shows.
-class ChapterImg extends StatelessWidget {
+/// placeholder with the page number shows. A page from the network that
+/// fails shows a retry in its place; tapping it loads that page again.
+class ChapterImg extends StatefulWidget {
   const ChapterImg({
     super.key,
     required this.chapterImage,
@@ -27,7 +29,11 @@ class ChapterImg extends StatelessWidget {
     this.fit = PageFit.width,
     this.fitHeight,
     this.headers = const {},
+    @visibleForTesting this.cacheManager,
   });
+
+  /// Defaults to [comicImageCache].
+  final BaseCacheManager? cacheManager;
 
   /// Sent with the image request, from [ChapterContent.imageHeaders].
   final Map<String, String> headers;
@@ -48,6 +54,34 @@ class ChapterImg extends StatelessWidget {
   /// Height used with [PageFit.height] in the vertical reader.
   final double? fitHeight;
 
+  @override
+  State<ChapterImg> createState() => _ChapterImgState();
+}
+
+class _ChapterImgState extends State<ChapterImg> {
+  /// Bumped by [_retry]: a new key makes the image resolve again.
+  int _attempt = 0;
+
+  BaseCacheManager get _cache => widget.cacheManager ?? comicImageCache;
+
+  /// Drops the failed page from the memory cache (which keeps the failed
+  /// stream under the same key, resized as in [build]) and from the disk
+  /// cache, then rebuilds the image so it is requested again.
+  Future<void> _retry(int? cacheWidth, int? cacheHeight) async {
+    final url = widget.chapterImage;
+    await ResizeImage.resizeIfNeeded(
+      cacheWidth,
+      cacheHeight,
+      CachedNetworkImageProvider(url, cacheKey: url, cacheManager: _cache),
+    ).evict();
+    try {
+      await _cache.removeFile(url);
+    } catch (_) {
+      // Nothing stored for it.
+    }
+    if (mounted) setState(() => _attempt++);
+  }
+
   void _showSaveSheet(BuildContext context) {
     showDotSheet<void>(
       context: context,
@@ -58,7 +92,7 @@ class ChapterImg extends StatelessWidget {
           ActionSheetHeader(
             icon: LucideIcons300.image,
             title: AppText.saveImg,
-            subtitle: '${AppText.pageShort} $page',
+            subtitle: '${AppText.pageShort} ${widget.page}',
           ),
           const SizedBox(height: DotSpace.s5),
           DotButton(
@@ -66,7 +100,11 @@ class ChapterImg extends StatelessWidget {
             leading: LucideIcons300.download,
             onTap: () {
               Navigator.of(sheetContext).pop();
-              saveImg(context: context, img: chapterImage, headers: headers);
+              saveImg(
+                context: context,
+                img: widget.chapterImage,
+                headers: widget.headers,
+              );
             },
           ),
         ],
@@ -78,14 +116,14 @@ class ChapterImg extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final label = Text(
-      '${AppText.pageShort} $page'.toUpperCase(),
+      '${AppText.pageShort} ${widget.page}'.toUpperCase(),
       style: DotlineText.data.copyWith(color: c.inkFaint),
     );
 
     // [progress] is null while queued, then 0..1 once downloading (or -1 when
     // the server sends no content length).
     Widget placeholder({double? progress}) => SizedBox(
-      height: fitHeight ?? 480,
+      height: widget.fitHeight ?? 480,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -113,31 +151,73 @@ class ChapterImg extends StatelessWidget {
       ),
     );
 
-    if (!load) return placeholder();
+    if (!widget.load) return placeholder();
 
     // Decode at screen size instead of the source size; webtoon pages can be
     // thousands of pixels tall and take tens of MB each at full resolution.
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final cacheWidth = fit == PageFit.width
+    final cacheWidth = widget.fit == PageFit.width
         ? (screenWidth * dpr).round()
         : null;
-    final cacheHeight = fit == PageFit.height && fitHeight != null
-        ? (fitHeight! * dpr).round()
+    final cacheHeight = widget.fit == PageFit.height && widget.fitHeight != null
+        ? (widget.fitHeight! * dpr).round()
         : null;
-    final boxFit = fit == PageFit.height ? BoxFit.contain : BoxFit.fitWidth;
+    final boxFit = widget.fit == PageFit.height
+        ? BoxFit.contain
+        : BoxFit.fitWidth;
+    // Same height as [placeholder], so the list does not jump when a page
+    // fails or is retried.
     Widget error() => SizedBox(
-      height: fitHeight ?? 320,
+      height: widget.fitHeight ?? 480,
       child: Center(
         child: Icon(LucideIcons300.image, color: c.inkFaint, size: 32),
       ),
     );
 
-    final Widget image = isFile
+    // A failed network page: tap anywhere on it (or the button) to retry.
+    Widget retry() => GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _retry(cacheWidth, cacheHeight),
+      child: SizedBox(
+        height: widget.fitHeight ?? 480,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const DotGridPlaceholder(),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  label,
+                  const SizedBox(height: DotSpace.s3),
+                  Icon(LucideIcons300.imageOff, color: c.inkFaint, size: 32),
+                  const SizedBox(height: DotSpace.s2),
+                  Text(
+                    AppText.pageNotLoaded,
+                    style: DotlineText.data.copyWith(color: c.inkFaint),
+                  ),
+                  const SizedBox(height: DotSpace.s4),
+                  DotButton.outline(
+                    label: AppText.retry,
+                    leading: LucideIcons300.rotateCw,
+                    size: DotButtonSize.medium,
+                    expand: false,
+                    onTap: () => _retry(cacheWidth, cacheHeight),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final Widget image = widget.isFile
         ? Image.file(
-            File(chapterImage),
+            File(widget.chapterImage),
             width: double.infinity,
-            height: fitHeight,
+            height: widget.fitHeight,
             cacheWidth: cacheWidth,
             cacheHeight: cacheHeight,
             fit: boxFit,
@@ -146,19 +226,20 @@ class ChapterImg extends StatelessWidget {
             errorBuilder: (_, _, _) => error(),
           )
         : CachedNetworkImage(
-            cacheManager: comicImageCache,
-            cacheKey: chapterImage,
-            imageUrl: chapterImage,
-            httpHeaders: headers,
+            key: ValueKey(_attempt),
+            cacheManager: _cache,
+            cacheKey: widget.chapterImage,
+            imageUrl: widget.chapterImage,
+            httpHeaders: widget.headers,
             width: double.infinity,
-            height: fitHeight,
+            height: widget.fitHeight,
             memCacheWidth: cacheWidth,
             memCacheHeight: cacheHeight,
             fit: boxFit,
             fadeInDuration: DotMotion.press,
             progressIndicatorBuilder: (_, _, p) =>
                 placeholder(progress: p.progress ?? -1),
-            errorWidget: (_, _, _) => error(),
+            errorWidget: (_, _, _) => retry(),
           );
 
     return GestureDetector(
