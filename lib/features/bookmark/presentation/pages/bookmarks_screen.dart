@@ -6,6 +6,7 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_comic_card.dart';
@@ -93,7 +94,13 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     final count = _selected.length;
     final confirmed = await showDotSheet<bool>(
       context: context,
-      builder: (context) => _DeleteSheet(count: count),
+      builder: (context) => _ConfirmSheet(
+        icon: LucideIcons300.trash2,
+        title: AppText.deleteBookmark,
+        description: AppText.deleteBookmarkDescription,
+        confirmLabel: AppText.delete,
+        count: count,
+      ),
     );
     if (confirmed != true || !mounted) return;
     await context.read<BookmarkCubit>().removeBookmarkList(_selected.toList());
@@ -163,6 +170,50 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     if (saved && mounted) setState(_selected.clear);
   }
 
+  /// Marks every stored chapter of the selected comics read: the chapters
+  /// their cards count, as of the last refresh.
+  Future<void> _markAllRead() async {
+    final selected = {..._selected};
+    setState(_selected.clear);
+    await context.read<HistoryCubit>().markAllRead({
+      for (final b in context.read<BookmarkCubit>().state)
+        if (selected.contains(b.slug)) b.slug: b.comicDetails,
+    });
+    if (!mounted) return;
+    showSnackBar(
+      context: context,
+      message:
+          '${AppText.count(selected.length, AppText.comic, AppText.comics)} '
+          '${AppText.markedAllRead}',
+    );
+  }
+
+  /// Removes the read chapters of the selected comics, after confirming:
+  /// their progress cannot be brought back.
+  Future<void> _markAllUnread() async {
+    final selected = {..._selected};
+    final confirmed = await showDotSheet<bool>(
+      context: context,
+      builder: (context) => _ConfirmSheet(
+        icon: LucideIcons300.rotateCcw,
+        title: AppText.markAllUnread,
+        description: AppText.markAllUnreadDescription,
+        confirmLabel: AppText.markUnread,
+        count: selected.length,
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(_selected.clear);
+    await context.read<HistoryCubit>().markAllUnread(selected);
+    if (!mounted) return;
+    showSnackBar(
+      context: context,
+      message:
+          '${AppText.count(selected.length, AppText.comic, AppText.comics)} '
+          '${AppText.markedAllUnread}',
+    );
+  }
+
   Future<void> _migrate() async {
     final keys = {..._selected};
     setState(_selected.clear);
@@ -202,99 +253,103 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       child: Scaffold(
         body: SafeArea(
           bottom: false,
-          child: RefreshIndicator(
-            color: Dotline.of(context).ink,
-            backgroundColor: Dotline.of(context).surface,
-            // Not awaited: the notification shows progress, and pulling
-            // again in another group adds that group to the running queue.
-            // The comics on screen: the open group, narrowed by a search.
-            onRefresh: () async => unawaited(
-              context.read<BookmarkCubit>().updateBookmarkList([
-                for (final item in shown) item.bookmark.slug,
-              ]),
-            ),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: _selected.isEmpty
-                      ? ValueListenableBuilder(
-                          valueListenable: context
-                              .read<BookmarkCubit>()
-                              .refreshing,
-                          builder: (_, refreshing, _) => _header(
-                            all.length,
-                            updated,
-                            refreshing: refreshing,
+          child: Column(
+            children: [
+              // Outside the scroll view so the title stays put.
+              if (_selected.isEmpty)
+                ValueListenableBuilder(
+                  valueListenable: context.read<BookmarkCubit>().refreshing,
+                  builder: (_, refreshing, _) =>
+                      _header(all.length, updated, refreshing: refreshing),
+                )
+              else
+                _selectionHeader(),
+              Expanded(
+                child: RefreshIndicator(
+                  color: Dotline.of(context).ink,
+                  backgroundColor: Dotline.of(context).surface,
+                  // Not awaited: the notification shows progress, and pulling
+                  // again in another group adds that group to the running queue.
+                  // The comics on screen: the open group, narrowed by a search.
+                  onRefresh: () async => unawaited(
+                    context.read<BookmarkCubit>().updateBookmarkList([
+                      for (final item in shown) item.bookmark.slug,
+                    ]),
+                  ),
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      if (_searching)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DotSpace.s4,
+                              0,
+                              DotSpace.s4,
+                              DotSpace.s4,
+                            ),
+                            child: SearchField(
+                              hint: AppText.searchBookmarkHint,
+                              controller: _query,
+                              autofocus: true,
+                              onChanged: (_) => setState(() {}),
+                              onClear: () => setState(_query.clear),
+                            ),
                           ),
-                        )
-                      : _selectionHeader(),
-                ),
-                if (_searching)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DotSpace.s4,
-                        0,
-                        DotSpace.s4,
-                        DotSpace.s4,
+                        ),
+                      if (all.isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DotSpace.s4,
+                              0,
+                              DotSpace.s4,
+                              DotSpace.s5,
+                            ),
+                            child: ScrollableTabs<String>(
+                              selected: _group,
+                              onChanged: (g) => setState(() => _group = g),
+                              segments: tabs,
+                            ),
+                          ),
+                        ),
+                      if (shown.isEmpty)
+                        SliverToBoxAdapter(child: _empty(all.isEmpty))
+                      else
+                        CoverGridSliver(
+                          itemCount: shown.length,
+                          textHeight: BookmarkComicCard.textHeight,
+                          itemBuilder: (context, index) {
+                            final item = shown[index];
+                            final slug = item.bookmark.slug;
+                            return BookmarkComicCard(
+                              item: item,
+                              isSelected: _selected.contains(slug),
+                              onLongPress: () => _toggleSelected(slug),
+                              onTap: _selected.isNotEmpty
+                                  ? () => _toggleSelected(slug)
+                                  : () => ComicDetailsScreen.open(
+                                      context,
+                                      slug: slug,
+                                      title: item.bookmark.comicDetails.title,
+                                      cover:
+                                          item.bookmark.comicDetails.coverImg,
+                                    ),
+                            );
+                          },
+                        ),
+                      SliverPadding(
+                        padding: EdgeInsets.only(
+                          bottom:
+                              DotSpace.s4 +
+                              MediaQuery.paddingOf(context).bottom,
+                        ),
                       ),
-                      child: SearchField(
-                        hint: AppText.searchBookmarkHint,
-                        controller: _query,
-                        autofocus: true,
-                        onChanged: (_) => setState(() {}),
-                        onClear: () => setState(_query.clear),
-                      ),
-                    ),
-                  ),
-                if (all.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DotSpace.s4,
-                        0,
-                        DotSpace.s4,
-                        DotSpace.s5,
-                      ),
-                      child: ScrollableTabs<String>(
-                        selected: _group,
-                        onChanged: (g) => setState(() => _group = g),
-                        segments: tabs,
-                      ),
-                    ),
-                  ),
-                if (shown.isEmpty)
-                  SliverToBoxAdapter(child: _empty(all.isEmpty))
-                else
-                  CoverGridSliver(
-                    itemCount: shown.length,
-                    textHeight: BookmarkComicCard.textHeight,
-                    itemBuilder: (context, index) {
-                      final item = shown[index];
-                      final slug = item.bookmark.slug;
-                      return BookmarkComicCard(
-                        item: item,
-                        isSelected: _selected.contains(slug),
-                        onLongPress: () => _toggleSelected(slug),
-                        onTap: _selected.isNotEmpty
-                            ? () => _toggleSelected(slug)
-                            : () => ComicDetailsScreen.open(
-                                context,
-                                slug: slug,
-                                title: item.bookmark.comicDetails.title,
-                                cover: item.bookmark.comicDetails.coverImg,
-                              ),
-                      );
-                    },
-                  ),
-                SliverPadding(
-                  padding: EdgeInsets.only(
-                    bottom: DotSpace.s4 + MediaQuery.paddingOf(context).bottom,
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -354,24 +409,35 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               style: DotlineText.label.copyWith(color: c.ink),
             ),
           ),
-          RoundIconButton(
-            icon: LucideIcons300.arrowRightLeft,
-            semanticLabel: AppText.migrateSource,
-            onTap: _migrate,
-          ),
-          const SizedBox(width: DotSpace.s2),
-          RoundIconButton(
-            icon: LucideIcons300.folder,
-            semanticLabel: AppText.setCategories,
-            onTap: _setCategories,
-          ),
-          const SizedBox(width: DotSpace.s2),
-          RoundIconButton(
-            icon: LucideIcons300.trash2,
-            semanticLabel: AppText.deleteBookmark,
-            background: c.accent,
-            foreground: c.onAccent,
-            onTap: _confirmDelete,
+          DotMenuButton(
+            items: [
+              DotMenuItem(
+                label: AppText.markRead,
+                icon: LucideIcons300.checkCheck,
+                onTap: _markAllRead,
+              ),
+              DotMenuItem(
+                label: AppText.markUnread,
+                icon: LucideIcons300.rotateCcw,
+                onTap: _markAllUnread,
+              ),
+              DotMenuItem(
+                label: AppText.setCategories,
+                icon: LucideIcons300.folder,
+                onTap: _setCategories,
+              ),
+              DotMenuItem(
+                label: AppText.migrateSource,
+                icon: LucideIcons300.arrowRightLeft,
+                onTap: _migrate,
+              ),
+              DotMenuItem(
+                label: AppText.deleteBookmark,
+                icon: LucideIcons300.trash2,
+                onTap: _confirmDelete,
+                destructive: true,
+              ),
+            ],
           ),
         ],
       ),
@@ -394,10 +460,21 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   }
 }
 
-/// Confirms deleting the selected bookmarks. Pops `true` to delete.
-class _DeleteSheet extends StatelessWidget {
-  const _DeleteSheet({required this.count});
+/// Confirms a destructive action on the selected bookmarks. Pops `true` to
+/// go ahead.
+class _ConfirmSheet extends StatelessWidget {
+  const _ConfirmSheet({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.confirmLabel,
+    required this.count,
+  });
 
+  final IconData icon;
+  final String title;
+  final String description;
+  final String confirmLabel;
   final int count;
 
   @override
@@ -408,18 +485,15 @@ class _DeleteSheet extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ActionSheetHeader(
-          icon: LucideIcons300.trash2,
-          title: AppText.deleteBookmark,
+          icon: icon,
+          title: title,
           subtitle: AppText.count(count, AppText.comic, AppText.comics),
         ),
         const SizedBox(height: DotSpace.s4),
-        Text(
-          AppText.deleteBookmarkDescription,
-          style: DotlineText.body.copyWith(color: c.inkMuted),
-        ),
+        Text(description, style: DotlineText.body.copyWith(color: c.inkMuted)),
         const SizedBox(height: DotSpace.s5),
         DotButton.destructive(
-          label: AppText.delete,
+          label: confirmLabel,
           onTap: () => Navigator.of(context).pop(true),
         ),
         const SizedBox(height: DotSpace.s3),

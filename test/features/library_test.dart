@@ -56,7 +56,8 @@ class MockCategoryRepository extends Mock implements CategoryRepository {}
 MockCategoryRepository noCategories() {
   final repo = MockCategoryRepository();
   when(() => repo.getComicCategories()).thenAnswer((_) async => right({}));
-  when(() => repo.saveComicCategories(any())).thenAnswer((_) async => right(unit));
+  when(() => repo.saveComicCategories(any()))
+      .thenAnswer((_) async => right(unit));
   return repo;
 }
 
@@ -210,6 +211,48 @@ void main() {
       expect(cubit.index.isFinished('c/1'), isTrue);
     });
 
+    test('markAllRead finishes every chapter, keeping finished ones', () async {
+      // Chapter 2 finished earlier, chapter 1 half-read.
+      final finished = history('solo-leveling/2', 'solo-leveling', 50);
+      await cubit.addHistoryList([
+        finished,
+        history(
+          'solo-leveling/1',
+          'solo-leveling',
+          60,
+        ).copyWith(page: 3, pageCount: 20),
+      ]);
+
+      await cubit.markAllRead({'solo-leveling': details});
+
+      expect(cubit.index.isFinished('solo-leveling/1'), isTrue);
+      expect(cubit.index.chapter('solo-leveling/2'), finished);
+      expect(cubit.state, hasLength(5));
+    });
+
+    test('markAllRead dates the newest chapter latest', () async {
+      await cubit.markAllRead({'solo-leveling': details});
+
+      expect(cubit.index.isFinished('solo-leveling/1'), isTrue);
+      expect(cubit.index.isFinished('solo-leveling/2'), isTrue);
+      expect(cubit.getLatestHistoryBySlug('solo-leveling')!.readDate, at(1000));
+      expect(
+        cubit.getLatestHistoryBySlug('solo-leveling')!.slug,
+        'solo-leveling/2',
+      );
+    });
+
+    test('markAllUnread removes every chapter of the given comics', () async {
+      await cubit.markAllRead({'solo-leveling': details});
+      final before = cubit.getHistoryCountBySlug('a');
+
+      await cubit.markAllUnread(['solo-leveling']);
+
+      expect(cubit.getHistoryCountBySlug('solo-leveling'), 0);
+      expect(cubit.getLatestHistoryBySlug('solo-leveling'), isNull);
+      expect(cubit.getHistoryCountBySlug('a'), before);
+    });
+
     test('queries', () {
       expect(cubit.latestHistory.slug, 'b/1');
       expect(cubit.getLatestHistoryBySlug('a')!.slug, 'a/2');
@@ -357,23 +400,25 @@ void main() {
       expect(cubit.state[2].updatedDate, at(200));
     });
 
-    test('refresh checks only the given group; a second call joins the run',
-        () async {
-      final first = Completer<Either<Failure, ComicDetails>>();
-      when(() => comicDetails.getComicDetails('a'))
-          .thenAnswer((_) => first.future);
-      when(() => comicDetails.getComicDetails('c'))
-          .thenAnswer((_) async => right(details));
+    test(
+      'refresh checks only the given group; a second call joins the run',
+      () async {
+        final first = Completer<Either<Failure, ComicDetails>>();
+        when(() => comicDetails.getComicDetails('a'))
+            .thenAnswer((_) => first.future);
+        when(() => comicDetails.getComicDetails('c'))
+            .thenAnswer((_) async => right(details));
 
-      final run = cubit.updateBookmarkList(['a']);
-      final joined = cubit.updateBookmarkList(['a', 'c']);
-      first.complete(right(details));
-      await Future.wait([run, joined]);
+        final run = cubit.updateBookmarkList(['a']);
+        final joined = cubit.updateBookmarkList(['a', 'c']);
+        first.complete(right(details));
+        await Future.wait([run, joined]);
 
-      verifyNever(() => comicDetails.getComicDetails('b'));
-      verify(() => comicDetails.getComicDetails('a')).called(1);
-      expect(notifier.calls, ['0/1', '1/2', 'finish -']);
-    });
+        verifyNever(() => comicDetails.getComicDetails('b'));
+        verify(() => comicDetails.getComicDetails('a')).called(1);
+        expect(notifier.calls, ['0/1', '1/2', 'finish -']);
+      },
+    );
 
     test('refresh reports how many comics changed', () async {
       when(() => comicDetails.getComicDetails(any())).thenAnswer(
@@ -519,7 +564,11 @@ void main() {
       when(() => historyRepo.getHistory()).thenAnswer((_) async => right([]));
       when(() => categories.getComicCategories()).thenAnswer(
         (_) async => right({
-          'a': ComicCategories(slug: 'a', categoryIds: ['x'], updatedDate: at(1)),
+          'a': ComicCategories(
+            slug: 'a',
+            categoryIds: ['x'],
+            updatedDate: at(1),
+          ),
         }),
       );
 
@@ -538,7 +587,11 @@ void main() {
       when(() => historyRepo.getHistory()).thenAnswer((_) async => right([]));
       when(() => categories.getComicCategories()).thenAnswer(
         (_) async => right({
-          'a': ComicCategories(slug: 'a', categoryIds: ['x'], updatedDate: at(1)),
+          'a': ComicCategories(
+            slug: 'a',
+            categoryIds: ['x'],
+            updatedDate: at(1),
+          ),
           'v:a': ComicCategories(
             slug: 'v:a',
             categoryIds: ['y', 'x'],

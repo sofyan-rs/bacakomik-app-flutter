@@ -62,6 +62,26 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
   Future<void> addHistoryList(List<ReadHistory> history) =>
       _thenReload(_saveHistory([...history]));
 
+  /// Marks every chapter of each comic read, keyed by series slug. Finished
+  /// chapters keep their entry; unread and half-read ones are finished. The
+  /// newest chapter gets the newest read date, so it shows as the latest.
+  Future<void> markAllRead(Map<String, ComicDetails> comics) {
+    final now = _clock.now();
+    return addHistoryList([
+      for (final MapEntry(key: comicSlug, value: details) in comics.entries)
+        for (final (i, chapter) in details.chapters.indexed)
+          if (!index.isFinished(chapter.slug))
+            ReadHistory(
+              slug: chapter.slug,
+              chapterNumber: chapter.number,
+              // Chapters are newest first.
+              readDate: now.subtract(Duration(milliseconds: i)),
+              comicDetails: details,
+              comicSlug: comicSlug,
+            ),
+    ]);
+  }
+
   Future<void> removeHistory(String slug) => removeHistoryList([slug]);
 
   Future<void> removeHistoryList(List<String> slugs) =>
@@ -70,6 +90,14 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
   /// Removes every read chapter of one comic.
   Future<void> removeHistoryBySlug(String comicSlug) =>
       _thenReload(_removeComicHistory(comicSlug));
+
+  /// Removes every read chapter of each comic, reloading once.
+  Future<void> markAllUnread(Iterable<String> comicSlugs) async {
+    for (final slug in comicSlugs) {
+      (await _removeComicHistory(slug)).fold(_log, (_) {});
+    }
+    await load();
+  }
 
   Future<void> clearHistory() => _thenReload(_clearHistory(const NoParams()));
 

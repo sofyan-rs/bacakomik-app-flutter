@@ -73,6 +73,11 @@ class AppText {
   static const String deleteBookmarkDescription =
       'Are you sure you want to remove these comics from your bookmarks?';
   static const String selected = 'selected';
+  static const String markedAllRead = 'marked as read';
+  static const String markAllUnread = 'Mark all chapters as unread';
+  static const String markAllUnreadDescription =
+      'Reading progress of these comics is removed, and they leave History.';
+  static const String markedAllUnread = 'marked as unread';
   static const String cancel = 'Cancel';
   static const String delete = 'Delete';
 
