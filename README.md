@@ -89,6 +89,10 @@ Release signing and testing extensions locally are described in [Contributing](d
 - [Mihon](https://github.com/mihonapp/mihon) (Apache License 2.0), the successor of Tachiyomi: BacaKomik uses it as a reference for features and behavior, such as extensions and extension repos, the library and categories, the reader, migration and the `.tachibk` backup format read by the Mihon import.
 - [keiyoushi/extensions-source](https://github.com/keiyoushi/extensions-source) (Apache License 2.0): reference for some extensions (see [Extensions](#extensions)).
 
+## Disclaimer
+
+BacaKomik is not affiliated with any of the sites it reads from, and it does not host, store or distribute any comics. Like a web browser, it only shows content that is already freely available on those sites. Copyright and DMCA takedown requests should go to the owners of the site that hosts the content.
+
 ## License
 
 BacaKomik is free software under the [GNU General Public License v3.0](LICENSE): you can use, study, change and share it, and apps built from it must stay open source under the same license.
