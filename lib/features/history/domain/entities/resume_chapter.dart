@@ -64,3 +64,33 @@ class ResumeChapter {
     return i > 0 ? chapters[i - 1] : null;
   }
 }
+
+/// [chapters] newest first: by number, highest first (`11`, `10.5`, `10`),
+/// when every number parses; otherwise as given, since sources usually list
+/// newest first. Equal numbers keep their order.
+List<Chapter> chaptersNewestFirst(List<Chapter> chapters) {
+  final values = [for (final c in chapters) double.tryParse(c.number)];
+  if (values.contains(null)) return chapters;
+  final order = List.generate(chapters.length, (i) => i)
+    ..sort((a, b) {
+      final byNumber = values[b]!.compareTo(values[a]!);
+      return byNumber != 0 ? byNumber : a.compareTo(b);
+    });
+  return [for (final i in order) chapters[i]];
+}
+
+/// The chapter to start reading with: the lowest numbered one, or the last
+/// listed when a number does not parse. Null without chapters.
+Chapter? firstChapter(List<Chapter> chapters) {
+  Chapter? first;
+  double? firstValue;
+  for (final chapter in chapters) {
+    final value = double.tryParse(chapter.number);
+    if (value == null) return chapters.lastOrNull;
+    if (firstValue == null || value < firstValue) {
+      first = chapter;
+      firstValue = value;
+    }
+  }
+  return first;
+}

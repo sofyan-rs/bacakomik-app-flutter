@@ -10,6 +10,7 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
 import 'package:bacakomik_app/features/reader/presentation/bloc/reader_bloc.dart';
+import 'package:bacakomik_app/features/reader/presentation/reader_wakelock.dart';
 import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_end.dart';
 import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image.dart';
 import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settings_sheet.dart';
@@ -20,10 +21,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/network/image_cache.dart';
+
+/// The page number the reader shows (1-based) for 0-based [page] of a
+/// chapter with [pageCount] pages; the end item shows the last page. 0 for a
+/// chapter without pages.
+@visibleForTesting
+int shownPageNumber(int page, int pageCount) =>
+    pageCount <= 0 ? 0 : (page + 1).clamp(1, pageCount);
 
 class ReadChapterScreen extends StatelessWidget {
   const ReadChapterScreen({
@@ -117,6 +124,14 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   Timer? _saveTimer;
   int? _savedPage;
 
+  /// The last save was the one made on opening the chapter, which does not
+  /// finish it (see [_saveProgress]).
+  var _savedOpening = false;
+
+  /// Another chapter was opened in place of this one; this reader saves
+  /// nothing more, so its position can't become newer than the new one's.
+  var _left = false;
+
   /// Saves while reading are quiet (no sync per page); closing the reader
   /// or sending the app to the background announces the position to sync.
   late final AppLifecycleListener _lifecycle;
@@ -130,7 +145,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     context.read<ReaderBloc>().add(ChapterRequested(widget.slug));
     _itemPositions.itemPositions.addListener(_onItemPositions);
     _zoom.addListener(_onZoomChanged);
-    _syncWakelock(context.read<SettingsCubit>().state.keepScreenOn);
+    readerWakelock.acquire(keepOn: _settings.state.keepScreenOn);
     _lifecycle = AppLifecycleListener(onPause: _announceProgress);
   }
 
@@ -145,7 +160,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     _zoomAnimation.dispose();
     _zoom.dispose();
     _page.dispose();
-    WakelockPlus.disable();
+    readerWakelock.release();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
@@ -153,15 +168,22 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   /// Saves the page on screen if it changed. While reading the save is
   /// quiet; with [announce] it is a normal save that lets sync run, and an
   /// unchanged page re-announces the last quiet save.
-  void _saveProgress({bool announce = false}) {
+  ///
+  /// The save made on [opening] never finishes the chapter, so opening a
+  /// one-page chapter (or one resumed on its last page) does not mark it
+  /// read: it is finished by the next save, a moment later, if the reader
+  /// is still on that page ([_scheduleSave]).
+  void _saveProgress({bool announce = false, bool opening = false}) {
     final chapter = _chapter;
     final page = _page.value;
-    if (chapter == null) return;
-    if (page == _savedPage) {
+    if (chapter == null || chapter.images.isEmpty || _left) return;
+    final finishOpened = _savedOpening && !announce && !opening;
+    if (page == _savedPage && !finishOpened) {
       if (announce) _history.announce(widget.slug);
       return;
     }
     _savedPage = page;
+    _savedOpening = opening;
     _history.addHistory(
       slug: widget.slug,
       chapterNumber: chapter.chapterNumber,
@@ -169,6 +191,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       comicDetails: widget.comicDetails,
       page: page,
       pageCount: chapter.images.length,
+      canFinish: !opening,
       quiet: !announce,
     );
   }
@@ -184,9 +207,6 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(seconds: 1), _saveProgress);
   }
-
-  void _syncWakelock(bool keepOn) =>
-      keepOn ? WakelockPlus.enable() : WakelockPlus.disable();
 
   void _setControls(bool visible) {
     _autoHide?.cancel();
@@ -350,6 +370,12 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   }
 
   void _openChapter(String slug) {
+    if (_left) return;
+    // Save this chapter now, before the next one opens and saves: this
+    // route is disposed only after the transition, and a save from there
+    // would make this chapter look read after the new one.
+    _announceProgress();
+    _left = true;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ReadChapterScreen(
@@ -457,7 +483,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           a.keepScreenOn != b.keepScreenOn ||
           a.readingDirection != b.readingDirection,
       listener: (_, s) {
-        _syncWakelock(s.keepScreenOn);
+        readerWakelock.setKeepOn(s.keepScreenOn);
         if (s.readingDirection != ReadingDirection.vertical) {
           _setAutoScroll(false);
         }
@@ -475,7 +501,8 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                 state.chapter.images,
                 offline: state.chapter.isOffline,
               );
-              _saveProgress();
+              _saveProgress(opening: true);
+              if (pages > 0 && _page.value >= pages - 1) _scheduleSave();
               _autoHide = Timer(const Duration(seconds: 2), () {
                 if (mounted) _setControls(false);
               });
@@ -734,7 +761,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                   child: ValueListenableBuilder(
                     valueListenable: _page,
                     builder: (context, page, _) {
-                      final shown = (page + 1).clamp(1, pageCount);
+                      final shown = shownPageNumber(page, pageCount);
                       return Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

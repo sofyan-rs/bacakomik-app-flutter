@@ -5,6 +5,7 @@ import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:bacakomik_app/features/history/domain/entities/resume_chapter.dart';
 import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
 import 'package:bacakomik_app/features/migration/domain/repositories/pending_read_repository.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
@@ -47,11 +48,13 @@ class ApplyPendingReads implements UseCase<bool, ComicLoadedParams> {
     if (history case Left(value: final failure)) return left(failure);
     final index = HistoryIndex(history.getOrElse((_) => const []));
     final now = _clock.now();
-    // Chapters come newest first; without a date the last read one gets the
-    // newest time, so "Continue reading" points at it.
+    // Without a date the highest numbered read chapter gets the newest time,
+    // so "Continue reading" points at it.
     final read = [
       if (pending != null)
-        for (final (i, chapter) in details.chapters.indexed)
+        for (final (i, chapter) in chaptersNewestFirst(
+          details.chapters,
+        ).indexed)
           if (pending.covers(chapter.number) &&
               !index.containsChapter(chapter.slug))
             ReadHistory(
@@ -75,7 +78,11 @@ class ApplyPendingReads implements UseCase<bool, ComicLoadedParams> {
       if (saved case Left(value: final failure)) return left(failure);
     }
     if (pending == null) return right(read.isNotEmpty);
-    return (await _pending.remove(key)).map((_) => read.isNotEmpty);
+    // An import that added to it meanwhile keeps it for the next load.
+    return (await _pending.removeIfUnchanged(
+      key,
+      pending,
+    )).map((_) => read.isNotEmpty);
   }
 }
 

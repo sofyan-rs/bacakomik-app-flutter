@@ -353,7 +353,8 @@ class _ExtensionRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(DotRadius.s),
         ),
         child: Text(
-          meta.name.characters.first.toUpperCase(),
+          // An extension may ship without a name.
+          (meta.name.characters.firstOrNull ?? '?').toUpperCase(),
           style: DotlineText.headline.copyWith(color: c.ink),
         ),
       ),

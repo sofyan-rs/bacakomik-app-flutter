@@ -70,34 +70,54 @@ class SyncCubit extends Cubit<SyncState> {
   bool _syncAgain = false;
   bool _migrating = false;
 
+  /// The signed-in account is restored with Google for this run. A stored
+  /// account that could not be restored at start (offline, a platform
+  /// error) stays signed in, shown as failed; the next sync (on resume, or
+  /// tapped) tries to restore it first.
+  bool _restored = false;
+
   Future<void> start() async {
     _edits = _journal.changes.listen((_) => _scheduleSync());
     _lifecycle = AppLifecycleListener(onResume: _onResume);
 
-    final account = await _restoreAccount(const NoParams());
-    account.fold(_log, (account) {
-      emit(
-        state.copyWith(
-          email: account.email,
-          lastSyncedAt: account.lastSyncedAt,
-        ),
-      );
-    });
-    if (state.signedIn) {
+    try {
+      final account = await _restoreAccount(const NoParams());
+      account.fold(_log, _setAccount);
+    } catch (e) {
+      _log(ServerFailure('$e'));
+    }
+    if (isClosed) return;
+    if (state.signedIn && !_restored) {
+      emit(state.copyWith(status: SyncStatus.failed));
+    } else if (state.signedIn) {
       await sync();
     } else {
       await _migrate();
     }
   }
 
+  void _setAccount(SyncAccount account) {
+    if (isClosed) return;
+    _restored = account.restored;
+    emit(
+      state.copyWith(email: account.email, lastSyncedAt: account.lastSyncedAt),
+    );
+  }
+
   Future<void> signIn() async {
     if (state.busy) return;
     emit(state.copyWith(status: SyncStatus.signingIn));
     final result = await _signIn(const NoParams());
-    result.fold((failure) {
-      _log(failure);
-      emit(state.copyWith(status: SyncStatus.signInFailed));
-    }, (email) => emit(state.copyWith(email: email, status: SyncStatus.idle)));
+    result.fold(
+      (failure) {
+        _log(failure);
+        emit(state.copyWith(status: SyncStatus.signInFailed));
+      },
+      (email) {
+        _restored = email != null;
+        emit(state.copyWith(email: email, status: SyncStatus.idle));
+      },
+    );
     if (state.signedIn) await sync();
   }
 
@@ -105,6 +125,7 @@ class SyncCubit extends Cubit<SyncState> {
     _debounce?.cancel();
     final result = await _signOut(const NoParams());
     result.fold(_log, (_) {
+      _restored = false;
       emit(
         state.copyWith(
           email: null,
@@ -125,31 +146,47 @@ class SyncCubit extends Cubit<SyncState> {
     }
 
     emit(state.copyWith(status: SyncStatus.syncing));
-    final result = await _syncLibrary(const NoParams());
-    if (isClosed) return;
-    result.fold(
-      (failure) {
-        _log(failure);
+    // Whatever happens below, the status leaves `syncing`.
+    var status = SyncStatus.failed;
+    var signedOut = false;
+    try {
+      if (!_restored) {
+        final account = await _restoreAccount(const NoParams());
+        account.fold(_log, _setAccount);
+        if (!_restored || isClosed) return;
+      }
+      final result = await _syncLibrary(const NoParams());
+      if (isClosed) return;
+      result.fold(
+        (failure) {
+          _log(failure);
+          // Access was revoked: show the signed-out state.
+          signedOut = failure is AuthFailure;
+        },
+        (result) {
+          status = SyncStatus.idle;
+          emit(
+            state.copyWith(
+              lastSyncedAt: result.syncedAt,
+              libraryRevision: result.localChanged
+                  ? state.libraryRevision + 1
+                  : state.libraryRevision,
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      _log(ServerFailure('$e'));
+    } finally {
+      if (!isClosed) {
+        if (signedOut) _restored = false;
         emit(
-          state.copyWith(
-            status: SyncStatus.failed,
-            // Access was revoked: show the signed-out state.
-            email: failure is AuthFailure ? null : state.email,
-          ),
+          state.copyWith(status: status, email: signedOut ? null : state.email),
         );
-      },
-      (result) => emit(
-        state.copyWith(
-          status: SyncStatus.idle,
-          lastSyncedAt: result.syncedAt,
-          libraryRevision: result.localChanged
-              ? state.libraryRevision + 1
-              : state.libraryRevision,
-        ),
-      ),
-    );
+      }
+    }
 
-    if (_syncAgain) {
+    if (_syncAgain && !isClosed) {
       _syncAgain = false;
       await sync();
     }
@@ -181,7 +218,9 @@ class SyncCubit extends Cubit<SyncState> {
       return;
     }
     final last = state.lastSyncedAt;
-    if (last == null || DateTime.now().difference(last) > resumeInterval) {
+    if (!_restored ||
+        last == null ||
+        DateTime.now().difference(last) > resumeInterval) {
       sync();
     }
   }

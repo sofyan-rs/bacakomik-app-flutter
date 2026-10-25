@@ -16,7 +16,9 @@ import 'package:injectable/injectable.dart';
 /// kept as is; no request is made.
 ///
 /// Each moved comic leaves deletions for its old keys, so copies from
-/// devices that were not migrated yet are dropped by the sync merge.
+/// devices that were not migrated yet are dropped by the sync merge. Its
+/// categories move with it, joined with any the new key already has, and
+/// dated now so they win over an older copy under the new key.
 @injectable
 class MigrateSnapshot {
   const MigrateSnapshot(this._clock);
@@ -58,7 +60,31 @@ class MigrateSnapshot {
     if (legacyBookmarks.isEmpty && legacyHistory.isEmpty) return snapshot;
 
     final now = _clock.now();
+    final moved = {
+      for (final b in legacyBookmarks) b.slug,
+      for (final h in legacyHistory) h.comicSlug,
+    };
+    final categoriesOf = {for (final c in snapshot.comicCategories) c.slug: c};
+    final movedTo = {
+      for (final c in snapshot.comicCategories)
+        if (moved.contains(c.slug)) _legacyKey(c.slug),
+    };
     final migrated = snapshot.copyWith(
+      comicCategories: [
+        for (final c in snapshot.comicCategories)
+          if (moved.contains(c.slug))
+            c.copyWith(
+              slug: _legacyKey(c.slug),
+              categoryIds: {
+                ...?categoriesOf[_legacyKey(c.slug)]?.categoryIds,
+                ...c.categoryIds,
+              }.toList(),
+              updatedDate: now,
+            )
+          // Joined into the moved copy above.
+          else if (!movedTo.contains(c.slug))
+            c,
+      ],
       bookmarks: [
         for (final b in snapshot.bookmarks)
           if (isLegacy(b.slug, b.comicDetails))

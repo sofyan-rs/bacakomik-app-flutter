@@ -12,4 +12,11 @@ abstract interface class PendingReadRepository {
   Future<Either<Failure, Unit>> save(Map<String, PendingRead> pending);
 
   Future<Either<Failure, Unit>> remove(String key);
+
+  /// Removes what waits for [key] only while it still equals [expected], so
+  /// progress saved since it was read is kept.
+  Future<Either<Failure, Unit>> removeIfUnchanged(
+    String key,
+    PendingRead expected,
+  );
 }

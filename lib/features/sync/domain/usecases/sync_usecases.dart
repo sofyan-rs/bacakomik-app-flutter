@@ -7,13 +7,17 @@ import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
-/// Signed-in account and the last successful sync.
-typedef SyncAccount = ({String? email, DateTime? lastSyncedAt});
+/// Signed-in account and the last successful sync. [restored] is false
+/// when an account is stored but could not be restored this time (offline,
+/// a platform error): it stays signed in, and sync tries again later.
+typedef SyncAccount = ({String? email, DateTime? lastSyncedAt, bool restored});
 
 /// Outcome of one sync.
 typedef SyncResult = ({DateTime syncedAt, bool localChanged});
 
 /// Restores the account signed in on an earlier run, without any prompt.
+/// A failed restore is not a sign-out: the stored account is returned with
+/// `restored: false`.
 @injectable
 class RestoreSyncAccount implements UseCase<SyncAccount, NoParams> {
   const RestoreSyncAccount(this._repository);
@@ -22,13 +26,16 @@ class RestoreSyncAccount implements UseCase<SyncAccount, NoParams> {
 
   @override
   Future<Either<Failure, SyncAccount>> call(NoParams params) async {
-    final email = await _repository.restoreAccount();
-    return email.map(
-      (email) => (
-        email: email,
-        lastSyncedAt: email == null ? null : _repository.lastSyncedAt(),
-      ),
+    final restored = await _repository.restoreAccount();
+    final (email, ok) = restored.fold(
+      (_) => (_repository.storedAccount(), false),
+      (email) => (email, true),
     );
+    return right((
+      email: email,
+      lastSyncedAt: email == null ? null : _repository.lastSyncedAt(),
+      restored: ok && email != null,
+    ));
   }
 }
 

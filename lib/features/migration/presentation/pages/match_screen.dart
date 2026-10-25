@@ -235,7 +235,8 @@ class _MatchViewState extends State<_MatchView> {
         label:
             '${migrate ? AppText.migrateCount : AppText.importCount} '
             '${AppText.count(state.readyCount, AppText.comic, AppText.comics)}',
-        onTap: state.readyCount == 0
+        // Applying while searching would leave out comics found later.
+        onTap: state.readyCount == 0 || state.phase == MatchPhase.searching
             ? null
             : () => context.read<MatchCubit>().apply(),
       ),

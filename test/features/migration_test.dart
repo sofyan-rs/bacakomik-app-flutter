@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:bacakomik_app/core/domain/entities/comic.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
+import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/source/extension_meta.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:bacakomik_app/core/storage/library_journal.dart';
@@ -11,6 +12,7 @@ import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_data_source.dart';
 import 'package:bacakomik_app/features/bookmark/data/repositories/bookmark_repository_impl.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/category/data/datasources/category_local_data_source.dart';
 import 'package:bacakomik_app/features/category/data/repositories/category_repository_impl.dart';
 import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
@@ -27,6 +29,7 @@ import 'package:bacakomik_app/features/migration/domain/usecases/apply_pending_r
 import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/source_migration.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
 import '../fixtures/library_fixtures.dart';
@@ -79,6 +82,16 @@ final mangadex = meta(
     r'^/(?:manga|title)/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
   ],
 );
+
+/// Pending reads where an import adds to the comic right after it was read.
+class _ImportingMeanwhile extends MemoryPendingReads {
+  @override
+  Future<Either<Failure, PendingRead?>> pendingOf(String key) async {
+    final read = await super.pendingOf(key);
+    values[key] = PendingRead.upTo('9');
+    return read;
+  }
+}
 
 /// Protobuf writer for test backups.
 class _Proto {
@@ -259,6 +272,32 @@ void main() {
         () => parseMihonBackup(utf8.encode('{"version": 2}')),
         throwsFormatException,
       );
+    });
+
+    test('a huge length is a truncated file, not a range error', () {
+      // Field 1, length-delimited, length 2^63 - 1.
+      final bytes = [0x0a, for (var i = 0; i < 8; i++) 0xff, 0x7f, 1, 2];
+      expect(
+        () => parseMihonBackup(bytes),
+        throwsA(
+          isFormatException.having(
+            (e) => e.message,
+            'message',
+            'Truncated backup',
+          ),
+        ),
+      );
+    });
+
+    test('skips groups instead of rejecting the file', () {
+      final backup = _Proto()
+        .._varint(50 << 3 | 3)
+        ..int64(1, 5)
+        ..string(2, 'inside')
+        .._varint(50 << 3 | 4)
+        ..bytes(1, manga(1, '/a', 'A'));
+
+      expect(parseMihonBackup(backup.value).manga.map((m) => m.title), ['A']);
     });
 
     test('parses chapters and their history', () {
@@ -488,6 +527,67 @@ void main() {
     });
 
     tearDown(() => tearDownHive());
+
+    test('ApplyPendingReads keeps progress imported meanwhile', () async {
+      final meanwhile = _ImportingMeanwhile();
+      await meanwhile.save({'comix:a': PendingRead.upTo('1')});
+      final details = sampleComicDetails.copyWith(
+        chapters: const [
+          Chapter(number: '2', slug: 'comix:a/2', date: '-'),
+          Chapter(number: '1', slug: 'comix:a/1', date: '-'),
+        ],
+      );
+
+      await ApplyPendingReads(meanwhile, history, clock)((
+        key: 'comix:a',
+        details: details,
+      ));
+
+      expect(meanwhile.values['comix:a'], PendingRead.upTo('9'));
+    });
+
+    test('removeIfUnchanged removes only what was read', () async {
+      final repo = PendingReadRepositoryImpl(
+        await Hive.openBox<String>(HiveBoxes.pendingReads),
+      );
+      await repo.save({'a': PendingRead.upTo('3')});
+
+      await repo.removeIfUnchanged('a', PendingRead.upTo('2'));
+      expect(
+        (await repo.pendingOf('a')).getOrElse((_) => null),
+        PendingRead.upTo('3'),
+      );
+
+      await repo.removeIfUnchanged('a', PendingRead.upTo('3'));
+      expect((await repo.pendingOf('a')).getOrElse((_) => null), isNull);
+    });
+
+    test('MigrateComic moves pending progress to the new key', () async {
+      final d5 = DateTime(2026, 10, 5);
+      await pending.save({
+        'comix:old': PendingRead.upTo('3'),
+        'comix:new': PendingRead(chapters: {'5': d5}),
+      });
+      await bookmarks.saveBookmarks([
+        Bookmark(
+          slug: 'comix:old',
+          comicDetails: sampleComicDetails,
+          updatedDate: DateTime(2020),
+        ),
+      ]);
+
+      await MigrateComic(bookmarks, history, categories, clock, pending)((
+        from: 'comix:old',
+        to: 'comix:new',
+        details: sampleComicDetails,
+      ));
+
+      expect(pending.values.keys, ['comix:new']);
+      expect(
+        pending.values['comix:new'],
+        PendingRead(upTo: '3', chapters: {'5': d5}),
+      );
+    });
 
     test('ImportLibrary adds placeholders in order, skips existing', () async {
       await bookmarks.saveBookmarks([

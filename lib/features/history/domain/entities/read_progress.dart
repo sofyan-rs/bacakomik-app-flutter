@@ -19,8 +19,11 @@ class ReadProgress {
   /// Highest chapter number of the comic (`88`).
   final String latestNumber;
 
-  /// 1-based rank of the read chapter among all chapters by number.
+  /// 1-based rank of the read chapter among the numbered chapters.
   final int position;
+
+  /// Chapters with a number. Ones without (`extra`) can't be ranked, so
+  /// they are left out of both counts and a comic can still finish.
   final int total;
 
   /// Chapters released after the read one.
@@ -38,8 +41,10 @@ class ReadProgress {
     var latest = chapterNumber;
     var latestValue = read ?? double.negativeInfinity;
     var position = 0;
+    var total = 0;
     for (final (label, value) in numbers) {
       if (value == null) continue;
+      total++;
       if (value > latestValue) {
         latestValue = value;
         latest = label;
@@ -51,7 +56,7 @@ class ReadProgress {
       chapterNumber: chapterNumber,
       latestNumber: latest,
       position: position,
-      total: details.chapters.length,
+      total: total,
     );
   }
 }

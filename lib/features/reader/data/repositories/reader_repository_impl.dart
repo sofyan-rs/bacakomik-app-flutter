@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/data/datasources/series_remote_data_source.dart';
+import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/network/network_info.dart';
 import 'package:bacakomik_app/core/network/remote_call.dart';
@@ -11,6 +12,9 @@ import 'package:injectable/injectable.dart';
 @LazySingleton(as: ReaderRepository)
 class ReaderRepositoryImpl implements ReaderRepository {
   const ReaderRepositoryImpl(this._remote, this._networkInfo);
+
+  /// Message of the failure for a chapter the source returns no pages for.
+  static const noPages = 'This chapter has no pages';
 
   final SeriesRemoteDataSource _remote;
   final NetworkInfo _networkInfo;
@@ -26,6 +30,8 @@ class ReaderRepositoryImpl implements ReaderRepository {
 
     return runRemote(_networkInfo, () async {
       final res = await _remote.getChapter(seriesSlug, number);
+      // The reader and downloads need at least one page.
+      if (res.images.isEmpty) throw const ServerException(noPages);
       final chapterNumber = ApiFormat.number(res.number);
       return ChapterContent(
         chapterTitle: res.title ?? 'Chapter $chapterNumber',

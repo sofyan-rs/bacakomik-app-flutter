@@ -45,6 +45,12 @@ void main() {
     expect(p.unread, 0);
   });
 
+  test('chapters without a number are left out of the total', () {
+    final p = ReadProgress.of(_details(['2', 'extra', '1']), '2');
+    expect(p.total, 2);
+    expect(p.isFinished, isTrue);
+  });
+
   test('unparsable chapter number shows no progress', () {
     final p = ReadProgress.of(_details(['1', '2']), 'extra');
     expect(p.position, 0);

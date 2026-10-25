@@ -26,6 +26,15 @@ abstract class SyncSnapshot with _$SyncSnapshot {
 
     /// Deletion time per category id.
     @Default({}) Map<String, DateTime> deletedCategories,
+
+    /// When a deleted bookmark was saved again, per slug ([merge]).
+    @Default({}) Map<String, DateTime> savedBookmarks,
+
+    /// When a deleted history entry was saved again, per chapter slug.
+    @Default({}) Map<String, DateTime> savedHistory,
+
+    /// When a deleted category was saved again, per id.
+    @Default({}) Map<String, DateTime> savedCategories,
   }) = _SyncSnapshot;
 
   /// Merges two libraries. Per slug the newest version wins: a bookmark by
@@ -38,25 +47,47 @@ abstract class SyncSnapshot with _$SyncSnapshot {
   /// (with [ComicDetails.source]) wins over one stored before the switch.
   /// A winning bookmark without [Bookmark.addedDate] (saved by an app
   /// version before it) takes the other side's.
+  ///
+  /// An entry saved again after it was deleted ([savedBookmarks] and the
+  /// like: a restored backup or an import, whose entries keep their older
+  /// dates) cancels that deletion, so the deletion no longer drops it. The
+  /// save times are kept as long as deletions, so a deletion still on a
+  /// device that was offline is cancelled too.
   factory SyncSnapshot.merge(
     SyncSnapshot a,
     SyncSnapshot b, {
     required DateTime keepDeletionsSince,
   }) {
-    final deletedBookmarks = _newestDates(
-      a.deletedBookmarks,
-      b.deletedBookmarks,
+    final savedBookmarks = _newestDates(
+      a.savedBookmarks,
+      b.savedBookmarks,
       keepDeletionsSince,
     );
-    final deletedHistory = _newestDates(
-      a.deletedHistory,
-      b.deletedHistory,
+    final savedHistory = _newestDates(
+      a.savedHistory,
+      b.savedHistory,
       keepDeletionsSince,
     );
-    final deletedCategories = _newestDates(
-      a.deletedCategories,
-      b.deletedCategories,
+    final savedCategories = _newestDates(
+      a.savedCategories,
+      b.savedCategories,
       keepDeletionsSince,
+    );
+    final deletedBookmarks = _withoutSavedAgain(
+      _newestDates(a.deletedBookmarks, b.deletedBookmarks, keepDeletionsSince),
+      savedBookmarks,
+    );
+    final deletedHistory = _withoutSavedAgain(
+      _newestDates(a.deletedHistory, b.deletedHistory, keepDeletionsSince),
+      savedHistory,
+    );
+    final deletedCategories = _withoutSavedAgain(
+      _newestDates(
+        a.deletedCategories,
+        b.deletedCategories,
+        keepDeletionsSince,
+      ),
+      savedCategories,
     );
 
     final bookmarks = _keepAddedDates(
@@ -102,6 +133,9 @@ abstract class SyncSnapshot with _$SyncSnapshot {
       categories: categories,
       comicCategories: comicCategories,
       deletedCategories: deletedCategories,
+      savedBookmarks: savedBookmarks,
+      savedHistory: savedHistory,
+      savedCategories: savedCategories,
     );
   }
 
@@ -147,6 +181,9 @@ abstract class SyncSnapshot with _$SyncSnapshot {
     return _sameDates(deletedBookmarks, other.deletedBookmarks) &&
         _sameDates(deletedHistory, other.deletedHistory) &&
         _sameDates(deletedCategories, other.deletedCategories) &&
+        _sameDates(savedBookmarks, other.savedBookmarks) &&
+        _sameDates(savedHistory, other.savedHistory) &&
+        _sameDates(savedCategories, other.savedCategories) &&
         _sameLists(
           categories,
           other.categories,
@@ -255,6 +292,18 @@ Map<String, DateTime> _newestDates(
     if (current == null || value.isAfter(current)) result[key] = value;
   }
   return result;
+}
+
+/// [deleted] minus the deletions [saved] has a later save for.
+Map<String, DateTime> _withoutSavedAgain(
+  Map<String, DateTime> deleted,
+  Map<String, DateTime> saved,
+) {
+  if (saved.isEmpty) return deleted;
+  return {
+    for (final MapEntry(:key, :value) in deleted.entries)
+      if (!(saved[key]?.isAfter(value) ?? false)) key: value,
+  };
 }
 
 /// [merged] with each missing [Bookmark.addedDate] taken from another copy

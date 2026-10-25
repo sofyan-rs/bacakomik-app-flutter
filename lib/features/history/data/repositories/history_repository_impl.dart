@@ -38,23 +38,30 @@ class HistoryRepositoryImpl implements HistoryRepository {
     ].newestFirst;
   });
 
-  /// Stores the entries, and each comic's details once (the last given).
-  /// A comic record that would not change is not written again.
+  /// Stores each comic's details once (the last given), then the entries:
+  /// in that order, so a write cut short leaves a comic without entries
+  /// rather than entries without their comic, which reads skip. A comic
+  /// record that would not change is not written again.
   @override
   Future<Either<Failure, Unit>> saveHistory(
     List<ReadHistory> history, {
     bool quiet = false,
   }) => runLocal(() async {
-    await _local.putEntries(history.map(ReadHistoryModel.fromEntity).toList());
     final comics = {for (final h in history) h.comicSlug: h.comicDetails};
-    await _local.putComics([
-      for (final MapEntry(key: slug, value: details) in comics.entries)
-        if (!_isStored(slug, details))
-          HistoryComicModel(
-            slug: slug,
-            comicDetails: ComicDetailsModel.fromEntity(details),
-          ),
-    ]);
+    Future<void> putComics(bool Function(String slug, ComicDetails d) when) =>
+        _local.putComics([
+          for (final MapEntry(key: slug, value: details) in comics.entries)
+            if (when(slug, details))
+              HistoryComicModel(
+                slug: slug,
+                comicDetails: ComicDetailsModel.fromEntity(details),
+              ),
+        ]);
+    await putComics((slug, details) => !_isStored(slug, details));
+    await _local.putEntries(history.map(ReadHistoryModel.fromEntity).toList());
+    // A removal running meanwhile may have pruned a comic before its new
+    // entries landed: store it again.
+    await putComics((slug, _) => _local.comicJson(slug) == null);
     for (final MapEntry(key: slug, value: details) in comics.entries) {
       _saved[slug] = (details, _local.comicJson(slug));
     }

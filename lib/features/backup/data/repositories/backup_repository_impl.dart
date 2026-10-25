@@ -9,6 +9,7 @@ import 'package:bacakomik_app/features/backup/domain/repositories/backup_reposit
 import 'package:bacakomik_app/features/bookmark/data/models/bookmark_model.dart';
 import 'package:bacakomik_app/features/category/data/models/category_model.dart';
 import 'package:bacakomik_app/features/history/data/models/read_history_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
@@ -94,32 +95,45 @@ class BackupRepositoryImpl implements BackupRepository {
   }
 
   /// Reads [libraryToJson] output. History entries whose comic is missing
-  /// are skipped.
+  /// are skipped, and so is an entry that does not parse, so one bad record
+  /// cannot hide the rest.
   static LibraryBackup libraryFromJson(Map<String, dynamic> json) {
-    List<Map<String, dynamic>> list(String key) =>
-        (json[key] as List? ?? []).cast<Map<String, dynamic>>();
+    List<T> list<T>(String key, T Function(Map<String, dynamic>) read) {
+      final items = json[key];
+      if (items is! List) return [];
+      final result = <T>[];
+      for (final item in items) {
+        try {
+          result.add(read(item as Map<String, dynamic>));
+        } catch (e) {
+          debugPrint('Skipping unreadable $key entry: $e');
+        }
+      }
+      return result;
+    }
 
     final comics = {
-      for (final c in list('historyComics').map(HistoryComicModel.fromJson))
+      for (final c in list(
+        'historyComics',
+        (j) => HistoryComicModel.fromJson(j),
+      ))
         c.slug: c.comicDetails.toEntity(),
     };
     return LibraryBackup(
-      bookmarks: [
-        for (final b in list('bookmarks')) BookmarkModel.fromJson(b).toEntity(),
-      ],
+      bookmarks: list('bookmarks', (j) => BookmarkModel.fromJson(j).toEntity()),
       history: [
-        for (final entry in list('history').map(ReadHistoryModel.fromJson))
+        for (final entry in list('history', ReadHistoryModel.fromJson))
           if (comics[entry.comicSlug] case final details?)
             entry.toEntity(details),
       ],
-      categories: [
-        for (final c in list('categories'))
-          CategoryModel.fromJson(c).toEntity(),
-      ],
-      comicCategories: [
-        for (final c in list('comicCategories'))
-          ComicCategoriesModel.fromJson(c).toEntity(),
-      ],
+      categories: list(
+        'categories',
+        (j) => CategoryModel.fromJson(j).toEntity(),
+      ),
+      comicCategories: list(
+        'comicCategories',
+        (j) => ComicCategoriesModel.fromJson(j).toEntity(),
+      ),
     );
   }
 }

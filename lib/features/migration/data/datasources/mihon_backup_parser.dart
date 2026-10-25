@@ -203,6 +203,8 @@ class _Reader {
   static const varintType = 0;
   static const fixed64 = 1;
   static const lengthDelimited = 2;
+  static const startGroup = 3;
+  static const endGroup = 4;
   static const fixed32 = 5;
 
   final Uint8List _bytes;
@@ -219,16 +221,18 @@ class _Reader {
         case varintType:
           yield _Field(number, type, varint(), Uint8List(0));
         case lengthDelimited:
-          final length = varint();
-          if (length < 0 || _i + length > _bytes.length) {
-            throw const FormatException('Truncated backup');
-          }
+          final length = _length();
           yield _Field(
             number,
             type,
             0,
             Uint8List.sublistView(_bytes, _i, _i += length),
           );
+        // Groups (deprecated; no Mihon field uses them) are skipped.
+        case startGroup:
+          _skipGroup(number);
+        case endGroup:
+          break;
         case fixed64:
           _skip(8);
         case fixed32:
@@ -254,6 +258,42 @@ class _Reader {
       if (shift < 64) result |= (b & 0x7f) << shift;
       if (b < 0x80) return result;
       shift += 7;
+    }
+  }
+
+  /// A length prefix; a negative or overflowing one (a damaged file) is
+  /// [FormatException] too, never a range error.
+  int _length() {
+    final length = varint();
+    if (length < 0 || length > _bytes.length - _i) {
+      throw const FormatException('Truncated backup');
+    }
+    return length;
+  }
+
+  /// Skips past the end of the group [number] just started.
+  void _skipGroup(int number) {
+    while (true) {
+      if (done) throw const FormatException('Truncated backup');
+      final key = varint();
+      final type = key & 7;
+      switch (type) {
+        case varintType:
+          varint();
+        case fixed64:
+          _skip(8);
+        case lengthDelimited:
+          _skip(_length());
+        case startGroup:
+          _skipGroup(key >> 3);
+        case endGroup:
+          if (key >> 3 == number) return;
+          throw const FormatException('Unmatched group end');
+        case fixed32:
+          _skip(4);
+        default:
+          throw FormatException('Unknown wire type $type');
+      }
     }
   }
 

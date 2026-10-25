@@ -17,7 +17,15 @@ abstract interface class RawJsonStore {
   /// Makes the box hold exactly [values]: writes the ones whose stored JSON
   /// differs and deletes keys not in [values]. Keys Hive cannot store are
   /// skipped ([isValidHiveKey]).
-  Future<void> replaceRaw(Map<String, String> values);
+  ///
+  /// With [since], what [readRaw] gave before [values] were worked out, a
+  /// record stored differently from [since] by then (saved meanwhile) is
+  /// left as it is, and a key not in [since] (added meanwhile) is not
+  /// deleted.
+  Future<void> replaceRaw(
+    Map<String, String> values, {
+    Map<String, String>? since,
+  });
 }
 
 /// Typed view over a `Box<String>` whose values are JSON-encoded objects.
@@ -67,15 +75,26 @@ class JsonBox<T> implements RawJsonStore {
   };
 
   @override
-  Future<void> replaceRaw(Map<String, String> values) async {
-    await _box.putAll({
+  Future<void> replaceRaw(
+    Map<String, String> values, {
+    Map<String, String>? since,
+  }) async {
+    bool unchanged(String key) => since == null || _box.get(key) == since[key];
+    // Both decided before the first write starts, so nothing saved
+    // meanwhile is overwritten or deleted.
+    final put = {
       for (final MapEntry(:key, :value) in values.entries)
-        if (_box.get(key) != value && _storable(key)) key: value,
-    });
-    await _box.deleteAll([
+        if (_box.get(key) != value && unchanged(key) && _storable(key))
+          key: value,
+    };
+    final delete = [
       for (final key in keys)
-        if (!values.containsKey(key)) key,
-    ]);
+        if (!values.containsKey(key) &&
+            (since == null || since.containsKey(key)) &&
+            unchanged(key))
+          key,
+    ];
+    await Future.wait([_box.putAll(put), _box.deleteAll(delete)]);
   }
 
   /// A value whose key Hive cannot store ([isValidHiveKey]) is skipped:

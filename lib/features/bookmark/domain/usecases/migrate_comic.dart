@@ -7,6 +7,7 @@ import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_rep
 import 'package:bacakomik_app/features/category/domain/entities/category.dart';
 import 'package:bacakomik_app/features/category/domain/repositories/category_repository.dart';
 import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
+import 'package:bacakomik_app/features/migration/domain/repositories/pending_read_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
@@ -18,19 +19,27 @@ typedef MigrateComicParams = ({String from, String to, ComicDetails details});
 /// moves to the chapter with the same number in the new source. Chapters
 /// the new source lacks are dropped. The comic keeps its categories, joined
 /// with those of a bookmark it replaces under [MigrateComicParams.to].
+/// Progress an import left waiting for the old key (matched by chapter
+/// number, so valid in any source) moves to the new one, joined with what
+/// already waits there.
 @injectable
 class MigrateComic implements UseCase<Unit, MigrateComicParams> {
   const MigrateComic(
     this._bookmarks,
     this._history,
     this._categories,
-    this._clock,
-  );
+    this._clock, [
+    this._pending,
+  ]);
 
   final BookmarkRepository _bookmarks;
   final HistoryRepository _history;
   final CategoryRepository _categories;
   final Clock _clock;
+
+  /// Optional only so the generated DI code built before it was added still
+  /// compiles; registered, it is always given.
+  final PendingReadRepository? _pending;
 
   @override
   Future<Either<Failure, Unit>> call(MigrateComicParams params) async {
@@ -76,6 +85,7 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
         () => _categories.saveComicCategories([
           ComicCategories(slug: to, categoryIds: categoryIds, updatedDate: now),
         ]),
+      if (_pending case final pending?) () => _movePending(pending, from, to),
       () => _history.removeComicHistory(from),
       () => _bookmarks.removeBookmarks([from]),
     ];
@@ -84,6 +94,26 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
       if (result.isLeft()) return result;
     }
     return right(unit);
+  }
+
+  Future<Either<Failure, Unit>> _movePending(
+    PendingReadRepository pending,
+    String from,
+    String to,
+  ) async {
+    final moving = await pending.pendingOf(from);
+    if (moving case Left(value: final failure)) return left(failure);
+    final read = moving.getOrElse((_) => null);
+    if (read == null || from == to) return right(unit);
+    final waiting = await pending.pendingOf(to);
+    if (waiting case Left(value: final failure)) return left(failure);
+    final merged = switch (waiting.getOrElse((_) => null)) {
+      final there? => there.merge(read),
+      null => read,
+    };
+    final saved = await pending.save({to: merged});
+    if (saved.isLeft()) return saved;
+    return pending.remove(from);
   }
 }
 

@@ -5,6 +5,7 @@ import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
+import 'package:bacakomik_app/features/category/domain/entities/category.dart';
 import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/sync/domain/entities/sync_snapshot.dart';
 import 'package:bacakomik_app/features/sync/domain/repositories/sync_repository.dart';
@@ -109,6 +110,42 @@ void main() {
         'solo-leveling/1': now,
         'solo-leveling/2': now,
       });
+    });
+
+    test('moves categories with their comic, dated now', () async {
+      final result = await run(
+        SyncSnapshot(
+          bookmarks: [bookmark('solo-leveling', 5)],
+          comicCategories: [
+            ComicCategories(
+              slug: 'solo-leveling',
+              categoryIds: const ['a'],
+              updatedDate: at(2),
+            ),
+            ComicCategories(
+              slug: 'voratoon:solo-leveling',
+              categoryIds: const ['b'],
+              updatedDate: at(3),
+            ),
+            ComicCategories(
+              slug: 'other',
+              categoryIds: const ['c'],
+              updatedDate: at(4),
+            ),
+          ],
+        ),
+      );
+
+      expect(
+        result.comicCategories.map(
+          (c) => (
+            c.slug,
+            (c.categoryIds.toList()..sort()).join(','),
+            c.updatedDate,
+          ),
+        ),
+        [('other', 'c', at(4)), ('voratoon:solo-leveling', 'a,b', now)],
+      );
     });
 
     test('moves comics marked with the legacy source', () async {

@@ -74,4 +74,33 @@ void main() {
     expect(r.number, '2');
     expect(r.isNext, isTrue);
   });
+
+  group('chapter order by number', () {
+    List<String> numbers(List<Chapter> chapters) => [
+      for (final c in chapters) c.number,
+    ];
+
+    test('newest first whatever the list order', () {
+      expect(
+        numbers(
+          chaptersNewestFirst(_details(['1', '10', '2', '1.5']).chapters),
+        ),
+        ['10', '2', '1.5', '1'],
+      );
+    });
+
+    test('a number that does not parse keeps the list order', () {
+      expect(
+        numbers(chaptersNewestFirst(_details(['1', 'extra', '2']).chapters)),
+        ['1', 'extra', '2'],
+      );
+    });
+
+    test('the first chapter is the lowest numbered', () {
+      expect(firstChapter(_details(['1', '3', '2']).chapters)?.number, '1');
+      expect(firstChapter(_details(['3', '2', '1']).chapters)?.number, '1');
+      expect(firstChapter(_details(['b', 'a']).chapters)?.number, 'a');
+      expect(firstChapter(const []), isNull);
+    });
+  });
 }

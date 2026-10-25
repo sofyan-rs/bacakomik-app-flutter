@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
@@ -19,7 +23,9 @@ import 'package:bacakomik_app/features/sync/domain/entities/sync_snapshot.dart';
 import 'package:bacakomik_app/features/sync/domain/repositories/sync_repository.dart';
 import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart';
 import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart';
+import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart';
 import 'package:bacakomik_app/features/sync/presentation/widgets/sync_section.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
@@ -42,6 +48,10 @@ class MockSyncRepository extends Mock implements SyncRepository {}
 class MockAuth extends Mock implements GoogleAuthDataSource {}
 
 class MockDrive extends Mock implements DriveDataSource {}
+
+class MockSyncLibrary extends Mock implements SyncLibrary {}
+
+class MockMigrateLocal extends Mock implements MigrateLocalLibrary {}
 
 DateTime at(int ms) => DateTime.fromMillisecondsSinceEpoch(ms);
 
@@ -116,6 +126,53 @@ void main() {
       expect(merged.deletedBookmarks, {'a': at(10)});
     });
 
+    test('an entry saved again after its deletion stays, old date and all', () {
+      // Deleted at 10 on one device; a backup restored at 20 on another
+      // brings it back with its old date (5).
+      final restored = merge(
+        SyncSnapshot(
+          deletedBookmarks: {'a': at(10)},
+          deletedHistory: {'a/1': at(10)},
+        ),
+        SyncSnapshot(
+          bookmarks: [bookmark('a', 5)],
+          history: [read('a/1', 5)],
+          savedBookmarks: {'a': at(20)},
+          savedHistory: {'a/1': at(20)},
+        ),
+      );
+      expect(restored.bookmarks.map((b) => b.slug), ['a']);
+      expect(restored.history.map((h) => h.slug), ['a/1']);
+      expect(restored.deletedBookmarks, isEmpty);
+      expect(restored.deletedHistory, isEmpty);
+      expect(restored.savedBookmarks, {'a': at(20)});
+
+      // A device that still has the deletion keeps the entry too.
+      final elsewhere = merge(
+        SyncSnapshot(deletedBookmarks: {'a': at(10)}),
+        restored,
+      );
+      expect(elsewhere.bookmarks.map((b) => b.slug), ['a']);
+      expect(elsewhere.deletedBookmarks, isEmpty);
+
+      // Deleting it again later wins.
+      final deletedAgain = merge(
+        SyncSnapshot(deletedBookmarks: {'a': at(30)}),
+        restored,
+      );
+      expect(deletedAgain.bookmarks, isEmpty);
+      expect(deletedAgain.deletedBookmarks, {'a': at(30)});
+    });
+
+    test('save times expire with deletions', () {
+      final merged = merge(
+        SyncSnapshot(savedBookmarks: {'a': at(5), 'b': at(50)}),
+        const SyncSnapshot(),
+        keepSince: 10,
+      );
+      expect(merged.savedBookmarks, {'b': at(50)});
+    });
+
     test('an entry saved after the deletion stays', () {
       final merged = merge(
         SyncSnapshot(deletedBookmarks: {'a': at(10)}),
@@ -136,12 +193,19 @@ void main() {
     test('categories: newest wins, deletions apply', () {
       final merged = merge(
         SyncSnapshot(
-          categories: [category('x', 1, name: 'Old'), category('y', 1)],
-          comicCategories: [inCategories('a', ['x'], 1)],
+          categories: [
+            category('x', 1, name: 'Old'),
+            category('y', 1),
+          ],
+          comicCategories: [
+            inCategories('a', ['x'], 1),
+          ],
         ),
         SyncSnapshot(
           categories: [category('x', 2, name: 'New')],
-          comicCategories: [inCategories('a', ['x', 'y'], 2)],
+          comicCategories: [
+            inCategories('a', ['x', 'y'], 2),
+          ],
           deletedCategories: {'y': at(2)},
         ),
       );
@@ -154,7 +218,9 @@ void main() {
       final local = SyncSnapshot(
         bookmarks: [bookmark('a', 1)],
         categories: [category('x', 1)],
-        comicCategories: [inCategories('a', ['x'], 1)],
+        comicCategories: [
+          inCategories('a', ['x'], 1),
+        ],
       );
       final merged = merge(local, SyncSnapshot(bookmarks: [bookmark('a', 5)]));
       expect(merged.categories, local.categories);
@@ -183,7 +249,9 @@ void main() {
     test('round-trips categories', () {
       final snapshot = SyncSnapshot(
         categories: [category('x', 1)],
-        comicCategories: [inCategories('a', ['x'], 2)],
+        comicCategories: [
+          inCategories('a', ['x'], 2),
+        ],
         deletedCategories: {'y': at(3)},
       );
       expect(
@@ -202,6 +270,98 @@ void main() {
       expect(
         SyncRepositoryImpl.decode(SyncRepositoryImpl.encode(snapshot)),
         snapshot,
+      );
+    });
+  });
+
+  group('sync file', () {
+    test('round-trips save times; a file without them reads', () {
+      final snapshot = SyncSnapshot(
+        bookmarks: [bookmark('a', 1)],
+        savedBookmarks: {'a': at(7)},
+        savedHistory: {'a/1': at(8)},
+        savedCategories: {'c': at(9)},
+      ).sorted();
+      expect(
+        SyncRepositoryImpl.decode(SyncRepositoryImpl.encode(snapshot)),
+        snapshot,
+      );
+      expect(
+        SyncRepositoryImpl.decode(
+          SyncRepositoryImpl.encode(snapshot.copyWith(savedBookmarks: {})),
+        ).savedBookmarks,
+        isEmpty,
+      );
+    });
+
+    test('an unreadable entry is skipped, not the whole file', () {
+      final good = SyncRepositoryImpl.encode(
+        SyncSnapshot(bookmarks: [bookmark('a', 1)]),
+      );
+      final json =
+          jsonDecode(utf8.decode(gzip.decode(good))) as Map<String, dynamic>;
+      (json['bookmarks'] as List).add({'slug': 'broken'});
+      json['deletedBookmarks'] = {'x': 'not a time', 'y': 4};
+      final decoded = SyncRepositoryImpl.decode(
+        Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(json)))),
+      );
+      expect(decoded.bookmarks.map((b) => b.slug), ['a']);
+      expect(decoded.deletedBookmarks, {'y': at(4)});
+    });
+  });
+
+  group('Drive errors', () {
+    DioException error(int status, [Object? body]) => DioException(
+      requestOptions: RequestOptions(),
+      response: Response(
+        requestOptions: RequestOptions(),
+        statusCode: status,
+        data: body,
+      ),
+    );
+    Map<String, Object> reason(String reason) => {
+      'error': {
+        'code': 403,
+        'errors': [
+          {'domain': 'global', 'reason': reason},
+        ],
+      },
+    };
+
+    test('only lost access is a sign-out', () {
+      expect(SyncRepositoryImpl.driveFailure(error(401)), isA<AuthFailure>());
+      expect(
+        SyncRepositoryImpl.driveFailure(
+          error(403, reason('insufficientPermissions')),
+        ),
+        isA<AuthFailure>(),
+      );
+      // Bytes, as a download's error body comes.
+      expect(
+        SyncRepositoryImpl.driveFailure(
+          error(403, utf8.encode(jsonEncode(reason('authError')))),
+        ),
+        isA<AuthFailure>(),
+      );
+      for (final quota in [
+        'userRateLimitExceeded',
+        'rateLimitExceeded',
+        'storageQuotaExceeded',
+      ]) {
+        expect(
+          SyncRepositoryImpl.driveFailure(error(403, reason(quota))),
+          isA<ServerFailure>(),
+        );
+      }
+      expect(
+        SyncRepositoryImpl.driveFailure(error(403, 'Forbidden')),
+        isA<ServerFailure>(),
+      );
+      expect(
+        SyncRepositoryImpl.driveFailure(
+          DioException(requestOptions: RequestOptions()),
+        ),
+        isA<NetworkFailure>(),
       );
     });
   });
@@ -285,6 +445,159 @@ void main() {
         snapshot.sorted(),
       );
       expect(events, 0);
+    });
+
+    test('saving a deleted entry again records when', () async {
+      await bookmarks.saveBookmarks([bookmark('a', 1)]);
+      await bookmarks.saveBookmarks([bookmark('b', 1)]);
+      expect(journal.saved(LibraryKind.bookmark), isEmpty);
+
+      await bookmarks.removeBookmarks(['a']);
+      clock.value = at(2000);
+      // A restore brings back its old date.
+      await bookmarks.saveBookmarks([bookmark('a', 1), bookmark('b', 1)]);
+
+      expect(journal.deleted(LibraryKind.bookmark), isEmpty);
+      expect(journal.saved(LibraryKind.bookmark), {'a': at(2000)});
+      final local = (await sync.readLocal()).getOrElse((f) => fail('$f'));
+      expect(local.savedBookmarks, {'a': at(2000)});
+
+      // The deletion synced from elsewhere no longer drops it.
+      final merged = merge(
+        local,
+        SyncSnapshot(deletedBookmarks: {'a': at(1000)}),
+      );
+      expect(merged.bookmarks.map((b) => b.slug), ['a', 'b']);
+    });
+
+    test('writeLocal keeps edits made after the library was read', () async {
+      await bookmarks.saveBookmarks([bookmark('a', 1), bookmark('gone', 1)]);
+      final local = (await sync.readLocal()).getOrElse((f) => fail('$f'));
+
+      // Edits while the sync downloads and merges.
+      await bookmarks.saveBookmarks([
+        bookmark('a', 5, title: 'Edited'),
+        bookmark('new', 5),
+      ]);
+      await bookmarks.removeBookmarks(['gone']);
+      await bookmarks.saveBookmarks([bookmark('gone', 6)]);
+
+      // The merge, from the earlier read, drops gone and changes a.
+      await sync.writeLocal(
+        local.copyWith(
+          bookmarks: [bookmark('a', 3, title: 'Remote')],
+          deletedBookmarks: {'gone': at(2)},
+        ),
+      );
+
+      final now = (await sync.readLocal()).getOrElse((f) => fail('$f'));
+      expect(
+        {for (final b in now.bookmarks) b.slug: b.comicDetails.title},
+        {'a': 'Edited', 'new': 'Solo', 'gone': 'Solo'},
+      );
+      // The next sync keeps what was saved meanwhile.
+      expect(merge(now, const SyncSnapshot()).bookmarks.map((b) => b.slug), [
+        'a',
+        'gone',
+        'new',
+      ]);
+    });
+
+    test('writeLocal still applies records unchanged since the read', () async {
+      await bookmarks.saveBookmarks([bookmark('a', 1), bookmark('b', 1)]);
+      await sync.readLocal();
+
+      await sync.writeLocal(
+        SyncSnapshot(
+          bookmarks: [bookmark('a', 3, title: 'Remote')],
+          deletedBookmarks: {'b': at(2)},
+        ),
+      );
+
+      final now = (await sync.readLocal()).getOrElse((f) => fail('$f'));
+      expect(now.bookmarks.single.comicDetails.title, 'Remote');
+      expect(now.deletedBookmarks, {'b': at(2)});
+    });
+  });
+
+  group('SyncCubit', () {
+    late MockSyncRepository repo;
+    late MockSyncLibrary syncLibrary;
+    late MockMigrateLocal migrateLocal;
+    late Future<void> Function() tearDownHive;
+    late SyncCubit cubit;
+
+    setUpAll(TestWidgetsFlutterBinding.ensureInitialized);
+
+    setUp(() async {
+      tearDownHive = await setUpTempHive();
+      repo = MockSyncRepository();
+      syncLibrary = MockSyncLibrary();
+      migrateLocal = MockMigrateLocal();
+      when(() => repo.storedAccount()).thenReturn('me@example.com');
+      when(() => repo.lastSyncedAt()).thenReturn(at(5));
+      when(() => migrateLocal(const NoParams()))
+          .thenAnswer((_) async => right(false));
+      cubit = SyncCubit(
+        RestoreSyncAccount(repo),
+        SignInSync(repo),
+        SignOutSync(repo),
+        syncLibrary,
+        migrateLocal,
+        LibraryJournal(
+          await Hive.openBox<String>(HiveBoxes.libraryDeletions),
+          FixedClock(at(1)),
+        ),
+      );
+    });
+
+    tearDown(() async {
+      await cubit.close();
+      await tearDownHive();
+    });
+
+    test('a failed restore at start keeps the account and retries', () async {
+      when(() => repo.restoreAccount())
+          .thenAnswer((_) async => left(const ServerFailure('offline')));
+
+      await cubit.start();
+
+      expect(cubit.state.email, 'me@example.com');
+      expect(cubit.state.status, SyncStatus.failed);
+      verifyNever(() => syncLibrary(const NoParams()));
+
+      when(() => repo.restoreAccount())
+          .thenAnswer((_) async => right('me@example.com'));
+      when(
+        () => syncLibrary(const NoParams()),
+      ).thenAnswer((_) async => right((syncedAt: at(9), localChanged: false)));
+      await cubit.sync();
+
+      expect(cubit.state.status, SyncStatus.idle);
+      expect(cubit.state.lastSyncedAt, at(9));
+    });
+
+    test('an error thrown while syncing does not leave it syncing', () async {
+      when(() => repo.restoreAccount())
+          .thenAnswer((_) async => right('me@example.com'));
+      when(() => syncLibrary(const NoParams())).thenThrow(StateError('bug'));
+
+      await cubit.start();
+
+      expect(cubit.state.status, SyncStatus.failed);
+      expect(cubit.state.email, 'me@example.com');
+    });
+
+    test('lost access signs out', () async {
+      when(() => repo.restoreAccount())
+          .thenAnswer((_) async => right('me@example.com'));
+      when(() => syncLibrary(const NoParams()))
+          .thenAnswer((_) async => left(const AuthFailure('revoked')));
+
+      await cubit.start();
+
+      expect(cubit.state.email, isNull);
+      expect(cubit.state.status, SyncStatus.failed);
     });
   });
 

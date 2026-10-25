@@ -76,8 +76,8 @@ class ComicAppBar extends StatelessWidget {
     );
     final chapters = comicDetails.chapters;
 
-    // API order is newest first, so the first chapter is the last one.
-    final first = chapters.isEmpty ? null : chapters.last;
+    // Lowest numbered, whatever order the source lists chapters in.
+    final first = firstChapter(chapters);
     // The freshly loaded list, so a chapter released since is found.
     final resume = latest == null ? null : ResumeChapter.of(latest, chapters);
     final label = resume != null

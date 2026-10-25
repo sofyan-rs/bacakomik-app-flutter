@@ -22,4 +22,13 @@ class MemoryPendingReads implements PendingReadRepository {
     values.remove(key);
     return right(unit);
   }
+
+  @override
+  Future<Either<Failure, Unit>> removeIfUnchanged(
+    String key,
+    PendingRead expected,
+  ) async {
+    if (values[key] == expected) values.remove(key);
+    return right(unit);
+  }
 }

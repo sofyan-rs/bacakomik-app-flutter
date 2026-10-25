@@ -17,11 +17,12 @@ class PendingReadRepositoryImpl implements PendingReadRepository {
   final Box<String> _box;
 
   @override
-  Future<Either<Failure, PendingRead?>> pendingOf(String key) =>
-      runLocal(() => switch (_box.get(key)) {
-        final value? => PendingRead.decode(value),
-        null => null,
-      });
+  Future<Either<Failure, PendingRead?>> pendingOf(String key) => runLocal(
+    () => switch (_box.get(key)) {
+      final value? => PendingRead.decode(value),
+      null => null,
+    },
+  );
 
   @override
   Future<Either<Failure, Unit>> save(Map<String, PendingRead> pending) =>
@@ -36,6 +37,20 @@ class PendingReadRepositoryImpl implements PendingReadRepository {
   @override
   Future<Either<Failure, Unit>> remove(String key) => runLocal(() async {
     await _box.delete(key);
+    return unit;
+  });
+
+  @override
+  Future<Either<Failure, Unit>> removeIfUnchanged(
+    String key,
+    PendingRead expected,
+  ) => runLocal(() async {
+    // Read and delete in one synchronous step: Hive applies the delete to
+    // its index before the first await, so no save can come in between.
+    if (_box.get(key) case final value?
+        when PendingRead.decode(value) == expected) {
+      await _box.delete(key);
+    }
     return unit;
   });
 }

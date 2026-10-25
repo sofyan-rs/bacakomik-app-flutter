@@ -43,9 +43,17 @@ typedef LocalDeletions = ({
   Map<String, DateTime> categories,
 });
 
+/// What [SyncRepositoryImpl.readLocal] read: the stored JSON, and per kind
+/// the journal's deletions and save-again times.
+typedef _LocalRead = ({
+  LocalLibraryJson json,
+  LocalDeletions deleted,
+  LocalDeletions saved,
+});
+
 @LazySingleton(as: SyncRepository)
 class SyncRepositoryImpl implements SyncRepository {
-  const SyncRepositoryImpl(
+  SyncRepositoryImpl(
     this._auth,
     this._drive,
     this._bookmarks,
@@ -63,6 +71,9 @@ class SyncRepositoryImpl implements SyncRepository {
   final LibraryJournal _journal;
   final Box<String> _state;
 
+  /// The last [readLocal], which [writeLocal] applies its changes to.
+  _LocalRead? _lastRead;
+
   static const _lastSyncedAtKey = 'lastSyncedAt';
 
   /// Set while signed in. On Android a restore attempt can show the account
@@ -70,9 +81,20 @@ class SyncRepositoryImpl implements SyncRepository {
   static const _accountKey = 'account';
 
   @override
+  String? storedAccount() => _state.get(_accountKey);
+
+  /// Fails, keeping the stored account, when the account could not be
+  /// restored (offline, Play services busy, a platform error): that is not a
+  /// sign-out.
+  @override
   Future<Either<Failure, String?>> restoreAccount() async {
-    if (_state.get(_accountKey) == null) return right(null);
-    return _remote(_auth.restore);
+    if (storedAccount() == null) return right(null);
+    final restored = await _remote(_auth.restore);
+    return restored.flatMap(
+      (email) => email == null
+          ? left(const ServerFailure('Google account not restored'))
+          : right(email),
+    );
   }
 
   @override
@@ -105,7 +127,13 @@ class SyncRepositoryImpl implements SyncRepository {
       history: _journal.deleted(LibraryKind.history),
       categories: _journal.deleted(LibraryKind.category),
     );
-    return _decodeLocalInBackground(json, deleted);
+    final saved = (
+      bookmarks: _journal.saved(LibraryKind.bookmark),
+      history: _journal.saved(LibraryKind.history),
+      categories: _journal.saved(LibraryKind.category),
+    );
+    _lastRead = (json: json, deleted: deleted, saved: saved);
+    return _decodeLocalInBackground(json, deleted, saved);
   });
 
   @override
@@ -132,30 +160,57 @@ class SyncRepositoryImpl implements SyncRepository {
   /// writes are not journaled as user edits. Records are encoded in a
   /// background isolate; only those whose JSON changed are written, and
   /// keys missing from [snapshot] are deleted.
+  ///
+  /// Changes apply to what the last [readLocal] read: a record saved or
+  /// deleted since (while the sync downloaded and merged) is left as it is,
+  /// and a key added since is not deleted. That edit fired a change, so the
+  /// next sync sends it.
   @override
-  Future<Either<Failure, Unit>> writeLocal(SyncSnapshot snapshot) =>
-      runLocal(() async {
-        final json = await _encodeLocalInBackground(snapshot);
-        await _bookmarks.raw.replaceRaw(json.bookmarks);
-        await _history.rawEntries.replaceRaw(json.entries);
-        await _history.rawComics.replaceRaw(json.comics);
-        await _categories.rawCategories.replaceRaw(json.categories);
-        await _categories.rawComicCategories.replaceRaw(json.comicCategories);
+  Future<Either<Failure, Unit>> writeLocal(SyncSnapshot snapshot) => runLocal(
+    () async {
+      final base = _lastRead;
+      _lastRead = null;
+      final json = await _encodeLocalInBackground(snapshot);
+      final since = base?.json;
+      await _bookmarks.raw.replaceRaw(json.bookmarks, since: since?.bookmarks);
+      await _history.rawEntries.replaceRaw(json.entries, since: since?.entries);
+      await _history.rawComics.replaceRaw(json.comics, since: since?.comics);
+      await _categories.rawCategories.replaceRaw(
+        json.categories,
+        since: since?.categories,
+      );
+      await _categories.rawComicCategories.replaceRaw(
+        json.comicCategories,
+        since: since?.comicCategories,
+      );
 
-        await _journal.replaceDeleted(
-          LibraryKind.bookmark,
-          snapshot.deletedBookmarks,
-        );
-        await _journal.replaceDeleted(
-          LibraryKind.history,
-          snapshot.deletedHistory,
-        );
-        await _journal.replaceDeleted(
-          LibraryKind.category,
-          snapshot.deletedCategories,
-        );
-        return unit;
-      });
+      await _journal.replaceSynced(
+        LibraryKind.bookmark,
+        deleted: snapshot.deletedBookmarks,
+        saved: snapshot.savedBookmarks,
+        since: base == null
+            ? null
+            : (deleted: base.deleted.bookmarks, saved: base.saved.bookmarks),
+      );
+      await _journal.replaceSynced(
+        LibraryKind.history,
+        deleted: snapshot.deletedHistory,
+        saved: snapshot.savedHistory,
+        since: base == null
+            ? null
+            : (deleted: base.deleted.history, saved: base.saved.history),
+      );
+      await _journal.replaceSynced(
+        LibraryKind.category,
+        deleted: snapshot.deletedCategories,
+        saved: snapshot.savedCategories,
+        since: base == null
+            ? null
+            : (deleted: base.deleted.categories, saved: base.saved.categories),
+      );
+      return unit;
+    },
+  );
 
   @override
   Future<Either<Failure, SyncSnapshot?>> download() => _remote(() async {
@@ -177,7 +232,8 @@ class SyncRepositoryImpl implements SyncRepository {
   static Future<SyncSnapshot> _decodeLocalInBackground(
     LocalLibraryJson json,
     LocalDeletions deleted,
-  ) => Isolate.run(() => decodeLocal(json, deleted));
+    LocalDeletions saved,
+  ) => Isolate.run(() => decodeLocal(json, deleted, saved: saved));
 
   static Future<LocalLibraryJson> _encodeLocalInBackground(
     SyncSnapshot snapshot,
@@ -193,8 +249,9 @@ class SyncRepositoryImpl implements SyncRepository {
   @visibleForTesting
   static SyncSnapshot decodeLocal(
     LocalLibraryJson json,
-    LocalDeletions deleted,
-  ) {
+    LocalDeletions deleted, {
+    LocalDeletions? saved,
+  }) {
     List<T> all<T>(
       String box,
       Map<String, String> records,
@@ -257,6 +314,9 @@ class SyncRepositoryImpl implements SyncRepository {
           c.toEntity(),
       ],
       deletedCategories: deleted.categories,
+      savedBookmarks: saved?.bookmarks ?? const {},
+      savedHistory: saved?.history ?? const {},
+      savedCategories: saved?.categories ?? const {},
     ).sorted();
   }
 
@@ -311,9 +371,11 @@ class SyncRepositoryImpl implements SyncRepository {
 
   /// Gzipped JSON: the backup file's library fields plus
   /// `deletedBookmarks` / `deletedHistory` / `deletedCategories` (slug or
-  /// id to epoch milliseconds). Category fields were added without a new
-  /// version: older app versions ignore them, and [SyncSnapshot.merge] keeps
-  /// them when such a version uploads a copy without them.
+  /// id to epoch milliseconds), and `savedBookmarks` / `savedHistory` /
+  /// `savedCategories` (same shape: deleted entries saved again, written
+  /// only when not empty). Category and saved fields were added without a
+  /// new version: older app versions ignore them, and [SyncSnapshot.merge]
+  /// keeps categories when such a version uploads a copy without them.
   static Uint8List encode(SyncSnapshot snapshot) {
     Map<String, int> dates(Map<String, DateTime> map) => {
       for (final MapEntry(:key, :value) in map.entries)
@@ -332,6 +394,12 @@ class SyncRepositoryImpl implements SyncRepository {
       'deletedBookmarks': dates(snapshot.deletedBookmarks),
       'deletedHistory': dates(snapshot.deletedHistory),
       'deletedCategories': dates(snapshot.deletedCategories),
+      if (snapshot.savedBookmarks.isNotEmpty)
+        'savedBookmarks': dates(snapshot.savedBookmarks),
+      if (snapshot.savedHistory.isNotEmpty)
+        'savedHistory': dates(snapshot.savedHistory),
+      if (snapshot.savedCategories.isNotEmpty)
+        'savedCategories': dates(snapshot.savedCategories),
     });
     return Uint8List.fromList(gzip.encode(utf8.encode(json)));
   }
@@ -342,10 +410,12 @@ class SyncRepositoryImpl implements SyncRepository {
     if (json['version'] != formatVersion) {
       throw FormatException('Unsupported sync version: ${json['version']}');
     }
+    // A value that is not a time is skipped.
     Map<String, DateTime> dates(String field) => {
-      for (final MapEntry(:key, :value)
-          in (json[field] as Map<String, dynamic>? ?? {}).entries)
-        key: DateTime.fromMillisecondsSinceEpoch(value as int),
+      if (json[field] case final Map<String, dynamic> map)
+        for (final MapEntry(:key, :value) in map.entries)
+          if (value case final int ms)
+            key: DateTime.fromMillisecondsSinceEpoch(ms),
     };
     final library = BackupRepositoryImpl.libraryFromJson(json);
     return SyncSnapshot(
@@ -356,10 +426,15 @@ class SyncRepositoryImpl implements SyncRepository {
       categories: library.categories,
       comicCategories: library.comicCategories,
       deletedCategories: dates('deletedCategories'),
+      savedBookmarks: dates('savedBookmarks'),
+      savedHistory: dates('savedHistory'),
+      savedCategories: dates('savedCategories'),
     ).sorted();
   }
 
-  /// Maps sign-in and Drive errors to failures.
+  /// Maps sign-in and Drive errors to failures. Any other error (a
+  /// platform error from sign-in, a file that does not decode) is a
+  /// [ServerFailure].
   static Future<Either<Failure, T>> _remote<T>(
     Future<T> Function() call,
   ) async {
@@ -370,13 +445,47 @@ class SyncRepositoryImpl implements SyncRepository {
     } on GoogleSignInException catch (e) {
       return left(AuthFailure(e.toString()));
     } on DioException catch (e) {
-      return switch (e.response?.statusCode) {
-        401 || 403 => left(AuthFailure(e.toString())),
-        null => left(const NetworkFailure()),
-        _ => left(ServerFailure(e.toString())),
-      };
-    } on FormatException catch (e) {
+      return left(driveFailure(e));
+    } catch (e) {
       return left(ServerFailure(e.toString()));
     }
+  }
+
+  /// Drive answers 403 for lost access but also for quotas and rate
+  /// limits; only the first means signed out. The reason is in the error
+  /// body: `{"error": {"errors": [{"reason": "insufficientPermissions"}]}}`.
+  @visibleForTesting
+  static Failure driveFailure(DioException e) {
+    final response = e.response;
+    return switch (response?.statusCode) {
+      null => const NetworkFailure(),
+      401 => AuthFailure(e.toString()),
+      403 when _errorReasons(response!.data).any(_authReasons.contains) =>
+        AuthFailure(e.toString()),
+      _ => ServerFailure(e.toString()),
+    };
+  }
+
+  static const _authReasons = {'insufficientPermissions', 'authError'};
+
+  /// `error.errors[].reason` of a Drive error body (JSON, as bytes, text or
+  /// decoded); empty when there is none.
+  static Set<String> _errorReasons(Object? body) {
+    try {
+      final json = switch (body) {
+        final List<int> bytes => jsonDecode(utf8.decode(bytes)),
+        final String text => jsonDecode(text),
+        _ => body,
+      };
+      if (json case {'error': {'errors': final List<Object?> errors}}) {
+        return {
+          for (final error in errors)
+            if (error case {'reason': final String reason}) reason,
+        };
+      }
+    } on Object {
+      // Not JSON: no reason.
+    }
+    return const {};
   }
 }

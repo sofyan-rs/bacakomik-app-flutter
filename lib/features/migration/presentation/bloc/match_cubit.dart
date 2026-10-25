@@ -193,9 +193,10 @@ class MatchCubit extends Cubit<MatchState> {
   void skip(int i) =>
       _update(i, state.items[i].copyWith(status: MatchStatus.skipped));
 
-  /// Migrates or imports every picked match.
+  /// Migrates or imports every picked match, once the search ended: while
+  /// it runs, comics found later would be left out.
   Future<void> apply() async {
-    if (state.phase == MatchPhase.applying) return;
+    if (state.phase != MatchPhase.review) return;
     emit(state.copyWith(phase: MatchPhase.applying));
     switch (mode) {
       case MatchMode.migrate:

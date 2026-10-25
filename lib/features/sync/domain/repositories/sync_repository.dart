@@ -6,8 +6,13 @@ import 'package:fpdart/fpdart.dart';
 /// Google account, the library on this device and its copy in Google Drive.
 abstract interface class SyncRepository {
   /// Email of the account signed in on an earlier run, without any prompt.
-  /// Null when signed out.
+  /// Null when signed out. Fails when an account is stored but could not be
+  /// restored now; it stays stored ([storedAccount]).
   Future<Either<Failure, String?>> restoreAccount();
+
+  /// Email of the account last signed in, kept until sign-out; null when
+  /// signed out. Nothing is checked with Google.
+  String? storedAccount();
 
   /// Shows the Google sign-in and Drive consent. Returns the email, or null
   /// when the user cancelled.
@@ -26,7 +31,8 @@ abstract interface class SyncRepository {
     required bool Function(String key, ComicDetails details) test,
   });
 
-  /// Replaces the synced part of the local library.
+  /// Replaces the synced part of the local library, as changed since the
+  /// last [readLocal]: records saved or deleted after that read are kept.
   Future<Either<Failure, Unit>> writeLocal(SyncSnapshot snapshot);
 
   /// Null when nothing was uploaded yet.
