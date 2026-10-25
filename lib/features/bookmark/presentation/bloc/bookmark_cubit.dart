@@ -128,6 +128,7 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     const skipped = Right<Failure, RefreshResult>((
       updated: false,
       historyChanged: false,
+      failure: null,
     ));
     final cancel = _refreshCancel = Completer<void>();
     while (_refreshQueue.isNotEmpty && !cancel.isCompleted) {
@@ -152,10 +153,10 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
         cancel.future.then((_) => skipped),
       ]);
       _refreshDone++;
-      final (:updated, :historyChanged) = result.getOrElse((failure) {
-        _log(failure);
-        return (updated: false, historyChanged: false);
-      });
+      final (:updated, :historyChanged, :failure) = result.getOrElse(
+        (failure) => (updated: false, historyChanged: false, failure: failure),
+      );
+      if (failure != null) debugPrint('Refresh ${bookmark.slug}: $failure');
       if (historyChanged) _historyChanges.add(null);
       if (updated) {
         _refreshUpdated++;

@@ -30,7 +30,8 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
   Future<Either<Failure, RefreshResult>> call(Bookmark bookmark) async {
     final details = await _comicDetails.getComicDetails(bookmark.slug);
     return details.fold(
-      (_) async => right((updated: false, historyChanged: false)),
+      (failure) async =>
+          right((updated: false, historyChanged: false, failure: failure)),
       (fresh) async {
         final applied = await _applyPendingReads((
           key: bookmark.slug,
@@ -39,13 +40,17 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
         if (applied case Left(value: final failure)) return left(failure);
         final historyChanged = applied.getOrElse((_) => false);
         if (fresh.chapters.length == bookmark.comicDetails.chapters.length) {
-          return right((updated: false, historyChanged: historyChanged));
+          return right((
+            updated: false,
+            historyChanged: historyChanged,
+            failure: null,
+          ));
         }
         final saved = await _bookmarks.saveBookmarks([
           bookmark.copyWith(comicDetails: fresh, updatedDate: _clock.now()),
         ]);
         return saved.map(
-          (_) => (updated: true, historyChanged: historyChanged),
+          (_) => (updated: true, historyChanged: historyChanged, failure: null),
         );
       },
     );
@@ -53,5 +58,6 @@ class RefreshBookmark implements UseCase<RefreshResult, Bookmark> {
 }
 
 /// [updated]: new chapters were found. [historyChanged]: imported reading
-/// progress was written to the history.
-typedef RefreshResult = ({bool updated, bool historyChanged});
+/// progress was written to the history. [failure]: why the comic did not
+/// load; it is left as it was.
+typedef RefreshResult = ({bool updated, bool historyChanged, Failure? failure});
