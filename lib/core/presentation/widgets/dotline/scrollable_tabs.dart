@@ -100,15 +100,7 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
                                     : Colors.transparent,
                                 borderRadius: radius,
                               ),
-                              child: Text(
-                                segment.label.toUpperCase(),
-                                maxLines: 1,
-                                style: DotlineText.label.copyWith(
-                                  color: segment.value == widget.selected
-                                      ? c.onInk
-                                      : c.inkMuted,
-                                ),
-                              ),
+                              child: _label(c, segment),
                             ),
                           ),
                         ),
@@ -120,6 +112,37 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
           );
         },
       ),
+    );
+  }
+
+  /// Label, then its [Segment.count] smaller and dimmed.
+  Widget _label(DotlineColors c, Segment<T> segment) {
+    final selected = segment.value == widget.selected;
+    final color = selected ? c.onInk : c.inkMuted;
+    final label = Text(
+      segment.label.toUpperCase(),
+      maxLines: 1,
+      style: DotlineText.label.copyWith(color: color),
+    );
+    if (segment.count == null) return label;
+    // A Row, not a TextSpan: spans share a baseline, so the smaller count
+    // would sit low instead of centred on the label.
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        label,
+        const SizedBox(width: DotSpace.s1),
+        Text(
+          '${segment.count}',
+          maxLines: 1,
+          style: DotlineText.label.copyWith(
+            color: color.withValues(alpha: .6),
+            fontSize: 9,
+            height: 1,
+            letterSpacing: 0,
+          ),
+        ),
+      ],
     );
   }
 }

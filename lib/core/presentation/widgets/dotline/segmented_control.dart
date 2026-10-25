@@ -4,10 +4,13 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 class Segment<T> {
-  const Segment({required this.value, required this.label});
+  const Segment({required this.value, required this.label, this.count});
 
   final T value;
   final String label;
+
+  /// Shown after the label by [ScrollableTabs], e.g. comics in a category.
+  final int? count;
 }
 
 /// Pill container on `surface` with an `ink` pill that slides to the selected

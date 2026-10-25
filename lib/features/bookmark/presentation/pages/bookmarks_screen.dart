@@ -110,15 +110,16 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   static const _allTab = 'all';
   static const _uncategorizedTab = '';
 
-  /// Tabs of [grouping] as (key, label).
+  /// Tabs of [grouping] as (key, label). Only status has an All tab: source
+  /// and category tabs each hold their own comics.
   List<Segment<String>> _tabs(
     BookmarkGrouping grouping,
     List<BookmarkProgress> all,
     CategoryState categories,
   ) => [
-    const Segment(value: _allTab, label: AppText.filterAll),
     ...switch (grouping) {
       BookmarkGrouping.status => [
+        const Segment(value: _allTab, label: AppText.filterAll),
         Segment(
           value: BookmarkFilter.updated.name,
           label: AppText.filterUpdated,
@@ -150,18 +151,19 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     BookmarkGrouping grouping,
     BookmarkProgress item,
     CategoryState categories,
+    String group,
   ) {
-    if (_group == _allTab) return true;
+    if (group == _allTab) return true;
     final slug = item.bookmark.slug;
     return switch (grouping) {
       BookmarkGrouping.status => item.matches(
-        BookmarkFilter.values.byName(_group),
+        BookmarkFilter.values.byName(group),
       ),
-      BookmarkGrouping.source => ComicKey.sourceOf(slug) == _group,
+      BookmarkGrouping.source => ComicKey.sourceOf(slug) == group,
       BookmarkGrouping.category =>
-        _group == _uncategorizedTab
+        group == _uncategorizedTab
             ? categories.idsOf(slug).isEmpty
-            : categories.idsOf(slug).contains(_group),
+            : categories.idsOf(slug).contains(group),
     };
   }
 
@@ -231,13 +233,24 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       context.watch<HistoryCubit>(),
     );
     final updated = all.where((i) => i.hasUpdate).length;
-    final tabs = _tabs(grouping, all, categories);
-    // The tab is gone (grouping changed, category deleted): show all.
-    if (!tabs.any((t) => t.value == _group)) _group = _allTab;
+    final tabs = [
+      for (final tab in _tabs(grouping, all, categories))
+        Segment(
+          value: tab.value,
+          label: tab.label,
+          count: all
+              .where((i) => _inGroup(grouping, i, categories, tab.value))
+              .length,
+        ),
+    ];
+    // The tab is gone (grouping changed, category deleted): show the first.
+    if (!tabs.any((t) => t.value == _group)) {
+      _group = tabs.isEmpty ? _allTab : tabs.first.value;
+    }
     final query = _query.text.trim().toLowerCase();
     final group = [
       for (final item in all)
-        if (_inGroup(grouping, item, categories)) item,
+        if (_inGroup(grouping, item, categories, _group)) item,
     ];
     final shown = [
       for (final item in group)
@@ -264,6 +277,37 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                 )
               else
                 _selectionHeader(),
+              // Search and tabs stay put too; only the grid scrolls.
+              if (_searching)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DotSpace.s4,
+                    0,
+                    DotSpace.s4,
+                    DotSpace.s4,
+                  ),
+                  child: SearchField(
+                    hint: AppText.searchBookmarkHint,
+                    controller: _query,
+                    autofocus: true,
+                    onChanged: (_) => setState(() {}),
+                    onClear: () => setState(_query.clear),
+                  ),
+                ),
+              if (all.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DotSpace.s4,
+                    0,
+                    DotSpace.s4,
+                    DotSpace.s4,
+                  ),
+                  child: ScrollableTabs<String>(
+                    selected: _group,
+                    onChanged: (g) => setState(() => _group = g),
+                    segments: tabs,
+                  ),
+                ),
               Expanded(
                 child: RefreshIndicator(
                   color: Dotline.of(context).ink,
@@ -279,40 +323,6 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      if (_searching)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              DotSpace.s4,
-                              0,
-                              DotSpace.s4,
-                              DotSpace.s4,
-                            ),
-                            child: SearchField(
-                              hint: AppText.searchBookmarkHint,
-                              controller: _query,
-                              autofocus: true,
-                              onChanged: (_) => setState(() {}),
-                              onClear: () => setState(_query.clear),
-                            ),
-                          ),
-                        ),
-                      if (all.isNotEmpty)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              DotSpace.s4,
-                              0,
-                              DotSpace.s4,
-                              DotSpace.s5,
-                            ),
-                            child: ScrollableTabs<String>(
-                              selected: _group,
-                              onChanged: (g) => setState(() => _group = g),
-                              segments: tabs,
-                            ),
-                          ),
-                        ),
                       if (shown.isEmpty)
                         SliverToBoxAdapter(child: _empty(all.isEmpty))
                       else
