@@ -207,9 +207,10 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             backgroundColor: Dotline.of(context).surface,
             // Not awaited: the notification shows progress, and pulling
             // again in another group adds that group to the running queue.
+            // The comics on screen: the open group, narrowed by a search.
             onRefresh: () async => unawaited(
               context.read<BookmarkCubit>().updateBookmarkList([
-                for (final item in group) item.bookmark.slug,
+                for (final item in shown) item.bookmark.slug,
               ]),
             ),
             child: CustomScrollView(
