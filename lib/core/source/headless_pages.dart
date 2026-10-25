@@ -36,20 +36,18 @@ class HeadlessPages {
   /// [script] as the body of an async function in it and returns its
   /// result. Runs of one extension go one at a time.
   Future<Object?> run(String extensionId, String url, String script) {
-    final page = _pages.putIfAbsent(extensionId, _Page.new);
-    final result = page.queue = page.queue.then(
-      (_) => _run(extensionId, page, Uri.parse(url), script),
-      onError: (_) => _run(extensionId, page, Uri.parse(url), script),
-    );
-    return result;
+    Future<Object?> next(_) => _run(extensionId, Uri.parse(url), script);
+    final previous = _queues[extensionId] ?? Future<Object?>.value();
+    return _queues[extensionId] = previous.then(next, onError: next);
   }
 
-  Future<Object?> _run(
-    String extensionId,
-    _Page page,
-    Uri url,
-    String script,
-  ) async {
+  /// The last run of each extension; the next one waits for it.
+  final _queues = <String, Future<Object?>>{};
+
+  Future<Object?> _run(String extensionId, Uri url, String script) async {
+    // Looked up now: a failed run or the idle timer may have closed the
+    // page this run was queued behind.
+    final page = _pages.putIfAbsent(extensionId, _Page.new);
     page.idle?.cancel();
     try {
       final controller = await _open(page, url);
@@ -64,8 +62,16 @@ class HeadlessPages {
       if (result?.error case final error?) throw ServerException(error);
       await _saveCookies(extensionId, url);
       return result?.value;
+    } catch (_) {
+      // A page left on a check or a failed load would be reused as it is,
+      // even after the user passed the check in the visible WebView; the
+      // next run starts from a fresh page with the cookies it got there.
+      _close(extensionId);
+      rethrow;
     } finally {
-      page.idle = Timer(_keepAlive, () => _close(extensionId));
+      if (identical(_pages[extensionId], page)) {
+        page.idle = Timer(_keepAlive, () => _close(extensionId));
+      }
     }
   }
 
@@ -73,7 +79,11 @@ class HeadlessPages {
   Future<InAppWebViewController> _open(_Page page, Uri url) async {
     final controller = page.controller;
     // Navigating (not fetching) is what lets Cloudflare's check solve itself.
-    if (controller != null && page.url == url.toString()) return controller;
+    if (controller != null &&
+        page.url == url.toString() &&
+        !await _onCheck(controller)) {
+      return controller;
+    }
 
     final loaded = page.loaded = Completer<void>();
     page.host = url.host;
@@ -124,11 +134,14 @@ class HeadlessPages {
     return page.controller!;
   }
 
+  static Future<bool> _onCheck(InAppWebViewController c) async =>
+      (await c.getTitle() ?? '').contains('Just a moment');
+
   /// Waits while Cloudflare's "Just a moment" page solves itself; a check
   /// that needs the user becomes a [Challenge] for the visible WebView.
   Future<void> _passChallenge(InAppWebViewController c, Uri url) async {
     final deadline = DateTime.now().add(_challengeTimeout);
-    while ((await c.getTitle() ?? '').contains('Just a moment')) {
+    while (await _onCheck(c)) {
       if (DateTime.now().isAfter(deadline)) {
         throw ServerException(Challenge.message(url.toString()));
       }
@@ -194,5 +207,4 @@ class _Page {
   String? host;
   Completer<void>? loaded;
   Timer? idle;
-  Future<Object?> queue = Future.value();
 }
