@@ -84,4 +84,10 @@ Release signing and testing extensions locally are described in [Contributing](d
 - [Contributing](docs/CONTRIBUTION.md): setup, build, conventions, testing, PR checklist
 - [Link hosting](hosting/README.md): Cloudflare Worker for shared links, the website and the privacy policy
 
+## License
+
+BacaKomik is free software under the [GNU General Public License v3.0](LICENSE): you can use, study, change and share it, and apps built from it must stay open source under the same license.
+
+Third-party assets keep their own licenses: the Geist, Geist Mono and Doto fonts (SIL Open Font License 1.1), Lucide icons (ISC). The splash artwork and the "kuru kururin" animation and sound belong to their respective owners and are not covered by this license. Comics shown in the app and the screenshots belong to their publishers.
+
 Found a bug or have an idea? [Open an issue](https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new).
