@@ -132,6 +132,7 @@ Extensions themselves live in the separate private repo `bacakomik-ext-source`, 
 ### Data safety (non-negotiable)
 - **Never rename or remove a stored JSON field** (ARCHITECTURE §7.2) without a migration. Adding a field is fine if it is nullable or has a default, so data already on the device still parses.
 - **Never change the comic key format** (ARCHITECTURE §8.1) or an extension's `id`. Keys are stored in the library, history, downloads, backups and sync files.
+- **Never write a Hive key that is not ASCII or is longer than 255 characters.** Release builds skip Hive's check and corrupt the whole box file. Write through `JsonBox` (which skips such keys) or check `isValidHiveKey`; keys built from source data (slugs, titles) are the usual culprit (ARCHITECTURE §7.1).
 - **Backup format changes bump `BackupRepositoryImpl.formatVersion`** (ARCHITECTURE §7.4), and the PR says whether files of the previous version can still be restored. **Sync format changes** bump `SyncRepositoryImpl.formatVersion` (ARCHITECTURE §7.6) and must consider devices still on the old version.
 - Library writes made by the user go through the repositories, so `LibraryJournal` records them for sync. Writes made by sync go through the data sources.
 - Any change to storage, backup or sync needs a manual upgrade test: install the current release, add bookmarks, categories and history, install the new build over it with `adb install -r` (§2), and check that nothing was lost.
@@ -147,7 +148,8 @@ Extensions themselves live in the separate private repo `bacakomik-ext-source`, 
 | Use cases | Mock the repository interfaces with mocktail. |
 | Blocs / cubits | `bloc_test`, with mocked use cases or real ones over temp Hive. |
 | Sources | `test/core/source_test.dart`: `ComicKey`, filter groups, `ExtensionMeta` versions and languages, `Challenge`. |
-| Storage / backup / sync | `test/features/library_test.dart`, `backup_test.dart`, `sync_test.dart` (merge rules) and `migrate_library_test.dart` (sample data in `test/fixtures/library_fixtures.dart`). |
+| Storage / backup / sync | `test/features/library_test.dart`, `backup_test.dart`, `sync_test.dart` (merge rules) and `migrate_library_test.dart` (sample data in `test/fixtures/library_fixtures.dart`). `test/core/box_recovery_test.dart` builds a corrupted box file by hand and checks it is salvaged. |
+| Migration | `test/features/migration_test.dart`: Mihon backups (protobuf written in the test), source matching and `urlPatterns`, Comix CSV, `ImportLibrary`, pending reads. `MemoryPendingReads` (`test/helpers/`) stands in for the pending reads box. |
 | Manual | Every tab and screen on a recent Android before each release, plus the upgrade test above when storage changed. Check at least one Cloudflare-protected source and one download. |
 
 Every bug fix gets a regression test where it can be tested without a device. The JS engine, WebViews and Cronet are not available in `flutter test`; test the Dart around them with fakes, and the scripts themselves in the extension repo.
@@ -164,7 +166,7 @@ Extensions are written and checked in `bacakomik-ext-source` (`bun scripts/run.t
 3. Forward the port to the phone: `adb reverse tcp:8787 tcp:8787`.
 4. In the app: More → Extensions → the repos button in the top bar, add `http://localhost:8787/index.json`. Install or update the extension from that repo.
 
-Bump the extension's `version` for every change you want the app to pick up as an update. Remove the local repo when you are done; the app keeps it until removed. Script `log()` output appears in `flutter logs` / logcat as `[<sourceId>] …`.
+A new or changed `urlPatterns` in `meta.json` also needs a version bump: installed extensions keep the metadata they were installed with. Bump the extension's `version` for every change you want the app to pick up as an update. Remove the local repo when you are done; the app keeps it until removed. Script `log()` output appears in `flutter logs` / logcat as `[<sourceId>] …`.
 
 ---
 
@@ -173,6 +175,7 @@ Bump the extension's `version` for every change you want the app to pick up as a
 - The data layer throws `ServerException` or `CacheException`. Repositories turn every error into a `Failure` (ARCHITECTURE §9).
 - Blocs show `NetworkFailure` as the offline placeholder and other failures through `SourceError`, which also handles Cloudflare challenges and a missing source.
 - Log with `debugPrint`, never `print`. Never log full backup or sync contents.
+- Release builds print `debugPrint` to logcat under the `flutter` tag. On phones with a small logcat buffer, stream it to a file before reproducing (`adb logcat -s flutter > flutter.log`) and restart the stream after each reinstall.
 
 ---
 
@@ -182,6 +185,7 @@ Bump the extension's `version` for every change you want the app to pick up as a
 - `freezed`, the code generators (`injectable_generator`, `json_serializable`) and `hive_ce` are pinned for compatibility (ARCHITECTURE §10.1). Upgrade them in their own PR, then regenerate code and run all tests.
 - `flutter_inappwebview` is on a 6.2 beta. Upgrades of it, `flutter_js`, `native_dio_adapter` or `cronet_http` need a device test against a Cloudflare-protected source.
 - Upgrades of Flutter itself also go in their own PR, with a smoke test on a device.
+- `flutter_local_notifications` delivers notification buttons and dismissals through `ActionBroadcastReceiver`, which must stay declared in `android/app/src/main/AndroidManifest.xml`. Without it the bookmark refresh's Cancel button does nothing.
 
 ---
 

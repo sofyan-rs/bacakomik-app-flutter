@@ -42,7 +42,7 @@ This file covers how the app is built. Section numbers (§) refer to this file.
 | Connectivity | `connectivity_plus` behind `NetworkInfo` | Checked before every source call (§8.7). |
 | Local storage | `hive_ce` | Boxes of JSON strings, no type adapters (§7). |
 | Downloads | `background_downloader` | Chapter pages download outside the Dart isolate (§7.5). |
-| Notifications | `flutter_local_notifications` | Progress notification for bookmark refresh (`ProgressNotifier`, §6.1). Downloads use background_downloader's own notification. |
+| Notifications | `flutter_local_notifications` | Progress notification for bookmark refresh with a Cancel button (`ProgressNotifier`, §6.1); its `ActionBroadcastReceiver` is declared in the app's manifest. Downloads use background_downloader's own notification. |
 | Sync | `google_sign_in` + Drive REST over Dio | §7.6. |
 | Backup files | `file_picker` + `dart:io` | Behind `BackupFileDataSource` (§7.4). |
 | Links and sharing | `app_links`, `share_plus` | Shared comic links `https://bacakomik.kurodev.org/series/<slug>` open the app (`DeepLinks`; the host is served from `hosting/worker`). |
@@ -264,7 +264,7 @@ The UI uses **Dotline**, a monochrome, dark-first design system: pure black back
 
 ### 6.1 Checking bookmarks for new chapters
 
-Pull-to-refresh on the Bookmarks tab calls `BookmarkCubit.updateBookmarkList` with the slugs on screen: the open group, narrowed by the title search when one is typed. Bookmarks are checked one at a time by `RefreshBookmark`, which loads the comic again. When the chapter count changed, it saves the new details with `updatedDate = now`, which moves the bookmark to the top. A comic that fails to load is left unchanged.
+Pull-to-refresh on the Bookmarks tab calls `BookmarkCubit.updateBookmarkList` with the slugs on screen: the open group, narrowed by the title search when one is typed. Bookmarks are checked one at a time by `RefreshBookmark`, which loads the comic again. When the chapter count changed, it saves the new details with `updatedDate = now`, which moves the bookmark to the top. A comic that fails to load is left unchanged, and the reason is logged (`Refresh <key>: <failure>`).
 
 While the run lasts, `ProgressNotifier` (`core/notifications`, Android only) shows an ongoing notification with `done / total`. Refreshing another group during a run adds its bookmarks to the queue and raises the total. At the end the notification is replaced by "Bookmarks updated" with the number of comics that have new chapters, or removed when none have.
 
@@ -375,7 +375,7 @@ Entries are plain JSON objects, in the same shapes as §7.2. The category fields
 
 - **Backup:** if the library is empty, nothing happens and the folder picker does not open. Cancelling the picker does nothing.
 - **Restore:** merges into the library. Entries with the same slug (categories: the same id) are replaced. After a restore, the More screen reloads `BookmarkCubit` and `HistoryCubit`.
-- Downloads, extensions and source settings are not part of backups.
+- Downloads, extensions, source settings and pending reads (§6.4) are not part of backups.
 
 ### 7.5 Downloads
 
@@ -393,7 +393,7 @@ Entries are plain JSON objects, in the same shapes as §7.2. The category fields
 `features/sync` keeps the library in step across devices through one file, `bacakomik-sync.json.gz`, in the app's Drive `appDataFolder` (scope `drive.appdata`; the user cannot see or edit it in Drive). Sign-in uses `google_sign_in`; Drive calls use `filesDio` with the access token.
 
 - **When:** once signed in, `SyncCubit` syncs on start, when the app returns to the foreground (if the last sync is older than a minute), and 5 seconds after the last library edit (`LibraryJournal.changes`).
-- **What:** bookmarks, history and categories. Downloads, settings and extensions are not synced.
+- **What:** bookmarks, history and categories. Downloads, settings, extensions and pending reads are not synced. An imported bookmark syncs as it is stored (title only until it loads on some device).
 - **Format:** gzipped JSON, `version: 1` (`SyncRepositoryImpl.formatVersion`): the backup file's library fields (§7.4) plus `deletedBookmarks`, `deletedHistory` and `deletedCategories` (slug or id → epoch ms).
 - **Merge** (`SyncSnapshot.merge`): per slug or id the newest version wins (bookmarks by `updatedDate`, history by `readDate`, categories by `updatedDate`). An entry deleted at or after that time is dropped. Deletions older than 180 days are forgotten, so a device offline for longer may bring deleted entries back. A side without the category fields (an older app) keeps the other side's.
 - **Flow** (`SyncLibrary`): download, merge with the local library, migrate legacy entries (§7.7), write the result locally, and upload only when the Drive copy differs. A sync that changed local data bumps `SyncState.libraryRevision`, which reloads the library cubits (§4.2).
