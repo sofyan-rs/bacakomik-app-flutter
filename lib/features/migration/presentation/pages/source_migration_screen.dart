@@ -87,6 +87,12 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
 
   Future<void> _pickTo() async {
     final sources = context.read<SourcesCubit>().state.installed;
+    // Preselected comics all from one source: that source is no target.
+    final keys = widget.keys;
+    final only = keys == null
+        ? null
+        : {for (final k in keys) ComicKey.sourceOf(k)};
+    final from = _from ?? (only?.length == 1 ? only!.single : null);
     final picked = await showSourceChoiceSheet(
       context,
       title: AppText.migrateTo,
@@ -94,7 +100,7 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
       emptyMessage: AppText.noOtherSource,
       choices: [
         for (final s in sources)
-          if (s.id != _from) (id: s.id, name: s.name, detail: s.domain),
+          if (s.id != from) (id: s.id, name: s.name, detail: s.domain),
       ],
     );
     if (picked != null && mounted) setState(() => _to = picked);

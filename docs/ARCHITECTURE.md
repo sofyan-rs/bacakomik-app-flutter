@@ -315,7 +315,7 @@ An imported comic gets its details the first time they load from its source: pul
 
 Every box is a `Box<String>` that holds JSON or a plain string. There are no Hive type adapters, so stored data never depends on adapter type ids, and the backup and sync formats can reuse the same JSON. `JsonBox<T>` (`core/storage/json_box.dart`) gives typed `values()`, `get`, `put`, `putAll`, `deleteAll` and `clear`. An entry that fails to parse is skipped and logged, so one bad record cannot hide the rest.
 
-Hive keys must be ASCII and at most 255 characters. Comic keys are `sourceId:slug`, so extensions must return short, URL-safe slugs.
+Hive keys must be ASCII and at most 255 characters. Comic keys are `sourceId:slug`, so extensions must return short, URL-safe slugs. Hive stores a key's length in one byte and release builds skip its length check, so a longer key corrupts the whole box file: `JsonBox`, `LibraryJournal` and pending reads skip keys that fail `isValidHiveKey`, and imports skip comic keys longer than `ComicKey.maxLength` (240, room for `/<number>`). Boxes open through `openStringBox`: when Hive cannot read a file, it keeps a copy (`<name>.corrupt-<ms>.hive.bak`), salvages the entries frame by frame (keying a value whose key overflowed by its JSON `slug` or `id`) and writes them to a fresh box, so the app still starts.
 
 Extension scripts are not in Hive: they are files in `<app support>/extensions/<id>.js`. Each source's cookies are in `<app support>/cookies/<sourceId>/`.
 
