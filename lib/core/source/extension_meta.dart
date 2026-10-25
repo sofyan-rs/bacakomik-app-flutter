@@ -18,6 +18,7 @@ class ExtensionMeta {
     this.nsfw = false,
     this.repoUrl,
     this.languages = const [],
+    this.urlPatterns = const [],
     this.parentId,
   });
 
@@ -36,6 +37,9 @@ class ExtensionMeta {
     nsfw: json['nsfw'] as bool? ?? false,
     repoUrl: repoUrl ?? json['repoUrl'] as String?,
     languages: (json['languages'] as List?)?.cast<String>() ?? const [],
+    urlPatterns:
+        (json['urlPatterns'] as List?)?.whereType<String>().toList() ??
+        const [],
   );
 
   final String id;
@@ -61,6 +65,11 @@ class ExtensionMeta {
   /// enabled one is its own source ([forLanguage]); empty for an extension
   /// that is a single source.
   final List<String> languages;
+
+  /// Regexes that find the slug in a series URL path (their one capture
+  /// group), e.g. `^/manga/([^/?#]+)`. Lets the app read links, such as a
+  /// Mihon backup's, without running the script; see [slugFromUrl].
+  final List<String> urlPatterns;
 
   /// For a source made by [forLanguage]: the extension's id.
   final String? parentId;
@@ -95,8 +104,33 @@ class ExtensionMeta {
     sha256: sha256,
     nsfw: nsfw,
     repoUrl: repoUrl,
+    urlPatterns: urlPatterns,
     parentId: id,
   );
+
+  /// The slug in [url], a full URL or a path like `/manga/<slug>/`, by the
+  /// first of [urlPatterns] that matches. Null when none does.
+  String? slugFromUrl(String url) {
+    final uri = Uri.tryParse(url.trim());
+    var path = url.trim();
+    if (uri != null && uri.hasScheme) {
+      path = uri.path;
+      if (uri.hasQuery) path += '?${uri.query}';
+      if (uri.hasFragment) path += '#${uri.fragment}';
+    }
+    for (final pattern in urlPatterns) {
+      try {
+        final match = RegExp(pattern).firstMatch(path);
+        final slug = match != null && match.groupCount > 0
+            ? match.group(1)
+            : null;
+        if (slug != null && slug.isNotEmpty) return slug;
+      } on FormatException {
+        // A pattern Dart cannot parse matches nothing.
+      }
+    }
+    return null;
+  }
 
   bool get supported => apiVersion <= supportedExtensionApi;
 
@@ -122,6 +156,7 @@ class ExtensionMeta {
     'nsfw': nsfw,
     if (repoUrl != null) 'repoUrl': repoUrl,
     if (languages.isNotEmpty) 'languages': languages,
+    if (urlPatterns.isNotEmpty) 'urlPatterns': urlPatterns,
   };
 }
 

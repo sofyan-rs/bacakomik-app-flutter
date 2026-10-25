@@ -83,6 +83,10 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   /// [catalog] fetch.
   var _offered = <String, ExtensionMeta>{};
 
+  /// Newest version of each extension in the repos, from the last
+  /// [catalog] fetch; empty before it.
+  List<ExtensionMeta> get offered => _offered.values.toList();
+
   /// Installed extensions the repos have a newer, installable version of.
   int get updateCount => extensions.where((e) {
     final offered = _offered[e.id];
