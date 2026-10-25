@@ -431,6 +431,8 @@ void main() {
         ('comix:a/7', null),
         ('comix:a/1', 4),
       });
+      // The last read chapter is the newest entry.
+      expect(read.newestFirst.first.slug, 'comix:a/7');
     });
 
     test(

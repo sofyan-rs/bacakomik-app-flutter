@@ -38,15 +38,17 @@ class ApplyPendingReads implements UseCase<bool, ComicLoadedParams> {
     if (history case Left(value: final failure)) return left(failure);
     final index = HistoryIndex(history.getOrElse((_) => const []));
     final now = _clock.now();
+    // Chapters come newest first; the last read one gets the newest time,
+    // so "Continue reading" points at it.
     final read = [
       if (limit != null)
-        for (final chapter in details.chapters)
+        for (final (i, chapter) in details.chapters.indexed)
           if (num.tryParse(chapter.number) case final n?
               when n <= limit && !index.containsChapter(chapter.slug))
             ReadHistory(
               slug: chapter.slug,
               chapterNumber: chapter.number,
-              readDate: now,
+              readDate: now.subtract(Duration(milliseconds: i)),
               comicDetails: details,
               comicSlug: key,
             ),
