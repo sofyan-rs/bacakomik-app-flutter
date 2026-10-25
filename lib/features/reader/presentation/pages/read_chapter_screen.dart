@@ -92,6 +92,17 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   TapDownDetails? _doubleTap;
   var _zoomed = false;
 
+  /// Zoomed in the vertical reader, the viewer pans freely but never moves
+  /// up or down itself: the vertical part of a pan (and of its fling)
+  /// scrolls the page list instead, see [_panVertical]. [_pinY] and
+  /// [_pinScale] are where the viewer is held; [_viewport] bounds it
+  /// sideways and [_listMetrics] bounds the list.
+  double? _pinY;
+  double? _pinScale;
+  Size? _viewport;
+  ScrollMetrics? _listMetrics;
+  var _adjustingZoom = false;
+
   /// Fingers on the reader. With two or more, the page list stops scrolling
   /// so its drag recognizer leaves the gesture arena and the pinch wins.
   var _pointers = 0;
@@ -219,6 +230,65 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   void _onZoomChanged() {
     final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
     if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+    if (!_adjustingZoom &&
+        _settings.state.readingDirection == ReadingDirection.vertical) {
+      _panVertical();
+    }
+  }
+
+  /// Turns the viewer's vertical movement into a list scroll and keeps the
+  /// page within the screen sideways. A move at an unchanged scale is a pan:
+  /// the list scrolls by it and the viewer stays at [_pinY]. A pinch or the
+  /// double-tap animation changes the scale; then the viewer only stays
+  /// within the zoomed page.
+  void _panVertical() {
+    final size = _viewport;
+    if (size == null) return;
+    final m = _zoom.value;
+    final scale = m.getMaxScaleOnAxis();
+    final t = m.getTranslation();
+    final x = t.x.clamp(-(scale - 1) * size.width, 0.0);
+    var y = t.y;
+    final pinY = _pinY;
+    final pinScale = _pinScale;
+    final panned =
+        pinY != null &&
+        pinScale != null &&
+        scale > 1.01 &&
+        (scale - pinScale).abs() < 0.001 &&
+        !_zoomAnimation.isAnimating;
+    if (panned) {
+      _scrollList(-(y - pinY) / scale);
+      y = pinY;
+    } else {
+      y = y.clamp(-(scale - 1) * size.height, 0.0);
+    }
+    _pinY = y;
+    _pinScale = scale;
+    if (x != t.x || y != t.y) {
+      _adjustingZoom = true;
+      _zoom.value = m.clone()..setTranslationRaw(x, y, t.z);
+      _adjustingZoom = false;
+    }
+  }
+
+  /// Scrolls the vertical page list by [delta], within its ends.
+  void _scrollList(double delta) {
+    final metrics = _listMetrics;
+    if (metrics == null || delta == 0) return;
+    final to = (metrics.pixels + delta).clamp(
+      metrics.minScrollExtent,
+      metrics.maxScrollExtent,
+    );
+    if (to == metrics.pixels) return;
+    // Pans come faster than the list reports back.
+    _listMetrics = metrics.copyWith(pixels: to);
+    unawaited(
+      _scrollOffset.animateScroll(
+        offset: to - metrics.pixels,
+        duration: Duration.zero,
+      ),
+    );
   }
 
   void _onPointerDown(PointerDownEvent _) {
@@ -533,19 +603,28 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           onTap: () => _setControls(!_controlsVisible),
           onDoubleTapDown: (d) => _doubleTap = d,
           onDoubleTap: _toggleZoom,
-          child: InteractiveViewer(
-            transformationController: _zoom,
-            minScale: 1,
-            maxScale: 4,
-            // Unzoomed, drags scroll the pages. Zoomed in the vertical
-            // reader, the list keeps scrolling and the viewer pans sideways.
-            panEnabled: _zoomed,
-            panAxis: settings.readingDirection == ReadingDirection.vertical
-                ? PanAxis.horizontal
-                : PanAxis.free,
-            child: settings.readingDirection == ReadingDirection.vertical
-                ? _verticalPages(chapter, settings)
-                : _horizontalPages(chapter, settings),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              _viewport = constraints.biggest;
+              final vertical =
+                  settings.readingDirection == ReadingDirection.vertical;
+              return InteractiveViewer(
+                transformationController: _zoom,
+                minScale: 1,
+                maxScale: 4,
+                // Unzoomed, drags scroll the pages. Zoomed, the viewer takes
+                // every drag, in any direction. In the vertical reader it is
+                // unbounded because [_panVertical] keeps it in place and
+                // scrolls the list instead.
+                panEnabled: _zoomed,
+                boundaryMargin: vertical
+                    ? const EdgeInsets.all(double.infinity)
+                    : EdgeInsets.zero,
+                child: vertical
+                    ? _verticalPages(chapter, settings)
+                    : _horizontalPages(chapter, settings),
+              );
+            },
           ),
         ),
       ),
@@ -587,12 +666,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     final height = settings.pageFit == PageFit.height
         ? MediaQuery.sizeOf(context).height
         : null;
-    return ScrollablePositionedList.builder(
+    final list = ScrollablePositionedList.builder(
       initialScrollIndex: _page.value.clamp(0, pages.length),
       itemScrollController: _itemScroll,
       scrollOffsetController: _scrollOffset,
       itemPositionsListener: _itemPositions,
-      physics: _pinching ? const NeverScrollableScrollPhysics() : null,
+      // Zoomed, the viewer scrolls the list (see [_panVertical]).
+      physics: _pinching || _zoomed
+          ? const NeverScrollableScrollPhysics()
+          : null,
       itemCount: pages.length + 1,
       itemBuilder: (context, index) {
         if (index == pages.length) return _chapterEnd(chapter);
@@ -610,6 +692,19 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           ),
         );
       },
+    );
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: (n) {
+        _listMetrics = n.metrics;
+        return false;
+      },
+      child: NotificationListener<ScrollUpdateNotification>(
+        onNotification: (n) {
+          _listMetrics = n.metrics;
+          return false;
+        },
+        child: list,
+      ),
     );
   }
 

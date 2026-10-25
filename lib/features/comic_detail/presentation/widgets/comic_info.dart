@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/core/utils/alt_titles.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:flutter/material.dart';
 
@@ -32,6 +33,13 @@ class ComicInfo extends StatefulWidget {
     return match?.group(0) ?? '-';
   }
 
+  /// The alternative titles to show, joined with ` · `, or null when there
+  /// are none. See [splitAltTitles].
+  static String? altTitles(String title, String alternativeTitle) {
+    final parts = splitAltTitles(title, alternativeTitle);
+    return parts.isEmpty ? null : parts.join(' · ');
+  }
+
   @override
   State<ComicInfo> createState() => _ComicInfoState();
 }
@@ -39,12 +47,14 @@ class ComicInfo extends StatefulWidget {
 class _ComicInfoState extends State<ComicInfo> {
   static const _collapsedLines = 4;
   var _expanded = false;
+  var _altExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final d = widget.details;
     final year = ComicInfo.year(d.released);
+    final alt = ComicInfo.altTitles(d.title, d.alternativeTitle);
     final meta = [
       if (d.type != '-') d.type,
       d.status,
@@ -61,6 +71,19 @@ class _ComicInfoState extends State<ComicInfo> {
         ),
         const SizedBox(height: DotSpace.s3),
         ComicTitle(d.title),
+        if (alt != null) ...[
+          const SizedBox(height: DotSpace.s2),
+          GestureDetector(
+            onTap: () => setState(() => _altExpanded = !_altExpanded),
+            child: Text(
+              alt,
+              style: DotlineText.bodyS.copyWith(color: c.inkFaint),
+              textAlign: TextAlign.center,
+              maxLines: _altExpanded ? null : 2,
+              overflow: _altExpanded ? null : TextOverflow.ellipsis,
+            ),
+          ),
+        ],
         // The API sends `?` (or nothing) when the author is unknown.
         if (!const {'', '-', '?'}.contains(d.author.trim())) ...[
           const SizedBox(height: DotSpace.s2),

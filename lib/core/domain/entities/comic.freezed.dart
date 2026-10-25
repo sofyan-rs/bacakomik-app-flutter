@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Comic {
 
- String get title; String get coverImg; String get slug; String get type; bool get completed; String get rating; String get latestChapter;
+ String get title; String get coverImg; String get slug; String get type; bool get completed; String get rating; String get latestChapter;/// Other titles the source knows the comic by; used to match comics
+/// between sources. Empty when the source lists none.
+ List<String> get altTitles;
 /// Create a copy of Comic
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +29,20 @@ $ComicCopyWith<Comic> get copyWith => _$ComicCopyWithImpl<Comic>(this as Comic, 
 @override
 bool operator ==(Object other) {
   final _this = this as Comic;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Comic&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.coverImg, _this.coverImg) || other.coverImg == _this.coverImg)&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.completed, _this.completed) || other.completed == _this.completed)&&(identical(other.rating, _this.rating) || other.rating == _this.rating)&&(identical(other.latestChapter, _this.latestChapter) || other.latestChapter == _this.latestChapter));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Comic&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.coverImg, _this.coverImg) || other.coverImg == _this.coverImg)&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.completed, _this.completed) || other.completed == _this.completed)&&(identical(other.rating, _this.rating) || other.rating == _this.rating)&&(identical(other.latestChapter, _this.latestChapter) || other.latestChapter == _this.latestChapter)&&const DeepCollectionEquality().equals(other.altTitles, _this.altTitles));
 }
 
 
 @override
 int get hashCode {
   final _this = this as Comic;
-  return Object.hash(runtimeType,_this.title,_this.coverImg,_this.slug,_this.type,_this.completed,_this.rating,_this.latestChapter);
+  return Object.hash(runtimeType,_this.title,_this.coverImg,_this.slug,_this.type,_this.completed,_this.rating,_this.latestChapter,const DeepCollectionEquality().hash(_this.altTitles));
 }
 
 @override
 String toString() {
   final _this = this as Comic;
-  return 'Comic(title: ${_this.title}, coverImg: ${_this.coverImg}, slug: ${_this.slug}, type: ${_this.type}, completed: ${_this.completed}, rating: ${_this.rating}, latestChapter: ${_this.latestChapter})';
+  return 'Comic(title: ${_this.title}, coverImg: ${_this.coverImg}, slug: ${_this.slug}, type: ${_this.type}, completed: ${_this.completed}, rating: ${_this.rating}, latestChapter: ${_this.latestChapter}, altTitles: ${_this.altTitles})';
 }
 
 
@@ -51,7 +53,7 @@ abstract mixin class $ComicCopyWith<$Res>  {
   factory $ComicCopyWith(Comic value, $Res Function(Comic) _then) = _$ComicCopyWithImpl;
 @useResult
 $Res call({
- String title, String coverImg, String slug, String type, bool completed, String rating, String latestChapter
+ String title, String coverImg, String slug, String type, bool completed, String rating, String latestChapter, List<String> altTitles
 });
 
 
@@ -68,7 +70,7 @@ class _$ComicCopyWithImpl<$Res>
 
 /// Create a copy of Comic
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? coverImg = null,Object? slug = null,Object? type = null,Object? completed = null,Object? rating = null,Object? latestChapter = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? coverImg = null,Object? slug = null,Object? type = null,Object? completed = null,Object? rating = null,Object? latestChapter = null,Object? altTitles = null,}) {
   return _then(Comic(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,coverImg: null == coverImg ? _self.coverImg : coverImg // ignore: cast_nullable_to_non_nullable
@@ -77,7 +79,8 @@ as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non
 as String,completed: null == completed ? _self.completed : completed // ignore: cast_nullable_to_non_nullable
 as bool,rating: null == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
 as String,latestChapter: null == latestChapter ? _self.latestChapter : latestChapter // ignore: cast_nullable_to_non_nullable
-as String,
+as String,altTitles: null == altTitles ? _self.altTitles : altTitles // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -162,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String title,  String coverImg,  String slug,  String type,  bool completed,  String rating,  String latestChapter)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String title,  String coverImg,  String slug,  String type,  bool completed,  String rating,  String latestChapter,  List<String> altTitles)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Comic() when $default != null:
-return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed,_that.rating,_that.latestChapter);case _:
+return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed,_that.rating,_that.latestChapter,_that.altTitles);case _:
   return orElse();
 
 }
@@ -183,10 +186,10 @@ return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String coverImg,  String slug,  String type,  bool completed,  String rating,  String latestChapter)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String coverImg,  String slug,  String type,  bool completed,  String rating,  String latestChapter,  List<String> altTitles)  $default,) {final _that = this;
 switch (_that) {
 case _Comic():
-return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed,_that.rating,_that.latestChapter);case _:
+return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed,_that.rating,_that.latestChapter,_that.altTitles);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +206,10 @@ return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String title,  String coverImg,  String slug,  String type,  bool completed,  String rating,  String latestChapter)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String title,  String coverImg,  String slug,  String type,  bool completed,  String rating,  String latestChapter,  List<String> altTitles)?  $default,) {final _that = this;
 switch (_that) {
 case _Comic() when $default != null:
-return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed,_that.rating,_that.latestChapter);case _:
+return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed,_that.rating,_that.latestChapter,_that.altTitles);case _:
   return null;
 
 }
@@ -218,7 +221,7 @@ return $default(_that.title,_that.coverImg,_that.slug,_that.type,_that.completed
 
 
 class _Comic implements Comic {
-  const _Comic({required this.title, required this.coverImg, required this.slug, required this.type, required this.completed, required this.rating, required this.latestChapter});
+  const _Comic({required this.title, required this.coverImg, required this.slug, required this.type, required this.completed, required this.rating, required this.latestChapter,  List<String> altTitles = const []}): _altTitles = altTitles;
   
 
 @override final  String title;
@@ -228,6 +231,17 @@ class _Comic implements Comic {
 @override final  bool completed;
 @override final  String rating;
 @override final  String latestChapter;
+/// Other titles the source knows the comic by; used to match comics
+/// between sources. Empty when the source lists none.
+ final  List<String> _altTitles;
+/// Other titles the source knows the comic by; used to match comics
+/// between sources. Empty when the source lists none.
+@override@JsonKey() List<String> get altTitles {
+  if (_altTitles is EqualUnmodifiableListView) return _altTitles;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_altTitles);
+}
+
 
 /// Create a copy of Comic
 /// with the given fields replaced by the non-null parameter values.
@@ -239,18 +253,18 @@ _$ComicCopyWith<_Comic> get copyWith => __$ComicCopyWithImpl<_Comic>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Comic&&(identical(other.title, title) || other.title == title)&&(identical(other.coverImg, coverImg) || other.coverImg == coverImg)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.type, type) || other.type == type)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.latestChapter, latestChapter) || other.latestChapter == latestChapter));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Comic&&(identical(other.title, title) || other.title == title)&&(identical(other.coverImg, coverImg) || other.coverImg == coverImg)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.type, type) || other.type == type)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.latestChapter, latestChapter) || other.latestChapter == latestChapter)&&const DeepCollectionEquality().equals(other.altTitles, _altTitles));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,title,coverImg,slug,type,completed,rating,latestChapter);
+    return Object.hash(runtimeType,title,coverImg,slug,type,completed,rating,latestChapter,const DeepCollectionEquality().hash(_altTitles));
 }
 
 @override
 String toString() {
-    return 'Comic(title: $title, coverImg: $coverImg, slug: $slug, type: $type, completed: $completed, rating: $rating, latestChapter: $latestChapter)';
+    return 'Comic(title: $title, coverImg: $coverImg, slug: $slug, type: $type, completed: $completed, rating: $rating, latestChapter: $latestChapter, altTitles: $altTitles)';
 }
 
 
@@ -261,7 +275,7 @@ abstract mixin class _$ComicCopyWith<$Res> implements $ComicCopyWith<$Res> {
   factory _$ComicCopyWith(_Comic value, $Res Function(_Comic) _then) = __$ComicCopyWithImpl;
 @override @useResult
 $Res call({
- String title, String coverImg, String slug, String type, bool completed, String rating, String latestChapter
+ String title, String coverImg, String slug, String type, bool completed, String rating, String latestChapter, List<String> altTitles
 });
 
 
@@ -278,7 +292,7 @@ class __$ComicCopyWithImpl<$Res>
 
 /// Create a copy of Comic
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? coverImg = null,Object? slug = null,Object? type = null,Object? completed = null,Object? rating = null,Object? latestChapter = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? coverImg = null,Object? slug = null,Object? type = null,Object? completed = null,Object? rating = null,Object? latestChapter = null,Object? altTitles = null,}) {
   return _then(_Comic(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,coverImg: null == coverImg ? _self.coverImg : coverImg // ignore: cast_nullable_to_non_nullable
@@ -287,7 +301,8 @@ as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non
 as String,completed: null == completed ? _self.completed : completed // ignore: cast_nullable_to_non_nullable
 as bool,rating: null == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
 as String,latestChapter: null == latestChapter ? _self.latestChapter : latestChapter // ignore: cast_nullable_to_non_nullable
-as String,
+as String,altTitles: null == altTitles ? _self._altTitles : altTitles // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

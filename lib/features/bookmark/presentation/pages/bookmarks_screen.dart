@@ -24,6 +24,7 @@ import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dar
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
@@ -40,6 +41,12 @@ class BookmarksScreen extends StatefulWidget {
 class _BookmarksScreenState extends State<BookmarksScreen> {
   final _query = TextEditingController();
   var _searching = false;
+
+  /// The search of the last build, to tell when it changes.
+  var _lastQuery = '';
+
+  /// Fling speed, in logical pixels per second, that changes the tab.
+  static const _swipeVelocity = 300.0;
 
   /// Selected tab: [_allTab], a [BookmarkFilter] name, a source id, a category
   /// id or [_uncategorizedTab], depending on the grouping.
@@ -318,28 +325,41 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       order,
     );
     final updated = all.where((i) => i.hasUpdate).length;
-    final counts = _counts(grouping, all, categories);
+    // A search covers every tab; the tab counts show its matches.
+    final query = _query.text.trim().toLowerCase();
+    final matching = query.isEmpty
+        ? all
+        : [
+            for (final item in all)
+              if (_matchesSearch(item, query)) item,
+          ];
+    final counts = _counts(grouping, matching, categories);
     final tabs = [
       for (final tab in _tabs(grouping, all, categories))
         Segment(
           value: tab.value,
           label: tab.label,
-          count: tab.value == _allTab ? all.length : counts[tab.value] ?? 0,
+          count: tab.value == _allTab
+              ? matching.length
+              : counts[tab.value] ?? 0,
         ),
     ];
     // The tab is gone (grouping changed, category deleted): show the first.
     if (!tabs.any((t) => t.value == _group)) {
       _group = tabs.isEmpty ? _allTab : tabs.first.value;
     }
-    final query = _query.text.trim().toLowerCase();
-    final group = [
-      for (final item in all)
-        if (_inGroup(grouping, item, categories, _group)) item,
-    ];
+    // A new search with nothing in the open tab opens the first tab that
+    // has matches.
+    if (query != _lastQuery) {
+      _lastQuery = query;
+      final open = tabs.where((t) => t.value == _group).firstOrNull;
+      if (query.isNotEmpty && open != null && open.count == 0) {
+        _group = tabs.where((t) => (t.count ?? 0) > 0).firstOrNull?.value ?? _group;
+      }
+    }
     final shown = [
-      for (final item in group)
-        if (item.bookmark.comicDetails.title.toLowerCase().contains(query))
-          item,
+      for (final item in matching)
+        if (_inGroup(grouping, item, categories, _group)) item,
     ];
 
     return PopScope(
@@ -393,53 +413,58 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                   ),
                 ),
               Expanded(
-                child: RefreshIndicator(
-                  color: Dotline.of(context).ink,
-                  backgroundColor: Dotline.of(context).surface,
-                  // Not awaited: the notification shows progress, and pulling
-                  // again in another group adds that group to the running queue.
-                  // The comics on screen: the open group, narrowed by a search.
-                  onRefresh: () async => unawaited(
-                    context.read<BookmarkCubit>().updateBookmarkList([
-                      for (final item in shown) item.bookmark.slug,
-                    ]),
-                  ),
-                  child: CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      if (shown.isEmpty)
-                        SliverToBoxAdapter(child: _empty(all.isEmpty))
-                      else
-                        CoverGridSliver(
-                          itemCount: shown.length,
-                          textHeight: BookmarkComicCard.textHeight,
-                          itemBuilder: (context, index) {
-                            final item = shown[index];
-                            final slug = item.bookmark.slug;
-                            return BookmarkComicCard(
-                              item: item,
-                              isSelected: _selected.contains(slug),
-                              onLongPress: () => _toggleSelected(slug),
-                              onTap: _selected.isNotEmpty
-                                  ? () => _toggleSelected(slug)
-                                  : () => ComicDetailsScreen.open(
-                                      context,
-                                      slug: slug,
-                                      title: item.bookmark.comicDetails.title,
-                                      cover:
-                                          item.bookmark.comicDetails.coverImg,
-                                    ),
-                            );
-                          },
+                child: GestureDetector(
+                  onHorizontalDragEnd: _selected.isEmpty
+                      ? (d) => _swipeTab(d, tabs)
+                      : null,
+                  child: RefreshIndicator(
+                    color: Dotline.of(context).ink,
+                    backgroundColor: Dotline.of(context).surface,
+                    // Not awaited: the notification shows progress, and pulling
+                    // again in another group adds that group to the running queue.
+                    // The comics on screen: the open group, narrowed by a search.
+                    onRefresh: () async => unawaited(
+                      context.read<BookmarkCubit>().updateBookmarkList([
+                        for (final item in shown) item.bookmark.slug,
+                      ]),
+                    ),
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        if (shown.isEmpty)
+                          SliverToBoxAdapter(child: _empty(all.isEmpty))
+                        else
+                          CoverGridSliver(
+                            itemCount: shown.length,
+                            textHeight: BookmarkComicCard.textHeight,
+                            itemBuilder: (context, index) {
+                              final item = shown[index];
+                              final slug = item.bookmark.slug;
+                              return BookmarkComicCard(
+                                item: item,
+                                isSelected: _selected.contains(slug),
+                                onLongPress: () => _toggleSelected(slug),
+                                onTap: _selected.isNotEmpty
+                                    ? () => _toggleSelected(slug)
+                                    : () => ComicDetailsScreen.open(
+                                        context,
+                                        slug: slug,
+                                        title: item.bookmark.comicDetails.title,
+                                        cover:
+                                            item.bookmark.comicDetails.coverImg,
+                                      ),
+                              );
+                            },
+                          ),
+                        SliverPadding(
+                          padding: EdgeInsets.only(
+                            bottom:
+                                DotSpace.s4 +
+                                MediaQuery.paddingOf(context).bottom,
+                          ),
                         ),
-                      SliverPadding(
-                        padding: EdgeInsets.only(
-                          bottom:
-                              DotSpace.s4 +
-                              MediaQuery.paddingOf(context).bottom,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -448,6 +473,25 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
         ),
       ),
     );
+  }
+
+  /// The search [query] (trimmed, lower case) is in the title or one of the
+  /// alternative titles.
+  static bool _matchesSearch(BookmarkProgress item, String query) {
+    final details = item.bookmark.comicDetails;
+    return details.title.toLowerCase().contains(query) ||
+        details.alternativeTitle.toLowerCase().contains(query);
+  }
+
+  /// A sideways fling on the comics opens the next or previous tab.
+  void _swipeTab(DragEndDetails details, List<Segment<String>> tabs) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() < _swipeVelocity || tabs.length < 2) return;
+    final i = tabs.indexWhere((t) => t.value == _group);
+    final next = (i + (velocity < 0 ? 1 : -1)).clamp(0, tabs.length - 1);
+    if (next == i) return;
+    unawaited(HapticFeedback.selectionClick());
+    setState(() => _group = tabs[next].value);
   }
 
   Widget _header(int count, int updated, {required bool refreshing}) {

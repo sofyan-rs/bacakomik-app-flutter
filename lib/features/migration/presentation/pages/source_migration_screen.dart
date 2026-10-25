@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/utils/alt_titles.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
@@ -116,7 +117,14 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
       items: [
         for (final b in candidates)
           if (_checked.contains(b.slug) && ComicKey.sourceOf(b.slug) != to)
-            MatchItem(title: b.comicDetails.title, fromKey: b.slug),
+            MatchItem(
+              title: b.comicDetails.title,
+              altTitles: splitAltTitles(
+                b.comicDetails.title,
+                b.comicDetails.alternativeTitle,
+              ),
+              fromKey: b.slug,
+            ),
       ],
     );
   }

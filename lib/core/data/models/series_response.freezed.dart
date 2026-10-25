@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SeriesResponse {
 
- String get title; String get slug; String? get cover; String? get format; String? get status; num? get rating; num? get totalChapters;
+ String get title; String get slug; String? get cover; String? get format; String? get status; num? get rating; num? get totalChapters;/// Optional in the contract; only some lists have them.
+ List<String>? get altTitles;
 /// Create a copy of SeriesResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +31,20 @@ $SeriesResponseCopyWith<SeriesResponse> get copyWith => _$SeriesResponseCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as SeriesResponse;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeriesResponse&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.cover, _this.cover) || other.cover == _this.cover)&&(identical(other.format, _this.format) || other.format == _this.format)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.rating, _this.rating) || other.rating == _this.rating)&&(identical(other.totalChapters, _this.totalChapters) || other.totalChapters == _this.totalChapters));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeriesResponse&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.cover, _this.cover) || other.cover == _this.cover)&&(identical(other.format, _this.format) || other.format == _this.format)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.rating, _this.rating) || other.rating == _this.rating)&&(identical(other.totalChapters, _this.totalChapters) || other.totalChapters == _this.totalChapters)&&const DeepCollectionEquality().equals(other.altTitles, _this.altTitles));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SeriesResponse;
-  return Object.hash(runtimeType,_this.title,_this.slug,_this.cover,_this.format,_this.status,_this.rating,_this.totalChapters);
+  return Object.hash(runtimeType,_this.title,_this.slug,_this.cover,_this.format,_this.status,_this.rating,_this.totalChapters,const DeepCollectionEquality().hash(_this.altTitles));
 }
 
 @override
 String toString() {
   final _this = this as SeriesResponse;
-  return 'SeriesResponse(title: ${_this.title}, slug: ${_this.slug}, cover: ${_this.cover}, format: ${_this.format}, status: ${_this.status}, rating: ${_this.rating}, totalChapters: ${_this.totalChapters})';
+  return 'SeriesResponse(title: ${_this.title}, slug: ${_this.slug}, cover: ${_this.cover}, format: ${_this.format}, status: ${_this.status}, rating: ${_this.rating}, totalChapters: ${_this.totalChapters}, altTitles: ${_this.altTitles})';
 }
 
 
@@ -54,7 +55,7 @@ abstract mixin class $SeriesResponseCopyWith<$Res>  {
   factory $SeriesResponseCopyWith(SeriesResponse value, $Res Function(SeriesResponse) _then) = _$SeriesResponseCopyWithImpl;
 @useResult
 $Res call({
- String title, String slug, String? cover, String? format, String? status, num? rating, num? totalChapters
+ String title, String slug, String? cover, String? format, String? status, num? rating, num? totalChapters, List<String>? altTitles
 });
 
 
@@ -71,7 +72,7 @@ class _$SeriesResponseCopyWithImpl<$Res>
 
 /// Create a copy of SeriesResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? slug = null,Object? cover = freezed,Object? format = freezed,Object? status = freezed,Object? rating = freezed,Object? totalChapters = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? slug = null,Object? cover = freezed,Object? format = freezed,Object? status = freezed,Object? rating = freezed,Object? totalChapters = freezed,Object? altTitles = freezed,}) {
   return _then(SeriesResponse(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -80,7 +81,8 @@ as String?,format: freezed == format ? _self.format : format // ignore: cast_nul
 as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String?,rating: freezed == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
 as num?,totalChapters: freezed == totalChapters ? _self.totalChapters : totalChapters // ignore: cast_nullable_to_non_nullable
-as num?,
+as num?,altTitles: freezed == altTitles ? _self.altTitles : altTitles // ignore: cast_nullable_to_non_nullable
+as List<String>?,
   ));
 }
 
@@ -165,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String title,  String slug,  String? cover,  String? format,  String? status,  num? rating,  num? totalChapters)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String title,  String slug,  String? cover,  String? format,  String? status,  num? rating,  num? totalChapters,  List<String>? altTitles)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SeriesResponse() when $default != null:
-return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_that.rating,_that.totalChapters);case _:
+return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_that.rating,_that.totalChapters,_that.altTitles);case _:
   return orElse();
 
 }
@@ -186,10 +188,10 @@ return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String slug,  String? cover,  String? format,  String? status,  num? rating,  num? totalChapters)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String slug,  String? cover,  String? format,  String? status,  num? rating,  num? totalChapters,  List<String>? altTitles)  $default,) {final _that = this;
 switch (_that) {
 case _SeriesResponse():
-return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_that.rating,_that.totalChapters);case _:
+return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_that.rating,_that.totalChapters,_that.altTitles);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +208,10 @@ return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String title,  String slug,  String? cover,  String? format,  String? status,  num? rating,  num? totalChapters)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String title,  String slug,  String? cover,  String? format,  String? status,  num? rating,  num? totalChapters,  List<String>? altTitles)?  $default,) {final _that = this;
 switch (_that) {
 case _SeriesResponse() when $default != null:
-return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_that.rating,_that.totalChapters);case _:
+return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_that.rating,_that.totalChapters,_that.altTitles);case _:
   return null;
 
 }
@@ -221,7 +223,7 @@ return $default(_that.title,_that.slug,_that.cover,_that.format,_that.status,_th
 @JsonSerializable()
 
 class _SeriesResponse extends SeriesResponse {
-  const _SeriesResponse({required this.title, required this.slug, this.cover, this.format, this.status, this.rating, this.totalChapters}): super._();
+  const _SeriesResponse({required this.title, required this.slug, this.cover, this.format, this.status, this.rating, this.totalChapters,  List<String>? altTitles}): _altTitles = altTitles,super._();
   factory _SeriesResponse.fromJson(Map<String, dynamic> json) => _$SeriesResponseFromJson(json);
 
 @override final  String title;
@@ -231,6 +233,17 @@ class _SeriesResponse extends SeriesResponse {
 @override final  String? status;
 @override final  num? rating;
 @override final  num? totalChapters;
+/// Optional in the contract; only some lists have them.
+ final  List<String>? _altTitles;
+/// Optional in the contract; only some lists have them.
+@override List<String>? get altTitles {
+  final value = _altTitles;
+  if (value == null) return null;
+  if (_altTitles is EqualUnmodifiableListView) return _altTitles;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
 
 /// Create a copy of SeriesResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -245,18 +258,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SeriesResponse&&(identical(other.title, title) || other.title == title)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.cover, cover) || other.cover == cover)&&(identical(other.format, format) || other.format == format)&&(identical(other.status, status) || other.status == status)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.totalChapters, totalChapters) || other.totalChapters == totalChapters));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SeriesResponse&&(identical(other.title, title) || other.title == title)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.cover, cover) || other.cover == cover)&&(identical(other.format, format) || other.format == format)&&(identical(other.status, status) || other.status == status)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.totalChapters, totalChapters) || other.totalChapters == totalChapters)&&const DeepCollectionEquality().equals(other.altTitles, _altTitles));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,title,slug,cover,format,status,rating,totalChapters);
+    return Object.hash(runtimeType,title,slug,cover,format,status,rating,totalChapters,const DeepCollectionEquality().hash(_altTitles));
 }
 
 @override
 String toString() {
-    return 'SeriesResponse(title: $title, slug: $slug, cover: $cover, format: $format, status: $status, rating: $rating, totalChapters: $totalChapters)';
+    return 'SeriesResponse(title: $title, slug: $slug, cover: $cover, format: $format, status: $status, rating: $rating, totalChapters: $totalChapters, altTitles: $altTitles)';
 }
 
 
@@ -267,7 +280,7 @@ abstract mixin class _$SeriesResponseCopyWith<$Res> implements $SeriesResponseCo
   factory _$SeriesResponseCopyWith(_SeriesResponse value, $Res Function(_SeriesResponse) _then) = __$SeriesResponseCopyWithImpl;
 @override @useResult
 $Res call({
- String title, String slug, String? cover, String? format, String? status, num? rating, num? totalChapters
+ String title, String slug, String? cover, String? format, String? status, num? rating, num? totalChapters, List<String>? altTitles
 });
 
 
@@ -284,7 +297,7 @@ class __$SeriesResponseCopyWithImpl<$Res>
 
 /// Create a copy of SeriesResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? slug = null,Object? cover = freezed,Object? format = freezed,Object? status = freezed,Object? rating = freezed,Object? totalChapters = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? slug = null,Object? cover = freezed,Object? format = freezed,Object? status = freezed,Object? rating = freezed,Object? totalChapters = freezed,Object? altTitles = freezed,}) {
   return _then(_SeriesResponse(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -293,7 +306,8 @@ as String?,format: freezed == format ? _self.format : format // ignore: cast_nul
 as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String?,rating: freezed == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
 as num?,totalChapters: freezed == totalChapters ? _self.totalChapters : totalChapters // ignore: cast_nullable_to_non_nullable
-as num?,
+as num?,altTitles: freezed == altTitles ? _self._altTitles : altTitles // ignore: cast_nullable_to_non_nullable
+as List<String>?,
   ));
 }
 
@@ -304,7 +318,9 @@ as num?,
 /// @nodoc
 mixin _$SeriesDetailResponse {
 
- String get title; String get slug; String? get cover; String? get nativeTitle; String? get releaseDate; String? get status; String? get author; String? get format; num? get rating; String? get synopsis; List<GenreResponse> get genres;
+ String get title; String get slug; String? get cover; String? get nativeTitle;/// Every alternative title, already split. Optional in the contract; older
+/// extensions send only [nativeTitle].
+ List<String>? get altTitles; String? get releaseDate; String? get status; String? get author; String? get format; num? get rating; String? get synopsis; List<GenreResponse> get genres;
 /// Create a copy of SeriesDetailResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -318,20 +334,20 @@ $SeriesDetailResponseCopyWith<SeriesDetailResponse> get copyWith => _$SeriesDeta
 @override
 bool operator ==(Object other) {
   final _this = this as SeriesDetailResponse;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeriesDetailResponse&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.cover, _this.cover) || other.cover == _this.cover)&&(identical(other.nativeTitle, _this.nativeTitle) || other.nativeTitle == _this.nativeTitle)&&(identical(other.releaseDate, _this.releaseDate) || other.releaseDate == _this.releaseDate)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.author, _this.author) || other.author == _this.author)&&(identical(other.format, _this.format) || other.format == _this.format)&&(identical(other.rating, _this.rating) || other.rating == _this.rating)&&(identical(other.synopsis, _this.synopsis) || other.synopsis == _this.synopsis)&&const DeepCollectionEquality().equals(other.genres, _this.genres));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeriesDetailResponse&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.cover, _this.cover) || other.cover == _this.cover)&&(identical(other.nativeTitle, _this.nativeTitle) || other.nativeTitle == _this.nativeTitle)&&const DeepCollectionEquality().equals(other.altTitles, _this.altTitles)&&(identical(other.releaseDate, _this.releaseDate) || other.releaseDate == _this.releaseDate)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.author, _this.author) || other.author == _this.author)&&(identical(other.format, _this.format) || other.format == _this.format)&&(identical(other.rating, _this.rating) || other.rating == _this.rating)&&(identical(other.synopsis, _this.synopsis) || other.synopsis == _this.synopsis)&&const DeepCollectionEquality().equals(other.genres, _this.genres));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SeriesDetailResponse;
-  return Object.hash(runtimeType,_this.title,_this.slug,_this.cover,_this.nativeTitle,_this.releaseDate,_this.status,_this.author,_this.format,_this.rating,_this.synopsis,const DeepCollectionEquality().hash(_this.genres));
+  return Object.hash(runtimeType,_this.title,_this.slug,_this.cover,_this.nativeTitle,const DeepCollectionEquality().hash(_this.altTitles),_this.releaseDate,_this.status,_this.author,_this.format,_this.rating,_this.synopsis,const DeepCollectionEquality().hash(_this.genres));
 }
 
 @override
 String toString() {
   final _this = this as SeriesDetailResponse;
-  return 'SeriesDetailResponse(title: ${_this.title}, slug: ${_this.slug}, cover: ${_this.cover}, nativeTitle: ${_this.nativeTitle}, releaseDate: ${_this.releaseDate}, status: ${_this.status}, author: ${_this.author}, format: ${_this.format}, rating: ${_this.rating}, synopsis: ${_this.synopsis}, genres: ${_this.genres})';
+  return 'SeriesDetailResponse(title: ${_this.title}, slug: ${_this.slug}, cover: ${_this.cover}, nativeTitle: ${_this.nativeTitle}, altTitles: ${_this.altTitles}, releaseDate: ${_this.releaseDate}, status: ${_this.status}, author: ${_this.author}, format: ${_this.format}, rating: ${_this.rating}, synopsis: ${_this.synopsis}, genres: ${_this.genres})';
 }
 
 
@@ -342,7 +358,7 @@ abstract mixin class $SeriesDetailResponseCopyWith<$Res>  {
   factory $SeriesDetailResponseCopyWith(SeriesDetailResponse value, $Res Function(SeriesDetailResponse) _then) = _$SeriesDetailResponseCopyWithImpl;
 @useResult
 $Res call({
- String title, String slug, String? cover, String? nativeTitle, String? releaseDate, String? status, String? author, String? format, num? rating, String? synopsis, List<GenreResponse> genres
+ String title, String slug, String? cover, String? nativeTitle, List<String>? altTitles, String? releaseDate, String? status, String? author, String? format, num? rating, String? synopsis, List<GenreResponse> genres
 });
 
 
@@ -359,13 +375,14 @@ class _$SeriesDetailResponseCopyWithImpl<$Res>
 
 /// Create a copy of SeriesDetailResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? slug = null,Object? cover = freezed,Object? nativeTitle = freezed,Object? releaseDate = freezed,Object? status = freezed,Object? author = freezed,Object? format = freezed,Object? rating = freezed,Object? synopsis = freezed,Object? genres = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? slug = null,Object? cover = freezed,Object? nativeTitle = freezed,Object? altTitles = freezed,Object? releaseDate = freezed,Object? status = freezed,Object? author = freezed,Object? format = freezed,Object? rating = freezed,Object? synopsis = freezed,Object? genres = null,}) {
   return _then(SeriesDetailResponse(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,cover: freezed == cover ? _self.cover : cover // ignore: cast_nullable_to_non_nullable
 as String?,nativeTitle: freezed == nativeTitle ? _self.nativeTitle : nativeTitle // ignore: cast_nullable_to_non_nullable
-as String?,releaseDate: freezed == releaseDate ? _self.releaseDate : releaseDate // ignore: cast_nullable_to_non_nullable
+as String?,altTitles: freezed == altTitles ? _self.altTitles : altTitles // ignore: cast_nullable_to_non_nullable
+as List<String>?,releaseDate: freezed == releaseDate ? _self.releaseDate : releaseDate // ignore: cast_nullable_to_non_nullable
 as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String?,author: freezed == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
 as String?,format: freezed == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
@@ -457,10 +474,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String title,  String slug,  String? cover,  String? nativeTitle,  String? releaseDate,  String? status,  String? author,  String? format,  num? rating,  String? synopsis,  List<GenreResponse> genres)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String title,  String slug,  String? cover,  String? nativeTitle,  List<String>? altTitles,  String? releaseDate,  String? status,  String? author,  String? format,  num? rating,  String? synopsis,  List<GenreResponse> genres)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SeriesDetailResponse() when $default != null:
-return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.releaseDate,_that.status,_that.author,_that.format,_that.rating,_that.synopsis,_that.genres);case _:
+return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.altTitles,_that.releaseDate,_that.status,_that.author,_that.format,_that.rating,_that.synopsis,_that.genres);case _:
   return orElse();
 
 }
@@ -478,10 +495,10 @@ return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.relea
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String slug,  String? cover,  String? nativeTitle,  String? releaseDate,  String? status,  String? author,  String? format,  num? rating,  String? synopsis,  List<GenreResponse> genres)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String slug,  String? cover,  String? nativeTitle,  List<String>? altTitles,  String? releaseDate,  String? status,  String? author,  String? format,  num? rating,  String? synopsis,  List<GenreResponse> genres)  $default,) {final _that = this;
 switch (_that) {
 case _SeriesDetailResponse():
-return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.releaseDate,_that.status,_that.author,_that.format,_that.rating,_that.synopsis,_that.genres);case _:
+return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.altTitles,_that.releaseDate,_that.status,_that.author,_that.format,_that.rating,_that.synopsis,_that.genres);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -498,10 +515,10 @@ return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.relea
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String title,  String slug,  String? cover,  String? nativeTitle,  String? releaseDate,  String? status,  String? author,  String? format,  num? rating,  String? synopsis,  List<GenreResponse> genres)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String title,  String slug,  String? cover,  String? nativeTitle,  List<String>? altTitles,  String? releaseDate,  String? status,  String? author,  String? format,  num? rating,  String? synopsis,  List<GenreResponse> genres)?  $default,) {final _that = this;
 switch (_that) {
 case _SeriesDetailResponse() when $default != null:
-return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.releaseDate,_that.status,_that.author,_that.format,_that.rating,_that.synopsis,_that.genres);case _:
+return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.altTitles,_that.releaseDate,_that.status,_that.author,_that.format,_that.rating,_that.synopsis,_that.genres);case _:
   return null;
 
 }
@@ -513,13 +530,26 @@ return $default(_that.title,_that.slug,_that.cover,_that.nativeTitle,_that.relea
 @JsonSerializable()
 
 class _SeriesDetailResponse extends SeriesDetailResponse {
-  const _SeriesDetailResponse({required this.title, required this.slug, this.cover, this.nativeTitle, this.releaseDate, this.status, this.author, this.format, this.rating, this.synopsis,  List<GenreResponse> genres = const []}): _genres = genres,super._();
+  const _SeriesDetailResponse({required this.title, required this.slug, this.cover, this.nativeTitle,  List<String>? altTitles, this.releaseDate, this.status, this.author, this.format, this.rating, this.synopsis,  List<GenreResponse> genres = const []}): _altTitles = altTitles,_genres = genres,super._();
   factory _SeriesDetailResponse.fromJson(Map<String, dynamic> json) => _$SeriesDetailResponseFromJson(json);
 
 @override final  String title;
 @override final  String slug;
 @override final  String? cover;
 @override final  String? nativeTitle;
+/// Every alternative title, already split. Optional in the contract; older
+/// extensions send only [nativeTitle].
+ final  List<String>? _altTitles;
+/// Every alternative title, already split. Optional in the contract; older
+/// extensions send only [nativeTitle].
+@override List<String>? get altTitles {
+  final value = _altTitles;
+  if (value == null) return null;
+  if (_altTitles is EqualUnmodifiableListView) return _altTitles;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
 @override final  String? releaseDate;
 @override final  String? status;
 @override final  String? author;
@@ -547,18 +577,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SeriesDetailResponse&&(identical(other.title, title) || other.title == title)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.cover, cover) || other.cover == cover)&&(identical(other.nativeTitle, nativeTitle) || other.nativeTitle == nativeTitle)&&(identical(other.releaseDate, releaseDate) || other.releaseDate == releaseDate)&&(identical(other.status, status) || other.status == status)&&(identical(other.author, author) || other.author == author)&&(identical(other.format, format) || other.format == format)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.synopsis, synopsis) || other.synopsis == synopsis)&&const DeepCollectionEquality().equals(other.genres, _genres));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SeriesDetailResponse&&(identical(other.title, title) || other.title == title)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.cover, cover) || other.cover == cover)&&(identical(other.nativeTitle, nativeTitle) || other.nativeTitle == nativeTitle)&&const DeepCollectionEquality().equals(other.altTitles, _altTitles)&&(identical(other.releaseDate, releaseDate) || other.releaseDate == releaseDate)&&(identical(other.status, status) || other.status == status)&&(identical(other.author, author) || other.author == author)&&(identical(other.format, format) || other.format == format)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.synopsis, synopsis) || other.synopsis == synopsis)&&const DeepCollectionEquality().equals(other.genres, _genres));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,title,slug,cover,nativeTitle,releaseDate,status,author,format,rating,synopsis,const DeepCollectionEquality().hash(_genres));
+    return Object.hash(runtimeType,title,slug,cover,nativeTitle,const DeepCollectionEquality().hash(_altTitles),releaseDate,status,author,format,rating,synopsis,const DeepCollectionEquality().hash(_genres));
 }
 
 @override
 String toString() {
-    return 'SeriesDetailResponse(title: $title, slug: $slug, cover: $cover, nativeTitle: $nativeTitle, releaseDate: $releaseDate, status: $status, author: $author, format: $format, rating: $rating, synopsis: $synopsis, genres: $genres)';
+    return 'SeriesDetailResponse(title: $title, slug: $slug, cover: $cover, nativeTitle: $nativeTitle, altTitles: $altTitles, releaseDate: $releaseDate, status: $status, author: $author, format: $format, rating: $rating, synopsis: $synopsis, genres: $genres)';
 }
 
 
@@ -569,7 +599,7 @@ abstract mixin class _$SeriesDetailResponseCopyWith<$Res> implements $SeriesDeta
   factory _$SeriesDetailResponseCopyWith(_SeriesDetailResponse value, $Res Function(_SeriesDetailResponse) _then) = __$SeriesDetailResponseCopyWithImpl;
 @override @useResult
 $Res call({
- String title, String slug, String? cover, String? nativeTitle, String? releaseDate, String? status, String? author, String? format, num? rating, String? synopsis, List<GenreResponse> genres
+ String title, String slug, String? cover, String? nativeTitle, List<String>? altTitles, String? releaseDate, String? status, String? author, String? format, num? rating, String? synopsis, List<GenreResponse> genres
 });
 
 
@@ -586,13 +616,14 @@ class __$SeriesDetailResponseCopyWithImpl<$Res>
 
 /// Create a copy of SeriesDetailResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? slug = null,Object? cover = freezed,Object? nativeTitle = freezed,Object? releaseDate = freezed,Object? status = freezed,Object? author = freezed,Object? format = freezed,Object? rating = freezed,Object? synopsis = freezed,Object? genres = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? slug = null,Object? cover = freezed,Object? nativeTitle = freezed,Object? altTitles = freezed,Object? releaseDate = freezed,Object? status = freezed,Object? author = freezed,Object? format = freezed,Object? rating = freezed,Object? synopsis = freezed,Object? genres = null,}) {
   return _then(_SeriesDetailResponse(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,cover: freezed == cover ? _self.cover : cover // ignore: cast_nullable_to_non_nullable
 as String?,nativeTitle: freezed == nativeTitle ? _self.nativeTitle : nativeTitle // ignore: cast_nullable_to_non_nullable
-as String?,releaseDate: freezed == releaseDate ? _self.releaseDate : releaseDate // ignore: cast_nullable_to_non_nullable
+as String?,altTitles: freezed == altTitles ? _self._altTitles : altTitles // ignore: cast_nullable_to_non_nullable
+as List<String>?,releaseDate: freezed == releaseDate ? _self.releaseDate : releaseDate // ignore: cast_nullable_to_non_nullable
 as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String?,author: freezed == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
 as String?,format: freezed == format ? _self.format : format // ignore: cast_nullable_to_non_nullable

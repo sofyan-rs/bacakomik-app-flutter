@@ -46,6 +46,28 @@
   }
 
   const str = (v) => (v == null || String(v).trim() === '' ? null : String(v).trim())
+  // Alternative titles: trimmed, without placeholders, the main title or repeats.
+  // Sites separate them with `•`, `|`, `;`, ` / ` (not `1/2`) or line breaks, else
+  // with `, `. Titles have commas too, so commas split only when nothing else does.
+  const STRONG_SEP = /\s*[•|;\n]\s*|\s+\/\s+/
+  const splitAlts = (v) => {
+    const s = v == null ? '' : String(v)
+    return s.split(STRONG_SEP.test(s) ? STRONG_SEP : /\s*,\s+/)
+  }
+  const NONE = /^(-|\?|n\/a|none|unknown|updating|tba|tbd|field kosong)$/i
+  function altTitles(title, list) {
+    const key = (t) => t.toLowerCase().replace(/[‘’`]/g, "'")
+    const seen = new Set([key(String(title || '').replace(/\s+/g, ' ').trim())])
+    const out = []
+    for (const v of list || []) {
+      // Also drops separators left at the ends (`Title ,`).
+      const t = v == null ? '' : String(v).replace(/\s+/g, ' ').replace(/^[\s,;•|]+|[\s,;•|]+$/g, '')
+      if (!t || NONE.test(t) || seen.has(key(t))) continue
+      seen.add(key(t))
+      out.push(t)
+    }
+    return out
+  }
   const num = (v) => (v == null || v === '' || !isFinite(Number(v)) ? null : Number(v))
   const lower = (v) => (v ? String(v).trim().toLowerCase() : null)
   const enc = encodeURIComponent
@@ -56,6 +78,7 @@
     return {
       slug: String(d.slug),
       title: String(d.title),
+      altTitles: altTitles(d.title, splitAlts(d.nativeTitle)),
       cover: str(d.coverImage),
       format: lower(d.format),
       status: lower(d.status),
@@ -176,7 +199,8 @@
       const d = item.data || {}
       return {
         ...toSeries(item),
-        nativeTitle: str(d.nativeTitle),
+        nativeTitle: altTitles(d.title, splitAlts(d.nativeTitle))[0] || null,
+        altTitles: altTitles(d.title, splitAlts(d.nativeTitle)),
         releaseDate: str(d.releaseDate),
         author: str(d.author),
         synopsis: str(d.synopsis),
