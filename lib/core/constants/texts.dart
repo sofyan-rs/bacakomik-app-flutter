@@ -18,7 +18,7 @@ class AppText {
 
   // Home Screen Text
   static const String newSeries = 'New series';
-  static const String latest = 'Latest chapters';
+  static const String latest = 'Latest updates';
   static const String seeAll = 'See all';
   static const String continueReading = 'Continue reading';
   static const String retry = 'Try again';
