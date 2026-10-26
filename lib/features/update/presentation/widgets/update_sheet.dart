@@ -5,6 +5,7 @@ import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
 import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
+import 'package:bacakomik_app/features/update/presentation/widgets/release_notes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -33,14 +34,7 @@ class UpdateSheet extends StatelessWidget {
         ),
         if (changes.isNotEmpty) ...[
           const SizedBox(height: DotSpace.s4),
-          Flexible(
-            child: SingleChildScrollView(
-              child: Text(
-                changes,
-                style: DotlineText.body.copyWith(color: c.inkMuted),
-              ),
-            ),
-          ),
+          Flexible(child: SingleChildScrollView(child: ReleaseNotes(changes))),
         ],
         const SizedBox(height: DotSpace.s5),
         ...switch (state) {
