@@ -26,6 +26,7 @@ import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/missing_source.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
+import 'package:bacakomik_app/core/source/extension_meta.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 
 class ComicDetailsScreen extends StatelessWidget {
@@ -88,10 +89,25 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   /// instead of loading.
   var _sourceMissing = false;
 
+  /// The source's filters, to open Explore on a genre; null until loaded
+  /// or when they don't load (genres are then plain labels).
+  SourceFeatures? _features;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _loadFeatures();
+  }
+
+  Future<void> _loadFeatures() async {
+    try {
+      final backend = await getIt<ExtensionManager>().backend(_sourceId);
+      final features = await backend.features();
+      if (mounted) setState(() => _features = features);
+    } catch (_) {
+      // Offline or missing source: genres stay plain.
+    }
   }
 
   Future<void> _load() async {
@@ -132,8 +148,10 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   /// Explore filtered by [genre] alone, in this comic's source, on top of
   /// the tabs.
   void _exploreGenre(Genre genre) {
+    final filter = _features?.genreFilter(genre.slug, genre.name);
+    if (filter == null) return;
     final source = ComicKey.sourceOf(widget.slug);
-    context.read<FilterCubit>().showGenre(source, genre.slug);
+    context.read<FilterCubit>().showGenre(source, filter.key, filter.value);
     context.read<SourcesCubit>().select(source);
     RootTabsScope.read(context).openExploreFiltered();
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -271,6 +289,8 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                   details: comicDetails,
                   source: context.sourceLabelOf(widget.slug),
                   onGenreTap: _exploreGenre,
+                  canTapGenre: (genre) =>
+                      _features?.genreFilter(genre.slug, genre.name) != null,
                 ),
               ),
             ),

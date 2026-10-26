@@ -127,7 +127,7 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
     await start();
     final root = await _files.root;
     for (final job in jobs) {
-      if (_blockingHosts.contains(Uri.parse(job.url).host)) {
+      if (_inAppOnly(job.url)) {
         unawaited(
           _downloadInApp(
             job.chapterSlug,
@@ -141,7 +141,7 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
     }
     final native = [
       for (final job in jobs)
-        if (!_blockingHosts.contains(Uri.parse(job.url).host)) job,
+        if (!_inAppOnly(job.url)) job,
     ];
     final now = DateTime.now();
     await _downloader.enqueueAll([
@@ -208,6 +208,11 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
   /// are saved through the app's image cache, which fetches from inside the
   /// site when it has to. That runs only while the app does.
   final _blockingHosts = <String>{};
+
+  /// Pages the native downloader can't fetch: blocking hosts, and Mihon
+  /// sources' pages, which only their extension in the app can get.
+  bool _inAppOnly(String url) =>
+      isMihonImage(url) || _blockingHosts.contains(Uri.parse(url).host);
 
   /// Hosts being checked, so each is checked once at a time.
   final _checking = <String, Future<bool>>{};

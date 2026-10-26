@@ -1,5 +1,10 @@
 class AppText {
   /// `1 comic`, `3 comics`.
+  /// "Chapter 12", or the chapter's own [title] when its number was made
+  /// up (see `Chapter.title`).
+  static String chapterName(String number, [String? title]) =>
+      title ?? '$chapter $number';
+
   static String count(int n, String one, String many) =>
       '$n ${n == 1 ? one : many}';
 
@@ -97,6 +102,8 @@ class AppText {
   static const String sortShort = 'Sort';
   static const String sortShortLong = 'Sort by';
   static const String showResults = 'Show results';
+  static const String showAll = 'Show all';
+  static const String showLess = 'Show less';
   static const String close = 'Close';
   static const String exploreSearchHint = 'Search comic titles';
 
@@ -296,6 +303,18 @@ class AppText {
   static const String languagesHint =
       'Bookmarks and history are kept per language. Turning one off keeps '
       'them; its comics still open.';
+  static const String searchExtensions = 'Search extensions';
+  static const String allLanguages = 'All languages';
+  static const String hideNsfw = 'Hide 18+';
+  static const String languageFilterHint =
+      'Extensions with several languages show under each of them.';
+  static const String noMatchingExtensions = 'No extensions match';
+  static const String noMatchingExtensionsHint =
+      'Try another name or language.';
+  static const String sourceSettings = 'Settings';
+  static const String sourceSettingsHint =
+      "The extension's own settings. Changes apply to its next request.";
+  static const String noSourceSettings = 'This source has no settings.';
   static const String openWebView = 'Open in WebView';
   static const String refresh = 'Refresh';
   static const String openInBrowser = 'Open in browser';

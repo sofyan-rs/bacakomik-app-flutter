@@ -76,7 +76,12 @@ class SourcesCubit extends Cubit<SourcesState> {
 
   Future<void> select(String sourceId) => _manager.setActiveSource(sourceId);
 
+  /// Bumped per [_sync]; a slower earlier one (a Mihon source loading its
+  /// filters) must not emit over a newer pick.
+  var _syncs = 0;
+
   Future<void> _sync() async {
+    final sync = ++_syncs;
     final activeId = _manager.activeSource;
     var features = const SourceFeatures();
     String? error;
@@ -88,7 +93,7 @@ class SourcesCubit extends Cubit<SourcesState> {
         error = '$e';
       }
     }
-    if (isClosed) return;
+    if (isClosed || sync != _syncs) return;
     emit(
       SourcesState(
         installed: _manager.installed,

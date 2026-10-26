@@ -277,7 +277,7 @@ void main() {
         },
         query: 'solo',
       ),
-      act: (cubit) => cubit.showGenre('voratoon', '7'),
+      act: (cubit) => cubit.showGenre('voratoon', 'genre', '7'),
       expect: () => [
         const ExploreFilter(
           source: 'voratoon',

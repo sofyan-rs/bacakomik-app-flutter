@@ -72,21 +72,28 @@ class _ReposSheetState extends State<ReposSheet> {
           child: ListView(
             shrinkWrap: true,
             children: [
-              for (final repo in repos)
-                ListRow(
-                  title: repo.name ?? Uri.tryParse(repo.url)?.host ?? repo.url,
-                  subtitle: repo.error == null
-                      ? repo.url
-                      : '${AppText.repoFailed} · ${repo.url}',
-                  trailing: RoundIconButton(
-                    icon: LucideIcons300.trash2,
-                    semanticLabel: AppText.delete,
-                    iconSize: DotSize.iconSmall,
-                    background: Colors.transparent,
-                    onTap: () =>
-                        context.read<ExtensionsCubit>().removeRepo(repo.url),
-                  ),
-                ),
+              ListGroup(
+                background: c.bg,
+                children: [
+                  for (final repo in repos)
+                    ListRow(
+                      title:
+                          repo.name ?? Uri.tryParse(repo.url)?.host ?? repo.url,
+                      subtitle: repo.error == null
+                          ? repo.url
+                          : '${AppText.repoFailed} · ${repo.url}',
+                      trailing: RoundIconButton(
+                        icon: LucideIcons300.trash2,
+                        semanticLabel: AppText.delete,
+                        iconSize: DotSize.iconSmall,
+                        background: Colors.transparent,
+                        onTap: () => context.read<ExtensionsCubit>().removeRepo(
+                          repo.url,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -97,7 +104,7 @@ class _ReposSheetState extends State<ReposSheet> {
           autocorrect: false,
           style: DotlineText.body.copyWith(color: c.ink),
           decoration: InputDecoration(
-            hintText: 'https://…/index.json',
+            hintText: 'https://…/index.json · index.min.json',
             errorText: _error,
           ),
           onSubmitted: (_) => _add(),

@@ -166,7 +166,9 @@ class _FilterComicState extends State<FilterComic> {
   }
 }
 
-class _Section extends StatelessWidget {
+/// One filter group. A long one (Mihon sources list 50+ genres) shows its
+/// first [_folded] options, plus any picked further down, until expanded.
+class _Section extends StatefulWidget {
   const _Section({
     required this.group,
     required this.selected,
@@ -178,11 +180,29 @@ class _Section extends StatelessWidget {
   final void Function(String value) onTap;
 
   @override
+  State<_Section> createState() => _SectionState();
+}
+
+class _SectionState extends State<_Section> {
+  static const _folded = 12;
+
+  var _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
+    final group = widget.group;
+    final selected = widget.selected;
     final label = group.multi && selected.isNotEmpty
         ? '${group.label} · ${selected.length} ${AppText.selected}'
         : group.label;
+    final foldable = group.options.length > _folded + 2;
+    final options = !foldable || _expanded
+        ? group.options
+        : [
+            for (final (i, o) in group.options.indexed)
+              if (i < _folded || selected.contains(o.value)) o,
+          ];
     return Padding(
       padding: const EdgeInsets.only(top: DotSpace.s5),
       child: Column(
@@ -193,20 +213,107 @@ class _Section extends StatelessWidget {
             style: DotlineText.label.copyWith(color: c.inkFaint),
           ),
           const SizedBox(height: DotSpace.s3),
-          Wrap(
-            spacing: DotSpace.s2,
-            runSpacing: DotSpace.s2,
-            children: [
-              for (final option in group.options)
-                DotChip(
-                  label: option.label,
-                  selected: selected.contains(option.value),
-                  onTap: () => onTap(option.value),
+          if (group.sort)
+            _SortChips(
+              group: group,
+              selected: selected.firstOrNull ?? '',
+              onTap: widget.onTap,
+            )
+          else
+            Wrap(
+              spacing: DotSpace.s2,
+              runSpacing: DotSpace.s2,
+              children: [
+                for (final option in options)
+                  DotChip(
+                    label: option.label,
+                    selected: selected.contains(option.value),
+                    onTap: () => widget.onTap(option.value),
+                  ),
+              ],
+            ),
+          if (foldable && !group.sort)
+            Pressable(
+              semanticLabel: _expanded ? AppText.showLess : AppText.showAll,
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.only(top: DotSpace.s3),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      (_expanded
+                              ? AppText.showLess
+                              : '${AppText.showAll} · ${group.options.length}')
+                          .toUpperCase(),
+                      style: DotlineText.label.copyWith(color: c.inkMuted),
+                    ),
+                    const SizedBox(width: DotSpace.s1),
+                    Icon(
+                      _expanded
+                          ? LucideIcons300.chevronUp
+                          : LucideIcons300.chevronDown,
+                      size: DotSize.iconSmall,
+                      color: c.inkMuted,
+                    ),
+                  ],
                 ),
-            ],
-          ),
+              ),
+            ),
         ],
       ),
+    );
+  }
+}
+
+/// A sort group ([FilterGroup.sort]) as one chip per field: the picked one
+/// shows its direction, and tapping it again turns the direction around.
+/// Another field starts descending (newest, most popular first).
+class _SortChips extends StatelessWidget {
+  const _SortChips({
+    required this.group,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final FilterGroup group;
+
+  /// `<field>:a`, `<field>:d`, or `''` for the source's own order.
+  final String selected;
+  final void Function(String value) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final fields = <String, String>{};
+    for (final o in group.options) {
+      final i = o.value.indexOf(':');
+      if (i > 0) fields.putIfAbsent(o.value.substring(0, i), () => o.label);
+    }
+    final hasDefault = group.options.any((o) => o.value.isEmpty);
+    return Wrap(
+      spacing: DotSpace.s2,
+      runSpacing: DotSpace.s2,
+      children: [
+        if (hasDefault)
+          DotChip(
+            label: group.labelOf(''),
+            selected: selected.isEmpty,
+            onTap: () => onTap(''),
+          ),
+        for (final MapEntry(key: field, value: label) in fields.entries)
+          if (selected.startsWith('$field:'))
+            DotChip(
+              label: label,
+              selected: true,
+              trailing: selected.endsWith(':a')
+                  ? LucideIcons300.arrowUp
+                  : LucideIcons300.arrowDown,
+              onTap: () =>
+                  onTap('$field:${selected.endsWith(':a') ? 'd' : 'a'}'),
+            )
+          else
+            DotChip(label: label, onTap: () => onTap('$field:d')),
+      ],
     );
   }
 }

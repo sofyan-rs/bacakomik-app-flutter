@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/data/datasources/series_remote_data_source.dart';
+import 'package:bacakomik_app/core/data/models/series_response.dart';
 import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/network/network_info.dart';
@@ -23,7 +24,10 @@ class HomeRepositoryImpl implements HomeRepository {
     if (source == null) throw const ServerException(noSourceMessage);
     final features = await (await _sources.backend(source)).features();
     final [newSeries, latest] = await Future.wait([
-      _remote.getSeriesList(source, filters: features.featured, limit: 10),
+      if (features.showFeatured)
+        _remote.getSeriesList(source, filters: features.featured, limit: 10)
+      else
+        Future.value(const <SeriesResponse>[]),
       _remote.getSeriesList(source, filters: features.latest, limit: 20),
     ]);
     return Home(

@@ -14,11 +14,11 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 └──────────────────┘           │ screens ─► blocs ─► use cases ─► repos     │        └──────────────┘
                                │                                  │         │
   comic sites  ◄── http.fetch / hidden WebView ──────────────────┘         │
-  (mangafire.to, comix.to…)    │                  Hive boxes (library) ◄────│
+                               │                  Hive boxes (library) ◄────│
                                └───────────────────────────────────────────┘
 ```
 
-- The app has **no content of its own**. Each site is a **source**, backed by a small JavaScript **extension** downloaded from a repo (§8.2) and run in an embedded JS engine on the phone (§8.3).
+- The app has **no content of its own**. Each site is a **source**, backed by a small JavaScript **extension** downloaded from a repo (§8.2) and run in an embedded JS engine on the phone (§8.3), or, on Android 9+, by a **Mihon extension** APK run in Kotlin ([MIHON_EXTENSIONS.md](MIHON_EXTENSIONS.md)).
 - Screens talk to blocs, blocs call use cases, use cases call repositories. Only repositories know about sources, HTTP and storage (§3).
 - The library (bookmarks, categories, history, downloads, settings) lives **on the phone** in Hive (§7). It can be exported to a backup file (§7.4) or synced through one private file in the user's own Google Drive (§7.6). There is no BacaKomik account or server.
 
@@ -48,6 +48,7 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 | State / DI / errors | `flutter_bloc`, `get_it` + `injectable`, `fpdart` | `Either<Failure, T>` from repositories (§9) |
 | Models | `freezed`, `json_serializable` | Stored models use `@JsonSerializable` (§7.2) |
 | Sources | `flutter_js` | One QuickJS engine per source (§8.3); `crypto` checks script `sha256` |
+| Mihon sources | `android/mihon` module (Kotlin) | Mihon's source API and SCANCORE's host, vendored; OkHttp 5, Jsoup, RxJava, Injekt, QuickJS ([MIHON_EXTENSIONS.md](MIHON_EXTENSIONS.md)) |
 | Source HTTP | `dio` + `native_dio_adapter` (Cronet), `cookie_jar`, `html` | One cookie jar per source (§8.4) |
 | WebViews | `flutter_inappwebview` | Hidden pages and the visible WebView screen (§8.5) |
 | Images | `cached_network_image`, `flutter_cache_manager`, `cronet_http` | `coverImageCache` + `comicImageCache` (§8.6) |
@@ -73,7 +74,8 @@ Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the gen
 | `lib/features/<name>/` | One folder per feature (table below) | Yes, most work |
 | `*.freezed.dart`, `*.g.dart`, `injection.config.dart`, `core/assets/*.gen.dart` | Generated (§10) | No |
 | `assets/extensions/` | Bundled extensions (§8.2) | Only via `bundle.ts` (CONTRIBUTION §2) |
-| `android/…/MainActivity.kt` | `bacakomik/hidden_webviews` channel (§8.5) | Rarely |
+| `android/…/MainActivity.kt` | `bacakomik/hidden_webviews` channel (§8.5); registers `MihonChannel` (`bacakomik/mihon`) | Rarely |
+| `android/mihon/` | Runs Mihon extension APKs ([MIHON_EXTENSIONS.md](MIHON_EXTENSIONS.md)) | When Mihon's API or a host call changes |
 | `android/app/src/main/AndroidManifest.xml` | Permissions, deep links, notification action receiver | Rarely |
 | `hosting/` | Cloudflare Worker for `bacakomik.kurodev.org` | Rarely |
 | `test/` | Mirrors `lib/` | Yes |
@@ -209,7 +211,7 @@ Imported reading progress written during a refresh (§6.4) reloads the history a
 User-made `LibraryCategory` (id, name, order, `updatedDate`), managed in More → Categories. A comic can be in many (`ComicCategories`: key → ids). Bookmarking opens `SetCategoriesSheet` (skippable; with several comics, partly-applied categories start half-checked and stay unless tapped). Bookmarks group by status (All / Updated / Completed), source, or category (+ Uncategorized).
 
 ### 6.3 One series in two sources
-Keys include the source (§8.1), so `westmanga:oreaku` and `voratoon:oreaku` would be two bookmarks. Bookmarking a title that matches one from another source (case, spacing, punctuation ignored) opens `DuplicateSheet`: move or keep both. Moving runs `MigrateComic`: replaces the bookmark, moves each read chapter to the same number in the new source (missing ones dropped), and joins both comics' categories.
+Keys include the source (§8.1), so `source-a:some-title` and `source-b:some-title` would be two bookmarks. Bookmarking a title that matches one from another source (case, spacing, punctuation ignored) opens `DuplicateSheet`: move or keep both. Moving runs `MigrateComic`: replaces the bookmark, moves each read chapter to the same number in the new source (missing ones dropped), and joins both comics' categories.
 
 ### 6.4 Migration
 Three entries under More → Migration. **All write through the normal repositories**, so sync and the journal see them.
@@ -218,11 +220,11 @@ Three entries under More → Migration. **All write through the normal repositor
 |---|---|---|
 | Migrate source (`SourceMigrationScreen` → `MatchScreen`) | Bookmarks of one source, a selection, or the open comic | Title search in the target; then `MigrateToSource` runs `MigrateComic` (§6.3) |
 | Mihon / Tachiyomi (`MihonImportScreen`) | `.tachibk` (gzipped protobuf, `parseMihonBackup`) | The backup link, read with the extension's `urlPatterns` (§8.2); no request |
-| Comix.to (`MatchScreen`) | CSV export (`parseComixCsv`), no links | Title search in `comix` (`MissingSource` if not installed) |
+| Reading-list CSV (`MatchScreen`) | A site's CSV export (`parseComixCsv`), no links | Title search in that site's source (`MissingSource` if not installed) |
 
 - **Title search** (`MatchCubit`): one request at a time, `gap` 3 s apart, manual searches join the queue. A single result with the same normalized title is picked automatically (`exactMatch`); failing that, a single result whose title or `altTitles` (sent in `browse` by some extensions) equals the comic's title or one of its alternative titles. When the title finds nothing, up to `maxAltQueries` (2) alternative titles of a migrated comic are searched, Latin ones first (`altQueries`). The user picks or skips the rest.
 - **Mihon:** only library comics (`favorite`), with category names and their chapters (`BackupChapter`: url, read, dates, number; `BackupHistory` field 104, legacy 102, for read dates). `importChapters` keeps numbered chapters, one per number, newest first; a read chapter takes its Mihon history date, others are placed 1 ms around the nearest dated one (or Mihon's fetch date) so the newest read chapter is the latest. Half-read pages are skipped. Sources match by name; a multi-language extension's language comes from the Mihon source id (MD5 of `<name>/<lang>/<versionId>`, `mihonSourceId`). Unmatched sources are listed as skipped; a matched but missing extension can be installed from the screen (its language is enabled). Re-importing adds no bookmarks but brings read chapters to earlier imports.
-- **`ImportLibrary`:** an existing key is left alone; a title already bookmarked from another source (`normalizeTitle`) is not added, and its progress goes to that bookmark (higher chapter wins); a new comic gets `placeholderDetails` (title and the imported chapter list, empty `totalChapter`, `source` set so §7.7 leaves it alone), in file order; an existing placeholder gets the imported list, a loaded list is never replaced. Missing categories are created; keys over `ComicKey.maxLength` are skipped (§7.1). Read chapters found in the target's list are written to the history at once (finished, imported dates; finished entries kept, nothing unread). The rest (Comix's last read number, or chapters missing from the target's list) waits in `pending_reads` (local only), merged with what waits.
+- **`ImportLibrary`:** an existing key is left alone; a title already bookmarked from another source (`normalizeTitle`) is not added, and its progress goes to that bookmark (higher chapter wins); a new comic gets `placeholderDetails` (title and the imported chapter list, empty `totalChapter`, `source` set so §7.7 leaves it alone), in file order; an existing placeholder gets the imported list, a loaded list is never replaced. Missing categories are created; keys over `ComicKey.maxLength` are skipped (§7.1). Read chapters found in the target's list are written to the history at once (finished, imported dates; finished entries kept, nothing unread). The rest (a CSV's last read number, or chapters missing from the target's list) waits in `pending_reads` (local only), merged with what waits.
 - **Completing an import:** the first time the comic loads — refresh (`RefreshBookmark`) or opening it (`BookmarkCubit.comicLoaded` → `CompleteImportedComic`, which keeps its place) — the details are saved and `ApplyPendingReads` marks the pending chapters read by number (exact set with dates, or every chapter up to `upTo`; existing history entries kept), then clears it; the comic's history gets the loaded details (cover). A refreshed placeholder moves up only if the source has more chapters than the imported list.
 
 ---
@@ -253,7 +255,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 - `JsonBox<T>` gives typed access; an entry that fails to parse is skipped and logged.
 - **Hive keys must be ASCII and at most 255 characters.** Hive stores the length in one byte and release builds skip the check, so a longer key corrupts the whole file. `JsonBox`, `LibraryJournal` and pending reads skip keys failing `isValidHiveKey`; imports skip comic keys over `ComicKey.maxLength` (240, room for `/<number>`). Extensions must return short, URL-safe slugs.
 - Boxes open through `openStringBox`: if Hive can't read a file, it keeps `<name>.corrupt-<ms>.hive.bak`, salvages entries frame by frame (an overflowed key is replaced by the value's JSON `slug` or `id`) into a fresh box, and the app still starts.
-- Not in Hive: scripts in `<app support>/extensions/<id>.js`, cookies in `<app support>/cookies/<sourceId>/`.
+- Not in Hive: scripts in `<app support>/extensions/<id>.js`, Mihon APKs in `<app support>/extensions/<id>-<versionCode>-<time>.apk`, cookies in `<app support>/cookies/<sourceId>/` (Mihon sources: Android's WebView `CookieManager`).
 
 ### 7.2 Stored JSON shape
 
@@ -329,26 +331,26 @@ Keys without a prefix belong to `ComicKey.defaultSource` (`bacakomik`), as all p
 ## 8. Sources and networking
 
 ### 8.1 Sources and comic keys
-A source is one site; a multi-language extension (MangaDex) is one source per enabled language. Comics are addressed by a **comic key** (`ComicKey`):
+A source is one site; a multi-language extension is one source per enabled language. Comics are addressed by a **comic key** (`ComicKey`):
 
 | Kind | Format | Example |
 |---|---|---|
-| Comic | `sourceId:slug` (bare slug for `bacakomik`) | `westmanga:oreaku`, `solo-leveling` |
-| Chapter | `<comicKey>/<number>` | `westmanga:oreaku/14` |
+| Comic | `sourceId:slug` (bare slug for `bacakomik`) | `mysource:some-title`, `solo-leveling` |
+| Chapter | `<comicKey>/<number>` | `mysource:some-title/14` |
 
 `SourceRegistry` (`ExtensionManager`) gives `activeSource` and `backend(sourceId)`. `SeriesRemoteDataSource` is the only caller of source methods: `browse`, `series`, `chapters`, `chapter` (plus optional `filters()`, `home`, `webUrl`; contract in `bacakomik-ext-source/types/bridge.d.ts`). DTOs convert with `ApiFormat` (`9.25` → `"9.3"`, missing format → `"-"`, dates → "3 h ago") and turn source slugs into comic keys. The active source defaults to `bacakomik`, else the first installed; with none, Home and Explore show `noSourceMessage` and lead to Extensions.
 
 ### 8.2 Extensions and repos
 `ExtensionManager` owns installed extensions, repos and runtimes.
 
-- **Repos:** `index.json` URLs, stored in `source_settings` → `repos`; default `https://bacakomik-ext.kurodev.org/index.json` (the built `dist/` of `bacakomik-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
+- **Repos:** `index.json` URLs (and Mihon repos' `index.min.json`, [MIHON_EXTENSIONS.md](MIHON_EXTENSIONS.md) §7), stored in `source_settings` → `repos`; default `https://bacakomik-ext.kurodev.org/index.json` (the built `dist/` of `bacakomik-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
 - **`ExtensionMeta`:** `id` (`[a-z0-9_-]`, file name and key prefix), `name`, `lang`, semver `version`, `apiVersion` (app supports `supportedExtensionApi = 1`; higher is listed but not installable), `baseUrl`, `file`, `sha256`, `nsfw`, `languages`, and optional **`urlPatterns`**: regexes whose one capture group is the slug in a series URL path (`slugFromUrl`), used by the Mihon import (§6.4).
 - **Install:** download, check `sha256`, load once in a throwaway runtime (failing scripts aren't installed), save the script and meta. Updating = installing the newer version. `catalog()` fetches repos in parallel (a failing repo shows as an error) and sets `updateCount`.
 - **Uninstall** removes the script, meta, language setting, and each source's cookies, storage and hidden page.
 - **Bundled:** `bacakomik` and `voratoon` in `assets/extensions/`, installed on first run and when the app bundles a newer version (made with `bundle.ts`, CONTRIBUTION §2).
 - **Multi-language:** each enabled language is a source `<id>-<lang>`, named `<Name> (<LANG>)`. Enabled list in `source_settings` → `langs:<id>` (default English, else first). Turned-off languages still open.
 
-The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-bacakomik.kurodev.org`, serving bacakomik.my).
+The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-bacakomik.kurodev.org`).
 
 ### 8.3 Extension runtime
 `ExtensionRuntime` runs one source per `flutter_js` engine. `ExtensionManager.backend` loads it once: callers asking during the load share it, a failed load is not kept, and an engine whose extension was updated or uninstalled while loading is disposed and loaded again. It loads a prelude with the host globals (`http.fetch`, `html.select`, `storage.get/set`, `webview.run`, `log`, `qs`, `defineExtension`), then `var source = { id, lang }`, then the script (one `defineExtension`).
@@ -421,7 +423,7 @@ Upgrade these together in their own PR and run all tests after regenerating.
 
 ## 11. Feature summary
 
-All done: extensions with repos and updates, multi-language sources, Cloudflare handling (Android), Home / Latest (10-page cap) / Explore per source, comic detail, reader (zoom, auto-scroll, resume, save image), bookmarks with grouping and cancellable refresh, categories, moving a comic between sources, history, theme, backup / restore, Drive sync, offline downloads (background on Android), in-app updates, migrate source and Mihon / Comix.to import.
+All done: extensions with repos and updates, multi-language sources, Cloudflare handling (Android), Home / Latest (10-page cap) / Explore per source, comic detail, reader (zoom, auto-scroll, resume, save image), bookmarks with grouping and cancellable refresh, categories, moving a comic between sources, history, theme, backup / restore, Drive sync, offline downloads (background on Android), in-app updates, migrate source and Mihon / CSV import.
 
 ---
 

@@ -45,5 +45,9 @@ abstract class Chapter with _$Chapter {
     /// Chapter slug in the form `seriesSlug/number`.
     required String slug,
     required String date,
+
+    /// Shown instead of "Chapter [number]" when the number was made up for
+    /// a chapter without one (Mihon sources).
+    String? title,
   }) = _Chapter;
 }

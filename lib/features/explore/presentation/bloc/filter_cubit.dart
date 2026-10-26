@@ -20,13 +20,14 @@ class FilterCubit extends Cubit<ExploreFilter> {
   void setValue(String key, List<String> value) =>
       emit(state.copyWith(values: {...state.values, key: value}));
 
-  /// Only [genreId] of [source], with every other filter and the search
+  /// Only [value] of the genre group [key] of [source] (see
+  /// [SourceFeatures.genreFilter]), with every other filter and the search
   /// cleared.
-  void showGenre(String source, String genreId) => emit(
+  void showGenre(String source, String key, String value) => emit(
     ExploreFilter(
       source: source,
       values: {
-        FilterGroup.genreKey: [genreId],
+        key: [value],
       },
     ),
   );

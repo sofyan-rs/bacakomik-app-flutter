@@ -506,7 +506,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                         final chapter = chapters[index];
                         final isCurrent = index == current;
                         return ListRow(
-                          title: '${AppText.chapter} ${chapter.number}',
+                          title: AppText.chapterName(
+                            chapter.number,
+                            chapter.title,
+                          ),
                           value: chapter.date,
                           trailing: isCurrent
                               ? Icon(
@@ -780,7 +783,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           child: SafeArea(
             bottom: false,
             child: DotTopBar(
-              title: number == null ? null : '${AppText.chapter} $number',
+              title: number == null
+                  ? null
+                  : AppText.chapterName(
+                      number,
+                      widget.comicDetails.chapters
+                          .where((c) => c.number == number)
+                          .firstOrNull
+                          ?.title,
+                    ),
               subtitle: widget.comicDetails.title,
               actions: [
                 if (chapter != null &&

@@ -37,7 +37,14 @@ class ComicDetailsModel {
             .map((g) => GenreModel(name: g.name, slug: g.slug))
             .toList(),
         chapters: e.chapters
-            .map((c) => ChapterModel(number: c.number, slug: c.slug, date: c.date))
+            .map(
+              (c) => ChapterModel(
+                number: c.number,
+                slug: c.slug,
+                date: c.date,
+                title: c.title,
+              ),
+            )
             .toList(),
         source: e.source,
       );
@@ -77,7 +84,14 @@ class ComicDetailsModel {
         synopsis: synopsis,
         genres: genres.map((g) => Genre(name: g.name, slug: g.slug)).toList(),
         chapters: chapters
-            .map((c) => Chapter(number: c.number, slug: c.slug, date: c.date))
+            .map(
+              (c) => Chapter(
+                number: c.number,
+                slug: c.slug,
+                date: c.date,
+                title: c.title,
+              ),
+            )
             .toList(),
         source: source,
       );
@@ -102,6 +116,7 @@ class ChapterModel {
     required this.number,
     required this.slug,
     required this.date,
+    this.title,
   });
 
   factory ChapterModel.fromJson(Map<String, dynamic> json) =>
@@ -110,6 +125,10 @@ class ChapterModel {
   final String number;
   final String slug;
   final String date;
+
+  /// See [Chapter.title]; absent for most chapters.
+  @JsonKey(includeIfNull: false)
+  final String? title;
 
   Map<String, dynamic> toJson() => _$ChapterModelToJson(this);
 }

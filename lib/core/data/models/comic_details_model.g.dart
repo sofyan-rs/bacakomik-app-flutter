@@ -54,6 +54,7 @@ ChapterModel _$ChapterModelFromJson(Map<String, dynamic> json) => ChapterModel(
   number: json['number'] as String,
   slug: json['slug'] as String,
   date: json['date'] as String,
+  title: json['title'] as String?,
 );
 
 Map<String, dynamic> _$ChapterModelToJson(ChapterModel instance) =>
@@ -61,4 +62,5 @@ Map<String, dynamic> _$ChapterModelToJson(ChapterModel instance) =>
       'number': instance.number,
       'slug': instance.slug,
       'date': instance.date,
+      'title': ?instance.title,
     };

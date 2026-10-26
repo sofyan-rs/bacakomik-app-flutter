@@ -40,7 +40,12 @@ class MihonSourceGroup {
 /// one of [extensions] (installed and offered by the repos). Groups with a
 /// match come first, biggest first.
 ///
-/// Sources match by name, ignoring case, spacing and punctuation. For a
+/// A source of an installed or offered Mihon extension matches by its id,
+/// and its links need no reading. Other sources match by name, ignoring
+/// case, spacing and punctuation. What is installed ([installed], extension
+/// ids) wins, and the app's own (JS) extensions before Mihon ones, so the
+/// library stays readable on every device: an installed JS source by name,
+/// then an installed Mihon one by id, then the same from the repos. For a
 /// multi-language extension the language comes from the Mihon source id,
 /// which is the MD5 of `<name>/<lang>/<version>`.
 ///
@@ -49,11 +54,13 @@ class MihonSourceGroup {
 List<MihonSourceGroup> planMihonImport(
   MihonBackup backup,
   List<ExtensionMeta> extensions, {
+  Set<String> installed = const {},
   DateTime? now,
 }) {
   final at = now ?? DateTime.now();
   final byName = <String, ExtensionMeta>{};
-  for (final e in extensions) {
+  // Mihon extensions match by id only (below).
+  for (final e in extensions.where((e) => !e.isMihon)) {
     final key = normalizeName(e.name);
     final seen = byName[key];
     // Prefer the copy that can read links, then the newer one.
@@ -64,6 +71,13 @@ List<MihonSourceGroup> planMihonImport(
       _ => e.isNewerThan(seen!),
     };
     if (better) byName[key] = e;
+  }
+
+  final byMihonId = <String, ExtensionMeta>{};
+  for (final e in extensions.where((e) => e.isMihon)) {
+    for (final s in e.mihonSources) {
+      byMihonId.putIfAbsent(s.id, () => e.forMihonSource(s));
+    }
   }
 
   final mangaBySource = <int, List<MihonManga>>{};
@@ -78,7 +92,11 @@ List<MihonSourceGroup> planMihonImport(
           backup,
           name.isEmpty ? '$sourceId' : name,
           manga,
-          _sourceFor(byName[normalizeName(name)], name, sourceId),
+          _pick(
+            byMihonId['$sourceId'],
+            _sourceFor(byName[normalizeName(name)], name, sourceId),
+            installed,
+          ),
           at,
         ),
   ];
@@ -98,7 +116,11 @@ MihonSourceGroup _group(
   final entries = <String, ImportEntry>{};
   var unreadable = 0;
   for (final m in manga) {
-    final slug = source?.slugFromUrl(m.url);
+    final slug = source == null
+        ? null
+        : source.isMihon
+        ? ExtensionMeta.mihonSlug(m.url)
+        : source.slugFromUrl(m.url);
     final key = source == null || slug == null
         ? null
         : ComicKey.of(source.id, slug);
@@ -201,6 +223,24 @@ class _Merged {
 }
 
 /// [extension] itself, or the language of it whose Mihon id is [mihonId].
+/// The [js] match (by name) or the [mihon] one (by id): installed first,
+/// JS first when it can read the links.
+ExtensionMeta? _pick(
+  ExtensionMeta? mihon,
+  ExtensionMeta? js,
+  Set<String> installed,
+) {
+  bool isInstalled(ExtensionMeta? m) =>
+      m != null && installed.contains(m.extensionId);
+  // A JS extension without urlPatterns reads no backup link: every comic
+  // would be unreadable, while the Mihon source reads them all.
+  final reads = js != null && js.urlPatterns.isNotEmpty;
+  if (reads && isInstalled(js)) return js;
+  if (isInstalled(mihon)) return mihon;
+  if (reads) return js;
+  return mihon ?? js;
+}
+
 ExtensionMeta? _sourceFor(ExtensionMeta? extension, String name, int mihonId) {
   if (extension == null || extension.languages.isEmpty) return extension;
   for (final lang in extension.languages) {

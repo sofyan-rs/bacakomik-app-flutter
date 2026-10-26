@@ -82,12 +82,14 @@ _ChapterResponse _$ChapterResponseFromJson(Map<String, dynamic> json) =>
     _ChapterResponse(
       number: json['number'] as num,
       createdAt: json['createdAt'] as String?,
+      title: json['title'] as String?,
     );
 
 Map<String, dynamic> _$ChapterResponseToJson(_ChapterResponse instance) =>
     <String, dynamic>{
       'number': instance.number,
       'createdAt': instance.createdAt,
+      'title': instance.title,
     };
 
 _ChapterDetailResponse _$ChapterDetailResponseFromJson(

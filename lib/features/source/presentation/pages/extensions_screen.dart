@@ -5,7 +5,11 @@ import 'package:bacakomik_app/core/source/extension_meta.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/core/utils/language_names.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/extensions_cubit.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/extension_filters.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/extension_icon.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/mihon_settings_sheet.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/repos_sheet.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/source_picker_sheet.dart';
 import 'package:flutter/material.dart';
@@ -52,8 +56,34 @@ class _ExtensionsView extends StatefulWidget {
 class _ExtensionsViewState extends State<_ExtensionsView> {
   late var _tab = widget.showAvailable ? _Tab.available : _Tab.installed;
 
-  /// Language filter of the available tab; null shows all.
-  String? _lang;
+  /// Search, language and 18+ filter, shared by both tabs; adult
+  /// extensions start hidden.
+  var _filter = const ExtensionFilter(hideNsfw: true);
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  Widget _filterBar(List<ExtensionMeta> extensions) => SliverToBoxAdapter(
+    child: ExtensionFilterBar(
+      filter: _filter,
+      extensions: extensions,
+      controller: _search,
+      onChanged: (filter) => setState(() => _filter = filter),
+    ),
+  );
+
+  /// Shown when the filter hides every extension of a tab.
+  Widget get _noMatch => const SliverToBoxAdapter(
+    child: EmptyState(
+      icon: LucideIcons300.searchX,
+      title: AppText.noMatchingExtensions,
+      message: AppText.noMatchingExtensionsHint,
+    ),
+  );
 
   void _message(String text) {
     ScaffoldMessenger.of(context)
@@ -117,61 +147,67 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: RefreshIndicator(
-          color: Dotline.of(context).ink,
-          backgroundColor: Dotline.of(context).surface,
-          onRefresh: cubit.refresh,
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: DotTopBar(
-                  title: AppText.extensions,
-                  actions: [
-                    RoundIconButton(
-                      icon: LucideIcons300.gitBranch,
-                      semanticLabel: AppText.manageRepos,
-                      iconSize: DotSize.iconSmall,
-                      onTap: () => showReposSheet(context, cubit),
+        child: Column(
+          children: [
+            // Outside the scroll view so the title stays put.
+            DotTopBar(
+              title: AppText.extensions,
+              actions: [
+                RoundIconButton(
+                  icon: LucideIcons300.gitBranch,
+                  semanticLabel: AppText.manageRepos,
+                  iconSize: DotSize.iconSmall,
+                  onTap: () => showReposSheet(context, cubit),
+                ),
+              ],
+            ),
+            // The tabs stay put too; search and the lists scroll.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DotSpace.s4,
+                DotSpace.s2,
+                DotSpace.s4,
+                DotSpace.s4,
+              ),
+              child: SegmentedControl<_Tab>(
+                selected: _tab,
+                onChanged: (tab) => setState(() => _tab = tab),
+                segments: [
+                  Segment(
+                    value: _Tab.installed,
+                    label: state.updateCount > 0
+                        ? '${AppText.installed} · ${state.updateCount}'
+                        : AppText.installed,
+                  ),
+                  const Segment(
+                    value: _Tab.available,
+                    label: AppText.available,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                color: Dotline.of(context).ink,
+                backgroundColor: Dotline.of(context).surface,
+                onRefresh: cubit.refresh,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    ...switch (_tab) {
+                      _Tab.installed => _installed(state),
+                      _Tab.available => _available(state),
+                    },
+                    SliverPadding(
+                      padding: EdgeInsets.only(
+                        bottom: bottomInset + DotSpace.s5,
+                      ),
                     ),
                   ],
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  DotSpace.s4,
-                  DotSpace.s2,
-                  DotSpace.s4,
-                  DotSpace.s4,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: SegmentedControl<_Tab>(
-                    selected: _tab,
-                    onChanged: (tab) => setState(() => _tab = tab),
-                    segments: [
-                      Segment(
-                        value: _Tab.installed,
-                        label: state.updateCount > 0
-                            ? '${AppText.installed} · ${state.updateCount}'
-                            : AppText.installed,
-                      ),
-                      const Segment(
-                        value: _Tab.available,
-                        label: AppText.available,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              ...switch (_tab) {
-                _Tab.installed => _installed(state),
-                _Tab.available => _available(state),
-              },
-              SliverPadding(
-                padding: EdgeInsets.only(bottom: bottomInset + DotSpace.s5),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -191,11 +227,14 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
         ),
       ];
     }
+    final list = state.installed.where(_filter.matches).toList();
     return [
+      _filterBar(state.installed),
+      if (list.isEmpty) _noMatch,
       SliverListGroup(
-        itemCount: state.installed.length,
+        itemCount: list.length,
         itemBuilder: (context, i) {
-          final meta = state.installed[i];
+          final meta = list[i];
           final update = state.updateFor(meta.id);
           return _ExtensionRow(
             meta: meta,
@@ -211,6 +250,9 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
             onLanguages: meta.languages.isEmpty
                 ? null
                 : () => showLanguagesSheet(context, meta),
+            onSettings: meta.hasSettings
+                ? () => showMihonSettings(context, meta)
+                : null,
             onRemove: () => _uninstall(meta),
           );
         },
@@ -219,42 +261,12 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
   }
 
   List<Widget> _available(ExtensionsState state) {
-    final langs = state.languages;
-    final list = state.notInstalled
-        .where((e) => _lang == null || e.lang == _lang)
-        .toList();
+    final all = state.notInstalled;
+    final list = all.where(_filter.matches).toList();
     final failed = state.repos.where((r) => r.error != null).toList();
 
     return [
-      if (langs.length > 1)
-        SliverToBoxAdapter(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.fromLTRB(
-              DotSpace.s4,
-              0,
-              DotSpace.s4,
-              DotSpace.s4,
-            ),
-            child: Row(
-              children: [
-                DotChip(
-                  label: AppText.filterAll,
-                  selected: _lang == null,
-                  onTap: () => setState(() => _lang = null),
-                ),
-                for (final lang in langs) ...[
-                  const SizedBox(width: DotSpace.s2),
-                  DotChip(
-                    label: languageName(lang),
-                    selected: _lang == lang,
-                    onTap: () => setState(() => _lang = lang),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
+      _filterBar(all),
       for (final repo in failed)
         SliverToBoxAdapter(
           child: Padding(
@@ -279,6 +291,8 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
             child: Center(child: DotLoader()),
           ),
         )
+      else if (list.isEmpty && all.isNotEmpty)
+        _noMatch
       else if (list.isEmpty)
         SliverToBoxAdapter(
           child: EmptyState(
@@ -322,6 +336,7 @@ class _ExtensionRow extends StatelessWidget {
     this.action,
     this.newVersion,
     this.onLanguages,
+    this.onSettings,
     this.onRemove,
   });
 
@@ -334,6 +349,9 @@ class _ExtensionRow extends StatelessWidget {
 
   /// Opens the language toggles of a multi-language extension.
   final VoidCallback? onLanguages;
+
+  /// Opens a Mihon extension's source settings.
+  final VoidCallback? onSettings;
   final VoidCallback? onRemove;
 
   @override
@@ -341,23 +359,11 @@ class _ExtensionRow extends StatelessWidget {
     final c = Dotline.of(context);
     return ListRow(
       title: meta.name,
-      subtitle: newVersion == null
-          ? extensionLine(meta)
-          : '${extensionLine(meta)} → v$newVersion',
-      leading: Container(
-        width: 40,
-        height: 40,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: c.surfaceRaised,
-          borderRadius: BorderRadius.circular(DotRadius.s),
-        ),
-        child: Text(
-          // An extension may ship without a name.
-          (meta.name.characters.firstOrNull ?? '?').toUpperCase(),
-          style: DotlineText.headline.copyWith(color: c.ink),
-        ),
+      subtitleWidget: ExtensionLine(
+        meta,
+        suffix: newVersion == null ? '' : ' → v$newVersion',
       ),
+      leading: ExtensionIcon(meta),
       trailing: busy
           ? const SizedBox(width: 48, child: DotLoader(dots: 3))
           : Row(
@@ -389,6 +395,14 @@ class _ExtensionRow extends StatelessWidget {
                     background: Colors.transparent,
                     onTap: onLanguages,
                   ),
+                if (onSettings != null)
+                  RoundIconButton(
+                    icon: LucideIcons300.settings2,
+                    semanticLabel: '${AppText.sourceSettings} ${meta.name}',
+                    iconSize: DotSize.iconSmall,
+                    background: Colors.transparent,
+                    onTap: onSettings,
+                  ),
                 if (onRemove != null)
                   RoundIconButton(
                     icon: LucideIcons300.trash2,
@@ -403,30 +417,6 @@ class _ExtensionRow extends StatelessWidget {
   }
 }
 
-/// English name of an ISO 639-1 code, else the code itself.
-String languageName(String code) => switch (code) {
-  'id' => 'Indonesian',
-  'en' => 'English',
-  'ja' => 'Japanese',
-  'ko' => 'Korean',
-  'zh' => 'Chinese',
-  'es' => 'Spanish',
-  'pt' => 'Portuguese',
-  'fr' => 'French',
-  'de' => 'German',
-  'ru' => 'Russian',
-  'th' => 'Thai',
-  'vi' => 'Vietnamese',
-  'pt-br' => 'Portuguese (Brazil)',
-  'es-la' => 'Spanish (Latin America)',
-  'zh-hk' => 'Chinese (Traditional)',
-  'it' => 'Italian',
-  'pl' => 'Polish',
-  'tr' => 'Turkish',
-  'ar' => 'Arabic',
-  'ms' => 'Malay',
-  'tl' => 'Filipino',
-  'uk' => 'Ukrainian',
-  'all' => 'Multi',
-  _ => code.toUpperCase(),
-};
+/// English name of a language code, else the code itself.
+String languageName(String code) =>
+    languageNames[code.toLowerCase()] ?? code.toUpperCase();

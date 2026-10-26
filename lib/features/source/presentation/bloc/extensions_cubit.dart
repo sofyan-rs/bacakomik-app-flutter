@@ -50,10 +50,6 @@ class ExtensionsState {
       if (!installed.any((i) => i.id == e.id)) e,
   ];
 
-  /// Languages of [notInstalled], for the language filter.
-  List<String> get languages =>
-      {for (final e in notInstalled) e.lang}.toList()..sort();
-
   ExtensionsState copyWith({
     List<ExtensionMeta>? installed,
     List<ExtensionMeta>? available,
@@ -85,24 +81,17 @@ class ExtensionsCubit extends Cubit<ExtensionsState> {
   Future<void> refresh() async {
     emit(state.copyWith(loading: true));
     final catalog = await _manager.catalog();
-    final newest = <String, ExtensionMeta>{};
-    for (final entry in catalog) {
-      for (final e in entry.repo?.extensions ?? const <ExtensionMeta>[]) {
-        // The first repo listing an id wins unless another has a newer
-        // version.
-        final seen = newest[e.id];
-        if (seen == null || e.isNewerThan(seen)) newest[e.id] = e;
-      }
-    }
+    // The manager's pick per id: the newest, and for an installed Mihon
+    // extension only from repos with its key.
+    final offered = _manager.offered;
     if (isClosed) return;
     emit(
       state.copyWith(
         loading: false,
         installed: _manager.extensions,
-        available: newest.values.toList()
-          ..sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-          ),
+        available: [
+          ...offered,
+        ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
         repos: [
           for (final entry in catalog)
             RepoEntry(

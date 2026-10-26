@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/presentation/widgets/comic_card.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
@@ -48,13 +49,15 @@ class ComicSliderCard extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: DotSpace.s1),
-            Text(
-              // Blank (not "CH. -") when the source does not say.
-              chapter == '-' ? '' : 'CH. $chapter',
-              style: DotlineText.data.copyWith(color: c.inkFaint),
-              maxLines: 1,
-            ),
+            // No line at all (not "CH. -") when the source does not say.
+            if (ComicCard.hasChapter(chapter)) ...[
+              const SizedBox(height: DotSpace.s1),
+              Text(
+                'CH. $chapter',
+                style: DotlineText.data.copyWith(color: c.inkFaint),
+                maxLines: 1,
+              ),
+            ],
           ],
         ),
       ),

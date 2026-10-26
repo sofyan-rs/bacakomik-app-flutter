@@ -118,8 +118,11 @@ class MihonImportCubit extends Cubit<MihonImportState> {
     );
   }
 
-  List<MihonSourceGroup> _plan() =>
-      planMihonImport(_backup!, [..._manager.extensions, ..._manager.offered]);
+  List<MihonSourceGroup> _plan() => planMihonImport(
+    _backup!,
+    [..._manager.extensions, ..._manager.offered],
+    installed: {for (final e in _manager.extensions) e.id},
+  );
 
   void toggle(String id) {
     final selected = {...state.selected};
