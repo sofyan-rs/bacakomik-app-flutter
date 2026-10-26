@@ -16,6 +16,7 @@ import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image
 import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settings_sheet.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -819,11 +820,26 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                   iconSize: DotSize.iconSmall,
                   onTap: () => _showChapterList(widget.slug),
                 ),
-                RoundIconButton(
-                  icon: LucideIcons300.slidersHorizontal,
-                  semanticLabel: AppText.readerSettings,
+                DotMenuButton(
                   iconSize: DotSize.iconSmall,
-                  onTap: _showSettings,
+                  items: [
+                    DotMenuItem(
+                      label: AppText.readerSettings,
+                      icon: LucideIcons300.slidersHorizontal,
+                      onTap: _showSettings,
+                    ),
+                    if (number != null)
+                      DotMenuItem(
+                        label: AppText.openWebView,
+                        icon: LucideIcons300.globe,
+                        onTap: () => WebViewScreen.openSeries(
+                          context,
+                          sourceId: ComicKey.sourceOf(widget.comicSlug),
+                          key: widget.comicSlug,
+                          chapter: number,
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),

@@ -381,7 +381,7 @@ The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-ba
 - Popups are refused; main-frame navigation to other hosts is cancelled (subdomains and `challenges.cloudflare.com` allowed).
 - **Rendering:** hidden WebViews don't render, so lazy pages load nothing. Extension pages are rendered only while a script runs, and any page while it shows a "Just a moment" check: Dart calls `render` / `hide` with the WebView's id on `bacakomik/hidden_webviews`; `MainActivity.kt` moves it into an `Untouchable` frame at alpha 0 and makes it visible, so Chromium renders it while the user can't see or touch it. Image-host pages never render.
 
-**WebView screen** shows the site with the extension's User-Agent. `SourceError` opens it on a challenge URL, the comic page on `webUrl`. It copies cookies (e.g. `cf_clearance`) after every load; the failed screen retries when it closes; it can clear the source's cookies.
+**WebView screen** shows the site with the extension's User-Agent. `SourceError` opens it on a challenge URL, the comic page on `webUrl`, and the reader the chapter page (`webUrl(slug, number)`; a source that ignores the number gives the comic page). It copies cookies (e.g. `cf_clearance`) after every load; the failed screen retries when it closes; it can clear the source's cookies.
 
 ### 8.6 Images
 Two caches share one downloader. `coverImageCache` (key `bacakomikCovers`, 5000 files, 365 days) serves every cover, cover saving and download covers; Clear cache keeps it. `comicImageCache` (`DefaultCacheManager`'s key, 500 files, 14 days) serves pages, prefetch and blocked-host pages; Clear cache empties it.
@@ -426,7 +426,7 @@ Mihon source ids are stable hashes: keys survive updates and match Mihon backups
 | `series` | `getMangaUpdate` (details) | status from the `SManga` constant; author + artist without repeats; genres split, id = name. `Description.kt` takes alternative titles ("Alternative Titles: …"), a stats line's rating ("Rating: 9.13", or a line of stars and a score) and markdown bold out of the synopsis |
 | `chapters` | `getMangaUpdate` (chapters) | see Chapter numbers |
 | `chapter` | `getPageList` | finds a number's URL in the last list (fetches again when missing); `prev` / `next` are the nearest numbers; images are `mihon://` URLs |
-| `webUrl` | `HttpSource.getMangaUrl` | |
+| `webUrl` | `HttpSource.getMangaUrl`; with a chapter number, `getChapterUrl` | The reader's globe button asks for the chapter's page |
 | `features` | `getFilterList` | filter groups + `home`. A source that made no request yet first loads popular page 1 (many extensions fetch their genre list then); a list still showing a "Press reset" header is read again after 2 s |
 
 Details and chapters are separate `getMangaUpdate` calls, details first, one at a time per series (lib 1.6 sources refuse two at once); asks of the same kind arriving together share one call. The last chapter list of each series is kept (`<app files>/mihon/chapters/`) and handed back to `getMangaUpdate`, so sources that read only new chapters ("fetch until known") can: a site that pages its list in a WebView takes minutes the first time and seconds after. `chapters` asks for the details alongside when the title is not known yet.

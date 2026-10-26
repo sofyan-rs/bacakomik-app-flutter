@@ -67,7 +67,7 @@ class Contract(
             "series" -> series(params, slug(args))
             "chapters" -> chapters(params, slug(args), refresh = true)
             "chapter" -> chapter(params, slug(args), args.getOrNull(1)?.jsonPrimitive?.doubleOrNull ?: throw HostError("No chapter number.", 400))
-            "webUrl" -> JsonPrimitive(webUrl(params, slug(args)))
+            "webUrl" -> JsonPrimitive(webUrl(params, slug(args), args.getOrNull(1)?.jsonPrimitive?.doubleOrNull))
             "scanlators" -> scanlatorsOf(params, slug(args))
             "setScanlator" -> {
                 val key = "${sourceId(params)}|${Slugs.decode(slug(args))}"
@@ -248,13 +248,19 @@ class Contract(
             else -> null
         }
 
+    /** The series' page, or chapter [number]'s when given. */
     private suspend fun webUrl(
         params: JsonObject,
         slug: String,
+        number: Double?,
     ): String {
         val source = host.source(params)
         val url = Slugs.decode(slug)
-        return (source as? HttpSource)?.getMangaUrl(host.manga(source, url)) ?: url
+        val http = source as? HttpSource ?: return url
+        if (number == null) return http.getMangaUrl(host.manga(source, url, titles["${sourceId(params)}|$url"]))
+        val (_, c) = chapterOf(params, url, number)
+        val chapterUrl = c["url"]!!.jsonPrimitive.content
+        return http.getChapterUrl(host.chapter(source, chapterUrl, c))
     }
 
     // ---------------------------------------------------------------- chapters
@@ -374,15 +380,7 @@ class Contract(
         number: Double,
     ): JsonElement {
         val url = Slugs.decode(slug)
-        val key = "${sourceId(params)}|$url"
-        fun find(list: List<JsonObject>?) = list?.indexOfFirst { abs(numberOf(it) - number) < 1e-6 }?.takeIf { it >= 0 }
-        var list = chapterLists[key]
-        var i = find(list)
-        if (i == null) {
-            list = chapterList(params, url)
-            i = find(list) ?: throw HostError("404 Chapter $number not found.", 404)
-        }
-        val c = list!![i]
+        val (list, c) = chapterOf(params, url, number)
         val pages = host.handle("pages", with(params, "url" to JsonPrimitive(c["url"]!!.jsonPrimitive.content), "chapter" to c)).jsonArray
         val id = sourceId(params)
         return buildJsonObject {
@@ -394,6 +392,18 @@ class Contract(
             put("next", list.filter { numberOf(it) > n }.minByOrNull(::numberOf)?.let(::numberJson) ?: JsonNull)
             put("images", buildJsonArray { pages.forEach { add(JsonPrimitive(Images.page(id, it.jsonObject))) } })
         }
+    }
+
+    /** The chapter list of [url] and its chapter [number], fetched if not known yet. */
+    private suspend fun chapterOf(
+        params: JsonObject,
+        url: String,
+        number: Double,
+    ): Pair<List<JsonObject>, JsonObject> {
+        fun find(list: List<JsonObject>?) = list?.firstOrNull { abs(numberOf(it) - number) < 1e-6 }
+        chapterLists["${sourceId(params)}|$url"]?.let { list -> find(list)?.let { return list to it } }
+        val list = chapterList(params, url)
+        return list to (find(list) ?: throw HostError("404 Chapter $number not found.", 404))
     }
 
     private fun numberOf(c: JsonObject) = c["number"]?.jsonPrimitive?.doubleOrNull ?: -1.0

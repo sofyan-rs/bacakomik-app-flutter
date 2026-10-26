@@ -34,13 +34,14 @@ class WebViewScreen extends StatefulWidget {
     ),
   );
 
-  /// Opens the page of the series [key] on its site.
+  /// Opens the page of the series [key] on its site, or of its [chapter].
   static Future<void> openSeries(
     BuildContext context, {
     required String sourceId,
     required String key,
+    String? chapter,
   }) async {
-    final url = await getIt<ExtensionManager>().webUrlOf(key);
+    final url = await getIt<ExtensionManager>().webUrlOf(key, chapter: chapter);
     if (!context.mounted || url.isEmpty) return;
     await open(context, sourceId: sourceId, url: url);
   }

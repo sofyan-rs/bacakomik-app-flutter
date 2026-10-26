@@ -26,10 +26,12 @@ class DotMenuButton extends StatelessWidget {
     super.key,
     required this.items,
     this.semanticLabel = 'Menu',
+    this.iconSize = DotSize.icon,
   });
 
   final List<DotMenuItem> items;
   final String semanticLabel;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +68,7 @@ class DotMenuButton extends StatelessWidget {
         child: RoundIconButton(
           icon: LucideIcons300.ellipsisVertical,
           semanticLabel: semanticLabel,
+          iconSize: iconSize,
           background: controller.isOpen ? c.surfaceRaised : null,
           onTap: () =>
               controller.isOpen ? controller.close() : controller.open(),

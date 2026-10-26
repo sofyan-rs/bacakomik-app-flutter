@@ -307,7 +307,7 @@ class ExtensionHost(
         }
 
     // As in the list the chapter came from (`known`), like Mihon gives it.
-    private fun chapter(
+    fun chapter(
         source: Source,
         url: String,
         known: JsonObject? = null,
