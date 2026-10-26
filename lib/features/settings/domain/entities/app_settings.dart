@@ -77,8 +77,14 @@ abstract class AppSettings with _$AppSettings {
     /// 8px gap between pages.
     @Default(false) bool pageGap,
 
+    /// Thin page progress line at the bottom while the controls are hidden.
+    @Default(true) bool progressBar,
+
     /// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
     @Default(3) int autoScrollSpeed,
+
+    /// Incognito mode: the reader records no history.
+    @Default(false) bool incognito,
     @Default(BookmarkGrouping.status) BookmarkGrouping bookmarkGrouping,
     @Default(BookmarkSort.updated) BookmarkSort bookmarkSort,
     @Default(SortDirection.descending) SortDirection bookmarkSortDirection,

@@ -17,8 +17,10 @@ mixin _$AppSettings {
 
  AppThemeMode get themeMode; ReadingDirection get readingDirection; PageFit get pageFit;/// Keep the screen awake while a chapter is open.
  bool get keepScreenOn;/// 8px gap between pages.
- bool get pageGap;/// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
- int get autoScrollSpeed; BookmarkGrouping get bookmarkGrouping; BookmarkSort get bookmarkSort; SortDirection get bookmarkSortDirection;
+ bool get pageGap;/// Thin page progress line at the bottom while the controls are hidden.
+ bool get progressBar;/// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
+ int get autoScrollSpeed;/// Incognito mode: the reader records no history.
+ bool get incognito; BookmarkGrouping get bookmarkGrouping; BookmarkSort get bookmarkSort; SortDirection get bookmarkSortDirection;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +32,20 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 @override
 bool operator ==(Object other) {
   final _this = this as AppSettings;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.readingDirection, _this.readingDirection) || other.readingDirection == _this.readingDirection)&&(identical(other.pageFit, _this.pageFit) || other.pageFit == _this.pageFit)&&(identical(other.keepScreenOn, _this.keepScreenOn) || other.keepScreenOn == _this.keepScreenOn)&&(identical(other.pageGap, _this.pageGap) || other.pageGap == _this.pageGap)&&(identical(other.autoScrollSpeed, _this.autoScrollSpeed) || other.autoScrollSpeed == _this.autoScrollSpeed)&&(identical(other.bookmarkGrouping, _this.bookmarkGrouping) || other.bookmarkGrouping == _this.bookmarkGrouping)&&(identical(other.bookmarkSort, _this.bookmarkSort) || other.bookmarkSort == _this.bookmarkSort)&&(identical(other.bookmarkSortDirection, _this.bookmarkSortDirection) || other.bookmarkSortDirection == _this.bookmarkSortDirection));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.readingDirection, _this.readingDirection) || other.readingDirection == _this.readingDirection)&&(identical(other.pageFit, _this.pageFit) || other.pageFit == _this.pageFit)&&(identical(other.keepScreenOn, _this.keepScreenOn) || other.keepScreenOn == _this.keepScreenOn)&&(identical(other.pageGap, _this.pageGap) || other.pageGap == _this.pageGap)&&(identical(other.progressBar, _this.progressBar) || other.progressBar == _this.progressBar)&&(identical(other.autoScrollSpeed, _this.autoScrollSpeed) || other.autoScrollSpeed == _this.autoScrollSpeed)&&(identical(other.incognito, _this.incognito) || other.incognito == _this.incognito)&&(identical(other.bookmarkGrouping, _this.bookmarkGrouping) || other.bookmarkGrouping == _this.bookmarkGrouping)&&(identical(other.bookmarkSort, _this.bookmarkSort) || other.bookmarkSort == _this.bookmarkSort)&&(identical(other.bookmarkSortDirection, _this.bookmarkSortDirection) || other.bookmarkSortDirection == _this.bookmarkSortDirection));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppSettings;
-  return Object.hash(runtimeType,_this.themeMode,_this.readingDirection,_this.pageFit,_this.keepScreenOn,_this.pageGap,_this.autoScrollSpeed,_this.bookmarkGrouping,_this.bookmarkSort,_this.bookmarkSortDirection);
+  return Object.hash(runtimeType,_this.themeMode,_this.readingDirection,_this.pageFit,_this.keepScreenOn,_this.pageGap,_this.progressBar,_this.autoScrollSpeed,_this.incognito,_this.bookmarkGrouping,_this.bookmarkSort,_this.bookmarkSortDirection);
 }
 
 @override
 String toString() {
   final _this = this as AppSettings;
-  return 'AppSettings(themeMode: ${_this.themeMode}, readingDirection: ${_this.readingDirection}, pageFit: ${_this.pageFit}, keepScreenOn: ${_this.keepScreenOn}, pageGap: ${_this.pageGap}, autoScrollSpeed: ${_this.autoScrollSpeed}, bookmarkGrouping: ${_this.bookmarkGrouping}, bookmarkSort: ${_this.bookmarkSort}, bookmarkSortDirection: ${_this.bookmarkSortDirection})';
+  return 'AppSettings(themeMode: ${_this.themeMode}, readingDirection: ${_this.readingDirection}, pageFit: ${_this.pageFit}, keepScreenOn: ${_this.keepScreenOn}, pageGap: ${_this.pageGap}, progressBar: ${_this.progressBar}, autoScrollSpeed: ${_this.autoScrollSpeed}, incognito: ${_this.incognito}, bookmarkGrouping: ${_this.bookmarkGrouping}, bookmarkSort: ${_this.bookmarkSort}, bookmarkSortDirection: ${_this.bookmarkSortDirection})';
 }
 
 
@@ -54,7 +56,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap, int autoScrollSpeed, BookmarkGrouping bookmarkGrouping, BookmarkSort bookmarkSort, SortDirection bookmarkSortDirection
+ AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap, bool progressBar, int autoScrollSpeed, bool incognito, BookmarkGrouping bookmarkGrouping, BookmarkSort bookmarkSort, SortDirection bookmarkSortDirection
 });
 
 
@@ -71,15 +73,17 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,Object? autoScrollSpeed = null,Object? bookmarkGrouping = null,Object? bookmarkSort = null,Object? bookmarkSortDirection = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,Object? progressBar = null,Object? autoScrollSpeed = null,Object? incognito = null,Object? bookmarkGrouping = null,Object? bookmarkSort = null,Object? bookmarkSortDirection = null,}) {
   return _then(AppSettings(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as AppThemeMode,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
 as ReadingDirection,pageFit: null == pageFit ? _self.pageFit : pageFit // ignore: cast_nullable_to_non_nullable
 as PageFit,keepScreenOn: null == keepScreenOn ? _self.keepScreenOn : keepScreenOn // ignore: cast_nullable_to_non_nullable
 as bool,pageGap: null == pageGap ? _self.pageGap : pageGap // ignore: cast_nullable_to_non_nullable
+as bool,progressBar: null == progressBar ? _self.progressBar : progressBar // ignore: cast_nullable_to_non_nullable
 as bool,autoScrollSpeed: null == autoScrollSpeed ? _self.autoScrollSpeed : autoScrollSpeed // ignore: cast_nullable_to_non_nullable
-as int,bookmarkGrouping: null == bookmarkGrouping ? _self.bookmarkGrouping : bookmarkGrouping // ignore: cast_nullable_to_non_nullable
+as int,incognito: null == incognito ? _self.incognito : incognito // ignore: cast_nullable_to_non_nullable
+as bool,bookmarkGrouping: null == bookmarkGrouping ? _self.bookmarkGrouping : bookmarkGrouping // ignore: cast_nullable_to_non_nullable
 as BookmarkGrouping,bookmarkSort: null == bookmarkSort ? _self.bookmarkSort : bookmarkSort // ignore: cast_nullable_to_non_nullable
 as BookmarkSort,bookmarkSortDirection: null == bookmarkSortDirection ? _self.bookmarkSortDirection : bookmarkSortDirection // ignore: cast_nullable_to_non_nullable
 as SortDirection,
@@ -167,10 +171,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  int autoScrollSpeed,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  bool progressBar,  int autoScrollSpeed,  bool incognito,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.autoScrollSpeed,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.autoScrollSpeed,_that.incognito,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
   return orElse();
 
 }
@@ -188,10 +192,10 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepS
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  int autoScrollSpeed,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  bool progressBar,  int autoScrollSpeed,  bool incognito,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.autoScrollSpeed,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.autoScrollSpeed,_that.incognito,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +212,10 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepS
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  int autoScrollSpeed,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  bool keepScreenOn,  bool pageGap,  bool progressBar,  int autoScrollSpeed,  bool incognito,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.autoScrollSpeed,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.autoScrollSpeed,_that.incognito,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
   return null;
 
 }
@@ -223,7 +227,7 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.keepS
 
 
 class _AppSettings implements AppSettings {
-  const _AppSettings({this.themeMode = AppThemeMode.system, this.readingDirection = ReadingDirection.vertical, this.pageFit = PageFit.width, this.keepScreenOn = true, this.pageGap = false, this.autoScrollSpeed = 3, this.bookmarkGrouping = BookmarkGrouping.status, this.bookmarkSort = BookmarkSort.updated, this.bookmarkSortDirection = SortDirection.descending});
+  const _AppSettings({this.themeMode = AppThemeMode.system, this.readingDirection = ReadingDirection.vertical, this.pageFit = PageFit.width, this.keepScreenOn = true, this.pageGap = false, this.progressBar = true, this.autoScrollSpeed = 3, this.incognito = false, this.bookmarkGrouping = BookmarkGrouping.status, this.bookmarkSort = BookmarkSort.updated, this.bookmarkSortDirection = SortDirection.descending});
   
 
 @override@JsonKey() final  AppThemeMode themeMode;
@@ -233,8 +237,12 @@ class _AppSettings implements AppSettings {
 @override@JsonKey() final  bool keepScreenOn;
 /// 8px gap between pages.
 @override@JsonKey() final  bool pageGap;
+/// Thin page progress line at the bottom while the controls are hidden.
+@override@JsonKey() final  bool progressBar;
 /// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
 @override@JsonKey() final  int autoScrollSpeed;
+/// Incognito mode: the reader records no history.
+@override@JsonKey() final  bool incognito;
 @override@JsonKey() final  BookmarkGrouping bookmarkGrouping;
 @override@JsonKey() final  BookmarkSort bookmarkSort;
 @override@JsonKey() final  SortDirection bookmarkSortDirection;
@@ -249,18 +257,18 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.readingDirection, readingDirection) || other.readingDirection == readingDirection)&&(identical(other.pageFit, pageFit) || other.pageFit == pageFit)&&(identical(other.keepScreenOn, keepScreenOn) || other.keepScreenOn == keepScreenOn)&&(identical(other.pageGap, pageGap) || other.pageGap == pageGap)&&(identical(other.autoScrollSpeed, autoScrollSpeed) || other.autoScrollSpeed == autoScrollSpeed)&&(identical(other.bookmarkGrouping, bookmarkGrouping) || other.bookmarkGrouping == bookmarkGrouping)&&(identical(other.bookmarkSort, bookmarkSort) || other.bookmarkSort == bookmarkSort)&&(identical(other.bookmarkSortDirection, bookmarkSortDirection) || other.bookmarkSortDirection == bookmarkSortDirection));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.readingDirection, readingDirection) || other.readingDirection == readingDirection)&&(identical(other.pageFit, pageFit) || other.pageFit == pageFit)&&(identical(other.keepScreenOn, keepScreenOn) || other.keepScreenOn == keepScreenOn)&&(identical(other.pageGap, pageGap) || other.pageGap == pageGap)&&(identical(other.progressBar, progressBar) || other.progressBar == progressBar)&&(identical(other.autoScrollSpeed, autoScrollSpeed) || other.autoScrollSpeed == autoScrollSpeed)&&(identical(other.incognito, incognito) || other.incognito == incognito)&&(identical(other.bookmarkGrouping, bookmarkGrouping) || other.bookmarkGrouping == bookmarkGrouping)&&(identical(other.bookmarkSort, bookmarkSort) || other.bookmarkSort == bookmarkSort)&&(identical(other.bookmarkSortDirection, bookmarkSortDirection) || other.bookmarkSortDirection == bookmarkSortDirection));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,themeMode,readingDirection,pageFit,keepScreenOn,pageGap,autoScrollSpeed,bookmarkGrouping,bookmarkSort,bookmarkSortDirection);
+    return Object.hash(runtimeType,themeMode,readingDirection,pageFit,keepScreenOn,pageGap,progressBar,autoScrollSpeed,incognito,bookmarkGrouping,bookmarkSort,bookmarkSortDirection);
 }
 
 @override
 String toString() {
-    return 'AppSettings(themeMode: $themeMode, readingDirection: $readingDirection, pageFit: $pageFit, keepScreenOn: $keepScreenOn, pageGap: $pageGap, autoScrollSpeed: $autoScrollSpeed, bookmarkGrouping: $bookmarkGrouping, bookmarkSort: $bookmarkSort, bookmarkSortDirection: $bookmarkSortDirection)';
+    return 'AppSettings(themeMode: $themeMode, readingDirection: $readingDirection, pageFit: $pageFit, keepScreenOn: $keepScreenOn, pageGap: $pageGap, progressBar: $progressBar, autoScrollSpeed: $autoScrollSpeed, incognito: $incognito, bookmarkGrouping: $bookmarkGrouping, bookmarkSort: $bookmarkSort, bookmarkSortDirection: $bookmarkSortDirection)';
 }
 
 
@@ -271,7 +279,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap, int autoScrollSpeed, BookmarkGrouping bookmarkGrouping, BookmarkSort bookmarkSort, SortDirection bookmarkSortDirection
+ AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, bool keepScreenOn, bool pageGap, bool progressBar, int autoScrollSpeed, bool incognito, BookmarkGrouping bookmarkGrouping, BookmarkSort bookmarkSort, SortDirection bookmarkSortDirection
 });
 
 
@@ -288,15 +296,17 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,Object? autoScrollSpeed = null,Object? bookmarkGrouping = null,Object? bookmarkSort = null,Object? bookmarkSortDirection = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? keepScreenOn = null,Object? pageGap = null,Object? progressBar = null,Object? autoScrollSpeed = null,Object? incognito = null,Object? bookmarkGrouping = null,Object? bookmarkSort = null,Object? bookmarkSortDirection = null,}) {
   return _then(_AppSettings(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as AppThemeMode,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
 as ReadingDirection,pageFit: null == pageFit ? _self.pageFit : pageFit // ignore: cast_nullable_to_non_nullable
 as PageFit,keepScreenOn: null == keepScreenOn ? _self.keepScreenOn : keepScreenOn // ignore: cast_nullable_to_non_nullable
 as bool,pageGap: null == pageGap ? _self.pageGap : pageGap // ignore: cast_nullable_to_non_nullable
+as bool,progressBar: null == progressBar ? _self.progressBar : progressBar // ignore: cast_nullable_to_non_nullable
 as bool,autoScrollSpeed: null == autoScrollSpeed ? _self.autoScrollSpeed : autoScrollSpeed // ignore: cast_nullable_to_non_nullable
-as int,bookmarkGrouping: null == bookmarkGrouping ? _self.bookmarkGrouping : bookmarkGrouping // ignore: cast_nullable_to_non_nullable
+as int,incognito: null == incognito ? _self.incognito : incognito // ignore: cast_nullable_to_non_nullable
+as bool,bookmarkGrouping: null == bookmarkGrouping ? _self.bookmarkGrouping : bookmarkGrouping // ignore: cast_nullable_to_non_nullable
 as BookmarkGrouping,bookmarkSort: null == bookmarkSort ? _self.bookmarkSort : bookmarkSort // ignore: cast_nullable_to_non_nullable
 as BookmarkSort,bookmarkSortDirection: null == bookmarkSortDirection ? _self.bookmarkSortDirection : bookmarkSortDirection // ignore: cast_nullable_to_non_nullable
 as SortDirection,

@@ -155,7 +155,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 - Events are `final class`es named after what happened (`HomeStarted`, `ChapterRequested`).
 
 ### 4.4 Settings
-`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `autoScrollSpeed`), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
+`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `progressBar`, `autoScrollSpeed`), `incognito` (the reader saves no history while on; marking chapters read still does), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
 
 ---
 
@@ -279,7 +279,8 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 { "slug": "voratoon:solo-leveling", "categoryIds": ["…"], "updatedDate": "2026-10-20T10:00:00.000" }
 // settings
 { "themeMode": "system", "readingDirection": "vertical", "pageFit": "width",
-  "keepScreenOn": true, "pageGap": false, "autoScrollSpeed": 3, "bookmarkGrouping": "status",
+  "keepScreenOn": true, "pageGap": false, "progressBar": true, "autoScrollSpeed": 3, "incognito": false,
+  "bookmarkGrouping": "status",
   "bookmarkSort": "updated", "bookmarkSortDirection": "descending" }
 ```
 
@@ -430,7 +431,7 @@ Mihon source ids are stable hashes: keys survive updates and match Mihon backups
 
 Details and chapters are separate `getMangaUpdate` calls, details first, one at a time per series (lib 1.6 sources refuse two at once); asks of the same kind arriving together share one call. The last chapter list of each series is kept (`<app files>/mihon/chapters/`) and handed back to `getMangaUpdate`, so sources that read only new chapters ("fetch until known") can: a site that pages its list in a WebView takes minutes the first time and seconds after. `chapters` asks for the details alongside when the title is not known yet.
 
-**Chapter numbers.** The app keys chapters by number, Mihon by URL. A number is `chapter_number`, else read from the name as Mihon does (`ChapterRecognition.kt`, from Mihon; the series title is removed first). One chapter per number: the picked scanlator's when it has that number, else the first in Mihon's order. The comic page shows a scanlator picker (`MihonSource.scanlators` / `setScanlator`, kept per comic on the device) when a comic has several. A chapter without one ("Extra") gets one 0.001 above the numbered chapter before it (`placeNumbers`, counted per base number, so it stays put as new chapters come out) and keeps its name as the chapter's `title`, shown instead of "Chapter n" (`AppText.chapterName`). A list with no number at all (a gallery's one chapter) is numbered 1, 2, … from the oldest.
+**Chapter numbers.** The app keys chapters by number, Mihon by URL. A number is `chapter_number`, else read from the name as Mihon does (`ChapterRecognition.kt`, from Mihon; the series title is removed first). One chapter per number: the picked scanlator's when it has that number, else the first in Mihon's order. The comic page shows a scanlator picker (`MihonSource.scanlators` / `setScanlator`, kept per comic on the device) when a comic has several. A chapter without one ("Extra") gets one 0.001 above the numbered chapter before it (`placeNumbers`, counted per base number, so it stays put as new chapters come out) and keeps its name as the chapter's `title`, shown instead of "Chapter n" (`AppText.chapterName`). A list with no number at all is numbered 1, 2, … from the oldest. A comic with one chapter (a gallery such as nhentai, a oneshot) is always chapter 1 with no `title`, so it reads "Chapter 1".
 
 **Filters** (`Filters.kt`). Each top-level filter is group `f<index>`: `Select` → select (option index; a blank option is labelled All), `Sort` → type `sort` (`<i>:a` / `<i>:d`, `''` = source default; the sheet shows one chip per field and a second tap turns the direction), `Group` of `CheckBox` / `TriState` → multi, top-level `CheckBox` / `TriState` → multi with one option. `Text`, `Header`, `Separator` have no group; TriState exclude isn't offered. Values go onto a fresh `getFilterList()` by position; a tree equal to the fresh one (and no query) means "not searching".
 

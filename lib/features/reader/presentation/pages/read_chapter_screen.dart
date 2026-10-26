@@ -185,10 +185,13 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   /// one-page chapter (or one resumed on its last page) does not mark it
   /// read: it is finished by the next save, a moment later, if the reader
   /// is still on that page ([_scheduleSave]).
+  ///
+  /// Nothing is saved in incognito mode.
   void _saveProgress({bool announce = false, bool opening = false}) {
     final chapter = _chapter;
     final page = _page.value;
     if (chapter == null || chapter.images.isEmpty || _left) return;
+    if (_settings.state.incognito) return;
     final finishOpened = _savedOpening && !announce && !opening;
     if (page == _savedPage && !finishOpened) {
       if (announce) _history.announce(widget.slug);
@@ -585,6 +588,8 @@ class _ReadChapterViewState extends State<_ReadChapterView>
               children: [
                 Positioned.fill(child: _body(state, settings)),
                 _topBar(chapter),
+                if (chapter != null && settings.progressBar)
+                  _progressBar(chapter, settings),
                 if (chapter != null) _bottomPill(chapter, settings),
               ],
             );
@@ -822,6 +827,46 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Thin page progress line along the bottom edge, shown while the
+  /// controls (and their page meter) are hidden. Right to left, it fills
+  /// from the right.
+  Widget _progressBar(ChapterContent chapter, AppSettings settings) {
+    final c = Dotline.of(context);
+    final pageCount = chapter.images.length;
+    final animate = !MediaQuery.disableAnimationsOf(context);
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: IgnorePointer(
+        child: AnimatedOpacity(
+          duration: animate ? DotMotion.press : Duration.zero,
+          opacity: _controlsVisible ? 0 : 1,
+          child: ValueListenableBuilder(
+            valueListenable: _page,
+            builder: (context, page, _) {
+              final shown = shownPageNumber(page, pageCount);
+              return Container(
+                height: 3,
+                color: c.lineStrong,
+                alignment:
+                    settings.readingDirection == ReadingDirection.rightToLeft
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                child: AnimatedFractionallySizedBox(
+                  duration: animate ? DotMotion.press : Duration.zero,
+                  widthFactor: pageCount == 0 ? 0 : shown / pageCount,
+                  heightFactor: 1,
+                  child: ColoredBox(color: c.ink),
+                ),
+              );
+            },
           ),
         ),
       ),

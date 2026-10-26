@@ -14,7 +14,9 @@ void main() {
       pageFit: PageFit.height,
       keepScreenOn: false,
       pageGap: true,
+      progressBar: false,
       autoScrollSpeed: 7,
+      incognito: true,
       bookmarkSort: BookmarkSort.lastRead,
       bookmarkSortDirection: SortDirection.ascending,
     );

@@ -12,7 +12,9 @@ class SettingsModel {
     this.pageFit = PageFit.width,
     this.keepScreenOn = true,
     this.pageGap = false,
+    this.progressBar = true,
     this.autoScrollSpeed = 3,
+    this.incognito = false,
     this.bookmarkGrouping = BookmarkGrouping.status,
     this.bookmarkSort = BookmarkSort.updated,
     this.bookmarkSortDirection = SortDirection.descending,
@@ -24,7 +26,9 @@ class SettingsModel {
     pageFit: e.pageFit,
     keepScreenOn: e.keepScreenOn,
     pageGap: e.pageGap,
+    progressBar: e.progressBar,
     autoScrollSpeed: e.autoScrollSpeed,
+    incognito: e.incognito,
     bookmarkGrouping: e.bookmarkGrouping,
     bookmarkSort: e.bookmarkSort,
     bookmarkSortDirection: e.bookmarkSortDirection,
@@ -44,7 +48,9 @@ class SettingsModel {
 
   final bool keepScreenOn;
   final bool pageGap;
+  final bool progressBar;
   final int autoScrollSpeed;
+  final bool incognito;
 
   @JsonKey(unknownEnumValue: BookmarkGrouping.status)
   final BookmarkGrouping bookmarkGrouping;
@@ -63,7 +69,9 @@ class SettingsModel {
     pageFit: pageFit,
     keepScreenOn: keepScreenOn,
     pageGap: pageGap,
+    progressBar: progressBar,
     autoScrollSpeed: autoScrollSpeed.clamp(autoScrollMin, autoScrollMax),
+    incognito: incognito,
     bookmarkGrouping: bookmarkGrouping,
     bookmarkSort: bookmarkSort,
     bookmarkSortDirection: bookmarkSortDirection,

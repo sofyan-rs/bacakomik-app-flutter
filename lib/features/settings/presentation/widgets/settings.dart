@@ -22,8 +22,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bacakomik_app/features/category/presentation/pages/categories_screen.dart';
 import 'package:bacakomik_app/core/network/image_cache.dart';
 
-/// More groups: SOURCES, LIBRARY (categories, downloads, cache), BACKUP &
-/// SYNC, THEME, ABOUT.
+/// More groups: incognito mode, SOURCES, LIBRARY (categories, downloads,
+/// cache), BACKUP & SYNC, THEME, ABOUT.
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
@@ -64,10 +64,34 @@ class Settings extends StatelessWidget {
     final extensionUpdates = context.select<SourcesCubit, int>(
       (s) => s.state.updateCount,
     );
+    final incognito = context.select<SettingsCubit, bool>(
+      (s) => s.state.incognito,
+    );
+    void setIncognito(bool on) =>
+        context.read<SettingsCubit>().update((s) => s.copyWith(incognito: on));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const SizedBox(height: DotSpace.s5),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+          child: ListGroup(
+            children: [
+              ListRow(
+                icon: LucideIcons300.hatGlasses,
+                title: AppText.incognito,
+                subtitle: AppText.incognitoDescription,
+                trailing: DotSwitch(
+                  value: incognito,
+                  semanticLabel: AppText.incognito,
+                  onChanged: setIncognito,
+                ),
+                onTap: () => setIncognito(!incognito),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: DotSpace.s3),
         const SectionLabel(label: AppText.sources),
         Padding(

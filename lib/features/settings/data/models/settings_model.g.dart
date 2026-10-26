@@ -31,7 +31,9 @@ SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
           PageFit.width,
       keepScreenOn: json['keepScreenOn'] as bool? ?? true,
       pageGap: json['pageGap'] as bool? ?? false,
+      progressBar: json['progressBar'] as bool? ?? true,
       autoScrollSpeed: (json['autoScrollSpeed'] as num?)?.toInt() ?? 3,
+      incognito: json['incognito'] as bool? ?? false,
       bookmarkGrouping:
           $enumDecodeNullable(
             _$BookmarkGroupingEnumMap,
@@ -62,7 +64,9 @@ Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
       'pageFit': _$PageFitEnumMap[instance.pageFit]!,
       'keepScreenOn': instance.keepScreenOn,
       'pageGap': instance.pageGap,
+      'progressBar': instance.progressBar,
       'autoScrollSpeed': instance.autoScrollSpeed,
+      'incognito': instance.incognito,
       'bookmarkGrouping': _$BookmarkGroupingEnumMap[instance.bookmarkGrouping]!,
       'bookmarkSort': _$BookmarkSortEnumMap[instance.bookmarkSort]!,
       'bookmarkSortDirection':
