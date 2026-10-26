@@ -1,5 +1,6 @@
-// Runs Mihon extension APKs inside the app (docs/MIHON_EXTENSIONS.md). The
-// Mihon source API and SCANCORE's host are vendored here (see NOTICE.md);
+// Runs Mihon extension APKs inside the app (docs/ARCHITECTURE.md §8.9). The
+// Mihon source API and SCANCORE's host are vendored here (licences in the
+// files' headers and LICENSE-SCANCORE);
 // extensions link against these classes by name. Library versions follow
 // Mihon's (through SCANCORE's host), so extensions find what they were
 // built against.

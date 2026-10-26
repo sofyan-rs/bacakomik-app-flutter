@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 /// The Kotlin side that runs Mihon extension APKs (Android 9+ only; see
-/// docs/MIHON_EXTENSIONS.md). Behind an interface so tests, and one day a
+/// docs/ARCHITECTURE.md §8.9). Behind an interface so tests, and one day a
 /// desktop host, can stand in.
 abstract interface class MihonHost {
   /// Whether this device can run Mihon extensions.

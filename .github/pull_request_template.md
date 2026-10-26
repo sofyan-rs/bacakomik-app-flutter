@@ -20,4 +20,5 @@ See [Contributing](../docs/CONTRIBUTION.md) for details.
 - [ ] Data-safety rules (CONTRIBUTION §4) respected; storage, backup and sync changes tested with an upgrade install.
 - [ ] UI checked in light and dark theme, on a phone and on a wide screen if the layout changed.
 - [ ] Bundled extensions updated (CONTRIBUTION §2) if the change needs newer extension versions.
+- [ ] Mihon extension changes (`android/mihon`, `core/source/mihon_*`) tried on a release build (CONTRIBUTION Recipe H).
 - [ ] `docs/ARCHITECTURE.md` updated if the design changed.
