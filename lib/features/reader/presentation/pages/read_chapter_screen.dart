@@ -96,11 +96,12 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   /// up or down itself: the vertical part of a pan (and of its fling)
   /// scrolls the page list instead, see [_panVertical]. [_pinY] and
   /// [_pinScale] are where the viewer is held; [_viewport] bounds it
-  /// sideways and [_listMetrics] bounds the list.
+  /// sideways. [_listContext] is inside the page list's scrollable, see
+  /// [_scrollList].
   double? _pinY;
   double? _pinScale;
   Size? _viewport;
-  ScrollMetrics? _listMetrics;
+  BuildContext? _listContext;
   var _adjustingZoom = false;
 
   /// Fingers on the reader. With two or more, the page list stops scrolling
@@ -272,23 +273,20 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     }
   }
 
-  /// Scrolls the vertical page list by [delta], within its ends.
+  /// Scrolls the vertical page list by [delta], within its ends. It jumps
+  /// the list's position: [ScrollOffsetController.animateScroll] can't take
+  /// a zero duration (`DrivenScrollActivity` asserts on it), and a short
+  /// animation per pan update would cut off the one before it.
   void _scrollList(double delta) {
-    final metrics = _listMetrics;
-    if (metrics == null || delta == 0) return;
-    final to = (metrics.pixels + delta).clamp(
-      metrics.minScrollExtent,
-      metrics.maxScrollExtent,
+    final context = _listContext;
+    if (context == null || !context.mounted || delta == 0) return;
+    final position = Scrollable.maybeOf(context)?.position;
+    if (position == null || !position.hasContentDimensions) return;
+    final to = (position.pixels + delta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
     );
-    if (to == metrics.pixels) return;
-    // Pans come faster than the list reports back.
-    _listMetrics = metrics.copyWith(pixels: to);
-    unawaited(
-      _scrollOffset.animateScroll(
-        offset: to - metrics.pixels,
-        duration: Duration.zero,
-      ),
-    );
+    if (to != position.pixels) position.jumpTo(to);
   }
 
   void _onPointerDown(PointerDownEvent _) {
@@ -696,14 +694,17 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         );
       },
     );
+    // The list that last reported is the one on screen: while it moves to
+    // a page, ScrollablePositionedList passes on only the incoming list's
+    // updates, and that list stays once it arrives.
     return NotificationListener<ScrollMetricsNotification>(
       onNotification: (n) {
-        _listMetrics = n.metrics;
+        _listContext = n.context;
         return false;
       },
       child: NotificationListener<ScrollUpdateNotification>(
         onNotification: (n) {
-          _listMetrics = n.metrics;
+          _listContext = n.context ?? _listContext;
           return false;
         },
         child: list,
