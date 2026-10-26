@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
+
 import 'package:bacakomik_app/core/utils/version.dart';
 
 /// Extension lib versions the Mihon host runs (`AndroidLoader.libs`).
@@ -65,9 +67,19 @@ class ExtensionMeta {
   static const mihonPrefix = 'mihon-';
 
   /// The slug of a Mihon series: its URL as base64url without padding
-  /// (`Slugs.kt`), ASCII and slash-free for keys and folders.
-  static String mihonSlug(String url) =>
-      base64Url.encode(utf8.encode(url)).replaceAll('=', '');
+  /// (`Slugs.kt`), ASCII and slash-free for keys and folders. Past
+  /// [mihonSlugMax] characters it is `~` + the URL's SHA-1, which Kotlin
+  /// reads back only once told the URL ([isHashedMihonSlug]).
+  static String mihonSlug(String url) {
+    final slug = base64Url.encode(utf8.encode(url)).replaceAll('=', '');
+    if (slug.length <= mihonSlugMax) return slug;
+    return '~${sha1.convert(utf8.encode(url))}';
+  }
+
+  /// `Slugs.MAX` in Kotlin.
+  static const mihonSlugMax = 200;
+
+  static bool isHashedMihonSlug(String slug) => slug.startsWith('~');
 
   /// Id of the Mihon extension [pkg]: `eu.kanade.tachiyomi.extension.en.foo`
   /// → `mihon-en_foo`.

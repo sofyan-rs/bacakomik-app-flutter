@@ -32,6 +32,9 @@ class FakeMihonHost implements MihonHost {
   @override
   Future<({Uint8List bytes, String? type})> image(String url) =>
       throw UnimplementedError();
+
+  @override
+  Future<String?> httpUrl(String url) async => null;
 }
 
 const _dexEntry = {
@@ -410,6 +413,59 @@ void main() {
     expect(pick({mihon.id}), 'mihon-777');
     // Both installed: the JS one.
     expect(pick({'asura', mihon.id}), 'asura');
+  });
+
+  test('comics the JS source cannot read go to the Mihon one', () {
+    final mihon = MihonRepo.entry(
+      {
+        'name': 'Tachiyomi: Site',
+        'pkg': 'eu.kanade.tachiyomi.extension.en.site',
+        'apk': 'site.apk',
+        'code': 1,
+        'version': '1.6.1',
+        'sources': [
+          {'name': 'Site', 'lang': 'en', 'id': '888'},
+        ],
+      },
+      repoUrl: 'https://repo.test/index.min.json',
+      signer: 'k',
+    )!;
+    const js = ExtensionMeta(
+      id: 'site',
+      name: 'Site',
+      lang: 'en',
+      version: '1.0.0',
+      apiVersion: 1,
+      baseUrl: 'https://site.test',
+      file: 'site.js',
+      sha256: '',
+      urlPatterns: [r'^/series/([^/]+)'],
+    );
+    final backup = MihonBackup(
+      sourceNames: {888: 'Site'},
+      categories: const {},
+      manga: const [
+        MihonManga(sourceId: 888, url: '/series/abc', title: 'Abc'),
+        MihonManga(sourceId: 888, url: '/odd/x', title: 'Odd'),
+      ],
+    );
+    final groups = planMihonImport(backup, [js, mihon], installed: {'site'});
+    expect(groups.map((g) => (g.name, g.source?.id, g.entries.length)), [
+      ('Site', 'site', 1),
+      ('Site (Mihon)', 'mihon-888', 1),
+    ]);
+  });
+
+  test('a long Mihon URL gets a short hashed slug', () {
+    final url = '/manga/${'x' * 300}';
+    final slug = ExtensionMeta.mihonSlug(url);
+    expect(ExtensionMeta.isHashedMihonSlug(slug), isTrue);
+    expect(slug, hasLength(41));
+    expect(ComicKey.storable('mihon-1234567890123456789:$slug'), isTrue);
+    expect(
+      ExtensionMeta.isHashedMihonSlug(ExtensionMeta.mihonSlug('/a')),
+      isFalse,
+    );
   });
 
   test('a Mihon backup matches an installed Mihon source by id', () {

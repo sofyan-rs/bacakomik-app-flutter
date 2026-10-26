@@ -20,6 +20,11 @@ abstract interface class MihonHost {
 
   /// The bytes and content type of a `mihon://` image.
   Future<({Uint8List bytes, String? type})> image(String url);
+
+  /// [url] (a `mihon://` image) as an `http://127.0.0.1` URL the background
+  /// downloader can fetch while the app is closed (`MihonProxy.kt`); null
+  /// where there is none.
+  Future<String?> httpUrl(String url);
 }
 
 /// [MihonHost] over the `bacakomik/mihon` channel (`MihonChannel.kt`).
@@ -83,6 +88,23 @@ class ChannelMihonHost implements MihonHost {
         }
         return (bytes: bytes, type: result?['type'] as String?);
       });
+
+  Future<String?>? _proxyBase;
+
+  @override
+  Future<String?> httpUrl(String url) async {
+    final base = await (_proxyBase ??= () async {
+      if (!await available) return null;
+      try {
+        return await _channel.invokeMethod<String>('proxyBase');
+      } catch (_) {
+        return null;
+      }
+    }());
+    return base == null
+        ? null
+        : '$base/image?u=${Uri.encodeQueryComponent(url)}';
+  }
 
   static Future<T> _guard<T>(Future<T> Function() run) async {
     try {

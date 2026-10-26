@@ -219,7 +219,7 @@ Three entries under More → Migration. **All write through the normal repositor
 | Entry | Input | How comics are found |
 |---|---|---|
 | Migrate source (`SourceMigrationScreen` → `MatchScreen`) | Bookmarks of one source, a selection, or the open comic | Title search in the target; then `MigrateToSource` runs `MigrateComic` (§6.3) |
-| Mihon / Tachiyomi (`MihonImportScreen`) | `.tachibk` (gzipped protobuf, `parseMihonBackup`) | The backup link, read with the extension's `urlPatterns` (§8.2); no request |
+| Mihon / Tachiyomi (`MihonImportScreen`) | `.tachibk` (gzipped protobuf, `parseMihonBackup`) | The backup link, read with the extension's `urlPatterns` (§8.2), or by source id for Mihon extensions (§8.9); no request. JS first when both match; comics the JS source can't read go to the Mihon one (a second group, "<name> (Mihon)") |
 | Reading-list CSV (`MatchScreen`) | A site's CSV export (`parseComixCsv`), no links | Title search in that site's source (`MissingSource` if not installed) |
 
 - **Title search** (`MatchCubit`): one request at a time, `gap` 3 s apart, manual searches join the queue. A single result with the same normalized title is picked automatically (`exactMatch`); failing that, a single result whose title or `altTitles` (sent in `browse` by some extensions) equals the comic's title or one of its alternative titles. When the title finds nothing, up to `maxAltQueries` (2) alternative titles of a migrated comic are searched, Latin ones first (`altQueries`). The user picks or skips the rest.
@@ -307,7 +307,7 @@ Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and h
 ### 7.5 Downloads
 - **Files:** `<root>/<comicKey>/<chapter>/000.<ext>` and `<root>/<comicKey>/cover.<ext>`; unsafe characters become `_` (`voratoon:slug` → `voratoon_slug`). Root: `getExternalStorageDirectory()/downloads` on Android (app-specific, removed on uninstall), else `getApplicationSupportDirectory()/downloads`. Records store relative paths.
 - **Background:** `background_downloader` (`PageDownloadQueue`) runs outside Dart, three pages at a time, through lock and process death, with `imageHeaders`, 10 retries with backoff, one grouped notification. `POST_NOTIFICATIONS` is asked on the first download.
-- **Blocked hosts:** on a page's first retry, `imageHostBlocks` (§8.6) checks the host once; a blocking host's pages are saved through `comicImageCache` instead (only while the app runs). Mihon pages (`mihon://`) always go that way (§8.9).
+- **Blocked hosts:** on a page's first retry, `imageHostBlocks` (§8.6) checks the host once; a blocking host's pages are saved through `comicImageCache` instead (only while the app runs). Mihon pages go through the local server (§8.9), or that way when there is none.
 - **Preparing:** `DownloadRepositoryImpl` takes one chapter at a time, gets fresh page URLs from `ReaderRepository`, records planned paths and queues missing pages. Covers come from `coverImageCache` via a `.part` file; a missing cover doesn't fail the chapter.
 - **Progress:** events update records while running; on start and resume `DownloadCubit.sync()` checks planned paths on disk. Nothing queued but pages missing → failed. Unprepared chapters are prepared again.
 - **Status:** `queued → downloading → completed`, or `failed`; retry keeps saved pages.
@@ -413,9 +413,9 @@ MihonInstaller ─────────────────────�
 |---|---|---|
 | Extension id | `mihon-` + package without `eu.kanade.tachiyomi.extension.`, `.` → `_` | `mihon-en_example` |
 | Source id | `mihon-<Mihon source id>` (never `:`, which `ComicKey` splits on) | `mihon-3639673976007021338` |
-| Comic slug | base64url without padding of `SManga.url` (`Slugs.kt`, `ExtensionMeta.mihonSlug`) | `L21hbmdhLzEyMw` |
+| Comic slug | base64url without padding of `SManga.url` (`Slugs.kt`, `ExtensionMeta.mihonSlug`); over 200 characters, `~` + the URL's SHA-1 | `L21hbmdhLzEyMw` |
 
-Mihon source ids are stable hashes: keys survive updates and match Mihon backups. A multi-source extension uses the multi-language model (`ExtensionMeta.mihonSources`, `forMihonSource`, enabled languages in `langs:<extensionId>`).
+Mihon source ids are stable hashes: keys survive updates and match Mihon backups. A hashed slug is read back from a map kept on the device (`bacakomik_mihon_slugs`), filled whenever Kotlin sees the URL (lists, search) and by the Mihon import (`remember`); another device opens such a bookmark once the comic has shown up there. The comic page refuses to bookmark or download a comic whose key is still too long (`ComicKey.storable`), rather than storage skipping it. A multi-source extension uses the multi-language model (`ExtensionMeta.mihonSources`, `forMihonSource`, enabled languages in `langs:<extensionId>`).
 
 **Methods** (`Contract.kt`)
 
@@ -430,7 +430,7 @@ Mihon source ids are stable hashes: keys survive updates and match Mihon backups
 
 Details and chapters asked at once are merged into one `getMangaUpdate` (lib 1.6 sources refuse two at a time); `chapters` asks for the details alongside when the title is not known yet.
 
-**Chapter numbers.** The app keys chapters by number, Mihon by URL. A number is `chapter_number`, else read from the name as Mihon does (`ChapterRecognition.kt`, from Mihon; the series title is removed first). One chapter per number, the first in Mihon's order when several scanlators have it. A chapter without one ("Extra") gets one 0.001 above the numbered chapter before it (`placeNumbers`, counted per base number, so it stays put as new chapters come out) and keeps its name as the chapter's `title`, shown instead of "Chapter n" (`AppText.chapterName`). A list with no number at all (a gallery's one chapter) is numbered 1, 2, … from the oldest.
+**Chapter numbers.** The app keys chapters by number, Mihon by URL. A number is `chapter_number`, else read from the name as Mihon does (`ChapterRecognition.kt`, from Mihon; the series title is removed first). One chapter per number: the picked scanlator's when it has that number, else the first in Mihon's order. The comic page shows a scanlator picker (`MihonSource.scanlators` / `setScanlator`, kept per comic on the device) when a comic has several. A chapter without one ("Extra") gets one 0.001 above the numbered chapter before it (`placeNumbers`, counted per base number, so it stays put as new chapters come out) and keeps its name as the chapter's `title`, shown instead of "Chapter n" (`AppText.chapterName`). A list with no number at all (a gallery's one chapter) is numbered 1, 2, … from the oldest.
 
 **Filters** (`Filters.kt`). Each top-level filter is group `f<index>`: `Select` → select (option index; a blank option is labelled All), `Sort` → type `sort` (`<i>:a` / `<i>:d`, `''` = source default; the sheet shows one chip per field and a second tap turns the direction), `Group` of `CheckBox` / `TriState` → multi, top-level `CheckBox` / `TriState` → multi with one option. `Text`, `Header`, `Separator` have no group; TriState exclude isn't offered. Values go onto a fresh `getFilterList()` by position; a tree equal to the fresh one (and no query) means "not searching".
 
@@ -453,7 +453,7 @@ Details and chapters asked at once are merged into one `getMangaUpdate` (lib 1.6
 - **APK files:** `<app support>/extensions/<id>-<versionCode>-<time>.apk`, read-only (Android 14 refuses writable code). Every install gets a new file; the old one is deleted after the new one installs.
 - **Updates:** a higher `versionCode`, same badge and button as JS. Lib versions: `supportedMihonLibs` (`1.4`–`1.6`) must match `AndroidLoader.libs`.
 - **Images** need the source's own client (headers, cookies, interceptors that unscramble pages): `mihon://<sourceId>/cover/<b64url>` and `mihon://<sourceId>/page/<b64url of page JSON>` (`Images.kt`), fetched by the image caches' `FileService` through the channel (§8.6). The same on every device, so stored covers survive sync.
-- **Downloads:** `mihon://` pages are saved through `comicImageCache`, **only while the app runs** (§7.5).
+- **Downloads:** `mihon://` pages go to the background downloader as `http://127.0.0.1:<port>/<token>/image?u=…` (`MihonProxy.kt`, a local server started with the process from `BacaKomikApplication`, which starts the host by itself with the last User-Agent when Dart isn't running). The port is kept across runs; the token keeps other apps out. Without the server they are saved through `comicImageCache` while the app runs (§7.5).
 - **Settings:** `ConfigurableSource` screens are read with androidx.preference (`AndroidSettings`) and shown in a Dotline sheet (`mihon_settings_sheet.dart`); values stay in the extension's `source_<id>` SharedPreferences, not in backup or sync. The button shows only for extensions with a configurable source.
 - **Cloudflare:** `CloudflareInterceptor` solves automatic checks in a hidden WebView; one that needs the user becomes "Verify in WebView". Extensions and the app's WebViews share Android's `CookieManager`.
 
@@ -508,5 +508,5 @@ All done: extensions with repos and updates, multi-language sources, Cloudflare 
 
 ## 12. Open questions
 
-- **Mihon:** mark sources a site offers in both backends? TriState exclude in the filter contract? Background downloads for `mihon://` pages (a localhost proxy the background downloader can reach)? Keys for very long Mihon URLs (past about 160 characters the key passes 240 and the bookmark is skipped)?
+- **Mihon:** mark sources a site offers in both backends? TriState exclude in the filter contract? Extensions whose chapter list loads slowly (pages read in a WebView) keep the comic page waiting, since details and chapters come from one `getMangaUpdate`.
 - **Formatting:** the code predates the current `dart format` style. Reformatting everything at once would be a large, noisy diff. Decide whether to do it.

@@ -310,6 +310,18 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     notifyListeners();
   }
 
+  /// Tells the Mihon host the URLs behind hashed slugs
+  /// ([ExtensionMeta.isHashedMihonSlug]) of comics added without it seeing
+  /// them (an import).
+  Future<void> rememberMihonUrls(Iterable<String> urls) async {
+    final hashed = [
+      for (final url in urls)
+        if (ExtensionMeta.isHashedMihonSlug(ExtensionMeta.mihonSlug(url))) url,
+    ];
+    if (hashed.isEmpty || !await _mihon.available) return;
+    await _mihon.handle('remember', {'urls': hashed});
+  }
+
   /// Whether this device runs Mihon extensions (Android 9+).
   Future<bool> get mihonAvailable => _mihon.available;
 
@@ -356,8 +368,23 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
       if (seen == null || e.isNewerThan(seen)) offered[e.id] = e;
     }
     _offered = offered;
+    await _keepIcons(offered);
     notifyListeners();
     return result;
+  }
+
+  /// Gives installed extensions without an icon (bundled ones have no repo
+  /// to resolve one from) the repo's, as an absolute URL, so it shows
+  /// offline too.
+  Future<void> _keepIcons(Map<String, ExtensionMeta> offered) async {
+    for (final e in extensions) {
+      if (e.iconUrl != null) continue;
+      final icon = offered[e.id]?.iconUrl;
+      final raw = _installed.get(e.id);
+      if (icon == null || raw == null) continue;
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      await _installed.put(e.id, jsonEncode({...json, 'icon': icon}));
+    }
   }
 
   Future<ExtensionRepo> fetchRepo(String url) async {

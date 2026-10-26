@@ -71,6 +71,13 @@ object MihonHost {
         appVersion: String,
     ) {
         if (userAgent != null) HostNetwork.userAgent = userAgent
+        // Kept for a start without Dart (background downloads, MihonProxy).
+        context.applicationContext
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .apply { if (userAgent != null) putString("userAgent", userAgent) }
+            .putString("appVersion", appVersion)
+            .apply()
         if (started) return
         // Signing info (28) and DelegateLastClassLoader (27).
         if (!supported) throw HostError("Mihon extensions need Android 9 or newer.", 501)
@@ -79,6 +86,7 @@ object MihonHost {
         HostNetwork.cookieJar = WebViewCookieJar(File(folder, "cookies.json"))
         HostNetwork.browserCheckSolver = WebViewBrowserCheck(app)
         HostNetwork.cacheDir = File(app.cacheDir, "mihon")
+        Slugs.init(app)
         AppInfo.set(versionCode = 1, versionName = appVersion)
         Injekt.addSingleton<Application>(app)
         Injekt.addSingleton<Context>(app)
@@ -93,9 +101,18 @@ object MihonHost {
         Injekt.addSingletonFactory<ProtoBuf> { ProtoBuf }
         loader = AndroidLoader(app)
         host = ExtensionHost(loader, MemoStore(File(folder, "memos.json")), AndroidSettings(app))
-        contract = Contract(host)
+        contract = Contract(host, app.getSharedPreferences("bacakomik_mihon_scanlators", Context.MODE_PRIVATE))
         index = SourceIndex(app)
         started = true
+    }
+
+    private const val PREFS = "bacakomik_mihon"
+
+    /** Starts with what the last [start] from Dart was given, when Dart isn't running. */
+    fun ensureStarted(context: Context) {
+        if (started) return
+        val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        start(context, prefs.getString("userAgent", null), prefs.getString("appVersion", null) ?: "")
     }
 
     private fun check() {
@@ -109,6 +126,11 @@ object MihonHost {
         check()
         return when (method) {
             "libs" -> JsonArray(loader.libs.map(::JsonPrimitive))
+            // Paths of comics an import adds whose slugs are hashed (Slugs).
+            "remember" -> {
+                (args["urls"] as? JsonArray).orEmpty().forEach { Slugs.remember(it.jsonPrimitive.content) }
+                JsonNull
+            }
             "inspect" -> inspect(args.string("path"), args.optString("signer"))
             "install" -> {
                 val pkg = args.string("pkg")

@@ -13,6 +13,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import org.kurodev.bacakomik.mihon.MihonHost
+import org.kurodev.bacakomik.mihon.MihonProxy
 
 /**
  * `bacakomik/mihon`: Dart's way to [MihonHost].
@@ -21,6 +22,7 @@ import org.kurodev.bacakomik.mihon.MihonHost
  * - `start` {userAgent, appVersion}.
  * - `handle` {method, args: JSON text} → JSON text.
  * - `image` {url} → {bytes, type}.
+ * - `proxyBase` → `http://127.0.0.1:<port>/<token>` ([MihonProxy]), or null.
  *
  * Failures come back as a PlatformException: code = HTTP-like status,
  * message, details = {verifyUrl, verifyAgent} for a browser check.
@@ -34,6 +36,9 @@ class MihonChannel(
     init {
         MethodChannel(messenger, "bacakomik/mihon").setMethodCallHandler { call, result ->
             if (call.method == "supported") return@setMethodCallHandler result.success(MihonHost.supported)
+            if (call.method == "proxyBase") {
+                return@setMethodCallHandler result.success(if (MihonHost.supported) runCatching { MihonProxy.start(context) }.getOrNull() else null)
+            }
             scope.launch {
                 try {
                     val value: Any? =

@@ -85,21 +85,35 @@ List<MihonSourceGroup> planMihonImport(
     if (m.favorite) (mangaBySource[m.sourceId] ??= []).add(m);
   }
 
-  final groups = [
-    for (final MapEntry(key: sourceId, value: manga) in mangaBySource.entries)
-      if (backup.sourceNames[sourceId] ?? '' case final name)
-        _group(
-          backup,
-          name.isEmpty ? '$sourceId' : name,
-          manga,
-          _pick(
-            byMihonId['$sourceId'],
-            _sourceFor(byName[normalizeName(name)], name, sourceId),
-            installed,
-          ),
-          at,
-        ),
-  ];
+  final groups = <MihonSourceGroup>[];
+  for (final MapEntry(key: sourceId, value: manga) in mangaBySource.entries) {
+    final raw = backup.sourceNames[sourceId] ?? '';
+    final name = raw.isEmpty ? '$sourceId' : raw;
+    final mihon = byMihonId['$sourceId'];
+    final source = _pick(
+      mihon,
+      _sourceFor(byName[normalizeName(raw)], raw, sourceId),
+      installed,
+    );
+    // A JS source takes the comics its urlPatterns read; the Mihon source
+    // (same site, by id) takes the rest instead of leaving them out.
+    if (source != null && !source.isMihon && mihon != null) {
+      final unread = [
+        for (final m in manga)
+          if (_keyFor(source, m) == null) m,
+      ];
+      if (unread.isNotEmpty) {
+        final read = [
+          for (final m in manga)
+            if (!unread.contains(m)) m,
+        ];
+        if (read.isNotEmpty) groups.add(_group(backup, name, read, source, at));
+        groups.add(_group(backup, '$name (Mihon)', unread, mihon, at));
+        continue;
+      }
+    }
+    groups.add(_group(backup, name, manga, source, at));
+  }
   return groups..sort((a, b) {
     if (a.supported != b.supported) return a.supported ? -1 : 1;
     return b.total.compareTo(a.total);
@@ -116,16 +130,8 @@ MihonSourceGroup _group(
   final entries = <String, ImportEntry>{};
   var unreadable = 0;
   for (final m in manga) {
-    final slug = source == null
-        ? null
-        : source.isMihon
-        ? ExtensionMeta.mihonSlug(m.url)
-        : source.slugFromUrl(m.url);
-    final key = source == null || slug == null
-        ? null
-        : ComicKey.of(source.id, slug);
-    // A key too long for storage would corrupt the library.
-    if (key == null || !ComicKey.storable(key)) {
+    final key = source == null ? null : _keyFor(source, m);
+    if (key == null) {
       unreadable++;
       continue;
     }
@@ -142,6 +148,17 @@ MihonSourceGroup _group(
     entries: entries.values.toList(),
     unreadable: unreadable,
   );
+}
+
+/// The key of [manga] in [source]; null when its link can't be read or the
+/// key would be too long for storage (it would corrupt the library).
+String? _keyFor(ExtensionMeta source, MihonManga manga) {
+  final slug = source.isMihon
+      ? ExtensionMeta.mihonSlug(manga.url)
+      : source.slugFromUrl(manga.url);
+  if (slug == null) return null;
+  final key = ComicKey.of(source.id, slug);
+  return ComicKey.storable(key) ? key : null;
 }
 
 /// The numbered chapters of [manga], newest first, one per number, with

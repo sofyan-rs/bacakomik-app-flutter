@@ -6,6 +6,7 @@ import 'package:bacakomik_app/features/migration/domain/entities/mihon_import_pl
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/pick_files.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -178,6 +179,13 @@ class MihonImportCubit extends Cubit<MihonImportState> {
         .toList();
     if (groups.isEmpty) return;
     emit(state.copyWith(phase: MihonImportPhase.importing));
+    if (groups.any((g) => g.source?.isMihon ?? false)) {
+      try {
+        await _manager.rememberMihonUrls(_backup!.manga.map((m) => m.url));
+      } catch (e) {
+        debugPrint('Mihon import: $e');
+      }
+    }
     final result = await _import([for (final g in groups) ...g.entries]);
     if (isClosed) return;
     // A comic of a language that is installed but turned off still opens;

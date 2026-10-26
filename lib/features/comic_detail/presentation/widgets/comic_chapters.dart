@@ -24,6 +24,7 @@ class ComicChapters extends StatefulWidget {
     required this.onToggleSelected,
     required this.isSelected,
     required this.isSelecting,
+    this.onScanlators,
   });
 
   final ComicDetails comicDetails;
@@ -31,6 +32,9 @@ class ComicChapters extends StatefulWidget {
   final void Function(SelectedChapter chapter) onToggleSelected;
   final bool Function(String slug) isSelected;
   final bool isSelecting;
+
+  /// Opens the scanlator picker; null hides its button (one scanlator).
+  final VoidCallback? onScanlators;
 
   @override
   State<ComicChapters> createState() => _ComicChaptersState();
@@ -53,7 +57,14 @@ class _ComicChaptersState extends State<ComicChapters> {
     final query = _query.text.trim();
     final filtered = query.isEmpty
         ? all
-        : all.where((c) => c.number.contains(query)).toList();
+        : all
+              .where(
+                (c) =>
+                    c.number.contains(query) ||
+                    (c.title?.toLowerCase().contains(query.toLowerCase()) ??
+                        false),
+              )
+              .toList();
     return _newestFirst ? filtered : filtered.reversed.toList();
   }
 
@@ -94,6 +105,15 @@ class _ComicChaptersState extends State<ComicChapters> {
                       style: DotlineText.data.copyWith(color: c.inkFaint),
                     ),
                     const Spacer(),
+                    if (widget.onScanlators case final onTap?) ...[
+                      RoundIconButton(
+                        icon: LucideIcons300.users,
+                        semanticLabel: AppText.scanlators,
+                        iconSize: DotSize.iconSmall,
+                        onTap: onTap,
+                      ),
+                      const SizedBox(width: DotSpace.s2),
+                    ],
                     RoundIconButton(
                       icon: _searching
                           ? LucideIcons300.x

@@ -311,6 +311,13 @@ class AppText {
   static const String noMatchingExtensions = 'No extensions match';
   static const String noMatchingExtensionsHint =
       'Try another name or language.';
+  static const String comicKeyTooLong =
+      "This comic's link is too long to keep in the library.";
+  static const String scanlators = 'Scanlators';
+  static const String scanlatorsHint =
+      'Whose version of a chapter shows when several groups have it. '
+      'Saved on this device.';
+  static const String sourceOrder = "Source's order";
   static const String sourceSettings = 'Settings';
   static const String sourceSettingsHint =
       "The extension's own settings. Changes apply to its next request.";

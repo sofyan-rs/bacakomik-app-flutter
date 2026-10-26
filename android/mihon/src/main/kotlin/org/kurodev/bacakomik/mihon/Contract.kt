@@ -1,5 +1,6 @@
 package org.kurodev.bacakomik.mihon
 
+import android.content.SharedPreferences
 import com.mediumdev.scancore.host.ExtensionHost
 import com.mediumdev.scancore.host.HostError
 import eu.kanade.tachiyomi.source.CatalogueSource
@@ -41,12 +42,17 @@ import kotlin.math.abs
  */
 class Contract(
     private val host: ExtensionHost,
+    /** The scanlator picked per comic (`<sourceId>|<url>`), on this device only. */
+    private val scanlators: SharedPreferences,
 ) {
     /** Last chapter list per `<sourceId>|<url>`, newest first, one per number. */
     private val chapterLists = ConcurrentHashMap<String, List<JsonObject>>()
 
     /** Series titles by `<sourceId>|<url>`, to find chapter numbers ([ChapterRecognition]). */
     private val titles = ConcurrentHashMap<String, String>()
+
+    /** Every chapter's scanlator in the last list per `<sourceId>|<url>`. */
+    private val scanlatorLists = ConcurrentHashMap<String, List<String>>()
 
     /** Sources that made a request this run (see [features]). */
     private val browsed = ConcurrentHashMap.newKeySet<String>()
@@ -62,6 +68,14 @@ class Contract(
             "chapters" -> chapters(params, slug(args), refresh = true)
             "chapter" -> chapter(params, slug(args), args.getOrNull(1)?.jsonPrimitive?.doubleOrNull ?: throw HostError("No chapter number.", 400))
             "webUrl" -> JsonPrimitive(webUrl(params, slug(args)))
+            "scanlators" -> scanlatorsOf(params, slug(args))
+            "setScanlator" -> {
+                val key = "${sourceId(params)}|${Slugs.decode(slug(args))}"
+                val name = args.getOrNull(1)?.jsonPrimitive?.contentOrNull
+                scanlators.edit().apply { if (name.isNullOrBlank()) remove(key) else putString(key, name) }.apply()
+                chapterLists.remove(key)
+                JsonNull
+            }
             "features" -> features(params)
             else -> throw HostError("Mihon sources have no \"$method\".", 400)
         }
@@ -275,17 +289,53 @@ class Contract(
                 ChapterRecognition.parseChapterNumber(title, name, given)
             }
         val placed = ChapterRecognition.placeNumbers(numbers)
-        val seen = HashSet<Double>()
+        scanlatorLists[key] = chapters.mapNotNull { it["scanlator"]?.jsonPrimitive?.contentOrNull?.trim()?.ifEmpty { null } }
+        // One chapter per number: the picked scanlator's when it has that
+        // number, else the first in Mihon's order.
+        val picked = scanlators.getString(key, null)
+        val chosen = HashMap<Double, Int>()
+        for (i in chapters.indices) {
+            val n = placed[i]
+            val mine = picked != null && chapters[i]["scanlator"]?.jsonPrimitive?.contentOrNull?.trim() == picked
+            val seen = chosen[n]
+            if (seen == null || (mine && chapters[seen]["scanlator"]?.jsonPrimitive?.contentOrNull?.trim() != picked)) chosen[n] = i
+        }
+        val keep = chosen.values.toHashSet()
         val list =
             chapters.indices.mapNotNull { i ->
                 val n = placed[i]
-                if (!seen.add(n)) return@mapNotNull null
+                if (i !in keep) return@mapNotNull null
                 val name = chapters[i]["name"]?.jsonPrimitive?.contentOrNull
                 val extra = if (numbers[i] < 0 && !name.isNullOrBlank()) listOf("title" to JsonPrimitive(name)) else emptyList()
                 JsonObject(chapters[i] + ("number" to JsonPrimitive(n)) + extra)
             }
         chapterLists["${sourceId(params)}|$url"] = list
         return list
+    }
+
+    /**
+     * The comic's scanlators, most chapters first, and the one picked
+     * (null: the source's order decides). Fewer than two: nothing to pick.
+     */
+    private suspend fun scanlatorsOf(
+        params: JsonObject,
+        slug: String,
+    ): JsonElement {
+        val url = Slugs.decode(slug)
+        val key = "${sourceId(params)}|$url"
+        if (scanlatorLists[key] == null) chapterList(params, url)
+        val names =
+            scanlatorLists[key]
+                .orEmpty()
+                .groupingBy { it }
+                .eachCount()
+                .entries
+                .sortedByDescending { it.value }
+                .map { it.key }
+        return buildJsonObject {
+            put("names", buildJsonArray { names.forEach { add(JsonPrimitive(it)) } })
+            put("picked", scanlators.getString(key, null))
+        }
     }
 
     private suspend fun chapters(

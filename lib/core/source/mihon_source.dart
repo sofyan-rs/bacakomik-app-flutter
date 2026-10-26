@@ -65,6 +65,22 @@ class MihonSource implements LoadedSource {
     _features = null;
   }
 
+  /// The comic's scanlators, most chapters first, and the one picked (null:
+  /// the source's order decides which version of a chapter shows).
+  Future<({List<String> names, String? picked})> scanlators(String slug) async {
+    final res = await call('scanlators', [slug]);
+    final map = res is Map ? res : const {};
+    return (
+      names: [for (final n in (map['names'] as List?) ?? const []) '$n'],
+      picked: map['picked'] as String?,
+    );
+  }
+
+  /// Picks the scanlator whose version of each chapter shows; null for the
+  /// source's order. Stays on this device.
+  Future<void> setScanlator(String slug, String? name) =>
+      call('setScanlator', [slug, name]);
+
   @override
   void dispose() => _disposed = true;
 }

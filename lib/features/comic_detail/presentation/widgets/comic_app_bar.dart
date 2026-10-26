@@ -1,6 +1,7 @@
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
@@ -211,7 +212,16 @@ class ComicAppBar extends StatelessWidget {
     ];
   }
 
+  /// Whether [comicSlug] fits the library; says so when it doesn't, as
+  /// storage would skip it without a word.
+  bool _storable(BuildContext context) {
+    if (ComicKey.storable(comicSlug)) return true;
+    showSnackBar(context: context, message: AppText.comicKeyTooLong);
+    return false;
+  }
+
   void _download(BuildContext context, List<Chapter> chapters) {
+    if (!_storable(context)) return;
     context.read<DownloadCubit>().download(
       comicSlug: comicSlug,
       comicDetails: comicDetails,
@@ -255,6 +265,7 @@ class ComicAppBar extends StatelessWidget {
   /// Bookmarks the comic, then offers to put it in categories when there
   /// are any.
   Future<void> _add(BuildContext context) async {
+    if (!_storable(context)) return;
     await context.read<BookmarkCubit>().addBookmark(comicDetails, comicSlug);
     if (!context.mounted) return;
     showSnackBar(context: context, message: AppText.addedToBookmark);

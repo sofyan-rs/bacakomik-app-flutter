@@ -27,6 +27,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/missing_source.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
 import 'package:bacakomik_app/core/source/extension_meta.dart';
+import 'package:bacakomik_app/core/source/mihon_source.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 
 class ComicDetailsScreen extends StatelessWidget {
@@ -98,6 +99,73 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     super.initState();
     _load();
     _loadFeatures();
+    _loadScanlators();
+  }
+
+  /// Scanlators of a Mihon comic with several (empty otherwise), and the
+  /// one picked.
+  var _scanlators = const <String>[];
+  String? _scanlator;
+
+  Future<void> _loadScanlators() async {
+    try {
+      final backend = await getIt<ExtensionManager>().backend(_sourceId);
+      if (backend is! MihonSource) return;
+      final result = await backend.scanlators(ComicKey.slugOf(widget.slug));
+      if (!mounted) return;
+      setState(() {
+        _scanlators = result.names.length > 1 ? result.names : const [];
+        _scanlator = result.picked;
+      });
+    } catch (_) {
+      // Offline or failed: no picker.
+    }
+  }
+
+  Future<void> _pickScanlator() async {
+    final c = Dotline.of(context);
+    final picked = await showDotSheet<({String? name})>(
+      context: context,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const ActionSheetHeader(
+            icon: LucideIcons300.users,
+            title: AppText.scanlators,
+            subtitle: AppText.scanlatorsHint,
+          ),
+          const SizedBox(height: DotSpace.s4),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                ListGroup(
+                  background: c.bg,
+                  children: [
+                    for (final name in [null, ..._scanlators])
+                      ListRow(
+                        title: name ?? AppText.sourceOrder,
+                        trailing: name == _scanlator
+                            ? Icon(LucideIcons300.check, color: c.ink)
+                            : null,
+                        onTap: () => Navigator.of(context).pop((name: name)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (picked == null || picked.name == _scanlator || !mounted) return;
+    final backend = await getIt<ExtensionManager>().backend(_sourceId);
+    if (backend is! MihonSource) return;
+    await backend.setScanlator(ComicKey.slugOf(widget.slug), picked.name);
+    if (!mounted) return;
+    setState(() => _scanlator = picked.name);
+    await _load();
   }
 
   Future<void> _loadFeatures() async {
@@ -300,6 +368,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
               onToggleSelected: _toggleSelected,
               isSelected: _isSelected,
               isSelecting: _selected.isNotEmpty,
+              onScanlators: _scanlators.isEmpty ? null : _pickScanlator,
             ),
           ],
           ComicDetailsNoInternet() => [
