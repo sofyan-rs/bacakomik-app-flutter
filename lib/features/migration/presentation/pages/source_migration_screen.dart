@@ -148,127 +148,145 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            const SliverToBoxAdapter(
-              child: DotTopBar(title: AppText.migrateSource),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DotSpace.s4,
-                  0,
-                  DotSpace.s4,
-                  DotSpace.s4,
-                ),
-                child: ListGroup(
-                  children: [
-                    if (widget.keys == null)
-                      ListRow(
-                        icon: LucideIcons300.bookmark,
-                        title: AppText.migrateFrom,
-                        value: _from == null
-                            ? AppText.pickSource
-                            : _manager.nameOf(_from!),
-                        showChevron: true,
-                        onTap: bookmarks.isEmpty
-                            ? null
-                            : () => _pickFrom(bookmarks),
+        child: Column(
+          children: [
+            // Outside the scroll view so the title stays put.
+            const DotTopBar(title: AppText.migrateSource),
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DotSpace.s4,
+                        0,
+                        DotSpace.s4,
+                        DotSpace.s4,
                       ),
-                    ListRow(
-                      icon: LucideIcons300.arrowRightLeft,
-                      title: AppText.migrateTo,
-                      value: toName ?? AppText.pickSource,
-                      showChevron: true,
-                      onTap: _pickTo,
+                      child: ListGroup(
+                        children: [
+                          if (widget.keys == null)
+                            ListRow(
+                              icon: LucideIcons300.bookmark,
+                              title: AppText.migrateFrom,
+                              value: _from == null
+                                  ? AppText.pickSource
+                                  : _manager.nameOf(_from!),
+                              showChevron: true,
+                              onTap: bookmarks.isEmpty
+                                  ? null
+                                  : () => _pickFrom(bookmarks),
+                            ),
+                          ListRow(
+                            icon: LucideIcons300.arrowRightLeft,
+                            title: AppText.migrateTo,
+                            value: toName ?? AppText.pickSource,
+                            showChevron: true,
+                            onTap: _pickTo,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (bookmarks.isEmpty)
+                    const SliverToBoxAdapter(
+                      child: EmptyState(
+                        icon: LucideIcons300.bookmark,
+                        title: AppText.noBookmarksToMigrate,
+                        message: AppText.noBookmarksToMigrateHint,
+                      ),
+                    )
+                  else if (candidates.isNotEmpty) ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          DotSpace.s4,
+                          0,
+                          DotSpace.s4,
+                          DotSpace.s2,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${_checked.length} / ${candidates.length} '
+                                        '${AppText.selected}'
+                                    .toUpperCase(),
+                                style: DotlineText.label.copyWith(
+                                  color: c.inkFaint,
+                                ),
+                              ),
+                            ),
+                            Pressable(
+                              semanticLabel: allChecked
+                                  ? AppText.selectNone
+                                  : AppText.selectAll,
+                              onTap: () => setState(() {
+                                if (allChecked) {
+                                  _checked.clear();
+                                } else {
+                                  _checked.addAll(
+                                    candidates.map((b) => b.slug),
+                                  );
+                                }
+                              }),
+                              child: Padding(
+                                padding: const EdgeInsets.all(DotSpace.s2),
+                                child: Text(
+                                  allChecked
+                                      ? AppText.selectNone
+                                      : AppText.selectAll,
+                                  style: DotlineText.body.copyWith(
+                                    color: c.inkMuted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverListGroup(
+                      itemCount: candidates.length,
+                      itemBuilder: (context, i) {
+                        final b = candidates[i];
+                        final checked = _checked.contains(b.slug);
+                        void toggle() => setState(
+                          () => checked
+                              ? _checked.remove(b.slug)
+                              : _checked.add(b.slug),
+                        );
+                        return ListRow(
+                          leading: SizedBox(
+                            width: 40,
+                            child: ComicCover(
+                              imageUrl: b.comicDetails.coverImg,
+                            ),
+                          ),
+                          title: b.comicDetails.title,
+                          subtitle: widget.keys == null
+                              ? null
+                              : context.sourceNameOf(b.slug),
+                          onTap: toggle,
+                          trailing: Checkbox(
+                            value: checked,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            activeColor: c.ink,
+                            checkColor: c.onInk,
+                            onChanged: (_) => toggle(),
+                          ),
+                        );
+                      },
                     ),
                   ],
-                ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: DotSpace.s4),
+                  ),
+                ],
               ),
             ),
-            if (bookmarks.isEmpty)
-              const SliverToBoxAdapter(
-                child: EmptyState(
-                  icon: LucideIcons300.bookmark,
-                  title: AppText.noBookmarksToMigrate,
-                  message: AppText.noBookmarksToMigrateHint,
-                ),
-              )
-            else if (candidates.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DotSpace.s4,
-                    0,
-                    DotSpace.s4,
-                    DotSpace.s2,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${_checked.length} / ${candidates.length} '
-                                  '${AppText.selected}'
-                              .toUpperCase(),
-                          style: DotlineText.label.copyWith(color: c.inkFaint),
-                        ),
-                      ),
-                      Pressable(
-                        semanticLabel: allChecked
-                            ? AppText.selectNone
-                            : AppText.selectAll,
-                        onTap: () => setState(() {
-                          if (allChecked) {
-                            _checked.clear();
-                          } else {
-                            _checked.addAll(candidates.map((b) => b.slug));
-                          }
-                        }),
-                        child: Padding(
-                          padding: const EdgeInsets.all(DotSpace.s2),
-                          child: Text(
-                            allChecked ? AppText.selectNone : AppText.selectAll,
-                            style: DotlineText.body.copyWith(color: c.inkMuted),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SliverListGroup(
-                itemCount: candidates.length,
-                itemBuilder: (context, i) {
-                  final b = candidates[i];
-                  final checked = _checked.contains(b.slug);
-                  void toggle() => setState(
-                    () => checked
-                        ? _checked.remove(b.slug)
-                        : _checked.add(b.slug),
-                  );
-                  return ListRow(
-                    leading: SizedBox(
-                      width: 40,
-                      child: ComicCover(imageUrl: b.comicDetails.coverImg),
-                    ),
-                    title: b.comicDetails.title,
-                    subtitle: widget.keys == null
-                        ? null
-                        : context.sourceNameOf(b.slug),
-                    onTap: toggle,
-                    trailing: Checkbox(
-                      value: checked,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      activeColor: c.ink,
-                      checkColor: c.onInk,
-                      onChanged: (_) => toggle(),
-                    ),
-                  );
-                },
-              ),
-            ],
-            const SliverToBoxAdapter(child: SizedBox(height: DotSpace.s4)),
           ],
         ),
       ),

@@ -139,70 +139,77 @@ class _MatchViewState extends State<_MatchView> {
           canPop: state.phase != MatchPhase.applying,
           child: Scaffold(
             body: SafeArea(
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: DotTopBar(
-                      title: title,
-                      subtitle: '${AppText.migrateTo} $target',
-                    ),
+              child: Column(
+                children: [
+                  // Outside the scroll view so the title stays put.
+                  DotTopBar(
+                    title: title,
+                    subtitle: '${AppText.migrateTo} $target',
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DotSpace.s4,
-                        0,
-                        DotSpace.s4,
-                        DotSpace.s4,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            _summary(state),
-                            style: DotlineText.label.copyWith(color: c.ink),
+                  Expanded(
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DotSpace.s4,
+                              0,
+                              DotSpace.s4,
+                              DotSpace.s4,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  _summary(state),
+                                  style: DotlineText.label.copyWith(
+                                    color: c.ink,
+                                  ),
+                                ),
+                                if (state.phase == MatchPhase.searching) ...[
+                                  const SizedBox(height: DotSpace.s2),
+                                  DotMeter(
+                                    value: state.searched,
+                                    total: state.items.length,
+                                  ),
+                                  const SizedBox(height: DotSpace.s2),
+                                  Text(
+                                    AppText.searchingSlowly,
+                                    style: DotlineText.bodyS.copyWith(
+                                      color: c.inkFaint,
+                                    ),
+                                  ),
+                                ],
+                                if (state.phase == MatchPhase.finished &&
+                                    widget.mode == MatchMode.import) ...[
+                                  const SizedBox(height: DotSpace.s2),
+                                  Text(
+                                    AppText.importLoadHint,
+                                    style: DotlineText.bodyS.copyWith(
+                                      color: c.inkFaint,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
-                          if (state.phase == MatchPhase.searching) ...[
-                            const SizedBox(height: DotSpace.s2),
-                            DotMeter(
-                              value: state.searched,
-                              total: state.items.length,
-                            ),
-                            const SizedBox(height: DotSpace.s2),
-                            Text(
-                              AppText.searchingSlowly,
-                              style: DotlineText.bodyS.copyWith(
-                                color: c.inkFaint,
-                              ),
-                            ),
-                          ],
-                          if (state.phase == MatchPhase.finished &&
-                              widget.mode == MatchMode.import) ...[
-                            const SizedBox(height: DotSpace.s2),
-                            Text(
-                              AppText.importLoadHint,
-                              style: DotlineText.bodyS.copyWith(
-                                color: c.inkFaint,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                        ),
+                        SliverListGroup(
+                          itemCount: state.items.length,
+                          itemBuilder: (context, i) => _MatchRow(
+                            item: state.items[i],
+                            onTap:
+                                state.phase == MatchPhase.applying ||
+                                    state.phase == MatchPhase.finished
+                                ? null
+                                : () => _fix(i, state.items[i]),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: DotSpace.s4),
+                        ),
+                      ],
                     ),
-                  ),
-                  SliverListGroup(
-                    itemCount: state.items.length,
-                    itemBuilder: (context, i) => _MatchRow(
-                      item: state.items[i],
-                      onTap:
-                          state.phase == MatchPhase.applying ||
-                              state.phase == MatchPhase.finished
-                          ? null
-                          : () => _fix(i, state.items[i]),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: DotSpace.s4),
                   ),
                 ],
               ),

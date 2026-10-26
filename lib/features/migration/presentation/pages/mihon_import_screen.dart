@@ -56,71 +56,83 @@ class _MihonImportView extends StatelessWidget {
           canPop: state.phase != MihonImportPhase.importing,
           child: Scaffold(
             body: SafeArea(
-              child: CustomScrollView(
-                slivers: [
-                  const SliverToBoxAdapter(
-                    child: DotTopBar(title: AppText.importMihon),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DotSpace.s4,
-                        0,
-                        DotSpace.s4,
-                        DotSpace.s4,
-                      ),
-                      child: Text(switch (state.phase) {
-                        MihonImportPhase.finished => switch (state.result) {
-                          final r? =>
-                            '${AppText.importDone} · ${r.added} ${AppText.added}'
-                                '${r.existing > 0 ? ' · ${r.existing} ${AppText.alreadyInLibrary}' : ''}'
-                                '${r.sameTitle > 0 ? ' · ${r.sameTitle} ${AppText.sameTitleElsewhere}' : ''}'
-                                '${r.chaptersRead > 0 ? ' · ${r.chaptersRead} ${AppText.chaptersMarkedRead}' : ''}. '
-                                '${AppText.mihonLoadHint}',
-                          null => AppText.importDone,
-                        },
-                        _ => AppText.mihonHint,
-                      }, style: DotlineText.bodyS.copyWith(color: c.inkFaint)),
-                    ),
-                  ),
-                  if (state.phase == MihonImportPhase.reading)
-                    const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(DotSpace.s6),
-                        child: Center(child: DotLoader()),
-                      ),
-                    ),
-                  if (state.supported.isNotEmpty) ...[
-                    const SliverToBoxAdapter(
-                      child: SectionLabel(label: AppText.sources),
-                    ),
-                    SliverListGroup(
-                      itemCount: state.supported.length,
-                      itemBuilder: (context, i) =>
-                          _GroupRow(group: state.supported[i], state: state),
-                    ),
-                  ],
-                  if (state.unsupported.isNotEmpty) ...[
-                    const SliverToBoxAdapter(
-                      child: SectionLabel(label: AppText.notAvailableHere),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DotSpace.s4,
+              child: Column(
+                children: [
+                  // Outside the scroll view so the title stays put.
+                  const DotTopBar(title: AppText.importMihon),
+                  Expanded(
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DotSpace.s4,
+                              0,
+                              DotSpace.s4,
+                              DotSpace.s4,
+                            ),
+                            child: Text(switch (state.phase) {
+                              MihonImportPhase.finished => switch (state
+                                  .result) {
+                                final r? =>
+                                  '${AppText.importDone} · ${r.added} ${AppText.added}'
+                                      '${r.existing > 0 ? ' · ${r.existing} ${AppText.alreadyInLibrary}' : ''}'
+                                      '${r.sameTitle > 0 ? ' · ${r.sameTitle} ${AppText.sameTitleElsewhere}' : ''}'
+                                      '${r.chaptersRead > 0 ? ' · ${r.chaptersRead} ${AppText.chaptersMarkedRead}' : ''}. '
+                                      '${AppText.mihonLoadHint}',
+                                null => AppText.importDone,
+                              },
+                              _ => AppText.mihonHint,
+                            }, style: DotlineText.bodyS.copyWith(color: c.inkFaint)),
+                          ),
                         ),
-                        child: Text(
-                          [
-                            for (final g in state.unsupported)
-                              '${g.name} (${g.total})',
-                          ].join(' · '),
-                          style: DotlineText.bodyS.copyWith(color: c.inkFaint),
+                        if (state.phase == MihonImportPhase.reading)
+                          const SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.all(DotSpace.s6),
+                              child: Center(child: DotLoader()),
+                            ),
+                          ),
+                        if (state.supported.isNotEmpty) ...[
+                          const SliverToBoxAdapter(
+                            child: SectionLabel(label: AppText.sources),
+                          ),
+                          SliverListGroup(
+                            itemCount: state.supported.length,
+                            itemBuilder: (context, i) => _GroupRow(
+                              group: state.supported[i],
+                              state: state,
+                            ),
+                          ),
+                        ],
+                        if (state.unsupported.isNotEmpty) ...[
+                          const SliverToBoxAdapter(
+                            child: SectionLabel(
+                              label: AppText.notAvailableHere,
+                            ),
+                          ),
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: DotSpace.s4,
+                              ),
+                              child: Text(
+                                [
+                                  for (final g in state.unsupported)
+                                    '${g.name} (${g.total})',
+                                ].join(' · '),
+                                style: DotlineText.bodyS.copyWith(
+                                  color: c.inkFaint,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: DotSpace.s4),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: DotSpace.s4),
                   ),
                 ],
               ),

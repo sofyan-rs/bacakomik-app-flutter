@@ -43,56 +43,64 @@ class DownloadsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: SlidableAutoCloseBehavior(
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: DotTopBar(
-                  title: AppText.downloads,
-                  actions: [
-                    if (library.chapters.isNotEmpty)
-                      RoundIconButton(
-                        icon: LucideIcons300.trash2,
-                        semanticLabel: AppText.clearDownloads,
-                        iconSize: DotSize.iconSmall,
-                        onTap: () => _confirmClear(context),
+        child: Column(
+          children: [
+            // Outside the scroll view so the title stays put.
+            DotTopBar(
+              title: AppText.downloads,
+              actions: [
+                if (library.chapters.isNotEmpty)
+                  RoundIconButton(
+                    icon: LucideIcons300.trash2,
+                    semanticLabel: AppText.clearDownloads,
+                    iconSize: DotSize.iconSmall,
+                    onTap: () => _confirmClear(context),
+                  ),
+              ],
+            ),
+            Expanded(
+              child: SlidableAutoCloseBehavior(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DotSpace.s4,
+                        DotSpace.s3,
+                        DotSpace.s4,
+                        DotSpace.s3,
                       ),
+                      sliver: SliverToBoxAdapter(child: _stats(library)),
+                    ),
+                    if (library.chapters.isEmpty)
+                      const SliverToBoxAdapter(
+                        child: EmptyState(
+                          icon: LucideIcons300.download,
+                          title: AppText.downloadsEmpty,
+                          message: AppText.downloadsEmptyHint,
+                        ),
+                      ),
+                    if (pending.isNotEmpty)
+                      ..._queue(context, library, pending),
+                    for (final (comic, chapters) in groups) ...[
+                      DownloadComicGroup(
+                        key: ValueKey(comic.slug),
+                        comic: comic,
+                        chapters: chapters,
+                      ),
+                      const SliverPadding(
+                        padding: EdgeInsets.only(bottom: DotSpace.s5),
+                      ),
+                    ],
+                    SliverPadding(
+                      padding: EdgeInsets.only(
+                        bottom: bottomInset + DotSpace.s4,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  DotSpace.s4,
-                  DotSpace.s3,
-                  DotSpace.s4,
-                  DotSpace.s3,
-                ),
-                sliver: SliverToBoxAdapter(child: _stats(library)),
-              ),
-              if (library.chapters.isEmpty)
-                const SliverToBoxAdapter(
-                  child: EmptyState(
-                    icon: LucideIcons300.download,
-                    title: AppText.downloadsEmpty,
-                    message: AppText.downloadsEmptyHint,
-                  ),
-                ),
-              if (pending.isNotEmpty) ..._queue(context, library, pending),
-              for (final (comic, chapters) in groups) ...[
-                DownloadComicGroup(
-                  key: ValueKey(comic.slug),
-                  comic: comic,
-                  chapters: chapters,
-                ),
-                const SliverPadding(
-                  padding: EdgeInsets.only(bottom: DotSpace.s5),
-                ),
-              ],
-              SliverPadding(
-                padding: EdgeInsets.only(bottom: bottomInset + DotSpace.s4),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
