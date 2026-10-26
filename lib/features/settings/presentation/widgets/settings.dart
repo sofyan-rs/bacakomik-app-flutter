@@ -69,6 +69,12 @@ class Settings extends StatelessWidget {
     );
     void setIncognito(bool on) =>
         context.read<SettingsCubit>().update((s) => s.copyWith(incognito: on));
+    final kururinSound = context.select<SettingsCubit, bool>(
+      (s) => s.state.kururinSound,
+    );
+    void setKururinSound(bool on) => context.read<SettingsCubit>().update(
+      (s) => s.copyWith(kururinSound: on),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,6 +184,25 @@ class Settings extends StatelessWidget {
               Segment(value: AppThemeMode.system, label: AppText.themeSystem),
               Segment(value: AppThemeMode.light, label: AppText.themeLight),
               Segment(value: AppThemeMode.dark, label: AppText.themeDark),
+            ],
+          ),
+        ),
+        const SizedBox(height: DotSpace.s3),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+          child: ListGroup(
+            children: [
+              ListRow(
+                icon: LucideIcons300.volume2,
+                title: AppText.kururinSound,
+                subtitle: AppText.kururinSoundDescription,
+                trailing: DotSwitch(
+                  value: kururinSound,
+                  semanticLabel: AppText.kururinSound,
+                  onChanged: setKururinSound,
+                ),
+                onTap: () => setKururinSound(!kururinSound),
+              ),
             ],
           ),
         ),

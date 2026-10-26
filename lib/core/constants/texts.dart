@@ -172,6 +172,9 @@ class AppText {
   static const String themeSystem = 'System';
   static const String themeLight = 'Light';
   static const String themeDark = 'Dark';
+  static const String kururinSound = 'Kuru-kuru sound';
+  static const String kururinSoundDescription =
+      'Plays while pulling to refresh Home';
   static const String version = 'Version';
 
   // Download Text

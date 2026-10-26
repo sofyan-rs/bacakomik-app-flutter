@@ -155,7 +155,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 - Events are `final class`es named after what happened (`HomeStarted`, `ChapterRequested`).
 
 ### 4.4 Settings
-`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `progressBar`, `autoScrollSpeed`), `incognito` (the reader saves no history while on; marking chapters read still does), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
+`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `progressBar`, `autoScrollSpeed`), `incognito` (the reader saves no history while on; marking chapters read still does), `kururinSound` (Home's pull-to-refresh sound; the spin shows either way), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
 
 ---
 
@@ -279,7 +279,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 { "slug": "voratoon:solo-leveling", "categoryIds": ["…"], "updatedDate": "2026-10-20T10:00:00.000" }
 // settings
 { "themeMode": "system", "readingDirection": "vertical", "pageFit": "width",
-  "keepScreenOn": true, "pageGap": false, "progressBar": true, "autoScrollSpeed": 3, "incognito": false,
+  "keepScreenOn": true, "pageGap": false, "progressBar": true, "autoScrollSpeed": 3, "incognito": false, "kururinSound": true,
   "bookmarkGrouping": "status",
   "bookmarkSort": "updated", "bookmarkSortDirection": "descending" }
 ```

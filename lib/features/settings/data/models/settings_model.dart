@@ -15,6 +15,7 @@ class SettingsModel {
     this.progressBar = true,
     this.autoScrollSpeed = 3,
     this.incognito = false,
+    this.kururinSound = true,
     this.bookmarkGrouping = BookmarkGrouping.status,
     this.bookmarkSort = BookmarkSort.updated,
     this.bookmarkSortDirection = SortDirection.descending,
@@ -29,6 +30,7 @@ class SettingsModel {
     progressBar: e.progressBar,
     autoScrollSpeed: e.autoScrollSpeed,
     incognito: e.incognito,
+    kururinSound: e.kururinSound,
     bookmarkGrouping: e.bookmarkGrouping,
     bookmarkSort: e.bookmarkSort,
     bookmarkSortDirection: e.bookmarkSortDirection,
@@ -51,6 +53,7 @@ class SettingsModel {
   final bool progressBar;
   final int autoScrollSpeed;
   final bool incognito;
+  final bool kururinSound;
 
   @JsonKey(unknownEnumValue: BookmarkGrouping.status)
   final BookmarkGrouping bookmarkGrouping;
@@ -72,6 +75,7 @@ class SettingsModel {
     progressBar: progressBar,
     autoScrollSpeed: autoScrollSpeed.clamp(autoScrollMin, autoScrollMax),
     incognito: incognito,
+    kururinSound: kururinSound,
     bookmarkGrouping: bookmarkGrouping,
     bookmarkSort: bookmarkSort,
     bookmarkSortDirection: bookmarkSortDirection,

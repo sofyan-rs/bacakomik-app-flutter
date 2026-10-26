@@ -11,6 +11,7 @@ import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter.dart';
+import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/source_picker_sheet.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
@@ -68,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _minSpinDone = true;
       _stopKururinIfDone();
     });
+    if (!context.read<SettingsCubit>().state.kururinSound) return;
     await _player.setSource(AssetSource('sounds/kuru-kururin.mp3'));
     await _player.resume();
   }

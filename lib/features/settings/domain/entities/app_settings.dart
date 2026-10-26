@@ -85,6 +85,9 @@ abstract class AppSettings with _$AppSettings {
 
     /// Incognito mode: the reader records no history.
     @Default(false) bool incognito,
+
+    /// Herta's "kuru kuru" sound while Home refreshes.
+    @Default(true) bool kururinSound,
     @Default(BookmarkGrouping.status) BookmarkGrouping bookmarkGrouping,
     @Default(BookmarkSort.updated) BookmarkSort bookmarkSort,
     @Default(SortDirection.descending) SortDirection bookmarkSortDirection,
