@@ -260,8 +260,9 @@ class Contract(
      * the numbered chapter before it, in 0.001 steps ([ChapterRecognition.placeNumbers]); with
      * no number anywhere (a gallery's one "Chapter", nhentai) they are
      * numbered 1, 2, … from the oldest. Those keep their name as `title`
-     * for the app to show. The list is kept so [chapter] finds a number's
-     * URL.
+     * for the app to show. A comic with one chapter (a gallery, a oneshot)
+     * is always chapter 1, without a title, whatever its name says. The
+     * list is kept so [chapter] finds a number's URL.
      */
     private suspend fun chapterList(
         params: JsonObject,
@@ -288,7 +289,8 @@ class Contract(
                 val name = it["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
                 ChapterRecognition.parseChapterNumber(title, name, given)
             }
-        val placed = ChapterRecognition.placeNumbers(numbers)
+        val single = chapters.size == 1
+        val placed = if (single) listOf(1.0) else ChapterRecognition.placeNumbers(numbers)
         scanlatorLists[key] = chapters.mapNotNull { it["scanlator"]?.jsonPrimitive?.contentOrNull?.trim()?.ifEmpty { null } }
         // One chapter per number: the picked scanlator's when it has that
         // number, else the first in Mihon's order.
@@ -306,7 +308,7 @@ class Contract(
                 val n = placed[i]
                 if (i !in keep) return@mapNotNull null
                 val name = chapters[i]["name"]?.jsonPrimitive?.contentOrNull
-                val extra = if (numbers[i] < 0 && !name.isNullOrBlank()) listOf("title" to JsonPrimitive(name)) else emptyList()
+                val extra = if (!single && numbers[i] < 0 && !name.isNullOrBlank()) listOf("title" to JsonPrimitive(name)) else emptyList()
                 JsonObject(chapters[i] + ("number" to JsonPrimitive(n)) + extra)
             }
         chapterLists["${sourceId(params)}|$url"] = list
