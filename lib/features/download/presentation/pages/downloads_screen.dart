@@ -67,7 +67,7 @@ class DownloadsScreen extends StatelessWidget {
                         DotSpace.s4,
                         DotSpace.s3,
                         DotSpace.s4,
-                        DotSpace.s3,
+                        DotSpace.s5,
                       ),
                       sliver: SliverToBoxAdapter(child: _stats(library)),
                     ),
@@ -88,7 +88,7 @@ class DownloadsScreen extends StatelessWidget {
                         chapters: chapters,
                       ),
                       const SliverPadding(
-                        padding: EdgeInsets.only(bottom: DotSpace.s5),
+                        padding: EdgeInsets.only(bottom: DotSpace.s3),
                       ),
                     ],
                     SliverPadding(
