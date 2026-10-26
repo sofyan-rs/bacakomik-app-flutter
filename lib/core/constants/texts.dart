@@ -263,6 +263,7 @@ class AppText {
   static const String sortLatestChapter = 'Latest chapter';
   static const String sortAdded = 'Date added';
   static const String sortLastRead = 'Last read';
+  static const String sortUnread = 'Unread chapters';
   static const String sortNewestFirst = 'Newest first';
   static const String sortOldestFirst = 'Oldest first';
   static const String sortAToZ = 'A to Z';

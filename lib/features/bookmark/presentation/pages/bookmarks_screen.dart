@@ -354,7 +354,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       _lastQuery = query;
       final open = tabs.where((t) => t.value == _group).firstOrNull;
       if (query.isNotEmpty && open != null && open.count == 0) {
-        _group = tabs.where((t) => (t.count ?? 0) > 0).firstOrNull?.value ?? _group;
+        _group =
+            tabs.where((t) => (t.count ?? 0) > 0).firstOrNull?.value ?? _group;
       }
     }
     final shown = [

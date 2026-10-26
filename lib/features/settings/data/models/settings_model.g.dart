@@ -96,6 +96,7 @@ const _$BookmarkSortEnumMap = {
   BookmarkSort.latestChapter: 'latestChapter',
   BookmarkSort.added: 'added',
   BookmarkSort.lastRead: 'lastRead',
+  BookmarkSort.unread: 'unread',
 };
 
 const _$SortDirectionEnumMap = {

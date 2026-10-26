@@ -52,6 +52,9 @@ enum BookmarkSort {
 
   /// When a chapter of the comic was last read.
   lastRead,
+
+  /// Chapters not read yet, the count badge.
+  unread,
 }
 
 enum SortDirection { ascending, descending }

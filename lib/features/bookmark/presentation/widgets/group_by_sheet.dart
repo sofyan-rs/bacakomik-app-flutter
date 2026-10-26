@@ -183,6 +183,13 @@ class _SortOptions extends StatelessWidget {
       AppText.sortOldestFirst,
       AppText.sortNewestFirst,
     ),
+    (
+      BookmarkSort.unread,
+      LucideIcons300.bookDashed,
+      AppText.sortUnread,
+      AppText.sortFewestFirst,
+      AppText.sortMostFirst,
+    ),
   ];
 
   @override

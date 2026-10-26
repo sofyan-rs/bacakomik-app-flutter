@@ -6,7 +6,8 @@ import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dar
 /// [items] (the repository's, newest first), so the default reproduces the
 /// order from before sorting existed. Other keys break ties by title, then
 /// key. With [BookmarkSort.lastRead], comics never read go last in both
-/// directions.
+/// directions; with [BookmarkSort.unread], comics with nothing left to
+/// read do.
 List<BookmarkProgress> sortBookmarks(
   Iterable<BookmarkProgress> items,
   BookmarkSort sort,
@@ -36,6 +37,13 @@ Comparator<BookmarkProgress> bookmarkComparator(
         (_, null) => -1,
         (final x?, final y?) => sign * x.compareTo(y),
       };
+    } else if (sort == BookmarkSort.unread) {
+      order = switch ((a.newChapters, b.newChapters)) {
+        (0, 0) => 0,
+        (0, _) => 1,
+        (_, 0) => -1,
+        (final x, final y) => sign * x.compareTo(y),
+      };
     } else {
       order =
           sign *
@@ -50,6 +58,7 @@ Comparator<BookmarkProgress> bookmarkComparator(
             ),
             BookmarkSort.added => a.added.compareTo(b.added),
             BookmarkSort.lastRead => 0,
+            BookmarkSort.unread => 0,
           };
     }
     if (order != 0 || sort == BookmarkSort.updated) return order;
@@ -58,12 +67,12 @@ Comparator<BookmarkProgress> bookmarkComparator(
   };
 }
 
-/// The direction an option starts in when picked: A to Z, otherwise the
-/// most or newest first.
-SortDirection defaultDirectionOf(BookmarkSort sort) =>
-    sort == BookmarkSort.title
-    ? SortDirection.ascending
-    : SortDirection.descending;
+/// The direction an option starts in when picked: A to Z, fewest unread
+/// first, otherwise the most or newest first.
+SortDirection defaultDirectionOf(BookmarkSort sort) => switch (sort) {
+  BookmarkSort.title || BookmarkSort.unread => SortDirection.ascending,
+  _ => SortDirection.descending,
+};
 
 String _title(BookmarkProgress item) =>
     item.bookmark.comicDetails.title.toLowerCase();

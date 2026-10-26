@@ -159,6 +159,30 @@ void main() {
       ]);
     });
 
+    test('unread orders by chapters left, all read last both ways', () {
+      BookmarkProgress withRead(String slug, int chapters, int read) {
+        final base = item(slug, chapters: chapters);
+        return BookmarkProgress(base.bookmark, read);
+      }
+
+      final items = [
+        withRead('caught up', 10, 10),
+        withRead('far behind', 50, 5),
+        withRead('a bit behind', 3, 1),
+      ];
+
+      expect(sorted(items, BookmarkSort.unread, desc), [
+        'far behind',
+        'a bit behind',
+        'caught up',
+      ]);
+      expect(sorted(items, BookmarkSort.unread, asc), [
+        'a bit behind',
+        'far behind',
+        'caught up',
+      ]);
+    });
+
     test('ties break by title, then key, in both directions', () {
       final items = [
         item('z', title: 'Same', added: 1),
@@ -171,10 +195,13 @@ void main() {
       }
     });
 
-    test('options start A to Z or newest first', () {
+    test('options start A to Z, fewest unread or newest first', () {
       expect(defaultDirectionOf(BookmarkSort.title), asc);
+      expect(defaultDirectionOf(BookmarkSort.unread), asc);
       for (final sort in BookmarkSort.values) {
-        if (sort == BookmarkSort.title) continue;
+        if (sort == BookmarkSort.title || sort == BookmarkSort.unread) {
+          continue;
+        }
         expect(defaultDirectionOf(sort), desc);
       }
     });
