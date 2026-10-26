@@ -34,6 +34,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Response
@@ -69,6 +70,10 @@ class ExtensionHost(
     private val loader: ExtensionLoader,
     private val memos: MemoStore,
     private val settings: SettingsBridge,
+    // BACAKOMIK: each series' last chapter list, handed back to
+    // getMangaUpdate so sources that read only new chapters ("fetch until
+    // known") can; null keeps none.
+    private val chapterDir: java.io.File? = null,
 ) {
     // By package: each source id's Source.
     private val loaded = ConcurrentHashMap<String, Map<Long, Source>>()
@@ -202,6 +207,9 @@ class ExtensionHost(
     private val updateLocks = ConcurrentHashMap<String, Mutex>()
     private val updateScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // BACAKOMIK: details and chapters are separate jobs, details first, so a
+    // source that reads its chapter list slowly (page by page in a web view)
+    // shows the series at once. Asks of the same kind still share one call.
     private suspend fun mangaUpdate(
         source: Source,
         url: String,
@@ -209,27 +217,29 @@ class ExtensionHost(
         chapters: Boolean,
     ): SMangaUpdate {
         val key = "${source.id}|$url"
+        val jobKey = "$key|${if (details) "d" else ""}${if (chapters) "c" else ""}"
         val (job, first) =
             synchronized(updateJobs) {
-                val waiting = updateJobs[key]?.takeIf { !it.started }
-                if (waiting != null) {
-                    waiting.details = waiting.details || details
-                    waiting.chapters = waiting.chapters || chapters
-                    waiting to false
-                } else {
-                    MangaUpdateJob(details, chapters).also { updateJobs[key] = it } to true
-                }
+                val waiting = updateJobs[jobKey]?.takeIf { !it.started }
+                waiting?.let { it to false } ?: (MangaUpdateJob(details, chapters).also { updateJobs[jobKey] = it } to true)
             }
         if (first) {
             updateScope.launch(coroutineContext[eu.kanade.tachiyomi.network.NetworkUse.For] ?: kotlin.coroutines.EmptyCoroutineContext) {
                 delay(UPDATE_GATHER_MS)
+                // A chapter walk lets waiting details go first.
+                if (!details) {
+                    while (synchronized(updateJobs) { updateJobs["$key|d"]?.started == false }) delay(UPDATE_GATHER_MS)
+                }
                 updateLocks.getOrPut(key) { Mutex() }.withLock {
                     synchronized(updateJobs) {
                         job.started = true
-                        if (updateJobs[key] === job) updateJobs.remove(key)
+                        if (updateJobs[jobKey] === job) updateJobs.remove(jobKey)
                     }
                     try {
-                        job.result.complete(source.getMangaUpdate(manga(source, url), emptyList(), job.details, job.chapters))
+                        val known = if (job.chapters) knownChapters(source, url) else emptyList()
+                        val update = source.getMangaUpdate(manga(source, url), known, job.details, job.chapters)
+                        if (job.chapters) saveChapters(source, url, update.chapters)
+                        job.result.complete(update)
                     } catch (e: Throwable) {
                         job.result.completeExceptionally(e)
                     }
@@ -237,6 +247,51 @@ class ExtensionHost(
             }
         }
         return job.result.await()
+    }
+
+    private fun chapterFile(
+        source: Source,
+        url: String,
+    ): java.io.File? {
+        val dir = chapterDir ?: return null
+        val hash = java.security.MessageDigest.getInstance("SHA-1").digest("${source.id}|$url".toByteArray()).joinToString("") { "%02x".format(it) }
+        return java.io.File(dir, "$hash.json")
+    }
+
+    // The last list, newest first, with each chapter's memo, as the source
+    // gave it.
+    private fun knownChapters(
+        source: Source,
+        url: String,
+    ): List<SChapter> =
+        runCatching {
+            val file = chapterFile(source, url)?.takeIf { it.isFile } ?: return emptyList()
+            kotlinx.serialization.json.Json.parseToJsonElement(file.readText()).let { it as JsonArray }.map { element ->
+                val o = element.jsonObject
+                SChapter.create().also { c ->
+                    c.url = o["url"]!!.jsonPrimitive.content
+                    c.name = o["name"]?.jsonPrimitive?.content.orEmpty()
+                    c.chapter_number = o["number"]?.jsonPrimitive?.content?.toFloatOrNull() ?: -1f
+                    c.date_upload = o["uploaded"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
+                    c.scanlator = o["scanlator"]?.jsonPrimitive?.content
+                    memos.chapter(source.id, c.url)?.let { c.memo = it }
+                }
+            }
+        }.getOrDefault(emptyList())
+
+    private fun saveChapters(
+        source: Source,
+        url: String,
+        chapters: List<SChapter>,
+    ) {
+        runCatching {
+            for (c in chapters) if (c.memo.isNotEmpty()) memos.putChapter(source.id, c.url, c.memo)
+            val file = chapterFile(source, url) ?: return
+            file.parentFile?.mkdirs()
+            val temp = java.io.File(file.path + ".tmp")
+            temp.writeText(Codec.chapters(chapters).toString())
+            temp.renameTo(file)
+        }
     }
 
     fun manga(
@@ -281,7 +336,6 @@ class ExtensionHost(
             }
             "chapters" -> {
                 val update = mangaUpdate(source, params.string("url"), details = false, chapters = true)
-                for (c in update.chapters) if (c.memo.isNotEmpty()) memos.putChapter(source.id, c.url, c.memo)
                 Codec.chapters(update.chapters)
             }
             "pages" -> Codec.pages(source.getPageList(chapter(source, params.string("url"))))

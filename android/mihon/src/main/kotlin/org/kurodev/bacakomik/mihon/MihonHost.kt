@@ -100,7 +100,7 @@ object MihonHost {
         }
         Injekt.addSingletonFactory<ProtoBuf> { ProtoBuf }
         loader = AndroidLoader(app)
-        host = ExtensionHost(loader, MemoStore(File(folder, "memos.json")), AndroidSettings(app))
+        host = ExtensionHost(loader, MemoStore(File(folder, "memos.json")), AndroidSettings(app), File(folder, "chapters"))
         contract = Contract(host, app.getSharedPreferences("bacakomik_mihon_scanlators", Context.MODE_PRIVATE))
         index = SourceIndex(app)
         started = true

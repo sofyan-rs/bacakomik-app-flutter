@@ -250,17 +250,20 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ComicDetailsBloc, ComicDetailsState>(
-      listenWhen: (_, state) => state is ComicDetailsLoaded,
+      listenWhen: (_, state) =>
+          state is ComicDetailsLoaded && !state.chaptersLoading,
       listener: _onLoaded,
       builder: (context, state) {
         final details = state is ComicDetailsLoaded ? state.comicDetails : null;
+        // Bookmarking or downloading waits for the chapter list.
+        final ready = state is ComicDetailsLoaded && !state.chaptersLoading;
         return PopScope(
           canPop: _selected.isEmpty,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _setSelected(const []);
           },
           child: Scaffold(
-            bottomNavigationBar: details == null
+            bottomNavigationBar: details == null || !ready
                 ? null
                 : ComicAppBar(
                     comicSlug: widget.slug,
@@ -344,7 +347,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
           ),
         ]
       : switch (state) {
-          ComicDetailsLoaded(:final comicDetails) => [
+          ComicDetailsLoaded(:final comicDetails, :final chaptersLoading) => [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 DotSpace.s4,
@@ -355,6 +358,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
               sliver: SliverToBoxAdapter(
                 child: ComicInfo(
                   details: comicDetails,
+                  chaptersLoading: chaptersLoading,
                   source: context.sourceLabelOf(widget.slug),
                   onGenreTap: _exploreGenre,
                   canTapGenre: (genre) =>
@@ -364,6 +368,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
             ),
             ComicChapters(
               comicDetails: comicDetails,
+              loading: chaptersLoading,
               onOpenChapter: (chapter) => _read(comicDetails, chapter.slug),
               onToggleSelected: _toggleSelected,
               isSelected: _isSelected,

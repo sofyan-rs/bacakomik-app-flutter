@@ -58,4 +58,11 @@ class DescriptionTest {
         assertNull(d.rating)
         assertEquals(text, d.synopsis)
     }
+
+    @Test
+    fun aStarLineIsTheRating() {
+        val d = Description.parse("★★★★★ 9.8\n\nMori, a child found by a rescue team.")
+        assertEquals(9.8, d.rating!!, 0.0001)
+        assertEquals("Mori, a child found by a rescue team.", d.synopsis)
+    }
 }

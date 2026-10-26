@@ -16,6 +16,7 @@ class ComicInfo extends StatefulWidget {
     this.source,
     this.onGenreTap,
     this.canTapGenre,
+    this.chaptersLoading = false,
   });
 
   final ComicDetails details;
@@ -28,6 +29,9 @@ class ComicInfo extends StatefulWidget {
 
   /// Whether a genre opens anything; others are plain labels.
   final bool Function(Genre genre)? canTapGenre;
+
+  /// The chapter list is still loading: its count shows as `…`.
+  final bool chaptersLoading;
 
   static final _yearPattern = RegExp(r'\d{4}');
 
@@ -64,7 +68,7 @@ class _ComicInfoState extends State<ComicInfo> {
     // Each shows only when known. The rating, a minor detail, is a tile of
     // its own nowhere: it follows the source line.
     final tiles = [
-      ('${d.chapters.length}', AppText.chapter),
+      (widget.chaptersLoading ? '…' : '${d.chapters.length}', AppText.chapter),
       if (year != '-') (year, AppText.released),
       if (status.isNotEmpty && status != '-') (d.status, AppText.status),
     ];

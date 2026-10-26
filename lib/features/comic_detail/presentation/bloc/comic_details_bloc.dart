@@ -17,8 +17,12 @@ final class ComicDetailsRequested {
 sealed class ComicDetailsState with _$ComicDetailsState {
   const factory ComicDetailsState.initial() = ComicDetailsInitial;
   const factory ComicDetailsState.loading() = ComicDetailsLoading;
+
+  /// [chaptersLoading]: the details came first; the chapter list is still
+  /// loading ([comicDetails] has none yet).
   const factory ComicDetailsState.loaded({
     required ComicDetails comicDetails,
+    @Default(false) bool chaptersLoading,
   }) = ComicDetailsLoaded;
   const factory ComicDetailsState.error({required String message}) =
       ComicDetailsError;
@@ -28,7 +32,7 @@ sealed class ComicDetailsState with _$ComicDetailsState {
 @injectable
 class ComicDetailsBloc extends Bloc<ComicDetailsRequested, ComicDetailsState> {
   ComicDetailsBloc(this._getComicDetails)
-      : super(const ComicDetailsState.initial()) {
+    : super(const ComicDetailsState.initial()) {
     on<ComicDetailsRequested>(_onRequested);
   }
 
@@ -39,13 +43,27 @@ class ComicDetailsBloc extends Bloc<ComicDetailsRequested, ComicDetailsState> {
     Emitter<ComicDetailsState> emit,
   ) async {
     emit(const ComicDetailsState.loading());
-    final result = await _getComicDetails(event.slug);
-    emit(result.fold(
-      (failure) => switch (failure) {
-        NetworkFailure() => const ComicDetailsState.noInternet(),
-        _ => ComicDetailsState.error(message: failure.message),
+    final result = await _getComicDetails(
+      event.slug,
+      onSeries: (details) {
+        if (!emit.isDone) {
+          emit(
+            ComicDetailsState.loaded(
+              comicDetails: details,
+              chaptersLoading: true,
+            ),
+          );
+        }
       },
-      (details) => ComicDetailsState.loaded(comicDetails: details),
-    ));
+    );
+    emit(
+      result.fold(
+        (failure) => switch (failure) {
+          NetworkFailure() => const ComicDetailsState.noInternet(),
+          _ => ComicDetailsState.error(message: failure.message),
+        },
+        (details) => ComicDetailsState.loaded(comicDetails: details),
+      ),
+    );
   }
 }

@@ -23,6 +23,8 @@ object Description {
     // A label with its colon ("Rating: 9.13"), so "rating 18+" in a sentence is no score.
     private val rating = Regex("""\b(?:rating|score)\s*[:：]\s*([0-9]+(?:[.,][0-9]+)?)""", RegexOption.IGNORE_CASE)
 
+    private val starRating = Regex("""[★☆⭐✩✪\s]*[★☆⭐✩✪]\s*([0-9]+(?:[.,][0-9]+)?)\s*(?:/\s*[0-9]+)?""")
+
     /** Separators that never appear inside a title (the app's alt_titles.dart). */
     private val strong = Regex("""\s*(?:[•|;]|\s/\s)\s*""")
 
@@ -51,6 +53,13 @@ object Description {
             val found = rating.find(line)
             if (found != null && score == null && isStats(line)) {
                 score = found.groupValues[1].replace(',', '.').toDoubleOrNull()
+                i++
+                continue
+            }
+            // A line of stars and a score ("★★★★★ 9.8").
+            val stars = starRating.matchEntire(line.trim())
+            if (stars != null && score == null) {
+                score = stars.groupValues[1].replace(',', '.').toDoubleOrNull()
                 i++
                 continue
             }

@@ -25,6 +25,7 @@ class ComicChapters extends StatefulWidget {
     required this.isSelected,
     required this.isSelecting,
     this.onScanlators,
+    this.loading = false,
   });
 
   final ComicDetails comicDetails;
@@ -35,6 +36,9 @@ class ComicChapters extends StatefulWidget {
 
   /// Opens the scanlator picker; null hides its button (one scanlator).
   final VoidCallback? onScanlators;
+
+  /// The list is still loading: a loader instead of rows.
+  final bool loading;
 
   @override
   State<ComicChapters> createState() => _ComicChaptersState();
@@ -145,6 +149,13 @@ class _ComicChaptersState extends State<ComicChapters> {
             ),
           ),
         ),
+        if (widget.loading)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(DotSpace.s6),
+              child: Center(child: DotLoader()),
+            ),
+          ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
           sliver: SliverList.builder(

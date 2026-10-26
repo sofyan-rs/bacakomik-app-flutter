@@ -171,8 +171,10 @@ class FakeComicDetailRepository implements ComicDetailRepository {
   Either<Failure, ComicDetails> result = left(const NetworkFailure());
 
   @override
-  Future<Either<Failure, ComicDetails>> getComicDetails(String slug) async =>
-      result;
+  Future<Either<Failure, ComicDetails>> getComicDetails(
+    String slug, {
+    void Function(ComicDetails details)? onSeries,
+  }) async => result;
 
   @override
   Future<Either<Failure, List<Chapter>>> getChapters(String slug) async =>

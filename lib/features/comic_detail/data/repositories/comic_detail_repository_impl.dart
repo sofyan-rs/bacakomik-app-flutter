@@ -15,14 +15,24 @@ class ComicDetailRepositoryImpl implements ComicDetailRepository {
   final NetworkInfo _networkInfo;
 
   @override
-  Future<Either<Failure, ComicDetails>> getComicDetails(String slug) =>
-      runRemote(_networkInfo, () async {
-        final series = _remote.getSeries(slug);
-        final chapters = _remote.getChapters(slug);
-        // Fail fast with the first error while both requests run in parallel.
-        await Future.wait([series, chapters]);
-        return (await series).toEntity(await chapters);
-      });
+  Future<Either<Failure, ComicDetails>> getComicDetails(
+    String slug, {
+    void Function(ComicDetails details)? onSeries,
+  }) => runRemote(_networkInfo, () async {
+    final series = _remote.getSeries(slug);
+    final chapters = _remote.getChapters(slug);
+    var chaptersDone = false;
+    // Errors are reported by the Future.wait below.
+    chapters.whenComplete(() => chaptersDone = true).ignore();
+    if (onSeries != null) {
+      series.then((s) {
+        if (!chaptersDone) onSeries(s.toEntity(const []));
+      }).ignore();
+    }
+    // Fail fast with the first error while both requests run in parallel.
+    await Future.wait([series, chapters]);
+    return (await series).toEntity(await chapters);
+  });
 
   @override
   Future<Either<Failure, List<Chapter>>> getChapters(String slug) =>
