@@ -1,4 +1,5 @@
-package com.mediumdev.scancore.host
+// From SCANCORE's MemoStore.kt (MIT, LICENSE-SCANCORE).
+package org.kurodev.bacakomik.mihon.host
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -10,12 +11,11 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-// Extensions on lib 1.6 (Aniyomi: 17) keep notes on a manga or chapter
-// (anime or episode, "memo") that the app must hand back with it. SCANCORE
-// knows series and chapters by link, so the host keeps the notes, by source
-// and link, in one file it writes a moment after the last change. Most
-// extensions never set one. Anime notes share the maps under an "anime:"
-// prefix, as an anime and a manga source can have the same id.
+// Extensions on lib 1.6 keep notes on a manga or chapter ("memo") that the
+// app must hand back with it. The app knows series and chapters by link, so
+// the host keeps the notes, by source and link, in one file it writes a
+// moment after the last change. Most extensions never set one. BACAKOMIK:
+// Aniyomi's anime and episode notes left out.
 class MemoStore(
     private val file: File?,
 ) {
@@ -64,32 +64,6 @@ class MemoStore(
         memo: JsonObject,
     ) {
         if (chapters.put(key(source, url), memo) != memo) scheduleSave()
-    }
-
-    fun anime(
-        source: Long,
-        url: String,
-    ) = mangas["anime:" + key(source, url)]
-
-    fun episode(
-        source: Long,
-        url: String,
-    ) = chapters["anime:" + key(source, url)]
-
-    fun putAnime(
-        source: Long,
-        url: String,
-        memo: JsonObject,
-    ) {
-        if (mangas.put("anime:" + key(source, url), memo) != memo) scheduleSave()
-    }
-
-    fun putEpisode(
-        source: Long,
-        url: String,
-        memo: JsonObject,
-    ) {
-        if (chapters.put("anime:" + key(source, url), memo) != memo) scheduleSave()
     }
 
     private fun scheduleSave() {

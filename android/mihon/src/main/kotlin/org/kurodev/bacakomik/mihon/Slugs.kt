@@ -3,7 +3,7 @@ package org.kurodev.bacakomik.mihon
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Base64
-import com.mediumdev.scancore.host.HostError
+import org.kurodev.bacakomik.mihon.host.HostError
 import java.security.MessageDigest
 
 /**

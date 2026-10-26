@@ -1,4 +1,5 @@
-package com.mediumdev.scancore.host
+// From SCANCORE's Codec.kt (MIT, LICENSE-SCANCORE).
+package org.kurodev.bacakomik.mihon.host
 
 import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
@@ -11,14 +12,11 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -201,10 +199,4 @@ object Codec {
             else -> {}
         }
     }
-
-    fun JsonObject.child(key: String): JsonObject? = this[key] as? JsonObject
-
-    fun JsonObject.array(key: String): JsonArray = (this[key] as? JsonArray) ?: JsonArray(emptyList())
-
-    fun obj(element: JsonElement?): JsonObject = element?.jsonObject ?: JsonObject(emptyMap())
 }

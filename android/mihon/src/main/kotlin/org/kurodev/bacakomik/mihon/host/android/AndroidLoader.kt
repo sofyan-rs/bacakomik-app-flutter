@@ -1,12 +1,12 @@
 // From SCANCORE's AndroidLoader.kt (MIT). BACAKOMIK: Aniyomi (anime) left out.
-package com.mediumdev.scancore.host.android
+package org.kurodev.bacakomik.mihon.host.android
 
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import com.mediumdev.scancore.host.ExtensionLoader
-import com.mediumdev.scancore.host.HostError
-import com.mediumdev.scancore.host.LoadedExtension
+import org.kurodev.bacakomik.mihon.host.ExtensionLoader
+import org.kurodev.bacakomik.mihon.host.HostError
+import org.kurodev.bacakomik.mihon.host.LoadedExtension
 import dalvik.system.DelegateLastClassLoader
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory

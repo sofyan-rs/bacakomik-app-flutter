@@ -1,7 +1,7 @@
 // From SCANCORE's Rpc.kt (MIT). BACAKOMIK: the line protocol (RpcServer) is
 // left out; the app calls ExtensionHost over a MethodChannel instead. What
 // stays: HostError, the parameter helpers and the error wording.
-package com.mediumdev.scancore.host
+package org.kurodev.bacakomik.mihon.host
 
 import eu.kanade.tachiyomi.network.BrowserCheckException
 import eu.kanade.tachiyomi.network.HttpException

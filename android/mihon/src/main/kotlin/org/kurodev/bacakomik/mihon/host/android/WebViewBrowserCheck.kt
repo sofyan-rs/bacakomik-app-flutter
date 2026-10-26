@@ -1,4 +1,5 @@
-package com.mediumdev.scancore.host.android
+// From SCANCORE's WebViewBrowserCheck.kt (MIT, LICENSE-SCANCORE).
+package org.kurodev.bacakomik.mihon.host.android
 
 import android.annotation.SuppressLint
 import android.content.Context

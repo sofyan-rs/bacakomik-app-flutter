@@ -2,7 +2,7 @@
 // out, the line protocol's own calls (hello, setUserAgent, setCookies,
 // networkUse) dropped, and the source and its images opened to the app's
 // adapter (source(), image(), cover()).
-package com.mediumdev.scancore.host
+package org.kurodev.bacakomik.mihon.host
 
 import android.content.SharedPreferences
 import androidx.preference.PreferenceScreen
@@ -30,7 +30,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -90,10 +89,6 @@ class ExtensionHost(
     ): JsonElement =
         when (method) {
             "load" -> describe(sources(params))
-            "unload" -> {
-                unload(params.string("pkg"))
-                JsonNull
-            }
             else -> {
                 // Everything the call does over the network counts for its
                 // extension, whichever thread it runs on.

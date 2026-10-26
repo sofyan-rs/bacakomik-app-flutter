@@ -1,6 +1,6 @@
 package org.kurodev.bacakomik.mihon
 
-import com.mediumdev.scancore.host.HostError
+import org.kurodev.bacakomik.mihon.host.HostError
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject

@@ -1,7 +1,7 @@
 package org.kurodev.bacakomik.mihon
 
 import android.content.Context
-import com.mediumdev.scancore.host.describeFailure
+import org.kurodev.bacakomik.mihon.host.describeFailure
 import kotlinx.coroutines.runBlocking
 import java.io.BufferedOutputStream
 import java.io.OutputStream

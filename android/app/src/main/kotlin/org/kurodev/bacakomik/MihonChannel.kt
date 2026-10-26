@@ -1,7 +1,7 @@
 package org.kurodev.bacakomik
 
 import android.content.Context
-import com.mediumdev.scancore.host.describeFailure
+import org.kurodev.bacakomik.mihon.host.describeFailure
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
