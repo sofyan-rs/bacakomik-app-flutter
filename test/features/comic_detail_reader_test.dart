@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:bacakomik_app/core/data/datasources/series_remote_data_source.dart';
+import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/features/comic_detail/data/repositories/comic_detail_repository_impl.dart';
@@ -28,6 +31,26 @@ void main() {
   });
 
   group('ComicDetailRepositoryImpl', () {
+    test('shows the details before a slow chapter list', () async {
+      final chaptersDone = Completer<Object?>();
+      bacakomik.responses
+        ..['series'] = seriesDetail
+        ..['chapters'] = (List<Object?> _) => chaptersDone.future;
+      final early = <ComicDetails>[];
+
+      final result = ComicDetailRepositoryImpl(
+        remote,
+        network,
+      ).getComicDetails('solo-leveling', onSeries: early.add);
+      await pumpEventQueue();
+      expect(early.single.chapters, isEmpty);
+
+      chaptersDone.complete(chapterList);
+      final details = (await result).getOrElse((f) => throw f);
+      expect(details.chapters, isNotEmpty);
+      expect(early, hasLength(1));
+    });
+
     test('maps series and chapters', () async {
       bacakomik.responses
         ..['series'] = seriesDetail

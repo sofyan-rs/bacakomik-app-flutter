@@ -28,9 +28,10 @@ Screenshots were taken on a real device (iQOO I2218, Android 16) running v2.0.0.
 
 ## Features
 
-- **Sources:** pick the source in the header of Home or Explore. Two sources come bundled; more install from More → Extensions. A multi-language source becomes one source per enabled language (for example EN and ID), each with its own bookmarks and history. Installed extensions show an update badge when the repo has a newer version.
-- **Home:** continue reading with chapter progress, new series and the latest updates of the current source. Pull to refresh for a small easter egg.
-- **Explore:** title search combined with the source's own filters (type, status, sort, genres…), with infinite scroll.
+- **Sources:** pick the source in the header of Home or Explore. Two sources come bundled; more install from More → Extensions. A multi-language source becomes one source per enabled language (for example EN and ID), each with its own bookmarks and history. Installed extensions show an update badge when the repo has a newer version. On Android 9+, Mihon / Tachiyomi extensions install too (see [Extensions](#extensions)).
+- **Extensions:** icons, an 18+ label (18+ extensions are hidden until you show them), search by name or site, and a language picker, for installed and available extensions alike.
+- **Home:** continue reading with chapter progress, new series (or popular, when the source has no newest order) and the latest updates of the current source. Pull to refresh for a small easter egg.
+- **Explore:** title search combined with the source's own filters (type, status, sort, genres…), with infinite scroll. Long filter lists fold away behind "Show all".
 - **Comic details:** alternative titles (other languages and romanized names; tap to see them all), source and language, rating, chapter count, release year, synopsis and genres. The chapter list can be searched and sorted, marks new, read, partly read (`5 / 24`) and downloaded chapters, and supports selecting chapters to download them or mark them read or unread. Share a comic as a link that opens the app, save its cover, or long-press the title to copy it. Without a connection, comics you downloaded, bookmarked or read still open from the details saved on the phone.
 - **Reader:** vertical strip or page by page (right-to-left or left-to-right), fit to width or height, keep the screen on, optional gap between pages. Double-tap or pinch to zoom, and move the zoomed page in any direction; page meter, previous/next chapter, and a "chapter finished" card. Reopens a chapter at the page you stopped at. Auto-scroll with adjustable speed in the vertical reader. Downloaded chapters open from the phone. Long press a page to save it to the gallery.
 - **Bookmarks:** language badge and unread-chapter badge on each card, read progress and search by title or alternative title across every tab (tab counts show the matches). Swipe the comics sideways to change tab. Group them by status, source or your own categories (a comic can be in several); pick a category when you bookmark, or skip. Pull to refresh checks the comics on screen (the open group, narrowed by a search) for new chapters, with a progress notification; stop it from the notification's Cancel button or the stop button in the header. A comic that takes too long is skipped.
@@ -56,13 +57,15 @@ https://sofyan-rs.github.io/bacakomik-ext-public-source/index.json
 
 Add a repo in More → Extensions → Extension repos. Extensions run code and access the internet, so only add repos you trust.
 
+**Mihon extensions (Android 9+).** A Mihon / Tachiyomi extension repo works too: paste its `index.min.json`, `repo.json` or base URL. Its extensions install inside the app (no separate APK install) and work like the app's own: browse, search, filters, the reader, downloads (in the background too), a scanlator picker when a comic has several, and their own settings. They update from the same repo, and an APK is only loaded when it is signed with the key the repo publishes. Bookmarks from a Mihon backup map straight to these sources.
+
 **Want to make your own extension?** Start from [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source): it has example extensions, the extension contract, and guides to write, test and publish one. Host the built `index.json` anywhere and add its URL as a repo in the app.
 
 Some extensions are reimplemented from the Tachiyomi / Mihon extensions in [keiyoushi/extensions-source](https://github.com/keiyoushi/extensions-source) (Apache License 2.0); each one credits its source in its file.
 
 ## Requirements
 
-- Android 7.0+ (API 24)
+- Android 7.0+ (API 24); Mihon extensions need Android 9+ (API 28)
 - To build: Flutter (stable, Dart 3.13), JDK 17, Android SDK 37
 
 ## Build
@@ -87,6 +90,7 @@ Release signing and testing extensions locally are described in [Contributing](d
 
 - [Mihon](https://github.com/mihonapp/mihon) (Apache License 2.0), the successor of Tachiyomi: BacaKomik uses it as a reference for features and behavior, such as extensions and extension repos, the library and categories, the reader, migration and the `.tachibk` backup format read by the Mihon import.
 - [keiyoushi/extensions-source](https://github.com/keiyoushi/extensions-source) (Apache License 2.0): reference for some extensions (see [Extensions](#extensions)).
+- [SCANCORE](https://github.com/medium-gh/scancore) (MIT): its extension host and its copy of Mihon's source API are the base of the Mihon extension support in `android/mihon`; Mihon's chapter-number recognition comes from Mihon.
 
 ## Disclaimer
 
@@ -95,6 +99,8 @@ BacaKomik is not affiliated with any of the sites it reads from, and it does not
 ## License
 
 BacaKomik is free software under the [GNU General Public License v3.0](LICENSE): you can use, study, change and share it, and apps built from it must stay open source under the same license.
+
+`android/mihon` contains Mihon's source API and chapter recognition (Apache License 2.0) and code from SCANCORE (MIT, `android/mihon/LICENSE-SCANCORE`), each file keeping its notice.
 
 Extensions are a separate project under the Apache License 2.0 ([public source](https://github.com/sofyan-rs/bacakomik-ext-public-source)). Third-party assets keep their own licenses: the Geist, Geist Mono and Doto fonts (SIL Open Font License 1.1), Lucide icons (ISC). The splash artwork and the "kuru kururin" animation and sound belong to their respective owners and are not covered by this license. Comics shown in the app and the screenshots belong to their publishers.
 

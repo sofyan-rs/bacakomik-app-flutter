@@ -9,9 +9,11 @@
     <!-- Progress notification for chapter downloads (Android 13+). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+       <!-- Cleartext: some Mihon extensions' sites are plain http (Mihon allows it too). -->
        <application
         android:label="BacaKomik"
-        android:name="${applicationName}"
+        android:name=".BacaKomikApplication"
+        android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
         <activity

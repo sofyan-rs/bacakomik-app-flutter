@@ -22,6 +22,15 @@ class ComicCard extends StatelessWidget {
   static const textHeight =
       DotSpace.s2 + 22 * 2 + DotSpace.s1 + 18 + DotSpace.s1;
 
+  /// [textHeight] for a grid where no comic has a latest chapter (many
+  /// Mihon sources list none).
+  static const textHeightWithoutChapter = DotSpace.s2 + 22 * 2 + DotSpace.s1;
+
+  /// Whether [chapter] is a latest chapter to show; sources without one
+  /// send `-`.
+  static bool hasChapter(String chapter) =>
+      chapter.isNotEmpty && chapter != '-';
+
   final String title;
   final String cover;
   final String chapter;
@@ -50,13 +59,15 @@ class ComicCard extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: DotSpace.s1),
-          Text(
-            // Blank (not "CH. -") when the source does not say.
-            chapter == '-' ? '' : 'CH. $chapter',
-            style: DotlineText.data.copyWith(color: c.inkFaint),
-            maxLines: 1,
-          ),
+          // No line at all (not "CH. -") when the source does not say.
+          if (ComicCard.hasChapter(chapter)) ...[
+            const SizedBox(height: DotSpace.s1),
+            Text(
+              'CH. $chapter',
+              style: DotlineText.data.copyWith(color: c.inkFaint),
+              maxLines: 1,
+            ),
+          ],
         ],
       ),
     );

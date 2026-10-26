@@ -72,33 +72,42 @@ class MigrationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: ListView(
+        child: Column(
           children: [
+            // Outside the scroll view so the title stays put.
             const DotTopBar(title: AppText.migration),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
-              child: ListGroup(
+            Expanded(
+              child: ListView(
                 children: [
-                  ListRow(
-                    icon: LucideIcons300.arrowRightLeft,
-                    title: AppText.migrateSource,
-                    subtitle: AppText.migrateSourceDescription,
-                    showChevron: true,
-                    onTap: () => SourceMigrationScreen.open(context),
-                  ),
-                  ListRow(
-                    icon: LucideIcons300.archiveRestore,
-                    title: AppText.importMihon,
-                    subtitle: AppText.importMihonDescription,
-                    showChevron: true,
-                    onTap: () => MihonImportScreen.open(context),
-                  ),
-                  ListRow(
-                    icon: LucideIcons300.fileSpreadsheet,
-                    title: AppText.importComix,
-                    subtitle: AppText.importComixDescription,
-                    showChevron: true,
-                    onTap: () => _importComix(context),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DotSpace.s4,
+                    ),
+                    child: ListGroup(
+                      children: [
+                        ListRow(
+                          icon: LucideIcons300.arrowRightLeft,
+                          title: AppText.migrateSource,
+                          subtitle: AppText.migrateSourceDescription,
+                          showChevron: true,
+                          onTap: () => SourceMigrationScreen.open(context),
+                        ),
+                        ListRow(
+                          icon: LucideIcons300.archiveRestore,
+                          title: AppText.importMihon,
+                          subtitle: AppText.importMihonDescription,
+                          showChevron: true,
+                          onTap: () => MihonImportScreen.open(context),
+                        ),
+                        ListRow(
+                          icon: LucideIcons300.fileSpreadsheet,
+                          title: AppText.importComix,
+                          subtitle: AppText.importComixDescription,
+                          showChevron: true,
+                          onTap: () => _importComix(context),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

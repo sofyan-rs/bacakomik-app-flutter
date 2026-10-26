@@ -72,7 +72,7 @@ class ChapterEnd extends StatelessWidget {
           const SizedBox(height: DotSpace.s5),
           if (next != null) ...[
             Pressable(
-              semanticLabel: '${AppText.chapter} ${next.number}',
+              semanticLabel: AppText.chapterName(next.number, next.title),
               onTap: onNext,
               child: Container(
                 padding: const EdgeInsets.all(DotSpace.s4),
@@ -94,7 +94,7 @@ class ChapterEnd extends StatelessWidget {
                           const NewBadge(label: AppText.nextChapter),
                           const SizedBox(height: DotSpace.s1),
                           Text(
-                            '${AppText.chapter} ${next.number}',
+                            AppText.chapterName(next.number, next.title),
                             style: DotlineText.headline.copyWith(color: c.ink),
                           ),
                           if (next.date != '-')

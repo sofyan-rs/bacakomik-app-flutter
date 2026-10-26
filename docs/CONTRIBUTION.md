@@ -9,7 +9,7 @@ Recipes for working on BacaKomik. Read [ARCHITECTURE.md](ARCHITECTURE.md) once f
 ## 1. One-time setup
 
 1. Install **Flutter** stable with **Dart 3.13+**, the Android SDK (platform 37) and **JDK 17**. Run `flutter doctor` until it is clean.
-2. Use a device or emulator on Android 7.0+ (API 24); test on a recent one (API 34+) too. Cloudflare sources and Cronet need Google Play services.
+2. Use a device or emulator on Android 7.0+ (API 24); test on a recent one (API 34+) too. Mihon extensions need Android 9+ (API 28). Cloudflare sources and Cronet need Google Play services.
 3. For extension work: [Bun](https://bun.sh) and access to the private `bacakomik-ext-source` repo. To write your own extension without that access, use the public extension source, [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source), served at `https://sofyan-rs.github.io/bacakomik-ext-public-source/index.json`.
 
 There is no server to configure. Content comes from the bundled extensions and the default repo `https://bacakomik-ext.kurodev.org/index.json`.
@@ -90,6 +90,14 @@ Secrets (Settings → Secrets → Actions): `KEYSTORE_BASE64` (`base64 -w0 uploa
    adb logcat -s flutter > flutter.log
    ```
 
+### Recipe H: Work on Mihon extension support
+Mihon extensions run in Kotlin, in `android/mihon` (ARCHITECTURE §8.9).
+
+1. **Kotlin tests** (no device): `cd android && ./gradlew :mihon:testDebugUnitTest` (chapter numbers, synopsis parsing, filters). Results in `build/mihon/test-results/`. Dart side: `flutter test test/core/mihon_test.dart`.
+2. **Always try a release build** (Recipe G): R8 runs only there, and a class it strips that an extension or native code needs only fails on the phone (an abort in `logcat -b crash`). Add keep rules to `android/mihon/consumer-rules.pro`.
+3. **On the phone:** add a Mihon repo (e.g. Keiyoushi's `index.min.json`), install two or three extensions (one HTML site, one API site, one behind Cloudflare), then Home, Explore search and filters, comic page, reader, download, settings, uninstall. For the Mihon import, a small `.tachibk` pushed to `/sdcard/Download` works; don't import test data into a library you keep.
+4. **Vendored code** (`eu/`, `mihon/`, `tachiyomi/`, `com/mediumdev/scancore/host/`) comes from SCANCORE's `host/`. When updating it, diff against SCANCORE and keep the changes marked `BACAKOMIK`; library versions in `android/mihon/build.gradle` follow Mihon's, and a new extension lib version goes into both `AndroidLoader.libs` and `supportedMihonLibs`.
+
 ---
 
 ## 3. Project map
@@ -139,7 +147,8 @@ Reading order: run the app; ARCHITECTURE §3–§4; `features/home/` end to end 
 | Sources | `test/core/source_test.dart` |
 | Storage, backup, sync | `library_test`, `backup_test`, `sync_test`, `migrate_library_test` (`test/fixtures/library_fixtures.dart`); `test/core/box_recovery_test.dart` salvages a hand-built corrupt box |
 | Migration | `test/features/migration_test.dart` (Mihon protobuf, `urlPatterns`, CSV, `ImportLibrary`, pending reads) with `MemoryPendingReads` |
-| Manual | Every screen on a recent Android before a release, one Cloudflare source, one download, plus the upgrade test when storage changed |
+| Mihon extensions | `test/core/mihon_test.dart` (repos, `index_v2` stores, ids, `MihonSource` with a fake host, error mapping, import matching); Kotlin unit tests in `android/mihon/src/test` (Recipe H) |
+| Manual | Every screen on a recent Android before a release, one Cloudflare source, one download, one Mihon extension (release build), plus the upgrade test when storage changed |
 
 **Every bug fix gets a regression test** where possible. The JS engine, WebViews and Cronet don't run in `flutter test`: fake them, and test scripts in the extension repo.
 
@@ -156,6 +165,7 @@ Data layer throws, repositories return `Failure`, blocs show `noInternet` or `So
 - Add a package only if it is maintained, works on Android 7.0+, and is needed.
 - `freezed`, the generators and `hive_ce` are pinned (ARCHITECTURE §10.1): upgrade in their own PR, regenerate, run all tests. Same for Flutter itself.
 - `flutter_inappwebview` (6.2 beta), `flutter_js`, `native_dio_adapter`, `cronet_http`: upgrades need a device test on a Cloudflare source.
+- **Mihon (`android/mihon/build.gradle`):** OkHttp, kotlinx.serialization, coroutines, Jsoup, RxJava 1, Injekt and QuickJS (from jitpack, `zhanghai/quickjs-java`) follow Mihon's versions, because extensions are compiled against them. Kotlin is 2.4.21 for the whole build; the module applies the serialization plugin with its own version (`background_downloader` pins another). Upgrade them only together with Mihon and test a release build (Recipe H).
 - **`flutter_local_notifications` needs `ActionBroadcastReceiver` declared in `android/app/src/main/AndroidManifest.xml`.** Without it the refresh Cancel button does nothing.
 
 ---

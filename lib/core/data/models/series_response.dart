@@ -107,8 +107,14 @@ abstract class GenreResponse with _$GenreResponse {
 abstract class ChapterResponse with _$ChapterResponse {
   const ChapterResponse._();
 
-  const factory ChapterResponse({required num number, String? createdAt}) =
-      _ChapterResponse;
+  const factory ChapterResponse({
+    required num number,
+    String? createdAt,
+
+    /// The site's name for a chapter whose [number] the source made up
+    /// (a Mihon "Extra" between numbered ones); null otherwise.
+    String? title,
+  }) = _ChapterResponse;
 
   factory ChapterResponse.fromJson(Map<String, dynamic> json) =>
       _$ChapterResponseFromJson(json);
@@ -117,6 +123,7 @@ abstract class ChapterResponse with _$ChapterResponse {
     number: ApiFormat.number(number),
     slug: ApiFormat.chapterSlug(seriesSlug, number),
     date: ApiFormat.relativeDate(createdAt),
+    title: title,
   );
 }
 

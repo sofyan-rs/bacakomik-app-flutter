@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/network/image_cache.dart';
+import 'package:bacakomik_app/core/source/mihon_host.dart';
 import 'package:bacakomik_app/features/download/data/datasources/download_file_data_source.dart';
 import 'package:injectable/injectable.dart';
 
@@ -68,7 +69,8 @@ abstract interface class PageDownloadQueue {
 
 @LazySingleton(as: PageDownloadQueue)
 class BackgroundPageDownloadQueue implements PageDownloadQueue {
-  BackgroundPageDownloadQueue(this._files) {
+  BackgroundPageDownloadQueue(this._files, {@ignoreParam MihonHost? mihon})
+    : _mihon = mihon ?? ChannelMihonHost.instance {
     // Listening has to start before FileDownloader.start(), which replays
     // updates from while the app was suspended.
     _downloader.updates.listen(_onUpdate);
@@ -77,6 +79,7 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
   static const _group = 'chapter_pages';
   static const _maxConcurrent = 3;
 
+  final MihonHost _mihon;
   final DownloadFileDataSource _files;
   final _downloader = FileDownloader();
   final _events = StreamController<PageEvent>.broadcast();
@@ -122,12 +125,31 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
   }
 
   @override
-  Future<void> enqueue(List<PageJob> jobs) async {
-    if (jobs.isEmpty) return;
+  Future<void> enqueue(List<PageJob> pages) async {
+    if (pages.isEmpty) return;
     await start();
+    // Mihon pages go to the native downloader through the app's local
+    // server (MihonProxy.kt), so they keep downloading with the app closed;
+    // without it they are saved in the app.
+    final jobs = [
+      for (final job in pages)
+        if (isMihonImage(job.url))
+          switch (await _mihon.httpUrl(job.url)) {
+            final url? => PageJob(
+              chapterSlug: job.chapterSlug,
+              index: job.index,
+              url: url,
+              path: job.path,
+              headers: job.headers,
+            ),
+            null => job,
+          }
+        else
+          job,
+    ];
     final root = await _files.root;
     for (final job in jobs) {
-      if (_blockingHosts.contains(Uri.parse(job.url).host)) {
+      if (_inAppOnly(job.url)) {
         unawaited(
           _downloadInApp(
             job.chapterSlug,
@@ -141,7 +163,7 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
     }
     final native = [
       for (final job in jobs)
-        if (!_blockingHosts.contains(Uri.parse(job.url).host)) job,
+        if (!_inAppOnly(job.url)) job,
     ];
     final now = DateTime.now();
     await _downloader.enqueueAll([
@@ -208,6 +230,11 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
   /// are saved through the app's image cache, which fetches from inside the
   /// site when it has to. That runs only while the app does.
   final _blockingHosts = <String>{};
+
+  /// Pages the native downloader can't fetch: blocking hosts, and Mihon
+  /// sources' pages left as `mihon://` (no local server).
+  bool _inAppOnly(String url) =>
+      isMihonImage(url) || _blockingHosts.contains(Uri.parse(url).host);
 
   /// Hosts being checked, so each is checked once at a time.
   final _checking = <String, Future<bool>>{};

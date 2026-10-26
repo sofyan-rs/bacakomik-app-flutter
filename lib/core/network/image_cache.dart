@@ -5,6 +5,7 @@ import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/network/image_host_support.dart';
 import 'package:bacakomik_app/core/source/extension_bridge.dart';
 import 'package:bacakomik_app/core/source/headless_pages.dart';
+import 'package:bacakomik_app/core/source/mihon_host.dart';
 import 'package:cronet_http/cronet_http.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
@@ -49,6 +50,10 @@ final CacheManager coverImageCache = CacheManager(
 const coverImageCacheKey = 'bacakomikCovers';
 
 final _fileService = _BrowserLikeFileService();
+
+/// Whether [url] is a Mihon source's image (`mihon://…`, see `Images.kt`):
+/// only the image caches get it, through the extension in Kotlin.
+bool isMihonImage(String url) => url.startsWith('mihon://');
 
 /// Whether [url]'s host turns away requests that do not come from inside
 /// the site (see [comicImageCache]); the image caches get its images
@@ -106,6 +111,7 @@ class _BrowserLikeFileService extends FileService {
     Map<String, String>? headers,
   }) async {
     final uri = Uri.parse(url);
+    if (isMihonImage(url)) return _getMihon(uri);
     if (_inPage(uri.host)) return _getInPage(uri, headers);
     final response = await _direct(uri, headers);
     if (!_isBlocked(uri, response)) return response;
@@ -113,8 +119,16 @@ class _BrowserLikeFileService extends FileService {
     return _getInPage(uri, headers);
   }
 
+  /// A Mihon source's image, through its own client in Kotlin.
+  Future<FileServiceResponse> _getMihon(Uri url) async {
+    final image = await ChannelMihonHost.instance.image(url.toString());
+    return _BytesResponse(image.bytes, url, image.type);
+  }
+
   /// See [imageHostBlocks].
   Future<bool> blocks(Uri url, Map<String, String>? headers) async {
+    // Only the image caches can fetch them.
+    if (isMihonImage(url.toString())) return true;
     if (_inPage(url.host)) return true;
     final response = await _direct(url, headers);
     await response.content.drain<void>();

@@ -58,6 +58,9 @@ class ComicGridSliver extends StatelessWidget {
   Widget build(BuildContext context) {
     return CoverGridSliver(
       itemCount: comics.length,
+      textHeight: comics.any((c) => ComicCard.hasChapter(c.latestChapter))
+          ? ComicCard.textHeight
+          : ComicCard.textHeightWithoutChapter,
       itemBuilder: (context, index) {
         final comic = comics[index];
         return ComicCard(

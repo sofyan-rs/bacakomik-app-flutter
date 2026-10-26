@@ -29,8 +29,8 @@ void showSnackBar({
   );
 }
 
-/// Saves a page or cover to the gallery. [img] is a URL, or a file path for
-/// a downloaded page. A URL is read from [cache] (the reader's cache when
+/// Saves a page or cover to the gallery. [img] is a URL (`mihon://` too),
+/// or a file path for a downloaded page. A URL is read from [cache] (the reader's cache when
 /// not given), which already holds what is on screen and downloads with the
 /// app's User-Agent, cookies and [headers] when it does not.
 Future saveImg({
@@ -42,7 +42,7 @@ Future saveImg({
   File? temp;
   try {
     final Uint8List bytes;
-    if (img.startsWith('http')) {
+    if (img.startsWith('http') || isMihonImage(img)) {
       final file = await (cache ?? comicImageCache).getSingleFile(
         img,
         headers: headers,

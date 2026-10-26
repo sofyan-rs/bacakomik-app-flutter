@@ -25,9 +25,13 @@ class GetComicDetails implements UseCase<ComicDetails, String> {
   final BookmarkRepository _bookmarks;
   final HistoryRepository _history;
 
+  /// [onSeries]: see [ComicDetailRepository.getComicDetails].
   @override
-  Future<Either<Failure, ComicDetails>> call(String slug) async {
-    final result = await _repository.getComicDetails(slug);
+  Future<Either<Failure, ComicDetails>> call(
+    String slug, {
+    void Function(ComicDetails details)? onSeries,
+  }) async {
+    final result = await _repository.getComicDetails(slug, onSeries: onSeries);
     if (result.isRight()) return result;
     final stored = await _stored(slug);
     return stored != null ? right(stored) : result;

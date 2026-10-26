@@ -914,7 +914,9 @@ as String,
 /// @nodoc
 mixin _$ChapterResponse {
 
- num get number; String? get createdAt;
+ num get number; String? get createdAt;/// The site's name for a chapter whose [number] the source made up
+/// (a Mihon "Extra" between numbered ones); null otherwise.
+ String? get title;
 /// Create a copy of ChapterResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -928,20 +930,20 @@ $ChapterResponseCopyWith<ChapterResponse> get copyWith => _$ChapterResponseCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as ChapterResponse;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChapterResponse&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChapterResponse&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.title, _this.title) || other.title == _this.title));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ChapterResponse;
-  return Object.hash(runtimeType,_this.number,_this.createdAt);
+  return Object.hash(runtimeType,_this.number,_this.createdAt,_this.title);
 }
 
 @override
 String toString() {
   final _this = this as ChapterResponse;
-  return 'ChapterResponse(number: ${_this.number}, createdAt: ${_this.createdAt})';
+  return 'ChapterResponse(number: ${_this.number}, createdAt: ${_this.createdAt}, title: ${_this.title})';
 }
 
 
@@ -952,7 +954,7 @@ abstract mixin class $ChapterResponseCopyWith<$Res>  {
   factory $ChapterResponseCopyWith(ChapterResponse value, $Res Function(ChapterResponse) _then) = _$ChapterResponseCopyWithImpl;
 @useResult
 $Res call({
- num number, String? createdAt
+ num number, String? createdAt, String? title
 });
 
 
@@ -969,10 +971,11 @@ class _$ChapterResponseCopyWithImpl<$Res>
 
 /// Create a copy of ChapterResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? number = null,Object? createdAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? number = null,Object? createdAt = freezed,Object? title = freezed,}) {
   return _then(ChapterResponse(
 number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
 as num,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -1058,10 +1061,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( num number,  String? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( num number,  String? createdAt,  String? title)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChapterResponse() when $default != null:
-return $default(_that.number,_that.createdAt);case _:
+return $default(_that.number,_that.createdAt,_that.title);case _:
   return orElse();
 
 }
@@ -1079,10 +1082,10 @@ return $default(_that.number,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( num number,  String? createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( num number,  String? createdAt,  String? title)  $default,) {final _that = this;
 switch (_that) {
 case _ChapterResponse():
-return $default(_that.number,_that.createdAt);case _:
+return $default(_that.number,_that.createdAt,_that.title);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1099,10 +1102,10 @@ return $default(_that.number,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( num number,  String? createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( num number,  String? createdAt,  String? title)?  $default,) {final _that = this;
 switch (_that) {
 case _ChapterResponse() when $default != null:
-return $default(_that.number,_that.createdAt);case _:
+return $default(_that.number,_that.createdAt,_that.title);case _:
   return null;
 
 }
@@ -1114,11 +1117,14 @@ return $default(_that.number,_that.createdAt);case _:
 @JsonSerializable()
 
 class _ChapterResponse extends ChapterResponse {
-  const _ChapterResponse({required this.number, this.createdAt}): super._();
+  const _ChapterResponse({required this.number, this.createdAt, this.title}): super._();
   factory _ChapterResponse.fromJson(Map<String, dynamic> json) => _$ChapterResponseFromJson(json);
 
 @override final  num number;
 @override final  String? createdAt;
+/// The site's name for a chapter whose [number] the source made up
+/// (a Mihon "Extra" between numbered ones); null otherwise.
+@override final  String? title;
 
 /// Create a copy of ChapterResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -1133,18 +1139,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChapterResponse&&(identical(other.number, number) || other.number == number)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChapterResponse&&(identical(other.number, number) || other.number == number)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.title, title) || other.title == title));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,number,createdAt);
+    return Object.hash(runtimeType,number,createdAt,title);
 }
 
 @override
 String toString() {
-    return 'ChapterResponse(number: $number, createdAt: $createdAt)';
+    return 'ChapterResponse(number: $number, createdAt: $createdAt, title: $title)';
 }
 
 
@@ -1155,7 +1161,7 @@ abstract mixin class _$ChapterResponseCopyWith<$Res> implements $ChapterResponse
   factory _$ChapterResponseCopyWith(_ChapterResponse value, $Res Function(_ChapterResponse) _then) = __$ChapterResponseCopyWithImpl;
 @override @useResult
 $Res call({
- num number, String? createdAt
+ num number, String? createdAt, String? title
 });
 
 
@@ -1172,10 +1178,11 @@ class __$ChapterResponseCopyWithImpl<$Res>
 
 /// Create a copy of ChapterResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? number = null,Object? createdAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? number = null,Object? createdAt = freezed,Object? title = freezed,}) {
   return _then(_ChapterResponse(
 number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
 as num,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

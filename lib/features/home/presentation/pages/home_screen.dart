@@ -141,8 +141,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> _content(HomeState state) => switch (state) {
     HomeLoaded() => [
-      ComicSlider(state: state),
-      const SizedBox(height: DotSpace.s5),
+      // Hidden when the source has nothing for it (see showFeatured).
+      if (state.home.newSeries.isNotEmpty) ...[
+        ComicSlider(state: state),
+        const SizedBox(height: DotSpace.s5),
+      ],
       LatestChapter(state: state),
     ],
     HomeNoInternet() => [

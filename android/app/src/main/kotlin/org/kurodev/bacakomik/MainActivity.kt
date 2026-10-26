@@ -13,6 +13,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MihonChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "bacakomik/hidden_webviews")
             .setMethodCallHandler { call, result ->
                 val view = hiddenWebView(flutterEngine, call.argument<String>("id"))

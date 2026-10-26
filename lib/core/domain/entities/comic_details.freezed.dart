@@ -599,7 +599,9 @@ as String,
 mixin _$Chapter {
 
  String get number;/// Chapter slug in the form `seriesSlug/number`.
- String get slug; String get date;
+ String get slug; String get date;/// Shown instead of "Chapter [number]" when the number was made up for
+/// a chapter without one (Mihon sources).
+ String? get title;
 /// Create a copy of Chapter
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -611,20 +613,20 @@ $ChapterCopyWith<Chapter> get copyWith => _$ChapterCopyWithImpl<Chapter>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as Chapter;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Chapter&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.date, _this.date) || other.date == _this.date));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Chapter&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.title, _this.title) || other.title == _this.title));
 }
 
 
 @override
 int get hashCode {
   final _this = this as Chapter;
-  return Object.hash(runtimeType,_this.number,_this.slug,_this.date);
+  return Object.hash(runtimeType,_this.number,_this.slug,_this.date,_this.title);
 }
 
 @override
 String toString() {
   final _this = this as Chapter;
-  return 'Chapter(number: ${_this.number}, slug: ${_this.slug}, date: ${_this.date})';
+  return 'Chapter(number: ${_this.number}, slug: ${_this.slug}, date: ${_this.date}, title: ${_this.title})';
 }
 
 
@@ -635,7 +637,7 @@ abstract mixin class $ChapterCopyWith<$Res>  {
   factory $ChapterCopyWith(Chapter value, $Res Function(Chapter) _then) = _$ChapterCopyWithImpl;
 @useResult
 $Res call({
- String number, String slug, String date
+ String number, String slug, String date, String? title
 });
 
 
@@ -652,12 +654,13 @@ class _$ChapterCopyWithImpl<$Res>
 
 /// Create a copy of Chapter
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? number = null,Object? slug = null,Object? date = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? number = null,Object? slug = null,Object? date = null,Object? title = freezed,}) {
   return _then(Chapter(
 number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
-as String,
+as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -742,10 +745,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String number,  String slug,  String date)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String number,  String slug,  String date,  String? title)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Chapter() when $default != null:
-return $default(_that.number,_that.slug,_that.date);case _:
+return $default(_that.number,_that.slug,_that.date,_that.title);case _:
   return orElse();
 
 }
@@ -763,10 +766,10 @@ return $default(_that.number,_that.slug,_that.date);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String number,  String slug,  String date)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String number,  String slug,  String date,  String? title)  $default,) {final _that = this;
 switch (_that) {
 case _Chapter():
-return $default(_that.number,_that.slug,_that.date);case _:
+return $default(_that.number,_that.slug,_that.date,_that.title);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -783,10 +786,10 @@ return $default(_that.number,_that.slug,_that.date);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String number,  String slug,  String date)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String number,  String slug,  String date,  String? title)?  $default,) {final _that = this;
 switch (_that) {
 case _Chapter() when $default != null:
-return $default(_that.number,_that.slug,_that.date);case _:
+return $default(_that.number,_that.slug,_that.date,_that.title);case _:
   return null;
 
 }
@@ -798,13 +801,16 @@ return $default(_that.number,_that.slug,_that.date);case _:
 
 
 class _Chapter implements Chapter {
-  const _Chapter({required this.number, required this.slug, required this.date});
+  const _Chapter({required this.number, required this.slug, required this.date, this.title});
   
 
 @override final  String number;
 /// Chapter slug in the form `seriesSlug/number`.
 @override final  String slug;
 @override final  String date;
+/// Shown instead of "Chapter [number]" when the number was made up for
+/// a chapter without one (Mihon sources).
+@override final  String? title;
 
 /// Create a copy of Chapter
 /// with the given fields replaced by the non-null parameter values.
@@ -816,18 +822,18 @@ _$ChapterCopyWith<_Chapter> get copyWith => __$ChapterCopyWithImpl<_Chapter>(thi
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Chapter&&(identical(other.number, number) || other.number == number)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.date, date) || other.date == date));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Chapter&&(identical(other.number, number) || other.number == number)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.date, date) || other.date == date)&&(identical(other.title, title) || other.title == title));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,number,slug,date);
+    return Object.hash(runtimeType,number,slug,date,title);
 }
 
 @override
 String toString() {
-    return 'Chapter(number: $number, slug: $slug, date: $date)';
+    return 'Chapter(number: $number, slug: $slug, date: $date, title: $title)';
 }
 
 
@@ -838,7 +844,7 @@ abstract mixin class _$ChapterCopyWith<$Res> implements $ChapterCopyWith<$Res> {
   factory _$ChapterCopyWith(_Chapter value, $Res Function(_Chapter) _then) = __$ChapterCopyWithImpl;
 @override @useResult
 $Res call({
- String number, String slug, String date
+ String number, String slug, String date, String? title
 });
 
 
@@ -855,12 +861,13 @@ class __$ChapterCopyWithImpl<$Res>
 
 /// Create a copy of Chapter
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? number = null,Object? slug = null,Object? date = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? number = null,Object? slug = null,Object? date = null,Object? title = freezed,}) {
   return _then(_Chapter(
 number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
-as String,
+as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

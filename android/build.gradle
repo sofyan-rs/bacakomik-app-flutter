@@ -2,6 +2,11 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // Only QuickJS for Mihon extensions (the fork Mihon uses).
+        maven {
+            url "https://jitpack.io"
+            content { includeGroup "com.github.zhanghai.quickjs-java" }
+        }
     }
 }
 

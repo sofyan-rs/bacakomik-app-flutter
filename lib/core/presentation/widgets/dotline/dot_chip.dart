@@ -6,17 +6,21 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Outline pill chip. Selected chips are filled `ink` with a check icon.
+/// [trailing] puts an icon after the label, e.g. a chevron on a chip that
+/// opens a picker.
 class DotChip extends StatelessWidget {
   const DotChip({
     super.key,
     required this.label,
     this.selected = false,
     this.onTap,
+    this.trailing,
   });
 
   final String label;
   final bool selected;
   final VoidCallback? onTap;
+  final IconData? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +56,10 @@ class DotChip extends StatelessWidget {
                 label.toUpperCase(),
                 style: DotlineText.label.copyWith(color: foreground),
               ),
+              if (trailing case final icon?) ...[
+                const SizedBox(width: 6),
+                Icon(icon, size: 14, color: foreground),
+              ],
             ],
           ),
         ),

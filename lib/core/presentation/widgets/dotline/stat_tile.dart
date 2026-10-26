@@ -31,13 +31,18 @@ class StatTile extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
-    final valueText = Text(
-      value,
-      style: (compact ? DotlineText.statS : DotlineText.stat).copyWith(
-        color: c.ink,
+    // Shrinks to fit rather than cutting a word ("Ongoing" in a third of
+    // the width); numbers that fit keep their size.
+    final valueText = FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text(
+        value,
+        style: (compact ? DotlineText.statS : DotlineText.stat).copyWith(
+          color: c.ink,
+        ),
+        maxLines: 1,
       ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
     );
 
     return Container(

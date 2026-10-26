@@ -3,8 +3,13 @@ import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class ComicDetailRepository {
-  /// Series details and chapter list, fetched in parallel.
-  Future<Either<Failure, ComicDetails>> getComicDetails(String slug);
+  /// Series details and chapter list, fetched in parallel. [onSeries] gets
+  /// the details (without chapters) when they come first, so a slow chapter
+  /// list doesn't hold the page back.
+  Future<Either<Failure, ComicDetails>> getComicDetails(
+    String slug, {
+    void Function(ComicDetails details)? onSeries,
+  });
 
   /// Only the chapter list of [slug], newest first: one source call, for
   /// checks that need the series details only when the chapters changed.

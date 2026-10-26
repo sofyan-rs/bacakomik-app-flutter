@@ -91,7 +91,7 @@ class ChapterTile extends StatelessWidget {
         ],
         Expanded(
           child: Text(
-            '${AppText.chapter} ${chapter.number}',
+            AppText.chapterName(chapter.number, chapter.title),
             style: DotlineText.headline.copyWith(
               color: isRead ? c.inkFaint : c.ink,
             ),

@@ -3,7 +3,9 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider_card.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// "NEW SERIES" horizontal strip.
 class ComicSlider extends StatelessWidget {
@@ -17,7 +19,11 @@ class ComicSlider extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionLabel(label: AppText.newSeries),
+        SectionLabel(
+          label:
+              context.watch<SourcesCubit>().state.features.featuredLabel ??
+              AppText.newSeries,
+        ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),

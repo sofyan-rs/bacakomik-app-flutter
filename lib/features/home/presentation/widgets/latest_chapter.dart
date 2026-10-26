@@ -4,7 +4,9 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_card.dart';
 import 'package:bacakomik_app/features/latest/presentation/pages/latest_chapter_screen.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// "LATEST CHAPTERS" section of the home tab.
 class LatestChapter extends StatelessWidget {
@@ -18,7 +20,9 @@ class LatestChapter extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionLabel(
-          label: AppText.latest,
+          label:
+              context.watch<SourcesCubit>().state.features.latestLabel ??
+              AppText.latest,
           actionLabel: AppText.seeAll,
           onAction: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const LatestChapterScreen()),

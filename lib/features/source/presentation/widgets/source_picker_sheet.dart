@@ -6,6 +6,7 @@ import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/extensions_screen.dart';
+import 'package:bacakomik_app/features/source/presentation/widgets/extension_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -196,6 +197,8 @@ class _SourceCard extends StatelessWidget {
         ),
         child: Row(
           children: [
+            ExtensionIcon(source, size: 32),
+            const SizedBox(width: DotSpace.s3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,8 +208,8 @@ class _SourceCard extends StatelessWidget {
                     style: DotlineText.headline.copyWith(color: c.ink),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    extensionLine(source),
+                  ExtensionLine(
+                    source,
                     style: DotlineText.data.copyWith(color: c.inkFaint),
                   ),
                 ],
@@ -221,9 +224,42 @@ class _SourceCard extends StatelessWidget {
 }
 
 /// `voratoon.co · ID · v1`.
-/// `mangadex.org · MULTI · v1.0.0`; a multi-language extension says MULTI.
+/// `mangadex.org · MULTI · 18+ · v1.0.0`; a multi-language extension says
+/// MULTI, an adult one 18+. The version comes last: an update follows it.
 String extensionLine(ExtensionMeta meta) =>
-    '${meta.domain} · ${meta.languages.isEmpty ? meta.lang.toUpperCase() : 'MULTI'} · v${meta.version}';
+    '${meta.domain} · ${meta.languages.isEmpty ? meta.lang.toUpperCase() : 'MULTI'} · ${meta.nsfw ? '18+ · ' : ''}v${meta.version}';
+
+/// [extensionLine] with its `18+` in red, and [suffix] (an update's
+/// `→ v1.2.0`) after the version.
+class ExtensionLine extends StatelessWidget {
+  const ExtensionLine(this.meta, {super.key, this.style, this.suffix = ''});
+
+  final ExtensionMeta meta;
+  final TextStyle? style;
+  final String suffix;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    final lang = meta.languages.isEmpty ? meta.lang.toUpperCase() : 'MULTI';
+    return Text.rich(
+      TextSpan(
+        style: style ?? DotlineText.bodyS.copyWith(color: c.inkMuted),
+        children: [
+          TextSpan(text: '${meta.domain} · $lang · '),
+          if (meta.nsfw) ...[
+            TextSpan(
+              text: '18+',
+              style: TextStyle(color: c.accentText),
+            ),
+            const TextSpan(text: ' · '),
+          ],
+          TextSpan(text: 'v${meta.version}$suffix'),
+        ],
+      ),
+    );
+  }
+}
 
 class _Radio extends StatelessWidget {
   const _Radio({required this.selected});

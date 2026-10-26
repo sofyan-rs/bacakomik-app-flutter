@@ -26,6 +26,8 @@ import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/missing_source.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
+import 'package:bacakomik_app/core/source/extension_meta.dart';
+import 'package:bacakomik_app/core/source/mihon_source.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
 
 class ComicDetailsScreen extends StatelessWidget {
@@ -88,10 +90,92 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   /// instead of loading.
   var _sourceMissing = false;
 
+  /// The source's filters, to open Explore on a genre; null until loaded
+  /// or when they don't load (genres are then plain labels).
+  SourceFeatures? _features;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _loadFeatures();
+    _loadScanlators();
+  }
+
+  /// Scanlators of a Mihon comic with several (empty otherwise), and the
+  /// one picked.
+  var _scanlators = const <String>[];
+  String? _scanlator;
+
+  Future<void> _loadScanlators() async {
+    try {
+      final backend = await getIt<ExtensionManager>().backend(_sourceId);
+      if (backend is! MihonSource) return;
+      final result = await backend.scanlators(ComicKey.slugOf(widget.slug));
+      if (!mounted) return;
+      setState(() {
+        _scanlators = result.names.length > 1 ? result.names : const [];
+        _scanlator = result.picked;
+      });
+    } catch (_) {
+      // Offline or failed: no picker.
+    }
+  }
+
+  Future<void> _pickScanlator() async {
+    final c = Dotline.of(context);
+    final picked = await showDotSheet<({String? name})>(
+      context: context,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const ActionSheetHeader(
+            icon: LucideIcons300.users,
+            title: AppText.scanlators,
+            subtitle: AppText.scanlatorsHint,
+          ),
+          const SizedBox(height: DotSpace.s4),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                ListGroup(
+                  background: c.bg,
+                  children: [
+                    for (final name in [null, ..._scanlators])
+                      ListRow(
+                        title: name ?? AppText.sourceOrder,
+                        trailing: name == _scanlator
+                            ? Icon(LucideIcons300.check, color: c.ink)
+                            : null,
+                        onTap: () => Navigator.of(context).pop((name: name)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (picked == null || picked.name == _scanlator || !mounted) return;
+    final backend = await getIt<ExtensionManager>().backend(_sourceId);
+    if (backend is! MihonSource) return;
+    await backend.setScanlator(ComicKey.slugOf(widget.slug), picked.name);
+    if (!mounted) return;
+    setState(() => _scanlator = picked.name);
+    await _load();
+  }
+
+  Future<void> _loadFeatures() async {
+    try {
+      final backend = await getIt<ExtensionManager>().backend(_sourceId);
+      final features = await backend.features();
+      if (mounted) setState(() => _features = features);
+    } catch (_) {
+      // Offline or missing source: genres stay plain.
+    }
   }
 
   Future<void> _load() async {
@@ -132,8 +216,10 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   /// Explore filtered by [genre] alone, in this comic's source, on top of
   /// the tabs.
   void _exploreGenre(Genre genre) {
+    final filter = _features?.genreFilter(genre.slug, genre.name);
+    if (filter == null) return;
     final source = ComicKey.sourceOf(widget.slug);
-    context.read<FilterCubit>().showGenre(source, genre.slug);
+    context.read<FilterCubit>().showGenre(source, filter.key, filter.value);
     context.read<SourcesCubit>().select(source);
     RootTabsScope.read(context).openExploreFiltered();
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -164,17 +250,20 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ComicDetailsBloc, ComicDetailsState>(
-      listenWhen: (_, state) => state is ComicDetailsLoaded,
+      listenWhen: (_, state) =>
+          state is ComicDetailsLoaded && !state.chaptersLoading,
       listener: _onLoaded,
       builder: (context, state) {
         final details = state is ComicDetailsLoaded ? state.comicDetails : null;
+        // Bookmarking or downloading waits for the chapter list.
+        final ready = state is ComicDetailsLoaded && !state.chaptersLoading;
         return PopScope(
           canPop: _selected.isEmpty,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _setSelected(const []);
           },
           child: Scaffold(
-            bottomNavigationBar: details == null
+            bottomNavigationBar: details == null || !ready
                 ? null
                 : ComicAppBar(
                     comicSlug: widget.slug,
@@ -258,7 +347,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
           ),
         ]
       : switch (state) {
-          ComicDetailsLoaded(:final comicDetails) => [
+          ComicDetailsLoaded(:final comicDetails, :final chaptersLoading) => [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 DotSpace.s4,
@@ -269,17 +358,22 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
               sliver: SliverToBoxAdapter(
                 child: ComicInfo(
                   details: comicDetails,
+                  chaptersLoading: chaptersLoading,
                   source: context.sourceLabelOf(widget.slug),
                   onGenreTap: _exploreGenre,
+                  canTapGenre: (genre) =>
+                      _features?.genreFilter(genre.slug, genre.name) != null,
                 ),
               ),
             ),
             ComicChapters(
               comicDetails: comicDetails,
+              loading: chaptersLoading,
               onOpenChapter: (chapter) => _read(comicDetails, chapter.slug),
               onToggleSelected: _toggleSelected,
               isSelected: _isSelected,
               isSelecting: _selected.isNotEmpty,
+              onScanlators: _scanlators.isEmpty ? null : _pickScanlator,
             ),
           ],
           ComicDetailsNoInternet() => [

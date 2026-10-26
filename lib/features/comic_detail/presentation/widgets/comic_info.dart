@@ -15,6 +15,8 @@ class ComicInfo extends StatefulWidget {
     required this.details,
     this.source,
     this.onGenreTap,
+    this.canTapGenre,
+    this.chaptersLoading = false,
   });
 
   final ComicDetails details;
@@ -24,6 +26,12 @@ class ComicInfo extends StatefulWidget {
 
   /// Tapping a genre chip; null leaves the chips inert.
   final void Function(Genre genre)? onGenreTap;
+
+  /// Whether a genre opens anything; others are plain labels.
+  final bool Function(Genre genre)? canTapGenre;
+
+  /// The chapter list is still loading: its count shows as `…`.
+  final bool chaptersLoading;
 
   static final _yearPattern = RegExp(r'\d{4}');
 
@@ -55,21 +63,32 @@ class _ComicInfoState extends State<ComicInfo> {
     final d = widget.details;
     final year = ComicInfo.year(d.released);
     final alt = ComicInfo.altTitles(d.title, d.alternativeTitle);
-    final meta = [
-      if (d.type != '-') d.type,
-      d.status,
-      if (year != '-') year,
+    final hasRating = !const {'', '-', '0', '0.0'}.contains(d.rating.trim());
+    final status = d.status.trim();
+    // Each shows only when known. The rating, a minor detail, is a tile of
+    // its own nowhere: it follows the source line.
+    final tiles = [
+      (widget.chaptersLoading ? '…' : '${d.chapters.length}', AppText.chapter),
+      if (year != '-') (year, AppText.released),
+      if (status.isNotEmpty && status != '-') (d.status, AppText.status),
+    ];
+    final meta = d.type == '-' ? '' : d.type;
+    final sourceLine = [
+      if (widget.source case final source?) '${AppText.sourceFrom} $source',
+      if (hasRating) '★ ${d.rating}',
     ].join(' · ');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          meta.toUpperCase(),
-          style: DotlineText.label.copyWith(color: c.inkFaint),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: DotSpace.s3),
+        if (meta.isNotEmpty) ...[
+          Text(
+            meta.toUpperCase(),
+            style: DotlineText.label.copyWith(color: c.inkFaint),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: DotSpace.s3),
+        ],
         ComicTitle(d.title),
         if (alt != null) ...[
           const SizedBox(height: DotSpace.s2),
@@ -93,10 +112,10 @@ class _ComicInfoState extends State<ComicInfo> {
             textAlign: TextAlign.center,
           ),
         ],
-        if (widget.source case final source?) ...[
+        if (sourceLine.isNotEmpty) ...[
           const SizedBox(height: DotSpace.s2),
           Text(
-            '${AppText.sourceFrom} $source'.toUpperCase(),
+            sourceLine.toUpperCase(),
             style: DotlineText.label.copyWith(color: c.inkFaint),
             textAlign: TextAlign.center,
           ),
@@ -104,29 +123,12 @@ class _ComicInfoState extends State<ComicInfo> {
         const SizedBox(height: DotSpace.s5),
         Row(
           children: [
-            Expanded(
-              child: StatTile(
-                value: d.rating,
-                label: AppText.rating,
-                compact: true,
+            for (final (i, (value, label)) in tiles.indexed) ...[
+              if (i > 0) const SizedBox(width: DotSpace.s3),
+              Expanded(
+                child: StatTile(value: value, label: label, compact: true),
               ),
-            ),
-            const SizedBox(width: DotSpace.s3),
-            Expanded(
-              child: StatTile(
-                value: '${d.chapters.length}',
-                label: AppText.chapter,
-                compact: true,
-              ),
-            ),
-            const SizedBox(width: DotSpace.s3),
-            Expanded(
-              child: StatTile(
-                value: year,
-                label: AppText.released,
-                compact: true,
-              ),
-            ),
+            ],
           ],
         ),
         if (d.synopsis.isNotEmpty) ...[
@@ -184,7 +186,9 @@ class _ComicInfoState extends State<ComicInfo> {
               for (final genre in d.genres)
                 DotChip(
                   label: genre.name,
-                  onTap: widget.onGenreTap == null
+                  onTap:
+                      widget.onGenreTap == null ||
+                          !(widget.canTapGenre?.call(genre) ?? true)
                       ? null
                       : () => widget.onGenreTap!(genre),
                 ),
