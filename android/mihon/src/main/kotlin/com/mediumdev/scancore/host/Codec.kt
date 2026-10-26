@@ -61,7 +61,8 @@ object Codec {
         base: String? = null,
     ): JsonObject =
         buildJsonObject {
-            put("title", manga.title)
+            // A source may return a new series without the title it was given.
+            put("title", runCatching { manga.title }.getOrNull())
             put("cover", cover(manga.thumbnail_url, base))
             put("description", manga.description)
             put("author", manga.author)

@@ -89,6 +89,13 @@ class Contract(
         vararg extra: Pair<String, JsonElement>,
     ) = JsonObject(params + extra)
 
+    /** A series call, with its title when known (sources may read it). */
+    private fun request(
+        params: JsonObject,
+        url: String,
+        title: String?,
+    ) = if (title == null) with(params, "url" to JsonPrimitive(url)) else with(params, "url" to JsonPrimitive(url), "title" to JsonPrimitive(title))
+
     // ------------------------------------------------------------------ browse
 
     private suspend fun browse(
@@ -190,9 +197,10 @@ class Contract(
         slug: String,
     ): JsonElement {
         val url = Slugs.decode(slug)
-        val d = host.handle("details", with(params, "url" to JsonPrimitive(url))).jsonObject
+        val key = "${sourceId(params)}|$url"
+        val d = host.handle("details", request(params, url, titles[key])).jsonObject
         fun text(key: String) = d[key]?.jsonPrimitive?.contentOrNull?.trim()?.ifEmpty { null }
-        text("title")?.let { titles["${sourceId(params)}|$url"] = it }
+        text("title")?.let { titles[key] = it }
         val description = Description.parse(d["description"]?.jsonPrimitive?.contentOrNull)
         val people =
             listOfNotNull(text("author"), text("artist"))
@@ -202,7 +210,7 @@ class Contract(
                 .distinct()
         return buildJsonObject {
             put("slug", slug)
-            put("title", text("title").orEmpty())
+            put("title", text("title") ?: titles[key].orEmpty())
             put("cover", Images.cover(sourceId(params), text("cover")))
             put("format", JsonNull)
             put("status", status(d["status"]?.jsonPrimitive?.intOrNull))
@@ -273,7 +281,7 @@ class Contract(
         // bookmark refresh), so the details are asked for alongside; asked
         // at once, both come from one getMangaUpdate (ExtensionHost).
         val key = "${sourceId(params)}|$url"
-        val request = with(params, "url" to JsonPrimitive(url))
+        val request = request(params, url, titles[key])
         val all =
             coroutineScope {
                 val details = if (titles[key] == null) async { runCatching { host.handle("details", request) }.getOrNull() } else null
@@ -375,7 +383,7 @@ class Contract(
             i = find(list) ?: throw HostError("404 Chapter $number not found.", 404)
         }
         val c = list!![i]
-        val pages = host.handle("pages", with(params, "url" to JsonPrimitive(c["url"]!!.jsonPrimitive.content))).jsonArray
+        val pages = host.handle("pages", with(params, "url" to JsonPrimitive(c["url"]!!.jsonPrimitive.content), "chapter" to c)).jsonArray
         val id = sourceId(params)
         return buildJsonObject {
             put("number", numberJson(c))

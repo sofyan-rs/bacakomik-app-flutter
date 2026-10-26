@@ -33,8 +33,11 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Response
@@ -213,6 +216,7 @@ class ExtensionHost(
     private suspend fun mangaUpdate(
         source: Source,
         url: String,
+        title: String?,
         details: Boolean,
         chapters: Boolean,
     ): SMangaUpdate {
@@ -237,7 +241,7 @@ class ExtensionHost(
                     }
                     try {
                         val known = if (job.chapters) knownChapters(source, url) else emptyList()
-                        val update = source.getMangaUpdate(manga(source, url), known, job.details, job.chapters)
+                        val update = source.getMangaUpdate(manga(source, url, title), known, job.details, job.chapters)
                         if (job.chapters) saveChapters(source, url, update.chapters)
                         job.result.complete(update)
                     } catch (e: Throwable) {
@@ -294,21 +298,31 @@ class ExtensionHost(
         }
     }
 
+    // Mihon always hands sources a series with its title; some read or copy
+    // it (MangaDex), so it is never left unset.
     fun manga(
         source: Source,
         url: String,
+        title: String? = null,
     ): SManga =
         SManga.create().also {
             it.url = url
+            it.title = title.orEmpty()
             memos.manga(source.id, url)?.let { memo -> it.memo = memo }
         }
 
+    // As in the list the chapter came from (`known`), like Mihon gives it.
     private fun chapter(
         source: Source,
         url: String,
+        known: JsonObject? = null,
     ): SChapter =
         SChapter.create().also {
             it.url = url
+            it.name = known?.get("name")?.jsonPrimitive?.contentOrNull.orEmpty()
+            known?.get("number")?.jsonPrimitive?.floatOrNull?.let { n -> it.chapter_number = n }
+            known?.get("uploaded")?.jsonPrimitive?.longOrNull?.let { t -> it.date_upload = t }
+            it.scanlator = known?.get("scanlator")?.jsonPrimitive?.contentOrNull
             memos.chapter(source.id, url)?.let { memo -> it.memo = memo }
         }
 
@@ -330,15 +344,15 @@ class ExtensionHost(
                 )
             }
             "details" -> {
-                val update = mangaUpdate(source, params.string("url"), details = true, chapters = false)
+                val update = mangaUpdate(source, params.string("url"), params.optString("title"), details = true, chapters = false)
                 remember(source, listOf(update.manga))
                 Codec.details(update.manga, base(source))
             }
             "chapters" -> {
-                val update = mangaUpdate(source, params.string("url"), details = false, chapters = true)
+                val update = mangaUpdate(source, params.string("url"), params.optString("title"), details = false, chapters = true)
                 Codec.chapters(update.chapters)
             }
-            "pages" -> Codec.pages(source.getPageList(chapter(source, params.string("url"))))
+            "pages" -> Codec.pages(source.getPageList(chapter(source, params.string("url"), params["chapter"] as? JsonObject)))
             "filters" -> Codec.filters(source.getFilterList())
             "preferences" -> (source as? ConfigurableSource)?.let { settings.describe(Configurable.of(it)) } ?: JsonArray(emptyList())
             "setPreference" -> {
