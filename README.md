@@ -90,6 +90,7 @@ Release signing and testing extensions locally are described in [Contributing](d
 
 - [Mihon](https://github.com/mihonapp/mihon) (Apache License 2.0), the successor of Tachiyomi: BacaKomik uses it as a reference for features and behavior, such as extensions and extension repos, the library and categories, the reader, migration and the `.tachibk` backup format read by the Mihon import.
 - [keiyoushi/extensions-source](https://github.com/keiyoushi/extensions-source) (Apache License 2.0): reference for some extensions (see [Extensions](#extensions)).
+- [SCANCORE](https://github.com/medium-gh/scancore) (MIT): its extension host and its copy of Mihon's source API are the base of the Mihon extension support in `android/mihon`; Mihon's chapter-number recognition comes from Mihon.
 
 ## Disclaimer
 
