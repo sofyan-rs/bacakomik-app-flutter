@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
@@ -7,6 +9,7 @@ import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/deep_links.dart';
+import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_app_bar.dart';
@@ -247,8 +250,47 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     );
   }
 
+  /// A chapter list that takes long (sources that read it page by page)
+  /// gets a note after [_slowAfter]; the note goes once the list is in.
+  static const _slowAfter = Duration(seconds: 4);
+  Timer? _slowChapters;
+  ScaffoldMessengerState? _slowNote;
+
+  @override
+  void dispose() {
+    _slowChapters?.cancel();
+    _slowNote?.hideCurrentSnackBar();
+    super.dispose();
+  }
+
+  void _onChaptersLoading(BuildContext context, ComicDetailsState state) {
+    if (state is ComicDetailsLoaded && state.chaptersLoading) {
+      _slowChapters ??= Timer(_slowAfter, () {
+        if (!mounted) return;
+        _slowNote = ScaffoldMessenger.of(this.context);
+        showSnackBar(
+          context: this.context,
+          message: AppText.chaptersLoadingSlow,
+          duration: const Duration(minutes: 5),
+        );
+      });
+      return;
+    }
+    _slowChapters?.cancel();
+    _slowChapters = null;
+    _slowNote?.hideCurrentSnackBar();
+    _slowNote = null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    return BlocListener<ComicDetailsBloc, ComicDetailsState>(
+      listener: _onChaptersLoading,
+      child: _content(),
+    );
+  }
+
+  Widget _content() {
     return BlocConsumer<ComicDetailsBloc, ComicDetailsState>(
       listenWhen: (_, state) =>
           state is ComicDetailsLoaded && !state.chaptersLoading,

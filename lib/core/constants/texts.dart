@@ -241,6 +241,8 @@ class AppText {
   static const String infiniteScrollHint =
       'Vertical: chapters run on into each other';
   static const String chapterLoadFailed = 'Could not load the chapter';
+  static const String chaptersLoadingSlow =
+      'Still loading the chapter list. Long series take a while.';
   static const String pageShort = 'Page';
   static const String autoScrollSpeed = 'Scroll speed';
   static const String autoScrollHint = 'Vertical mode. Tap the screen to pause';

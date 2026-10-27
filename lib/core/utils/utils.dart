@@ -13,6 +13,7 @@ void showSnackBar({
   required BuildContext context,
   required String message,
   Icon? icon,
+  Duration duration = const Duration(seconds: 1),
 }) {
   ScaffoldMessenger.of(context).clearSnackBars();
   ScaffoldMessenger.of(context).showSnackBar(
@@ -21,10 +22,10 @@ void showSnackBar({
         children: [
           icon ?? const SizedBox(),
           icon != null ? const SizedBox(width: 8) : const SizedBox(),
-          Text(message),
+          Flexible(child: Text(message)),
         ],
       ),
-      duration: const Duration(seconds: 1),
+      duration: duration,
     ),
   );
 }
