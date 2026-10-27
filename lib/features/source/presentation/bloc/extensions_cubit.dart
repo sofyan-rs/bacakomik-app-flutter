@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
 import 'package:bacakomik_app/core/source/extension_meta.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,6 +40,15 @@ class ExtensionsState {
     final offered = available.where((e) => e.id == id).firstOrNull;
     if (current == null || offered == null) return null;
     return offered.isNewerThan(current) ? offered : null;
+  }
+
+  /// Name of the repo [meta] comes from: its own name once the repos are
+  /// fetched, else the repo's host; bundled extensions have none.
+  String repoNameOf(ExtensionMeta meta) {
+    final url = meta.repoUrl;
+    if (url == null) return AppText.builtInExtension;
+    final name = repos.where((r) => r.url == url).firstOrNull?.name;
+    return name ?? Uri.tryParse(url)?.host ?? url;
   }
 
   int get updateCount =>

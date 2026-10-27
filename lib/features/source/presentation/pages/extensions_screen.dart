@@ -56,9 +56,15 @@ class _ExtensionsView extends StatefulWidget {
 class _ExtensionsViewState extends State<_ExtensionsView> {
   late var _tab = widget.showAvailable ? _Tab.available : _Tab.installed;
 
-  /// Search, language and 18+ filter, shared by both tabs; adult
-  /// extensions start hidden.
-  var _filter = const ExtensionFilter(hideNsfw: true);
+  /// Search and language, shared by both tabs.
+  var _filter = const ExtensionFilter();
+
+  /// The 18+ switch, per tab: adult extensions start hidden only among the
+  /// available ones, so installed ones always show.
+  final _hideNsfw = {_Tab.installed: false, _Tab.available: true};
+
+  /// [_filter] with the current tab's 18+ switch.
+  ExtensionFilter get _tabFilter => _filter.copyWith(hideNsfw: _hideNsfw[_tab]);
   final _search = TextEditingController();
 
   @override
@@ -69,10 +75,13 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
 
   Widget _filterBar(List<ExtensionMeta> extensions) => SliverToBoxAdapter(
     child: ExtensionFilterBar(
-      filter: _filter,
+      filter: _tabFilter,
       extensions: extensions,
       controller: _search,
-      onChanged: (filter) => setState(() => _filter = filter),
+      onChanged: (filter) => setState(() {
+        _filter = filter;
+        _hideNsfw[_tab] = filter.hideNsfw;
+      }),
     ),
   );
 
@@ -227,7 +236,7 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
         ),
       ];
     }
-    final list = state.installed.where(_filter.matches).toList();
+    final list = state.installed.where(_tabFilter.matches).toList();
     return [
       _filterBar(state.installed),
       if (list.isEmpty) _noMatch,
@@ -238,6 +247,7 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
           final update = state.updateFor(meta.id);
           return _ExtensionRow(
             meta: meta,
+            repo: state.repoNameOf(meta),
             busy: state.busy.contains(meta.id),
             action: update != null && update.supported
                 ? _RowAction(
@@ -262,7 +272,7 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
 
   List<Widget> _available(ExtensionsState state) {
     final all = state.notInstalled;
-    final list = all.where(_filter.matches).toList();
+    final list = all.where(_tabFilter.matches).toList();
     final failed = state.repos.where((r) => r.error != null).toList();
 
     return [
@@ -308,6 +318,7 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
             final meta = list[i];
             return _ExtensionRow(
               meta: meta,
+              repo: state.repoNameOf(meta),
               busy: state.busy.contains(meta.id),
               action: _RowAction(
                 label: meta.supported
@@ -332,6 +343,7 @@ class _RowAction {
 class _ExtensionRow extends StatelessWidget {
   const _ExtensionRow({
     required this.meta,
+    required this.repo,
     required this.busy,
     this.action,
     this.newVersion,
@@ -341,6 +353,9 @@ class _ExtensionRow extends StatelessWidget {
   });
 
   final ExtensionMeta meta;
+
+  /// Name of the repo it comes from, on its own line.
+  final String repo;
   final bool busy;
   final _RowAction? action;
 
@@ -359,9 +374,29 @@ class _ExtensionRow extends StatelessWidget {
     final c = Dotline.of(context);
     return ListRow(
       title: meta.name,
-      subtitleWidget: ExtensionLine(
-        meta,
-        suffix: newVersion == null ? '' : ' → v$newVersion',
+      subtitleWidget: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExtensionLine(
+            meta,
+            suffix: newVersion == null ? '' : ' → v$newVersion',
+          ),
+          Row(
+            children: [
+              Icon(LucideIcons300.package, size: 14, color: c.inkFaint),
+              const SizedBox(width: DotSpace.s1),
+              Expanded(
+                child: Text(
+                  repo,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: DotlineText.bodyS.copyWith(color: c.inkFaint),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       leading: ExtensionIcon(meta),
       trailing: busy
