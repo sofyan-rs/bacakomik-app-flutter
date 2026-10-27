@@ -140,6 +140,41 @@ void main() {
     expect(results, [('y:1', false), ('x:1', true)]);
   });
 
+  test(
+    'a comic over the timeout keeps its source until its work ends',
+    () async {
+      queue.dispose();
+      queue = make(timeout: const Duration(milliseconds: 20));
+      final run = queue.add(['x:1', 'x:2', 'y:1']);
+      await pumpEventQueue();
+      source.finish('y:1');
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      await pumpEventQueue();
+
+      // x:1 timed out but still runs: x:2 waits instead of starting.
+      expect(source.started, ['x:1', 'y:1']);
+      source.finish('x:1');
+      await pumpEventQueue();
+      expect(source.started.last, 'x:2');
+      source.finish('x:2');
+      await run;
+      expect(results, contains(('x:2', false)));
+    },
+  );
+
+  test('a stuck comic frees its source after one more timeout', () async {
+    queue.dispose();
+    queue = make(timeout: const Duration(milliseconds: 20));
+    final run = queue.add(['x:1', 'x:2']);
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await pumpEventQueue();
+
+    // x:1 never finishes; x:2 starts once the extra timeout passed.
+    expect(source.started, ['x:1', 'x:2']);
+    source.finish('x:2');
+    await run;
+  });
+
   test('drop forgets queued keys and abandons running ones', () async {
     final run = queue.add(['x:1', 'x:2', 'y:1']);
     await pumpEventQueue();

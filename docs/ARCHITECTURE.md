@@ -200,7 +200,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 |---|---|
 | Cancel in the notification | Reaches `progressActionInBackground` in a background isolate, which forwards via `IsolateNameServer`; `BookmarkCubit.cancelRefresh` drops the queue. **Needs `ActionBroadcastReceiver` in `AndroidManifest.xml`** |
 | Stop button in the Bookmarks header | Shown while `BookmarkCubit.refreshing`; same cancel |
-| A comic over `refreshTimeout` (90 s) | Skipped, so one stuck site can't block the run |
+| A comic over `refreshTimeout` (90 s) | Skipped, so one stuck site can't block the run. Its source stays busy until its work ends (at most 90 s more): the site or the extension's hidden WebView is still on it, and the next comic of that source would only wait there. Stopped or removed comics free their source at once |
 | Notification swiped away | Stays away; **the run continues** |
 
 A comic abandoned (stop, timeout, bookmark removed) has its `RefreshCancelToken` cancelled and writes nothing more; a request already sent may still finish, and a result whose write had begun arrives `late` so the screen shows it. Comics pulled after a Stop, or while a run is ending, get a run of their own.

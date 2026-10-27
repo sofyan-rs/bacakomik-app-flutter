@@ -43,7 +43,11 @@ class BookmarkRefreshQueue {
   final int maxParallel;
 
   /// A comic that takes longer is skipped, so one stuck site cannot hold
-  /// up the rest.
+  /// up the rest. Its source stays busy until its work ends (at most
+  /// [timeout] more): the site, or an extension's one hidden WebView, is
+  /// still on it, and the next comic of that source would only wait there
+  /// while its own time runs out. Comics stopped or removed by the user
+  /// free their source at once.
   final Duration timeout;
 
   /// Whether a run is going; Bookmarks shows a stop button.
@@ -55,7 +59,8 @@ class BookmarkRefreshQueue {
   /// Keys queued or checked in the current run, so none is checked twice.
   final _seen = <String>{};
 
-  /// Comics being checked, by key.
+  /// Comics being checked, by key, and the sources busy with them or with
+  /// a comic given up on whose work still runs.
   final _running = <String, _Job>{};
   final _busySources = <String>{};
 
@@ -137,7 +142,8 @@ class BookmarkRefreshQueue {
         ..addAll(_queue);
       while (true) {
         if (!_cancelled) _startJobs();
-        if (_running.isEmpty) break;
+        // Queued comics whose source is still busy wait for it.
+        if (_running.isEmpty && (_queue.isEmpty || _cancelled)) break;
         _report();
         final wake = _wake = Completer<void>();
         await wake.future;
@@ -198,12 +204,25 @@ class BookmarkRefreshQueue {
           timeout,
           onTimeout: () {
             debugPrint('BookmarkRefresh: $key timed out');
+            job.timedOut = true;
             return null;
           },
         );
     _running.remove(key);
-    _busySources.remove(source);
     _done++;
+    if (job.timedOut) {
+      // Its source is freed once the work ends (see [timeout]). One the
+      // user stopped or removed frees it at once.
+      unawaited(
+        Future.any<void>([work.then((_) {}), Future<void>.delayed(timeout)])
+            .whenComplete(() {
+              _busySources.remove(source);
+              _wakeUp();
+            }),
+      );
+    } else {
+      _busySources.remove(source);
+    }
     if (result == null) {
       // Abandoned: its writes are skipped from now on; one already begun
       // still lands, and is shown when it does.
@@ -213,7 +232,8 @@ class BookmarkRefreshQueue {
           if (!_disposed) onResult(key, _unwrap(late), late: true);
         }),
       );
-    } else if (!_disposed) {
+    }
+    if (result != null && !_disposed) {
       final unwrapped = _unwrap(result);
       if (unwrapped.saved != null) _updated++;
       onResult(key, unwrapped, late: false);
@@ -229,6 +249,9 @@ class BookmarkRefreshQueue {
 
 class _Job {
   final token = RefreshCancelToken();
+
+  /// Given up on after [BookmarkRefreshQueue.timeout].
+  var timedOut = false;
   final abandoned = Completer<void>();
 
   void abandon() {
