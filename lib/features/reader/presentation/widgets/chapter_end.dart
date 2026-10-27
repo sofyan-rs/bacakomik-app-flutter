@@ -18,7 +18,7 @@ class ChapterEnd extends StatelessWidget {
     required this.next,
     required this.onNext,
     required this.onChapterList,
-    required this.onHome,
+    required this.onBackToSeries,
   });
 
   final String chapterNumber;
@@ -29,7 +29,7 @@ class ChapterEnd extends StatelessWidget {
   final Chapter? next;
   final VoidCallback onNext;
   final VoidCallback onChapterList;
-  final VoidCallback onHome;
+  final VoidCallback onBackToSeries;
 
   @override
   Widget build(BuildContext context) {
@@ -141,9 +141,9 @@ class ChapterEnd extends StatelessWidget {
               const SizedBox(width: DotSpace.s3),
               Expanded(
                 child: DotButton.outline(
-                  label: AppText.toHome,
+                  label: AppText.backToSeries,
                   size: DotButtonSize.medium,
-                  onTap: onHome,
+                  onTap: onBackToSeries,
                 ),
               ),
             ],

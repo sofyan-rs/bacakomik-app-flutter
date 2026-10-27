@@ -58,6 +58,7 @@ class _DownloadComicGroupState extends State<DownloadComicGroup> {
           slug: chapter.slug,
           comicSlug: comic.slug,
           comicDetails: comic.comicDetails,
+          fromSeries: false,
         ),
       ),
     );

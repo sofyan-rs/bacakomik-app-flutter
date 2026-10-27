@@ -10,7 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// "Reader settings": direction, page size, keep awake, page gap,
-/// progress bar, auto-scroll speed. Saved
+/// progress bar, infinite scroll, auto-scroll speed. Saved
 /// right away through [SettingsCubit].
 class ReaderSettingsSheet extends StatelessWidget {
   const ReaderSettingsSheet({super.key});
@@ -106,6 +106,19 @@ class ReaderSettingsSheet extends StatelessWidget {
               ),
               onTap: () =>
                   cubit.update((s) => s.copyWith(progressBar: !s.progressBar)),
+            ),
+            ListRow(
+              title: AppText.infiniteScroll,
+              subtitle: AppText.infiniteScrollHint,
+              trailing: DotSwitch(
+                value: settings.infiniteScroll,
+                semanticLabel: AppText.infiniteScroll,
+                onChanged: (v) =>
+                    cubit.update((s) => s.copyWith(infiniteScroll: v)),
+              ),
+              onTap: () => cubit.update(
+                (s) => s.copyWith(infiniteScroll: !s.infiniteScroll),
+              ),
             ),
             ListRow(
               title: AppText.autoScrollSpeed,

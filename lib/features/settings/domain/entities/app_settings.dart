@@ -80,6 +80,10 @@ abstract class AppSettings with _$AppSettings {
     /// Thin page progress line at the bottom while the controls are hidden.
     @Default(true) bool progressBar,
 
+    /// Vertical reader: the next and previous chapters join the page list,
+    /// so reading runs on from one chapter into the next.
+    @Default(false) bool infiniteScroll,
+
     /// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
     @Default(3) int autoScrollSpeed,
 

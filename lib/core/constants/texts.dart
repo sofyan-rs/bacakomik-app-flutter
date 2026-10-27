@@ -237,6 +237,10 @@ class AppText {
   static const String pageGapHint = '8px line between pages';
   static const String progressBar = 'Progress bar';
   static const String progressBarHint = 'Thin line at the bottom while reading';
+  static const String infiniteScroll = 'Infinite scroll';
+  static const String infiniteScrollHint =
+      'Vertical: chapters run on into each other';
+  static const String chapterLoadFailed = 'Could not load the chapter';
   static const String pageShort = 'Page';
   static const String autoScrollSpeed = 'Scroll speed';
   static const String autoScrollHint = 'Vertical mode. Tap the screen to pause';
@@ -253,7 +257,8 @@ class AppText {
   static const String continueTo = 'Continue to Chapter';
   static const String latestChapterReached =
       "You're on the latest chapter. New chapters will show up in Bookmarks.";
-  static const String toHome = 'Go home';
+  static const String backToSeries = 'Back to series';
+  static const String builtInExtension = 'Built-in';
 
   // Bookmark groups and categories
   static const String groupByStatus = 'Status';

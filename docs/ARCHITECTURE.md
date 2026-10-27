@@ -74,7 +74,7 @@ Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the gen
 | `lib/features/<name>/` | One folder per feature (table below) | Yes, most work |
 | `*.freezed.dart`, `*.g.dart`, `injection.config.dart`, `core/assets/*.gen.dart` | Generated (§10) | No |
 | `assets/extensions/` | Bundled extensions (§8.2) | Only via `bundle.ts` (CONTRIBUTION §2) |
-| `android/…/MainActivity.kt` | `bacakomik/hidden_webviews` channel (§8.5); registers `MihonChannel` (`bacakomik/mihon`) | Rarely |
+| `android/…/MainActivity.kt` | `bacakomik/hidden_webviews` channel (§8.5); registers `MihonChannel` (`bacakomik/mihon`); asks for the display's fastest mode at its resolution (`preferredDisplayModeId`), as some phones keep apps at 60 Hz otherwise | Rarely |
 | `android/mihon/` | Runs Mihon extension APKs (§8.9) | When Mihon's API or a host call changes |
 | `android/app/src/main/AndroidManifest.xml` | Permissions, deep links, notification action receiver | Rarely |
 | `hosting/` | Cloudflare Worker for `bacakomik.kurodev.org` | Rarely |
@@ -155,7 +155,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 - Events are `final class`es named after what happened (`HomeStarted`, `ChapterRequested`).
 
 ### 4.4 Settings
-`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `progressBar`, `autoScrollSpeed`), `incognito` (the reader saves no history while on; marking chapters read still does), `kururinSound` (Home's pull-to-refresh sound; the spin shows either way), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
+`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `progressBar`, `infiniteScroll`, `autoScrollSpeed`), `incognito` (the reader saves no history while on; marking chapters read still does), `kururinSound` (Home's pull-to-refresh sound; the spin shows either way), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
 
 ---
 
@@ -183,7 +183,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 | latest | "See all" | `LatestBloc` | Infinite scroll, up to 10 pages |
 | explore | Explore tab | `ExploreBloc`, `FilterCubit` | `ExploreFilter` (source, query, values per group) goes to one `browse`. Sheet built from `filters()`; a `quick` group shows above the grid. Changing source resets it. Groups over 14 options show 12 (plus any picked) and "Show all"; a `sort` group (Mihon) is one chip per field, tapped again to turn the direction. Genre chips on a comic page open Explore with that genre alone (`FilterCubit.showGenre`) when the source has a matching filter (`SourceFeatures.genreFilter`: the `genre` group's id, else an option with that name); otherwise they are plain labels. Requests run in order. The tab is built (and first asks its source) on its first visit, which may be Home's search button (focuses the field) |
 | comic_detail | Card tap, shared link | `ComicDetailsBloc` | Series and chapters in parallel; the details show as soon as they come (`loaded(chaptersLoading: true)`: count `…`, a loader for the list, no bottom bar) while a slow chapter list loads; bookmark (then categories, §6.2), continue, WebView, share, multi-select to download or mark read. Offline: opens from stored details (downloads, bookmarks, history). Missing source: `MissingSource` offers to install it. Stat tiles: chapters, release year and status, each only when known; the rating follows the source line |
-| reader | Chapter tap | `ReaderBloc` | Chapter slug `<comicKey>/<number>`; prev/next replace the route; writes history with the page reached; uses `imageHeaders`; downloaded chapters read from files |
+| reader | Chapter tap | `ReaderBloc` | Chapter slug `<comicKey>/<number>`; prev/next replace the route; writes history with the page reached; uses `imageHeaders`; downloaded chapters read from files. With `infiniteScroll` (vertical only) the list holds several chapters (`_Segment`s): the next joins the end when the last 3 pages are reached, the previous joins the top when scrolled past the first page (the list is rebuilt at the item on screen, as inserting shifts every index); title, page meter and history follow the chapter on screen, the one left saved where it was left. "Back to series" pops to the comic page, or opens it when the reader came from Downloads (`fromSeries`) |
 | bookmark | Bookmarks tab | `BookmarkCubit` | Search, group tabs (§6.2), refresh (§6.1) |
 | category | More → Categories | `CategoryCubit` | §6.2 |
 | history | History tab | `HistoryCubit` | Newest chapter per comic by day; remove one, a comic, or all |
@@ -279,7 +279,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 { "slug": "voratoon:solo-leveling", "categoryIds": ["…"], "updatedDate": "2026-10-20T10:00:00.000" }
 // settings
 { "themeMode": "system", "readingDirection": "vertical", "pageFit": "width",
-  "keepScreenOn": true, "pageGap": false, "progressBar": true, "autoScrollSpeed": 3, "incognito": false, "kururinSound": true,
+  "keepScreenOn": true, "pageGap": false, "progressBar": true, "infiniteScroll": false, "autoScrollSpeed": 3, "incognito": false, "kururinSound": true,
   "bookmarkGrouping": "status",
   "bookmarkSort": "updated", "bookmarkSortDirection": "descending" }
 ```
@@ -426,7 +426,7 @@ Mihon source ids are stable hashes: keys survive updates and match Mihon backups
 | `series` | `getMangaUpdate` (details) | status from the `SManga` constant; author + artist without repeats; genres split, id = name. `Description.kt` takes alternative titles ("Alternative Titles: …"), a stats line's rating ("Rating: 9.13", or a line of stars and a score) and markdown bold out of the synopsis |
 | `chapters` | `getMangaUpdate` (chapters) | see Chapter numbers |
 | `chapter` | `getPageList` | finds a number's URL in the last list (fetches again when missing); `prev` / `next` are the nearest numbers; images are `mihon://` URLs |
-| `webUrl` | `HttpSource.getMangaUrl`; with a chapter number, `getChapterUrl` | The reader's globe button asks for the chapter's page |
+| `webUrl` | `HttpSource.getMangaUrl`; with a chapter number, `getChapterUrl` | The reader's ⋮ menu (Open in WebView) asks for the chapter's page |
 | `features` | `getFilterList` | filter groups + `home`. A source that made no request yet first loads popular page 1 (many extensions fetch their genre list then); a list still showing a "Press reset" header is read again after 2 s |
 
 Details and chapters are separate `getMangaUpdate` calls, details first, one at a time per series (lib 1.6 sources refuse two at once); asks of the same kind arriving together share one call. The last chapter list of each series is kept (`<app files>/mihon/chapters/`) and handed back to `getMangaUpdate`, so sources that read only new chapters ("fetch until known") can: a site that pages its list in a WebView takes minutes the first time and seconds after. `chapters` asks for the details alongside when the title is not known yet.

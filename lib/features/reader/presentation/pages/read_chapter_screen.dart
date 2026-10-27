@@ -7,8 +7,10 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
+import 'package:bacakomik_app/features/reader/domain/usecases/get_chapter_content.dart';
 import 'package:bacakomik_app/features/reader/presentation/bloc/reader_bloc.dart';
 import 'package:bacakomik_app/features/reader/presentation/reader_wakelock.dart';
 import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_end.dart';
@@ -33,17 +35,73 @@ import 'package:bacakomik_app/core/network/image_cache.dart';
 int shownPageNumber(int page, int pageCount) =>
     pageCount <= 0 ? 0 : (page + 1).clamp(1, pageCount);
 
+/// One chapter in the reader. With infinite scroll the vertical list holds
+/// several, in reading order; otherwise only the one opened.
+class _Segment {
+  _Segment(this.slug, this.content);
+
+  final String slug;
+  final ChapterContent content;
+
+  /// Pages load in batches, in order. Only pages below [loadLimit] may show
+  /// their image.
+  var loadLimit = 0;
+  final settled = <int>{};
+
+  List<String> get images => content.images;
+}
+
+/// An item of the vertical page list.
+sealed class _Item {
+  const _Item();
+}
+
+final class _PageItem extends _Item {
+  const _PageItem(this.segment, this.page);
+
+  final _Segment segment;
+  final int page;
+}
+
+/// Between two chapters of the list: [segment] ends, [next] starts.
+final class _BreakItem extends _Item {
+  const _BreakItem(this.segment, this.next);
+
+  final _Segment segment;
+  final _Segment next;
+}
+
+/// Above the first chapter while the one before it loads (infinite scroll).
+final class _HeadItem extends _Item {
+  const _HeadItem();
+}
+
+/// After the last chapter: its end card, or the next chapter loading.
+final class _TailItem extends _Item {
+  const _TailItem(this.segment);
+
+  final _Segment segment;
+}
+
+/// Fetching the chapter before the first or after the last of the list.
+enum _Fetch { idle, loading, failed }
+
 class ReadChapterScreen extends StatelessWidget {
   const ReadChapterScreen({
     super.key,
     required this.slug,
     required this.comicSlug,
     required this.comicDetails,
+    this.fromSeries = true,
   });
 
   final String slug;
   final String comicSlug;
   final ComicDetails comicDetails;
+
+  /// Opened from the series' page, which "Back to series" returns to;
+  /// otherwise (Downloads) that page opens in place of the reader.
+  final bool fromSeries;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +111,7 @@ class ReadChapterScreen extends StatelessWidget {
         slug: slug,
         comicSlug: comicSlug,
         comicDetails: comicDetails,
+        fromSeries: fromSeries,
       ),
     );
   }
@@ -63,11 +122,16 @@ class _ReadChapterView extends StatefulWidget {
     required this.slug,
     required this.comicSlug,
     required this.comicDetails,
+    this.fromSeries = true,
   });
 
   final String slug;
   final String comicSlug;
   final ComicDetails comicDetails;
+
+  /// Opened from the series' page, which "Back to series" returns to;
+  /// otherwise (Downloads) that page opens in place of the reader.
+  final bool fromSeries;
 
   @override
   State<_ReadChapterView> createState() => _ReadChapterViewState();
@@ -85,8 +149,9 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   /// notifier so a page change only rebuilds the page meter.
   final _page = ValueNotifier(0);
 
-  final _itemScroll = ItemScrollController();
-  final _scrollOffset = ScrollOffsetController();
+  /// Replaced when the vertical list is built anew ([_newList]).
+  var _itemScroll = ItemScrollController();
+  var _scrollOffset = ScrollOffsetController();
   final _itemPositions = ItemPositionsListener.create();
   PageController? _pageController;
   final _zoom = TransformationController();
@@ -115,12 +180,26 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   )..addListener(() => _zoom.value = _zoomTween?.value ?? _zoom.value);
   Animation<Matrix4>? _zoomTween;
 
-  /// Pages load in batches of [_batch], in order. Only pages below
-  /// [_loadLimit] may show their image.
+  /// Pages load in batches of [_batch] (see [_Segment.loadLimit]).
   static const _batch = 5;
-  var _loadLimit = 0;
-  List<String> _images = const [];
-  final _settled = <int>{};
+
+  /// Chapters in the list, oldest first, and the one being read: the
+  /// position, history, title and page meter are its.
+  final _segments = <_Segment>[];
+  _Segment? _current;
+  List<_Item> _items = const [];
+
+  /// Whether [_items] were built for infinite scroll.
+  var _itemsInfinite = false;
+  var _nextFetch = _Fetch.idle;
+  var _previousFetch = _Fetch.idle;
+  late final _getChapter = getIt<GetChapterContent>();
+
+  /// Chapters added above the list shift every item down, so the list is
+  /// built anew ([_listGeneration]), opening at [_anchor]: the item that
+  /// was on screen, where it was.
+  var _listGeneration = 0;
+  ({int index, double alignment})? _anchor;
 
   /// The reading position is saved a moment after the page changes, and
   /// when the reader closes.
@@ -133,7 +212,6 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   var _autoScroll = false;
   var _autoScrollRun = 0;
   Timer? _autoScrollResume;
-  ChapterContent? _chapter;
   Timer? _saveTimer;
   int? _savedPage;
 
@@ -189,19 +267,20 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   ///
   /// Nothing is saved in incognito mode.
   void _saveProgress({bool announce = false, bool opening = false}) {
-    final chapter = _chapter;
+    final segment = _current;
+    final chapter = segment?.content;
     final page = _page.value;
-    if (chapter == null || chapter.images.isEmpty || _left) return;
-    if (_settings.state.incognito) return;
+    if (segment == null || chapter == null || chapter.images.isEmpty) return;
+    if (_left || _settings.state.incognito) return;
     final finishOpened = _savedOpening && !announce && !opening;
     if (page == _savedPage && !finishOpened) {
-      if (announce) _history.announce(widget.slug);
+      if (announce) _history.announce(segment.slug);
       return;
     }
     _savedPage = page;
     _savedOpening = opening;
     _history.addHistory(
-      slug: widget.slug,
+      slug: segment.slug,
       chapterNumber: chapter.chapterNumber,
       comicSlug: widget.comicSlug,
       comicDetails: widget.comicDetails,
@@ -324,10 +403,23 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     }
   }
 
-  /// The end of the chapter is fully on screen.
-  bool get _atEnd => _itemPositions.itemPositions.value.any(
-    (p) => p.index == _images.length && p.itemTrailingEdge <= 1.0,
-  );
+  /// Infinite scroll is on and applies: the vertical reader.
+  bool get _infinite =>
+      _settings.state.infiniteScroll &&
+      _settings.state.readingDirection == ReadingDirection.vertical;
+
+  /// Another chapter can still join the end of the list.
+  bool get _moreAfter =>
+      _infinite &&
+      _segments.isNotEmpty &&
+      _segments.last.content.nextChapterSlug != null;
+
+  /// The end of the last chapter is fully on screen.
+  bool get _atEnd =>
+      !_moreAfter &&
+      _itemPositions.itemPositions.value.any(
+        (p) => p.index == _items.length - 1 && p.itemTrailingEdge <= 1.0,
+      );
 
   Future<void> _runAutoScroll() async {
     final run = ++_autoScrollRun;
@@ -369,76 +461,255 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     _zoomAnimation.forward(from: 0);
   }
 
-  /// Starts loading when the chapter arrives: every batch up to the
-  /// resumed page at once, then one batch at a time.
-  void _startLoading(List<String> images, {required bool offline}) {
-    _images = images;
-    _loadLimit = 0;
-    _settled.clear();
+  /// Starts loading a chapter's pages: every batch up to the page read (the
+  /// resumed one) at once, then one batch at a time.
+  void _startLoading(_Segment segment) {
+    final images = segment.images;
+    segment.loadLimit = 0;
+    segment.settled.clear();
     // Downloaded pages are on the device; nothing to fetch.
-    if (offline) {
-      setState(() => _loadLimit = images.length);
+    if (segment.content.isOffline) {
+      setState(() => segment.loadLimit = images.length);
       return;
     }
+    final from = identical(segment, _current) ? _page.value : 0;
     do {
-      _loadNextBatch();
-    } while (_loadLimit <= _page.value + 1 && _loadLimit < images.length);
+      _loadNextBatch(segment);
+    } while (segment.loadLimit <= from + 1 &&
+        segment.loadLimit < images.length);
   }
 
   /// Opens the next [_batch] pages and fetches them in the background.
-  void _loadNextBatch() {
-    if (_loadLimit >= _images.length) return;
-    final start = _loadLimit;
-    final end = (start + _batch).clamp(0, _images.length);
-    setState(() => _loadLimit = end);
+  void _loadNextBatch(_Segment segment) {
+    final images = segment.images;
+    if (segment.loadLimit >= images.length) return;
+    final start = segment.loadLimit;
+    final end = (start + _batch).clamp(0, images.length);
+    setState(() => segment.loadLimit = end);
     for (var i = start; i < end; i++) {
       final page = i;
       // Download into the disk cache only; decoding happens when the page
       // is shown, at screen width (see ChapterImg).
       comicImageCache
           .getSingleFile(
-            _images[page],
-            key: _images[page],
+            images[page],
+            key: images[page],
             // Same headers as ChapterImg: it shares this download.
-            headers: _chapter?.imageHeaders ?? const {},
+            headers: segment.content.imageHeaders,
           )
           .then((_) {}, onError: (_) {})
-          .whenComplete(() => _onPageSettled(page));
+          .whenComplete(() => _onPageSettled(segment, page));
     }
   }
 
   /// A page finished loading (or failed). The next batch starts once the
   /// current one has settled.
-  void _onPageSettled(int page) {
+  void _onPageSettled(_Segment segment, int page) {
     if (!mounted) return;
-    _settled.add(page);
-    final batchStart = _loadLimit - _batch;
+    segment.settled.add(page);
+    final limit = segment.loadLimit;
     final batchDone = [
-      for (var i = batchStart.clamp(0, _loadLimit); i < _loadLimit; i++) i,
-    ].every(_settled.contains);
+      for (var i = (limit - _batch).clamp(0, limit); i < limit; i++) i,
+    ].every(segment.settled.contains);
     // Stay about two batches ahead of the reader instead of fetching the
-    // whole chapter.
-    final aheadOfReader = _loadLimit - _page.value;
-    if (batchDone && aheadOfReader < _batch * 2) _loadNextBatch();
+    // whole chapter. A chapter not reached yet counts from its start.
+    final readerPage = identical(segment, _current) ? _page.value : 0;
+    if (batchDone && limit - readerPage < _batch * 2) _loadNextBatch(segment);
   }
 
-  /// Reading close to the last opened page opens the next batch early.
+  /// Reading close to the last opened page opens the next batch early;
+  /// close to the end of the list, the next chapter is fetched.
   void _onPageReached(int page) {
-    if (page >= _loadLimit - 2) _loadNextBatch();
+    final segment = _current;
+    if (segment == null) return;
+    if (page >= segment.loadLimit - 2) _loadNextBatch(segment);
+    if (identical(segment, _segments.last) &&
+        page >= segment.images.length - 3) {
+      _fetchNext();
+    }
+  }
+
+  /// Rebuilds [_items] from [_segments].
+  void _updateItems() {
+    final segments = _segments;
+    _itemsInfinite = _infinite;
+    if (segments.isEmpty) {
+      _items = const [];
+      return;
+    }
+    _items = [
+      if (_infinite && segments.first.content.previousChapterSlug != null)
+        const _HeadItem(),
+      for (final (i, segment) in segments.indexed) ...[
+        for (var page = 0; page < segment.images.length; page++)
+          _PageItem(segment, page),
+        if (i < segments.length - 1) _BreakItem(segment, segments[i + 1]),
+      ],
+      _TailItem(segments.last),
+    ];
+  }
+
+  /// Index in [_items] of [page] of [segment]; its page count is the item
+  /// after its last page.
+  int _indexOf(_Segment segment, int page) {
+    final index = _items.indexWhere(
+      (item) => switch (item) {
+        _PageItem(segment: final s, page: final p) =>
+          identical(s, segment) && p == page,
+        _BreakItem(segment: final s) || _TailItem(segment: final s) =>
+          identical(s, segment) && page >= segment.images.length,
+        _HeadItem() => false,
+      },
+    );
+    return index < 0 ? 0 : index;
+  }
+
+  /// A new vertical list, opening at [_anchor] (see [_listGeneration]).
+  void _newList() {
+    _listGeneration++;
+    _itemScroll = ItemScrollController();
+    _scrollOffset = ScrollOffsetController();
+    _listContext = null;
+  }
+
+  /// Infinite scroll was turned on or off (or no longer applies): only the
+  /// chapter being read stays, the list built anew around it, its page on
+  /// screen where it was.
+  void _resetList() {
+    final current = _current;
+    if (current == null) return;
+    final shown = _itemPositions.itemPositions.value
+        .where((p) => p.index == _indexOf(current, _page.value))
+        .firstOrNull;
+    setState(() {
+      _segments
+        ..clear()
+        ..add(current);
+      _nextFetch = _Fetch.idle;
+      _previousFetch = _Fetch.idle;
+      _updateItems();
+      _anchor = (
+        index: _indexOf(current, _page.value),
+        alignment: shown?.itemLeadingEdge ?? 0,
+      );
+      _newList();
+    });
   }
 
   /// The first page whose bottom is below the top third of the screen.
+  /// With infinite scroll, an end of the list on screen fetches the chapter
+  /// beyond it.
   void _onItemPositions() {
-    final positions = _itemPositions.itemPositions.value;
+    final positions = _itemPositions.itemPositions.value
+        .where((p) => p.index < _items.length)
+        .toList();
     if (positions.isEmpty) return;
-    final visible = positions.where((p) => p.itemTrailingEdge > 0.33);
+    if (_infinite) {
+      for (final p in positions) {
+        switch (_items[p.index]) {
+          case _HeadItem():
+            _fetchPrevious();
+          case _TailItem():
+            _fetchNext();
+          case _:
+        }
+      }
+    }
+    final visible = positions.where(
+      (p) => p.itemTrailingEdge > 0.33 && _items[p.index] is! _HeadItem,
+    );
     if (visible.isEmpty) return;
     final index = visible.reduce((a, b) => a.index < b.index ? a : b).index;
-    if (index != _page.value) {
-      _page.value = index;
-      _onPageReached(index);
+    final (segment, page) = switch (_items[index]) {
+      _PageItem(:final segment, :final page) => (segment, page),
+      _BreakItem(:final segment) ||
+      _TailItem(:final segment) => (segment, segment.images.length),
+      _HeadItem() => (_current!, _page.value),
+    };
+    if (!identical(segment, _current)) {
+      _enter(segment, page);
+    } else if (page != _page.value) {
+      _page.value = page;
+      _onPageReached(page);
       _scheduleSave();
     }
+  }
+
+  /// Reading went on into another chapter of the list: the one left is
+  /// saved where it was left, then this one as opened.
+  void _enter(_Segment segment, int page) {
+    _announceProgress();
+    setState(() => _current = segment);
+    _savedPage = null;
+    _savedOpening = false;
+    _page.value = page;
+    _onPageReached(page);
+    _saveProgress(opening: true);
+  }
+
+  /// Adds the chapter after the last one to the end of the list.
+  Future<void> _fetchNext() async {
+    if (!_moreAfter || _nextFetch != _Fetch.idle) return;
+    final last = _segments.last;
+    final slug = last.content.nextChapterSlug!;
+    setState(() => _nextFetch = _Fetch.loading);
+    final result = await _getChapter(slug);
+    if (!mounted) return;
+    if (!_infinite || !identical(last, _segments.last)) {
+      _nextFetch = _Fetch.idle;
+      return;
+    }
+    result.fold((_) => setState(() => _nextFetch = _Fetch.failed), (content) {
+      final segment = _Segment(slug, content);
+      setState(() {
+        _nextFetch = _Fetch.idle;
+        _segments.add(segment);
+        _updateItems();
+      });
+      _startLoading(segment);
+    });
+  }
+
+  /// Adds the chapter before the first one to the top of the list, keeping
+  /// what is on screen in place.
+  Future<void> _fetchPrevious() async {
+    if (!_infinite || _previousFetch != _Fetch.idle || _segments.isEmpty) {
+      return;
+    }
+    final first = _segments.first;
+    final slug = first.content.previousChapterSlug;
+    if (slug == null) return;
+    setState(() => _previousFetch = _Fetch.loading);
+    final result = await _getChapter(slug);
+    if (!mounted) return;
+    if (!_infinite || !identical(first, _segments.first)) {
+      _previousFetch = _Fetch.idle;
+      return;
+    }
+    result.fold((_) => setState(() => _previousFetch = _Fetch.failed), (
+      content,
+    ) {
+      // Read from its end, upwards: each page loads as it comes on screen.
+      final segment = _Segment(slug, content)
+        ..loadLimit = content.images.length;
+      final shown = _itemPositions.itemPositions.value.where(
+        (p) => p.index < _items.length && _items[p.index] is! _HeadItem,
+      );
+      final top = shown.isEmpty
+          ? null
+          : shown.reduce((a, b) => a.index < b.index ? a : b);
+      final before = _items.length;
+      setState(() {
+        _previousFetch = _Fetch.idle;
+        _segments.insert(0, segment);
+        _updateItems();
+        _anchor = (
+          index: (top?.index ?? 0) + _items.length - before,
+          alignment: top?.itemLeadingEdge ?? 0,
+        );
+        _newList();
+      });
+    });
   }
 
   void _openChapter(String slug) {
@@ -454,6 +725,24 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           slug: slug,
           comicSlug: widget.comicSlug,
           comicDetails: widget.comicDetails,
+          fromSeries: widget.fromSeries,
+        ),
+      ),
+    );
+  }
+
+  void _backToSeries() {
+    if (widget.fromSeries) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    final details = widget.comicDetails;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => ComicDetailsScreen(
+          slug: widget.comicSlug,
+          title: details.title,
+          cover: details.coverImg,
         ),
       ),
     );
@@ -462,9 +751,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   void _goToPage(int page, int pageCount, ReadingDirection direction) {
     final target = page.clamp(0, pageCount);
     if (direction == ReadingDirection.vertical) {
-      if (_itemScroll.isAttached) {
+      final current = _current;
+      if (_itemScroll.isAttached && current != null) {
         _itemScroll.scrollTo(
-          index: target,
+          index: _indexOf(current, target),
           duration: DotMotion.slide,
           curve: DotMotion.slideCurve,
         );
@@ -556,11 +846,19 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     return BlocListener<SettingsCubit, AppSettings>(
       listenWhen: (a, b) =>
           a.keepScreenOn != b.keepScreenOn ||
-          a.readingDirection != b.readingDirection,
+          a.readingDirection != b.readingDirection ||
+          a.infiniteScroll != b.infiniteScroll,
       listener: (_, s) {
         readerWakelock.setKeepOn(s.keepScreenOn);
         if (s.readingDirection != ReadingDirection.vertical) {
           _setAutoScroll(false);
+        }
+        if (_infinite != _itemsInfinite) {
+          _resetList();
+        } else {
+          // A vertical list built after the pages were read sideways opens
+          // at the page read, not at an older anchor.
+          _anchor = null;
         }
       },
       child: Scaffold(
@@ -569,13 +867,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           listener: (context, state) {
             if (state is ReaderLoaded) {
               final pages = state.chapter.images.length;
-              _chapter = state.chapter;
+              final segment = _Segment(widget.slug, state.chapter);
+              _segments
+                ..clear()
+                ..add(segment);
+              _current = segment;
               // A chapter that got shorter since the last visit.
               if (_page.value >= pages) _page.value = 0;
-              _startLoading(
-                state.chapter.images,
-                offline: state.chapter.isOffline,
-              );
+              _updateItems();
+              _startLoading(segment);
               _saveProgress(opening: true);
               if (pages > 0 && _page.value >= pages - 1) _scheduleSave();
               _autoHide = Timer(const Duration(seconds: 2), () {
@@ -584,7 +884,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
             }
           },
           builder: (context, state) {
-            final chapter = state is ReaderLoaded ? state.chapter : null;
+            final chapter = state is ReaderLoaded ? _current?.content : null;
             return Stack(
               children: [
                 Positioned.fill(child: _body(state, settings)),
@@ -602,7 +902,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
 
   Widget _body(ReaderState state, AppSettings settings) {
     return switch (state) {
-      ReaderLoaded(:final chapter) => Listener(
+      ReaderLoaded() when _current != null => Listener(
         onPointerDown: _onPointerDown,
         onPointerUp: _onPointerUp,
         onPointerCancel: _onPointerUp,
@@ -628,8 +928,8 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                     ? const EdgeInsets.all(double.infinity)
                     : EdgeInsets.zero,
                 child: vertical
-                    ? _verticalPages(chapter, settings)
-                    : _horizontalPages(chapter, settings),
+                    ? _verticalPages(settings)
+                    : _horizontalPages(_current!.content, settings),
               );
             },
           ),
@@ -645,12 +945,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         onRetry: () =>
             context.read<ReaderBloc>().add(ChapterRequested(widget.slug)),
       ),
-      ReaderInitial() || ReaderLoading() => const Center(child: DotLoader()),
+      ReaderInitial() ||
+      ReaderLoading() ||
+      ReaderLoaded() => const Center(child: DotLoader()),
     };
   }
 
   Widget _chapterEnd(ChapterContent chapter) {
     final next = chapter.nextChapterSlug;
+    final current = _current?.slug ?? widget.slug;
     final nextChapter = next == null
         ? null
         : widget.comicDetails.chapters
@@ -663,18 +966,94 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       cover: widget.comicDetails.coverImg,
       next: nextChapter,
       onNext: () => _openChapter(next!),
-      onChapterList: () => _showChapterList(widget.slug),
-      onHome: () => Navigator.of(context).popUntil((r) => r.isFirst),
+      onChapterList: () => _showChapterList(current),
+      onBackToSeries: _backToSeries,
     );
   }
 
-  Widget _verticalPages(ChapterContent chapter, AppSettings settings) {
-    final pages = chapter.images;
+  /// "Chapter N finished", then the next one's name: where one chapter of
+  /// the list runs into the next.
+  Widget _chapterBreak(_Segment segment, _Segment next) {
+    final c = Dotline.of(context);
+    final number = next.content.chapterNumber;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DotSpace.s4,
+        vertical: DotSpace.s6,
+      ),
+      child: Column(
+        children: [
+          Text(
+            '${AppText.chapter} ${segment.content.chapterNumber} '
+                    '${AppText.finishedLower}'
+                .toUpperCase(),
+            style: DotlineText.label.copyWith(color: c.inkFaint),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: DotSpace.s2),
+          Text(
+            AppText.chapterName(number, _titleOf(number)),
+            style: DotlineText.title.copyWith(color: c.ink),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// An end of the list while the chapter beyond it loads, or failed to.
+  Widget _chapterLoading(
+    _Fetch fetch,
+    VoidCallback retry, {
+    double bottom = 0,
+  }) {
+    final c = Dotline.of(context);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        DotSpace.s4,
+        DotSpace.s6,
+        DotSpace.s4,
+        DotSpace.s6 + bottom,
+      ),
+      child: Center(
+        child: fetch == _Fetch.failed
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    AppText.chapterLoadFailed,
+                    style: DotlineText.body.copyWith(color: c.inkMuted),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: DotSpace.s3),
+                  DotButton.outline(
+                    label: AppText.retry,
+                    size: DotButtonSize.medium,
+                    onTap: retry,
+                  ),
+                ],
+              )
+            : const DotLoader(),
+      ),
+    );
+  }
+
+  String? _titleOf(String number) => widget.comicDetails.chapters
+      .where((c) => c.number == number)
+      .firstOrNull
+      ?.title;
+
+  Widget _verticalPages(AppSettings settings) {
     final height = settings.pageFit == PageFit.height
         ? MediaQuery.sizeOf(context).height
         : null;
+    final current = _current!;
     final list = ScrollablePositionedList.builder(
-      initialScrollIndex: _page.value.clamp(0, pages.length),
+      key: ValueKey(_listGeneration),
+      initialScrollIndex:
+          _anchor?.index ??
+          _indexOf(current, _page.value.clamp(0, current.images.length)),
+      initialAlignment: _anchor?.alignment ?? 0,
       itemScrollController: _itemScroll,
       scrollOffsetController: _scrollOffset,
       itemPositionsListener: _itemPositions,
@@ -682,22 +1061,41 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       physics: _pinching || _zoomed
           ? const NeverScrollableScrollPhysics()
           : null,
-      itemCount: pages.length + 1,
-      itemBuilder: (context, index) {
-        if (index == pages.length) return _chapterEnd(chapter);
-        return Padding(
+      itemCount: _items.length,
+      itemBuilder: (context, index) => switch (_items[index]) {
+        _PageItem(:final segment, :final page) => Padding(
           padding: EdgeInsets.only(bottom: settings.pageGap ? DotSpace.s2 : 0),
           child: ChapterImg(
-            key: ValueKey(pages[index]),
-            chapterImage: pages[index],
-            isFile: chapter.isOffline,
-            page: index + 1,
-            headers: chapter.imageHeaders,
-            load: index < _loadLimit,
+            key: ValueKey(segment.images[page]),
+            chapterImage: segment.images[page],
+            isFile: segment.content.isOffline,
+            page: page + 1,
+            headers: segment.content.imageHeaders,
+            load: page < segment.loadLimit,
             fit: settings.pageFit,
             fitHeight: height,
           ),
-        );
+        ),
+        _BreakItem(:final segment, :final next) => _chapterBreak(segment, next),
+        _HeadItem() => _chapterLoading(_previousFetch, () {
+          setState(() => _previousFetch = _Fetch.idle);
+          _fetchPrevious();
+        }),
+        _TailItem(:final segment) =>
+          _moreAfter
+              ? _chapterLoading(
+                  _nextFetch,
+                  () {
+                    setState(() => _nextFetch = _Fetch.idle);
+                    _fetchNext();
+                  },
+                  // Clears the floating chapter pill, as the end card does.
+                  bottom:
+                      DotSize.navHeight +
+                      DotSize.navGap +
+                      MediaQuery.paddingOf(context).bottom,
+                )
+              : _chapterEnd(segment.content),
       },
     );
     // The list that last reported is the one on screen: while it moves to
@@ -750,7 +1148,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
               isFile: chapter.isOffline,
               page: index + 1,
               headers: chapter.imageHeaders,
-              load: index < _loadLimit,
+              load: index < (_current?.loadLimit ?? 0),
               fit: settings.pageFit,
               fitHeight: settings.pageFit == PageFit.height
                   ? MediaQuery.sizeOf(context).height
@@ -792,13 +1190,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
             child: DotTopBar(
               title: number == null
                   ? null
-                  : AppText.chapterName(
-                      number,
-                      widget.comicDetails.chapters
-                          .where((c) => c.number == number)
-                          .firstOrNull
-                          ?.title,
-                    ),
+                  : AppText.chapterName(number, _titleOf(number)),
               subtitle: widget.comicDetails.title,
               actions: [
                 if (chapter != null &&
@@ -818,7 +1210,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                   icon: LucideIcons300.list,
                   semanticLabel: AppText.chapterList,
                   iconSize: DotSize.iconSmall,
-                  onTap: () => _showChapterList(widget.slug),
+                  onTap: () => _showChapterList(_current?.slug ?? widget.slug),
                 ),
                 DotMenuButton(
                   iconSize: DotSize.iconSmall,

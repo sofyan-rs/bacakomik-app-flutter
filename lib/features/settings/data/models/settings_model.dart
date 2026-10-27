@@ -13,6 +13,7 @@ class SettingsModel {
     this.keepScreenOn = true,
     this.pageGap = false,
     this.progressBar = true,
+    this.infiniteScroll = false,
     this.autoScrollSpeed = 3,
     this.incognito = false,
     this.kururinSound = true,
@@ -28,6 +29,7 @@ class SettingsModel {
     keepScreenOn: e.keepScreenOn,
     pageGap: e.pageGap,
     progressBar: e.progressBar,
+    infiniteScroll: e.infiniteScroll,
     autoScrollSpeed: e.autoScrollSpeed,
     incognito: e.incognito,
     kururinSound: e.kururinSound,
@@ -51,6 +53,7 @@ class SettingsModel {
   final bool keepScreenOn;
   final bool pageGap;
   final bool progressBar;
+  final bool infiniteScroll;
   final int autoScrollSpeed;
   final bool incognito;
   final bool kururinSound;
@@ -73,6 +76,7 @@ class SettingsModel {
     keepScreenOn: keepScreenOn,
     pageGap: pageGap,
     progressBar: progressBar,
+    infiniteScroll: infiniteScroll,
     autoScrollSpeed: autoScrollSpeed.clamp(autoScrollMin, autoScrollMax),
     incognito: incognito,
     kururinSound: kururinSound,
