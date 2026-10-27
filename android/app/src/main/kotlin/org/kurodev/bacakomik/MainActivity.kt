@@ -1,6 +1,8 @@
 package org.kurodev.bacakomik
 
 import android.content.Context
+import android.os.Build
+import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +13,28 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        preferHighRefreshRate()
+    }
+
+    /**
+     * Some phones (vivo/iQOO, OnePlus, Xiaomi) run an app at 60 Hz unless it
+     * asks for more. Asks for the fastest mode at the screen's current
+     * resolution, so scrolling follows the display's refresh rate.
+     */
+    @Suppress("DEPRECATION")
+    private fun preferHighRefreshRate() {
+        val display = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display else windowManager.defaultDisplay) ?: return
+        val current = display.mode
+        val fastest =
+            display.supportedModes
+                .filter { it.physicalWidth == current.physicalWidth && it.physicalHeight == current.physicalHeight }
+                .maxByOrNull { it.refreshRate } ?: return
+        if (fastest.modeId == current.modeId) return
+        window.attributes = window.attributes.apply { preferredDisplayModeId = fastest.modeId }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MihonChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
