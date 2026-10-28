@@ -86,20 +86,31 @@ class ApplyPendingReads implements UseCase<bool, ComicLoadedParams> {
   }
 }
 
-/// Run when a comic's details load from its source. A bookmark stored by an
-/// import ([ComicDetailsX.isPlaceholder]) gets the loaded details, keeping
-/// its place, and pending reads are applied. Returns the bookmark as saved
-/// when it was completed, and whether the history changed.
+/// Run when a comic's details load. A bookmark stored by an import
+/// ([ComicDetailsX.isPlaceholder]) gets the loaded details, keeping its
+/// place, and pending reads are applied. With [fresh] (the details came
+/// from the source, not a stored copy), any other bookmark of the comic
+/// gets them too (cover, chapter count), moving to the top when the chapter
+/// count changed, as a refresh in Bookmarks does. Returns the bookmark as
+/// saved when it changed, and whether the history changed.
 @injectable
 class CompleteImportedComic
     implements UseCase<CompletedComic, ComicLoadedParams> {
-  const CompleteImportedComic(this._bookmarks, this._applyPendingReads);
+  const CompleteImportedComic(
+    this._bookmarks,
+    this._applyPendingReads,
+    this._clock,
+  );
 
   final BookmarkRepository _bookmarks;
   final ApplyPendingReads _applyPendingReads;
+  final Clock _clock;
 
   @override
-  Future<Either<Failure, CompletedComic>> call(ComicLoadedParams params) async {
+  Future<Either<Failure, CompletedComic>> call(
+    ComicLoadedParams params, {
+    bool fresh = false,
+  }) async {
     final (:key, :details) = params;
     if (details.isPlaceholder) {
       return right((bookmark: null, historyChanged: false));
@@ -108,19 +119,30 @@ class CompleteImportedComic
     if (stored case Left(value: final failure)) return left(failure);
     final bookmark = stored.getOrElse((_) => null);
     final imported = bookmark?.comicDetails.isPlaceholder ?? false;
-    Bookmark? completed;
-    if (bookmark != null && imported) {
-      completed = bookmark.copyWith(comicDetails: details);
-      final saved = await _bookmarks.saveBookmarks([completed]);
+    Bookmark? updated;
+    if (bookmark != null && (imported || fresh)) {
+      final now = _clock.now();
+      // Read again on write: a bookmark removed meanwhile stays removed.
+      final saved = await _bookmarks.updateBookmark(key, (current) {
+        final old = current.comicDetails;
+        if (old.isPlaceholder) return current.copyWith(comicDetails: details);
+        if (!fresh || old == details) return null;
+        final moved = old.chapters.length != details.chapters.length;
+        return current.copyWith(
+          comicDetails: details,
+          updatedDate: moved ? now : current.updatedDate,
+        );
+      });
       if (saved case Left(value: final failure)) return left(failure);
+      updated = saved.getOrElse((_) => null);
     }
     final applied = await _applyPendingReads(params, imported: imported);
     return applied.map(
-      (historyChanged) => (bookmark: completed, historyChanged: historyChanged),
+      (historyChanged) => (bookmark: updated, historyChanged: historyChanged),
     );
   }
 }
 
-/// [bookmark]: the imported bookmark as saved with its loaded details; null
-/// when no bookmark changed. [historyChanged]: the history was written.
+/// [bookmark]: the bookmark as saved with the loaded details; null when no
+/// bookmark changed. [historyChanged]: the history was written.
 typedef CompletedComic = ({Bookmark? bookmark, bool historyChanged});

@@ -129,12 +129,12 @@ return noInternet(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( ComicDetails comicDetails,  bool chaptersLoading)?  loaded,TResult Function( String message)?  error,TResult Function()?  noInternet,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( ComicDetails comicDetails,  bool chaptersLoading,  bool stored)?  loaded,TResult Function( String message)?  error,TResult Function()?  noInternet,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ComicDetailsInitial() when initial != null:
 return initial();case ComicDetailsLoading() when loading != null:
 return loading();case ComicDetailsLoaded() when loaded != null:
-return loaded(_that.comicDetails,_that.chaptersLoading);case ComicDetailsError() when error != null:
+return loaded(_that.comicDetails,_that.chaptersLoading,_that.stored);case ComicDetailsError() when error != null:
 return error(_that.message);case ComicDetailsNoInternet() when noInternet != null:
 return noInternet();case _:
   return orElse();
@@ -154,12 +154,12 @@ return noInternet();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( ComicDetails comicDetails,  bool chaptersLoading)  loaded,required TResult Function( String message)  error,required TResult Function()  noInternet,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( ComicDetails comicDetails,  bool chaptersLoading,  bool stored)  loaded,required TResult Function( String message)  error,required TResult Function()  noInternet,}) {final _that = this;
 switch (_that) {
 case ComicDetailsInitial():
 return initial();case ComicDetailsLoading():
 return loading();case ComicDetailsLoaded():
-return loaded(_that.comicDetails,_that.chaptersLoading);case ComicDetailsError():
+return loaded(_that.comicDetails,_that.chaptersLoading,_that.stored);case ComicDetailsError():
 return error(_that.message);case ComicDetailsNoInternet():
 return noInternet();}
 }
@@ -175,12 +175,12 @@ return noInternet();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( ComicDetails comicDetails,  bool chaptersLoading)?  loaded,TResult? Function( String message)?  error,TResult? Function()?  noInternet,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( ComicDetails comicDetails,  bool chaptersLoading,  bool stored)?  loaded,TResult? Function( String message)?  error,TResult? Function()?  noInternet,}) {final _that = this;
 switch (_that) {
 case ComicDetailsInitial() when initial != null:
 return initial();case ComicDetailsLoading() when loading != null:
 return loading();case ComicDetailsLoaded() when loaded != null:
-return loaded(_that.comicDetails,_that.chaptersLoading);case ComicDetailsError() when error != null:
+return loaded(_that.comicDetails,_that.chaptersLoading,_that.stored);case ComicDetailsError() when error != null:
 return error(_that.message);case ComicDetailsNoInternet() when noInternet != null:
 return noInternet();case _:
   return null;
@@ -258,11 +258,12 @@ String toString() {
 
 
 class ComicDetailsLoaded implements ComicDetailsState {
-  const ComicDetailsLoaded({required this.comicDetails, this.chaptersLoading = false});
+  const ComicDetailsLoaded({required this.comicDetails, this.chaptersLoading = false, this.stored = false});
   
 
  final  ComicDetails comicDetails;
 @JsonKey() final  bool chaptersLoading;
+@JsonKey() final  bool stored;
 
 /// Create a copy of ComicDetailsState
 /// with the given fields replaced by the non-null parameter values.
@@ -274,18 +275,18 @@ $ComicDetailsLoadedCopyWith<ComicDetailsLoaded> get copyWith => _$ComicDetailsLo
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ComicDetailsLoaded&&(identical(other.comicDetails, comicDetails) || other.comicDetails == comicDetails)&&(identical(other.chaptersLoading, chaptersLoading) || other.chaptersLoading == chaptersLoading));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ComicDetailsLoaded&&(identical(other.comicDetails, comicDetails) || other.comicDetails == comicDetails)&&(identical(other.chaptersLoading, chaptersLoading) || other.chaptersLoading == chaptersLoading)&&(identical(other.stored, stored) || other.stored == stored));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,comicDetails,chaptersLoading);
+    return Object.hash(runtimeType,comicDetails,chaptersLoading,stored);
 }
 
 @override
 String toString() {
-    return 'ComicDetailsState.loaded(comicDetails: $comicDetails, chaptersLoading: $chaptersLoading)';
+    return 'ComicDetailsState.loaded(comicDetails: $comicDetails, chaptersLoading: $chaptersLoading, stored: $stored)';
 }
 
 
@@ -296,7 +297,7 @@ abstract mixin class $ComicDetailsLoadedCopyWith<$Res> implements $ComicDetailsS
   factory $ComicDetailsLoadedCopyWith(ComicDetailsLoaded value, $Res Function(ComicDetailsLoaded) _then) = _$ComicDetailsLoadedCopyWithImpl;
 @useResult
 $Res call({
- ComicDetails comicDetails, bool chaptersLoading
+ ComicDetails comicDetails, bool chaptersLoading, bool stored
 });
 
 
@@ -313,10 +314,11 @@ class _$ComicDetailsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of ComicDetailsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? comicDetails = null,Object? chaptersLoading = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? comicDetails = null,Object? chaptersLoading = null,Object? stored = null,}) {
   return _then(ComicDetailsLoaded(
 comicDetails: null == comicDetails ? _self.comicDetails : comicDetails // ignore: cast_nullable_to_non_nullable
 as ComicDetails,chaptersLoading: null == chaptersLoading ? _self.chaptersLoading : chaptersLoading // ignore: cast_nullable_to_non_nullable
+as bool,stored: null == stored ? _self.stored : stored // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

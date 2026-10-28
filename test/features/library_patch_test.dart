@@ -368,6 +368,7 @@ void main() {
       CompleteImportedComic(
         repo,
         ApplyPendingReads(pendingReads, historyRepo, clock),
+        clock,
       ),
       RecordingNotifier(),
       clock,
@@ -459,13 +460,41 @@ void main() {
     test('comicLoaded leaves the state alone when nothing changed', () async {
       final before = cubit.state;
 
+      // A stored copy (offline) never replaces a complete bookmark.
       expect(
         await cubit.comicLoaded('x:a', comic('x:a', chapters: 9)),
         isFalse,
       );
-      expect(await cubit.comicLoaded('x:z', comic('x:z')), isFalse);
+      // Fresh but the same details.
+      final same = cubit.state.firstWhere((b) => b.slug == 'x:a');
+      expect(
+        await cubit.comicLoaded('x:a', same.comicDetails, fresh: true),
+        isFalse,
+      );
+      expect(
+        await cubit.comicLoaded('x:z', comic('x:z'), fresh: true),
+        isFalse,
+      );
 
       expect(identical(cubit.state, before), isTrue);
+    });
+
+    test('fresh details update a bookmark; new chapters move it up', () async {
+      clock.value = micros(5000);
+      final cover = comic('x:c').copyWith(coverImg: 'new-cover');
+
+      await cubit.comicLoaded('x:c', cover, fresh: true);
+
+      await matchesReload();
+      expect(cubit.state.map((b) => b.slug), ['x:b', 'x:c', 'x:a']);
+      expect(cubit.state[1].comicDetails, cover);
+
+      final grown = comic('x:a', chapters: 9);
+      await cubit.comicLoaded('x:a', grown, fresh: true);
+
+      await matchesReload();
+      expect(cubit.state.first.slug, 'x:a');
+      expect(cubit.state.first.comicDetails, grown);
     });
   });
 }

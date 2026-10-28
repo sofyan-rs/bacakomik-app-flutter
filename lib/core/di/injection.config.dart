@@ -430,15 +430,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i764.NetworkInfo>(),
       ),
     );
-    gh.factory<_i436.ImportLibrary>(
-      () => _i436.ImportLibrary(
-        gh<_i851.BookmarkRepository>(),
-        gh<_i866.CategoryRepository>(),
-        gh<_i494.PendingReadRepository>(),
-        gh<_i55.HistoryRepository>(),
-        gh<_i1011.Clock>(),
-      ),
-    );
     gh.lazySingleton<_i441.SyncRepository>(
       () => _i741.SyncRepositoryImpl(
         gh<_i609.GoogleAuthDataSource>(),
@@ -538,6 +529,15 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i364.SaveComicCategories(gh<_i866.CategoryRepository>()),
     );
     gh.factory<_i611.GetHome>(() => _i611.GetHome(gh<_i15.HomeRepository>()));
+    gh.factory<_i436.ImportLibrary>(
+      () => _i436.ImportLibrary(
+        gh<_i851.BookmarkRepository>(),
+        gh<_i866.CategoryRepository>(),
+        gh<_i494.PendingReadRepository>(),
+        gh<_i55.HistoryRepository>(),
+        gh<_i1011.Clock>(),
+      ),
+    );
     gh.lazySingleton<_i665.DownloadRepository>(
       () => _i183.DownloadRepositoryImpl(
         gh<_i595.DownloadLocalDataSource>(),
@@ -562,20 +562,18 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i21.ExtensionManager>(),
       ),
     );
+    gh.factory<_i442.CompleteImportedComic>(
+      () => _i442.CompleteImportedComic(
+        gh<_i851.BookmarkRepository>(),
+        gh<_i442.ApplyPendingReads>(),
+        gh<_i1011.Clock>(),
+      ),
+    );
     gh.factory<_i607.CheckForUpdate>(
       () => _i607.CheckForUpdate(gh<_i533.UpdateRepository>()),
     );
     gh.factory<_i607.InstallUpdate>(
       () => _i607.InstallUpdate(gh<_i533.UpdateRepository>()),
-    );
-    gh.factory<_i823.MigrateComic>(
-      () => _i823.MigrateComic(
-        gh<_i851.BookmarkRepository>(),
-        gh<_i55.HistoryRepository>(),
-        gh<_i866.CategoryRepository>(),
-        gh<_i1011.Clock>(),
-        gh<_i494.PendingReadRepository>(),
-      ),
     );
     gh.factory<_i928.HistoryCubit>(
       () => _i928.HistoryCubit(
@@ -605,12 +603,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i912.ExploreRepositoryImpl(
         gh<_i535.SeriesRemoteDataSource>(),
         gh<_i764.NetworkInfo>(),
-      ),
-    );
-    gh.factory<_i442.CompleteImportedComic>(
-      () => _i442.CompleteImportedComic(
-        gh<_i851.BookmarkRepository>(),
-        gh<_i442.ApplyPendingReads>(),
       ),
     );
     gh.factory<_i681.GetChapterContent>(
@@ -649,6 +641,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i328.GetLatestComics>(
       () => _i328.GetLatestComics(gh<_i655.LatestRepository>()),
+    );
+    gh.factory<_i823.MigrateComic>(
+      () => _i823.MigrateComic(
+        gh<_i851.BookmarkRepository>(),
+        gh<_i55.HistoryRepository>(),
+        gh<_i866.CategoryRepository>(),
+        gh<_i1011.Clock>(),
+        gh<_i494.PendingReadRepository>(),
+      ),
     );
     gh.factory<_i81.BackupLibrary>(
       () => _i81.BackupLibrary(

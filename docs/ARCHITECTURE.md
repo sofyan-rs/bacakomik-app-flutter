@@ -195,6 +195,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 1. Pull-to-refresh calls `BookmarkCubit.updateBookmarkList` with the comics **on screen** (open group, narrowed by search). Pulling in another group during a run adds to the queue.
 2. `BookmarkRefreshQueue` checks up to 3 comics at once, at most 1 per source (a site may block a burst). `RefreshBookmark` fetches the chapter list first, and the series details only when the count changed or the bookmark is an imported placeholder. A changed count saves the new details with `updatedDate = now` (moves it to the top). A failure leaves it unchanged and logs `Refresh <key>: <failure>`.
 3. `ProgressNotifier` (Android) shows `done / total`, then "Bookmarks updated" with the count, or nothing.
+4. **Comic page:** a bookmarked comic opens from its bookmark's details with no request (`ComicDetailsRequested.stored`); an imported placeholder is always fetched. Pull-to-refresh on the page fetches, and `BookmarkCubit.comicLoaded(fresh: true)` → `CompleteImportedComic` saves the loaded details (cover, chapter count) to the bookmark when they differ; a changed chapter count moves it to the top, like step 2. A stored copy (offline fallback) never overwrites a bookmark.
 
 | Stop | How |
 |---|---|

@@ -371,6 +371,7 @@ void main() {
         CompleteImportedComic(
           repo,
           ApplyPendingReads(pendingReads, historyRepo, clock),
+          clock,
         ),
         notifier,
         clock,

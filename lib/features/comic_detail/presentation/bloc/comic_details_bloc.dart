@@ -7,10 +7,13 @@ import 'package:injectable/injectable.dart';
 
 part 'comic_details_bloc.freezed.dart';
 
+/// [stored]: the library's copy, shown as is without a request (a
+/// bookmarked comic opens from its bookmark; pull-to-refresh fetches).
 final class ComicDetailsRequested {
-  const ComicDetailsRequested(this.slug);
+  const ComicDetailsRequested(this.slug, {this.stored});
 
   final String slug;
+  final ComicDetails? stored;
 }
 
 @freezed
@@ -19,10 +22,13 @@ sealed class ComicDetailsState with _$ComicDetailsState {
   const factory ComicDetailsState.loading() = ComicDetailsLoading;
 
   /// [chaptersLoading]: the details came first; the chapter list is still
-  /// loading ([comicDetails] has none yet).
+  /// loading ([comicDetails] has none yet). [stored]: [comicDetails] is the
+  /// library's copy, not loaded from the source (asked for, or the request
+  /// failed).
   const factory ComicDetailsState.loaded({
     required ComicDetails comicDetails,
     @Default(false) bool chaptersLoading,
+    @Default(false) bool stored,
   }) = ComicDetailsLoaded;
   const factory ComicDetailsState.error({required String message}) =
       ComicDetailsError;
@@ -42,6 +48,9 @@ class ComicDetailsBloc extends Bloc<ComicDetailsRequested, ComicDetailsState> {
     ComicDetailsRequested event,
     Emitter<ComicDetailsState> emit,
   ) async {
+    if (event.stored case final stored?) {
+      return emit(ComicDetailsState.loaded(comicDetails: stored, stored: true));
+    }
     emit(const ComicDetailsState.loading());
     final result = await _getComicDetails(
       event.slug,
@@ -62,7 +71,10 @@ class ComicDetailsBloc extends Bloc<ComicDetailsRequested, ComicDetailsState> {
           NetworkFailure() => const ComicDetailsState.noInternet(),
           _ => ComicDetailsState.error(message: failure.message),
         },
-        (details) => ComicDetailsState.loaded(comicDetails: details),
+        (loaded) => ComicDetailsState.loaded(
+          comicDetails: loaded.details,
+          stored: loaded.stored,
+        ),
       ),
     );
   }

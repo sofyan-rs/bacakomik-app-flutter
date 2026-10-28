@@ -19,6 +19,7 @@ import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_i
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
 import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
 import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
@@ -100,7 +101,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _load(fetch: false);
     _loadFeatures();
     _loadScanlators();
   }
@@ -181,11 +182,27 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     }
   }
 
-  Future<void> _load() async {
+  /// Without [fetch], a bookmarked comic shows its bookmark's details
+  /// without a request; pull-to-refresh fetches them. An imported bookmark
+  /// not loaded yet is always fetched.
+  Future<void> _load({bool fetch = true}) async {
     final missing = getIt<ExtensionManager>().meta(_sourceId) == null;
     if (missing != _sourceMissing) setState(() => _sourceMissing = missing);
     if (missing) return;
-    context.read<ComicDetailsBloc>().add(ComicDetailsRequested(widget.slug));
+    ComicDetails? stored;
+    if (!fetch) {
+      for (final bookmark in context.read<BookmarkCubit>().state) {
+        if (bookmark.slug != widget.slug) continue;
+        final details = bookmark.comicDetails;
+        if (!details.isPlaceholder && details.chapters.isNotEmpty) {
+          stored = details;
+        }
+        break;
+      }
+    }
+    context.read<ComicDetailsBloc>().add(
+      ComicDetailsRequested(widget.slug, stored: stored),
+    );
   }
 
   void _toggleSelected(SelectedChapter chapter) {
@@ -228,14 +245,15 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  /// Gives an imported bookmark its details and applies imported reading
-  /// progress.
+  /// Gives the bookmark the loaded details (cover, chapter count) and
+  /// applies imported reading progress.
   Future<void> _onLoaded(BuildContext context, ComicDetailsState state) async {
     if (state is! ComicDetailsLoaded) return;
     final history = context.read<HistoryCubit>();
     final changed = await context.read<BookmarkCubit>().comicLoaded(
       widget.slug,
       state.comicDetails,
+      fresh: !state.stored,
     );
     if (changed) await history.load();
   }

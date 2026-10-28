@@ -855,6 +855,7 @@ void main() {
           await CompleteImportedComic(
             bookmarks,
             ApplyPendingReads(pending, history, clock),
+            clock,
           )((key: 'westmanga:a', details: loaded));
           expect((await library())['westmanga:a']!.comicDetails, loaded);
           final after = HistoryIndex(await readHistory());
@@ -1035,6 +1036,7 @@ void main() {
         final complete = CompleteImportedComic(
           bookmarks,
           ApplyPendingReads(pending, history, clock),
+          clock,
         );
 
         await complete((key: 'b', details: sampleComicDetails));

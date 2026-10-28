@@ -214,19 +214,26 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     required ComicDetails details,
   }) => _thenReload(_migrateComic((from: from, to: to, details: details)));
 
-  /// Called when [key]'s details loaded from its source: an imported
-  /// bookmark gets them, and imported reading progress is applied. Returns
-  /// whether the history changed; the caller reloads it. The bookmarks
-  /// change only when an imported one was completed.
-  Future<bool> comicLoaded(String key, ComicDetails details) async {
-    final result = await _completeImportedComic((key: key, details: details));
+  /// Called when [key]'s details loaded: an imported bookmark gets them,
+  /// and imported reading progress is applied. With [fresh] (loaded from
+  /// the source, not a stored copy), any bookmark of [key] is updated to
+  /// them. Returns whether the history changed; the caller reloads it.
+  Future<bool> comicLoaded(
+    String key,
+    ComicDetails details, {
+    bool fresh = false,
+  }) async {
+    final result = await _completeImportedComic((
+      key: key,
+      details: details,
+    ), fresh: fresh);
     switch (result) {
       case Left(value: final failure):
         _log(failure);
         await load();
         return false;
       case Right(value: (:final bookmark, :final historyChanged)):
-        if (bookmark != null) _put(bookmark);
+        if (bookmark != null && isBookmark(bookmark.slug)) _put(bookmark);
         return historyChanged;
     }
   }

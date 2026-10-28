@@ -12,7 +12,7 @@ import 'package:injectable/injectable.dart';
 /// opens from its stored details, so it can still be browsed offline. The
 /// stored copy is tried from downloads, then bookmarks, then history.
 @injectable
-class GetComicDetails implements UseCase<ComicDetails, String> {
+class GetComicDetails implements UseCase<LoadedComic, String> {
   const GetComicDetails(
     this._repository,
     this._downloads,
@@ -27,14 +27,17 @@ class GetComicDetails implements UseCase<ComicDetails, String> {
 
   /// [onSeries]: see [ComicDetailRepository.getComicDetails].
   @override
-  Future<Either<Failure, ComicDetails>> call(
+  Future<Either<Failure, LoadedComic>> call(
     String slug, {
     void Function(ComicDetails details)? onSeries,
   }) async {
     final result = await _repository.getComicDetails(slug, onSeries: onSeries);
-    if (result.isRight()) return result;
+    if (result case Right(value: final details)) {
+      return right((details: details, stored: false));
+    }
     final stored = await _stored(slug);
-    return stored != null ? right(stored) : result;
+    if (stored != null) return right((details: stored, stored: true));
+    return result.map((details) => (details: details, stored: false));
   }
 
   Future<ComicDetails?> _stored(String slug) async {
@@ -54,3 +57,6 @@ class GetComicDetails implements UseCase<ComicDetails, String> {
     return null;
   }
 }
+
+/// [stored]: the request failed and [details] is the library's copy.
+typedef LoadedComic = ({ComicDetails details, bool stored});

@@ -488,8 +488,8 @@ void main() {
       late FakeHistory history;
       late GetComicDetails getDetails;
 
-      String title(Either<Failure, ComicDetails> result) =>
-          result.getOrElse((f) => throw f).title;
+      String title(Either<Failure, LoadedComic> result) =>
+          result.getOrElse((f) => throw f).details.title;
 
       setUp(() {
         comics = FakeComicDetailRepository();
