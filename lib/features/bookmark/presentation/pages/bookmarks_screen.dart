@@ -171,7 +171,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   static const _uncategorizedTab = '';
 
   /// Tabs of [grouping] as (key, label). Only status has an All tab: source
-  /// and category tabs each hold their own comics.
+  /// and category tabs each hold their own comics. Uncategorized shows only
+  /// while a comic has no category.
   List<Segment<String>> _tabs(
     BookmarkGrouping grouping,
     List<BookmarkProgress> all,
@@ -202,7 +203,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       BookmarkGrouping.category => [
         for (final category in categories.categories)
           Segment(value: category.id, label: category.name),
-        const Segment(value: _uncategorizedTab, label: AppText.uncategorized),
+        if (all.any((i) => categories.idsOf(i.bookmark.slug).isEmpty))
+          const Segment(value: _uncategorizedTab, label: AppText.uncategorized),
       ],
     },
   ];
