@@ -12,8 +12,10 @@ import 'package:bacakomik_app/core/utils/deep_links.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/merge_sources.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/bloc/comic_details_bloc.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/merged_sources_sheet.dart';
+import 'package:bacakomik_app/features/migration/presentation/widgets/source_choice_sheet.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_app_bar.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_chapters.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_cover.dart';
@@ -191,6 +193,11 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     final missing = getIt<ExtensionManager>().meta(_sourceId) == null;
     if (missing != _sourceMissing) setState(() => _sourceMissing = missing);
     if (missing) return;
+    if (fetch) {
+      // The picked source's chapters load again with the rest.
+      _sourceChapters.clear();
+      if (_chapterSource != null) unawaited(_pickChapterSource(_chapterSource));
+    }
     ComicDetails? stored;
     if (!fetch) {
       for (final bookmark in context.read<BookmarkCubit>().state) {
@@ -233,6 +240,66 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
         ),
       ),
     );
+  }
+
+  /// The merged comic's source whose chapters alone are listed; null for
+  /// all.
+  String? _chapterSource;
+
+  /// Every chapter of each source picked, by series key: the merged list
+  /// has only those it took from it.
+  final _sourceChapters = <String, List<Chapter>>{};
+
+  /// The chapters of [_chapterSource] are loading.
+  var _sourceLoading = false;
+
+  /// Lists the chapters of [key] alone, loading them all from the source
+  /// the first time; offline, those the merged list took from it.
+  Future<void> _pickChapterSource(String? key) async {
+    final load = key != null && !_sourceChapters.containsKey(key);
+    setState(() {
+      _chapterSource = key;
+      _sourceLoading = load;
+    });
+    if (!load) return;
+    final result = await getIt<FetchMergedChapters>()([key], const []);
+    if (!mounted || _chapterSource != key) return;
+    setState(() {
+      _sourceLoading = false;
+      result.fold((_) {}, (chapters) => _sourceChapters[key] = chapters);
+    });
+  }
+
+  /// Opens the comic's page on its site; a merged comic asks which
+  /// source's.
+  Future<void> _openWebView(Bookmark? bookmark) async {
+    var key = widget.slug;
+    if (bookmark != null && bookmark.isMerged) {
+      final picked = await showSourceChoiceSheet(
+        context,
+        title: AppText.openWebView,
+        choices: [
+          for (final k in bookmark.sourceKeys)
+            (id: k, name: context.sourceNameOf(k), detail: null),
+        ],
+      );
+      if (picked == null || !mounted) return;
+      key = picked;
+    }
+    await WebViewScreen.openSeries(
+      context,
+      sourceId: ComicKey.sourceOf(key),
+      key: key,
+    );
+  }
+
+  /// Lists every source's copy of a number, or one per number; the comic
+  /// loads again to list the copies it dropped.
+  Future<void> _setKeepDuplicates(bool keep) async {
+    await context.read<BookmarkCubit>().setKeepDuplicates(widget.slug, keep);
+    if (!mounted) return;
+    await context.read<HistoryCubit>().load();
+    await _load();
   }
 
   /// Edits the sources the bookmark reads from: series added are merged
@@ -403,11 +470,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                               icon: LucideIcons300.globe,
                               semanticLabel: AppText.openWebView,
                               iconSize: DotSize.iconSmall,
-                              onTap: () => WebViewScreen.openSeries(
-                                context,
-                                sourceId: ComicKey.sourceOf(widget.slug),
-                                key: widget.slug,
-                              ),
+                              onTap: () => _openWebView(bookmark),
                             ),
                             RoundIconButton(
                               icon: LucideIcons300.share2,
@@ -481,7 +544,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
             ),
             ComicChapters(
               comicDetails: comicDetails,
-              loading: chaptersLoading,
+              loading: chaptersLoading || _sourceLoading,
               onOpenChapter: (chapter) => _read(comicDetails, chapter.slug),
               onToggleSelected: _toggleSelected,
               isSelected: _isSelected,
@@ -491,6 +554,13 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                 final b? when b.isMerged => b.sourceKeys,
                 _ => const [],
               },
+              source: _chapterSource,
+              sourceChapters: _sourceLoading
+                  ? const []
+                  : _sourceChapters[_chapterSource],
+              onPickSource: _pickChapterSource,
+              keepDuplicates: _bookmark?.keepDuplicates ?? false,
+              onKeepDuplicates: _setKeepDuplicates,
             ),
           ],
           ComicDetailsNoInternet() => [

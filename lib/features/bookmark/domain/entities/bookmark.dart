@@ -22,6 +22,10 @@ abstract class Bookmark with _$Bookmark {
     /// that has it, and the details from the first. Empty when the entry
     /// has one source. See [sourceKeys].
     @Default(<String>[]) List<String> mergedKeys,
+
+    /// A merged entry lists the chapters of every source, also the numbers
+    /// several have, instead of one per number.
+    @Default(false) bool keepDuplicates,
   }) = _Bookmark;
 
   const Bookmark._();

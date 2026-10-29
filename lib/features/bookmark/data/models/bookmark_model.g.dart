@@ -22,6 +22,7 @@ BookmarkModel _$BookmarkModelFromJson(Map<String, dynamic> json) =>
       mergedKeys: (json['mergedKeys'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
+      keepDuplicates: json['keepDuplicates'] as bool?,
     );
 
 Map<String, dynamic> _$BookmarkModelToJson(BookmarkModel instance) =>
@@ -34,6 +35,7 @@ Map<String, dynamic> _$BookmarkModelToJson(BookmarkModel instance) =>
         const EpochMillisConverter().toJson,
       ),
       'mergedKeys': ?instance.mergedKeys,
+      'keepDuplicates': ?instance.keepDuplicates,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(

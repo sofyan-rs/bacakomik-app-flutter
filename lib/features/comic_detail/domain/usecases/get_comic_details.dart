@@ -62,6 +62,7 @@ class GetComicDetails implements UseCase<LoadedComic, String> {
       keys,
       stored.chapters,
       first: first.then((r) => r.map((d) => d.chapters)),
+      dedupe: !bookmark.keepDuplicates,
     );
     final details = (await first).getOrElse((_) => stored);
     return chapters.map((chapters) => details.copyWith(chapters: chapters));

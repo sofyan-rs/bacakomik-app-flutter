@@ -59,6 +59,24 @@ void main() {
       expect(merged.map((c) => c.slug), ['b/3', 'a/2', 'b/1.5', 'a/1']);
     });
 
+    test('keeps every copy of a number when not deduplicating', () {
+      final merged = mergeChapters([
+        [ch('a', '2'), ch('a', '1')],
+        [ch('b', '3'), ch('b', '2')],
+      ], dedupe: false);
+      expect(merged.map((c) => c.slug), ['b/3', 'a/2', 'b/2', 'a/1']);
+    });
+
+    test('neighbours skip the copies of the same number', () {
+      final list = [ch('b', '3'), ch('a', '2'), ch('b', '2'), ch('a', '1')];
+      final ofB2 = neighboursIn(list, 2);
+      expect(ofB2.next?.slug, 'b/3');
+      expect(ofB2.previous?.slug, 'a/1');
+      // Of the copies of 2, the first (most wanted) one.
+      expect(neighboursIn(list, 3).next?.slug, 'a/2');
+      expect(neighboursIn(list, 0).next, isNull);
+    });
+
     test('a list from several series is merged', () {
       expect(isMergedList([ch('a', '1'), ch('a', '2')]), isFalse);
       expect(isMergedList([ch('a', '1'), ch('v:b', '2')]), isTrue);
@@ -73,6 +91,13 @@ void main() {
           .toEntity()
           .mergedKeys,
       ['a', 'v:b'],
+    );
+    expect(
+      BookmarkModel.fromJson(
+        BookmarkModel.fromEntity(merged.copyWith(keepDuplicates: true))
+            .toJson(),
+      ).toEntity().keepDuplicates,
+      isTrue,
     );
     expect(
       BookmarkModel.fromEntity(bookmark('a', const [])).toJson(),
@@ -168,7 +193,11 @@ void main() {
         details: sampleComicDetails.copyWith(chapters: [ch('v:b', '1')]),
       ));
       // v:b first: chapter 1 now comes from it.
-      await SetMergedSources(bookmarks)((key: 'a', keys: ['v:b', 'a']));
+      await SetMergedSources(bookmarks)((
+        key: 'a',
+        keys: ['v:b', 'a'],
+        keepDuplicates: null,
+      ));
       final chapters = (await stored('a'))!.comicDetails.chapters;
       expect(chapters.map((c) => c.slug), ['a/1']);
 

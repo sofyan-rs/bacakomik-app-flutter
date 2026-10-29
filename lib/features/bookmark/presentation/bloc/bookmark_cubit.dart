@@ -235,8 +235,14 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
 
   /// Reorders or removes the sources of the merged bookmark [key]; see
   /// [SetMergedSources].
-  Future<void> setMergedSources(String key, List<String> keys) =>
-      _thenReload(_setMergedSources((key: key, keys: keys)));
+  Future<void> setMergedSources(String key, List<String> keys) => _thenReload(
+    _setMergedSources((key: key, keys: keys, keepDuplicates: null)),
+  );
+
+  /// Turns [Bookmark.keepDuplicates] of the merged bookmark [key] on or off.
+  Future<void> setKeepDuplicates(String key, bool keep) => _thenReload(
+    _setMergedSources((key: key, keys: null, keepDuplicates: keep)),
+  );
 
   /// Moves the bookmark and read history of [from] to [to]. The caller
   /// reloads history.

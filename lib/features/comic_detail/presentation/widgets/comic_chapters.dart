@@ -28,6 +28,11 @@ class ComicChapters extends StatefulWidget {
     required this.isSelecting,
     this.onScanlators,
     this.sources = const [],
+    this.source,
+    this.sourceChapters,
+    this.onPickSource,
+    this.keepDuplicates = false,
+    this.onKeepDuplicates,
     this.loading = false,
   });
 
@@ -44,6 +49,22 @@ class ComicChapters extends StatefulWidget {
   /// chapters of one of them. Empty for a comic with one source.
   final List<String> sources;
 
+  /// The one of [sources] whose chapters alone are shown; null for all.
+  final String? source;
+
+  /// Every chapter of [source], merged list or not; null while not loaded,
+  /// when the chapters the merged list took from it are shown.
+  final List<Chapter>? sourceChapters;
+
+  /// The user picked a source to show, or null for all.
+  final void Function(String? key)? onPickSource;
+
+  /// The merged list keeps every source's copy of a number.
+  final bool keepDuplicates;
+
+  /// Turns [keepDuplicates] on or off.
+  final void Function(bool keep)? onKeepDuplicates;
+
   /// The list is still loading: a loader instead of rows.
   final bool loading;
 
@@ -57,9 +78,6 @@ class _ComicChaptersState extends State<ComicChapters> {
   var _searching = false;
   final _query = TextEditingController();
 
-  /// Series key whose chapters alone are shown; null for all.
-  String? _source;
-
   @override
   void dispose() {
     _query.dispose();
@@ -70,7 +88,8 @@ class _ComicChaptersState extends State<ComicChapters> {
     final source = _shownSource;
     final all = source == null
         ? widget.comicDetails.chapters
-        : chaptersOf(widget.comicDetails.chapters, source);
+        : widget.sourceChapters ??
+              chaptersOf(widget.comicDetails.chapters, source);
     final query = _query.text.trim();
     final filtered = query.isEmpty
         ? all
@@ -85,13 +104,15 @@ class _ComicChaptersState extends State<ComicChapters> {
     return _newestFirst ? filtered : filtered.reversed.toList();
   }
 
-  /// [_source] while it is still one of the comic's sources.
-  String? get _shownSource => widget.sources.contains(_source) ? _source : null;
+  /// [ComicChapters.source] while it is still one of the comic's sources.
+  String? get _shownSource =>
+      widget.sources.contains(widget.source) ? widget.source : null;
 
-  /// Like the scanlator picker: all sources, or the chapters of one.
+  /// Like the scanlator picker: all sources, or the chapters of one; and
+  /// whether a number several sources have is listed once.
   Future<void> _pickSource() async {
     final c = Dotline.of(context);
-    final picked = await showDotSheet<({String? key})>(
+    final picked = await showDotSheet<({String? key, bool? keep})>(
       context: context,
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
@@ -118,8 +139,29 @@ class _ComicChaptersState extends State<ComicChapters> {
                         trailing: key == _shownSource
                             ? Icon(LucideIcons300.check, color: c.ink)
                             : null,
-                        onTap: () => Navigator.of(context).pop((key: key)),
+                        onTap: () =>
+                            Navigator.of(context).pop((key: key, keep: null)),
                       ),
+                  ],
+                ),
+                const SizedBox(height: DotSpace.s3),
+                ListGroup(
+                  background: c.bg,
+                  children: [
+                    ListRow(
+                      title: AppText.dedupeChapters,
+                      subtitle: AppText.dedupeChaptersHint,
+                      trailing: DotSwitch(
+                        value: !widget.keepDuplicates,
+                        semanticLabel: AppText.dedupeChapters,
+                        onChanged: (dedupe) =>
+                            Navigator.of(context)
+                                .pop((key: _shownSource, keep: !dedupe)),
+                      ),
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pop((key: _shownSource, keep: !widget.keepDuplicates)),
+                    ),
                   ],
                 ),
               ],
@@ -128,7 +170,12 @@ class _ComicChaptersState extends State<ComicChapters> {
         ],
       ),
     );
-    if (picked != null && mounted) setState(() => _source = picked.key);
+    if (picked == null) return;
+    if (picked.keep case final keep?) {
+      widget.onKeepDuplicates?.call(keep);
+    } else if (picked.key != _shownSource) {
+      widget.onPickSource?.call(picked.key);
+    }
   }
 
   void _toggleSearch() => setState(() {

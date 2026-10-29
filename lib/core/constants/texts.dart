@@ -412,6 +412,9 @@ class AppText {
   static const String chapterSources = 'Sources';
   static const String chapterSourcesHint =
       'Show the chapters taken from one source.';
+  static const String dedupeChapters = 'Deduplicate chapters';
+  static const String dedupeChaptersHint =
+      'One chapter per number, from the first source that has it';
   static const String migrate = 'Migrate';
   static const String addAnyway = 'Add anyway';
   static const String viewBookmarkedSeries = 'View bookmarked series';

@@ -656,12 +656,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     if (!isMergedList(chapters)) return content;
     final i = chapters.indexWhere((c) => c.slug == slug);
     if (i < 0) return content;
-    // Newest first.
+    final (:previous, :next) = neighboursIn(chapters, i);
     return content.copyWith(
-      nextChapterSlug: i > 0 ? chapters[i - 1].slug : null,
-      previousChapterSlug: i + 1 < chapters.length
-          ? chapters[i + 1].slug
-          : null,
+      nextChapterSlug: next?.slug,
+      previousChapterSlug: previous?.slug,
     );
   }
 

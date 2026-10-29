@@ -13,6 +13,7 @@ class BookmarkModel {
     required this.updatedDate,
     this.addedDate,
     this.mergedKeys,
+    this.keepDuplicates,
   });
 
   factory BookmarkModel.fromEntity(Bookmark e) => BookmarkModel(
@@ -21,6 +22,7 @@ class BookmarkModel {
     updatedDate: e.updatedDate,
     addedDate: e.addedDate,
     mergedKeys: e.mergedKeys.isEmpty ? null : e.mergedKeys,
+    keepDuplicates: e.keepDuplicates ? true : null,
   );
 
   factory BookmarkModel.fromJson(Map<String, dynamic> json) =>
@@ -42,6 +44,10 @@ class BookmarkModel {
   @JsonKey(includeIfNull: false)
   final List<String>? mergedKeys;
 
+  /// Absent when off; older app versions ignore it.
+  @JsonKey(includeIfNull: false)
+  final bool? keepDuplicates;
+
   Map<String, dynamic> toJson() => _$BookmarkModelToJson(this);
 
   Bookmark toEntity() => Bookmark(
@@ -50,5 +56,6 @@ class BookmarkModel {
     updatedDate: updatedDate,
     addedDate: addedDate,
     mergedKeys: mergedKeys ?? const [],
+    keepDuplicates: keepDuplicates ?? false,
   );
 }

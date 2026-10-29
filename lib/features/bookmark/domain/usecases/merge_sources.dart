@@ -2,6 +2,7 @@ import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
+import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
@@ -15,8 +16,9 @@ import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
 /// The chapter lists of a merged bookmark's sources, fetched in parallel
-/// and merged ([mergeChapters]). A source that fails keeps the chapters
-/// [stored] has from it; fails only when every source fails.
+/// and merged ([mergeChapters], one per number with [dedupe]). A source
+/// that fails keeps the chapters [stored] has from it; fails only when
+/// every source fails.
 ///
 /// [first], when given, is the result of the first source, fetched by the
 /// caller (with its details).
@@ -30,6 +32,7 @@ class FetchMergedChapters {
     List<String> keys,
     List<Chapter> stored, {
     Future<Either<Failure, List<Chapter>>>? first,
+    bool dedupe = true,
   }) async {
     final results = await Future.wait([
       for (final (i, key) in keys.indexed)
@@ -46,7 +49,7 @@ class FetchMergedChapters {
     if (failure case final failure? when results.every((r) => r.isLeft())) {
       return left(failure);
     }
-    return right(mergeChapters(lists));
+    return right(mergeChapters(lists, dedupe: dedupe));
   }
 }
 
@@ -72,12 +75,18 @@ class AlignMergedHistory implements UseCase<bool, AlignMergedHistoryParams> {
       for (final h in history.getOrElse((_) => const []))
         if (h.comicSlug == key) h,
     ];
-    final slugs = {for (final c in chapters) c.number: c.slug};
+    final listed = {for (final c in chapters) c.slug};
+    // Of several chapters of one number (duplicates kept), the first.
+    final slugs = <String, String>{};
+    for (final c in chapters) {
+      slugs.putIfAbsent(c.number, () => c.slug);
+    }
     final read = {for (final h in entries) h.slug};
     final moved = <ReadHistory>[];
     final removed = <String>[];
     // Newest first: of several entries of one number, the newest moves.
     for (final h in entries) {
+      if (listed.contains(h.slug)) continue;
       final slug = slugs[h.chapterNumber];
       if (slug == null || slug == h.slug) continue;
       removed.add(h.slug);
@@ -152,7 +161,7 @@ class MergeComic implements UseCase<Unit, MergeComicParams> {
     final stored = [...bookmark.comicDetails.chapters, ...addedChapters];
     final chapters = mergeChapters([
       for (final k in keys) chaptersOf(stored, k),
-    ]);
+    ], dedupe: !bookmark.keepDuplicates);
     final merged = bookmark.copyWith(
       comicDetails: bookmark.comicDetails.copyWith(chapters: chapters),
       mergedKeys: keys,
@@ -217,12 +226,18 @@ class MergeComic implements UseCase<Unit, MergeComicParams> {
   }
 }
 
-typedef SetMergedSourcesParams = ({String key, List<String> keys});
+typedef SetMergedSourcesParams = ({
+  String key,
+  List<String>? keys,
+  bool? keepDuplicates,
+});
 
 /// Reorders or removes the sources of the merged bookmark
-/// [SetMergedSourcesParams.key]; [SetMergedSourcesParams.keys] keeps the
-/// bookmark's own key. The chapter list follows once the comic is loaded
-/// again. Chapters of a removed source leave the list now.
+/// [SetMergedSourcesParams.key] ([SetMergedSourcesParams.keys] keeps the
+/// bookmark's own key), or turns [Bookmark.keepDuplicates] on or off; null
+/// leaves each as it is. The chapter list follows once the comic is loaded
+/// again. Chapters of a removed source, and duplicates turned off, leave
+/// the list now.
 @injectable
 class SetMergedSources implements UseCase<Unit, SetMergedSourcesParams> {
   const SetMergedSources(this._bookmarks);
@@ -231,18 +246,20 @@ class SetMergedSources implements UseCase<Unit, SetMergedSourcesParams> {
 
   @override
   Future<Either<Failure, Unit>> call(SetMergedSourcesParams params) async {
-    final (:key, :keys) = params;
+    final (:key, :keys, :keepDuplicates) = params;
     final result = await _bookmarks.updateBookmark(key, (current) {
       final kept = [
-        for (final k in keys)
+        for (final k in keys ?? current.sourceKeys)
           if (current.sourceKeys.contains(k)) k,
       ];
       if (!kept.contains(key)) return null;
+      final duplicates = keepDuplicates ?? current.keepDuplicates;
       final chapters = mergeChapters([
         for (final k in kept) chaptersOf(current.comicDetails.chapters, k),
-      ]);
+      ], dedupe: !duplicates);
       return current.copyWith(
         mergedKeys: kept.length > 1 ? kept : const [],
+        keepDuplicates: duplicates,
         comicDetails: current.comicDetails.copyWith(chapters: chapters),
       );
     });

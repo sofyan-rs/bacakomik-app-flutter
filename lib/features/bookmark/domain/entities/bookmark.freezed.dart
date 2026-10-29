@@ -23,7 +23,9 @@ mixin _$Bookmark {
 /// chapters are taken from: each chapter number comes from the first
 /// that has it, and the details from the first. Empty when the entry
 /// has one source. See [sourceKeys].
- List<String> get mergedKeys;
+ List<String> get mergedKeys;/// A merged entry lists the chapters of every source, also the numbers
+/// several have, instead of one per number.
+ bool get keepDuplicates;
 /// Create a copy of Bookmark
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -35,20 +37,20 @@ $BookmarkCopyWith<Bookmark> get copyWith => _$BookmarkCopyWithImpl<Bookmark>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as Bookmark;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Bookmark&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.comicDetails, _this.comicDetails) || other.comicDetails == _this.comicDetails)&&(identical(other.updatedDate, _this.updatedDate) || other.updatedDate == _this.updatedDate)&&(identical(other.addedDate, _this.addedDate) || other.addedDate == _this.addedDate)&&const DeepCollectionEquality().equals(other.mergedKeys, _this.mergedKeys));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Bookmark&&(identical(other.slug, _this.slug) || other.slug == _this.slug)&&(identical(other.comicDetails, _this.comicDetails) || other.comicDetails == _this.comicDetails)&&(identical(other.updatedDate, _this.updatedDate) || other.updatedDate == _this.updatedDate)&&(identical(other.addedDate, _this.addedDate) || other.addedDate == _this.addedDate)&&const DeepCollectionEquality().equals(other.mergedKeys, _this.mergedKeys)&&(identical(other.keepDuplicates, _this.keepDuplicates) || other.keepDuplicates == _this.keepDuplicates));
 }
 
 
 @override
 int get hashCode {
   final _this = this as Bookmark;
-  return Object.hash(runtimeType,_this.slug,_this.comicDetails,_this.updatedDate,_this.addedDate,const DeepCollectionEquality().hash(_this.mergedKeys));
+  return Object.hash(runtimeType,_this.slug,_this.comicDetails,_this.updatedDate,_this.addedDate,const DeepCollectionEquality().hash(_this.mergedKeys),_this.keepDuplicates);
 }
 
 @override
 String toString() {
   final _this = this as Bookmark;
-  return 'Bookmark(slug: ${_this.slug}, comicDetails: ${_this.comicDetails}, updatedDate: ${_this.updatedDate}, addedDate: ${_this.addedDate}, mergedKeys: ${_this.mergedKeys})';
+  return 'Bookmark(slug: ${_this.slug}, comicDetails: ${_this.comicDetails}, updatedDate: ${_this.updatedDate}, addedDate: ${_this.addedDate}, mergedKeys: ${_this.mergedKeys}, keepDuplicates: ${_this.keepDuplicates})';
 }
 
 
@@ -59,7 +61,7 @@ abstract mixin class $BookmarkCopyWith<$Res>  {
   factory $BookmarkCopyWith(Bookmark value, $Res Function(Bookmark) _then) = _$BookmarkCopyWithImpl;
 @useResult
 $Res call({
- String slug, ComicDetails comicDetails, DateTime updatedDate, DateTime? addedDate, List<String> mergedKeys
+ String slug, ComicDetails comicDetails, DateTime updatedDate, DateTime? addedDate, List<String> mergedKeys, bool keepDuplicates
 });
 
 
@@ -76,14 +78,15 @@ class _$BookmarkCopyWithImpl<$Res>
 
 /// Create a copy of Bookmark
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? slug = null,Object? comicDetails = null,Object? updatedDate = null,Object? addedDate = freezed,Object? mergedKeys = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? slug = null,Object? comicDetails = null,Object? updatedDate = null,Object? addedDate = freezed,Object? mergedKeys = null,Object? keepDuplicates = null,}) {
   return _then(Bookmark(
 slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,comicDetails: null == comicDetails ? _self.comicDetails : comicDetails // ignore: cast_nullable_to_non_nullable
 as ComicDetails,updatedDate: null == updatedDate ? _self.updatedDate : updatedDate // ignore: cast_nullable_to_non_nullable
 as DateTime,addedDate: freezed == addedDate ? _self.addedDate : addedDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,mergedKeys: null == mergedKeys ? _self.mergedKeys : mergedKeys // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,keepDuplicates: null == keepDuplicates ? _self.keepDuplicates : keepDuplicates // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of Bookmark
@@ -177,10 +180,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate,  List<String> mergedKeys)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate,  List<String> mergedKeys,  bool keepDuplicates)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Bookmark() when $default != null:
-return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,_that.mergedKeys);case _:
+return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,_that.mergedKeys,_that.keepDuplicates);case _:
   return orElse();
 
 }
@@ -198,10 +201,10 @@ return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate,  List<String> mergedKeys)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate,  List<String> mergedKeys,  bool keepDuplicates)  $default,) {final _that = this;
 switch (_that) {
 case _Bookmark():
-return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,_that.mergedKeys);case _:
+return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,_that.mergedKeys,_that.keepDuplicates);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -218,10 +221,10 @@ return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate,  List<String> mergedKeys)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String slug,  ComicDetails comicDetails,  DateTime updatedDate,  DateTime? addedDate,  List<String> mergedKeys,  bool keepDuplicates)?  $default,) {final _that = this;
 switch (_that) {
 case _Bookmark() when $default != null:
-return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,_that.mergedKeys);case _:
+return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,_that.mergedKeys,_that.keepDuplicates);case _:
   return null;
 
 }
@@ -233,7 +236,7 @@ return $default(_that.slug,_that.comicDetails,_that.updatedDate,_that.addedDate,
 
 
 class _Bookmark extends Bookmark {
-  const _Bookmark({required this.slug, required this.comicDetails, required this.updatedDate, this.addedDate,  List<String> mergedKeys = const <String>[]}): _mergedKeys = mergedKeys,super._();
+  const _Bookmark({required this.slug, required this.comicDetails, required this.updatedDate, this.addedDate,  List<String> mergedKeys = const <String>[], this.keepDuplicates = false}): _mergedKeys = mergedKeys,super._();
   
 
 /// Series slug.
@@ -259,6 +262,9 @@ class _Bookmark extends Bookmark {
   return EqualUnmodifiableListView(_mergedKeys);
 }
 
+/// A merged entry lists the chapters of every source, also the numbers
+/// several have, instead of one per number.
+@override@JsonKey() final  bool keepDuplicates;
 
 /// Create a copy of Bookmark
 /// with the given fields replaced by the non-null parameter values.
@@ -270,18 +276,18 @@ _$BookmarkCopyWith<_Bookmark> get copyWith => __$BookmarkCopyWithImpl<_Bookmark>
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Bookmark&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.comicDetails, comicDetails) || other.comicDetails == comicDetails)&&(identical(other.updatedDate, updatedDate) || other.updatedDate == updatedDate)&&(identical(other.addedDate, addedDate) || other.addedDate == addedDate)&&const DeepCollectionEquality().equals(other.mergedKeys, _mergedKeys));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Bookmark&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.comicDetails, comicDetails) || other.comicDetails == comicDetails)&&(identical(other.updatedDate, updatedDate) || other.updatedDate == updatedDate)&&(identical(other.addedDate, addedDate) || other.addedDate == addedDate)&&const DeepCollectionEquality().equals(other.mergedKeys, _mergedKeys)&&(identical(other.keepDuplicates, keepDuplicates) || other.keepDuplicates == keepDuplicates));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,slug,comicDetails,updatedDate,addedDate,const DeepCollectionEquality().hash(_mergedKeys));
+    return Object.hash(runtimeType,slug,comicDetails,updatedDate,addedDate,const DeepCollectionEquality().hash(_mergedKeys),keepDuplicates);
 }
 
 @override
 String toString() {
-    return 'Bookmark(slug: $slug, comicDetails: $comicDetails, updatedDate: $updatedDate, addedDate: $addedDate, mergedKeys: $mergedKeys)';
+    return 'Bookmark(slug: $slug, comicDetails: $comicDetails, updatedDate: $updatedDate, addedDate: $addedDate, mergedKeys: $mergedKeys, keepDuplicates: $keepDuplicates)';
 }
 
 
@@ -292,7 +298,7 @@ abstract mixin class _$BookmarkCopyWith<$Res> implements $BookmarkCopyWith<$Res>
   factory _$BookmarkCopyWith(_Bookmark value, $Res Function(_Bookmark) _then) = __$BookmarkCopyWithImpl;
 @override @useResult
 $Res call({
- String slug, ComicDetails comicDetails, DateTime updatedDate, DateTime? addedDate, List<String> mergedKeys
+ String slug, ComicDetails comicDetails, DateTime updatedDate, DateTime? addedDate, List<String> mergedKeys, bool keepDuplicates
 });
 
 
@@ -309,14 +315,15 @@ class __$BookmarkCopyWithImpl<$Res>
 
 /// Create a copy of Bookmark
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? slug = null,Object? comicDetails = null,Object? updatedDate = null,Object? addedDate = freezed,Object? mergedKeys = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? slug = null,Object? comicDetails = null,Object? updatedDate = null,Object? addedDate = freezed,Object? mergedKeys = null,Object? keepDuplicates = null,}) {
   return _then(_Bookmark(
 slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,comicDetails: null == comicDetails ? _self.comicDetails : comicDetails // ignore: cast_nullable_to_non_nullable
 as ComicDetails,updatedDate: null == updatedDate ? _self.updatedDate : updatedDate // ignore: cast_nullable_to_non_nullable
 as DateTime,addedDate: freezed == addedDate ? _self.addedDate : addedDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,mergedKeys: null == mergedKeys ? _self._mergedKeys : mergedKeys // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,keepDuplicates: null == keepDuplicates ? _self.keepDuplicates : keepDuplicates // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

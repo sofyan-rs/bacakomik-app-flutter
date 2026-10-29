@@ -75,7 +75,11 @@ class RefreshBookmark implements UseCase<RefreshResult, String> {
     final keys = bookmark.sourceKeys;
     final merged = bookmark.isMerged;
     final chapters = merged
-        ? await _mergedChapters(keys, bookmark.comicDetails.chapters)
+        ? await _mergedChapters(
+            keys,
+            bookmark.comicDetails.chapters,
+            dedupe: !bookmark.keepDuplicates,
+          )
         : await _comicDetails.getChapters(key);
     if (chapters case Left(value: final failure)) {
       return right((saved: null, historyChanged: false, failure: failure));
