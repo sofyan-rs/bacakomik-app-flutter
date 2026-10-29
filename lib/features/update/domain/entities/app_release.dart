@@ -16,7 +16,7 @@ abstract class AppRelease with _$AppRelease {
 
     /// Release page on GitHub.
     required String pageUrl,
-    @Default([]) List<ReleaseApk> apks,
+    @Default([]) List<ReleaseAsset> assets,
   }) = _AppRelease;
 
   /// Heading that starts the APK table the release workflow appends.
@@ -25,21 +25,24 @@ abstract class AppRelease with _$AppRelease {
   /// [notes] without the APK table, for the update sheet.
   String get changes => notes.split(apkTableHeading).first.trim();
 
-  /// The APK built for [abi] (e.g. `arm64-v8a`), else the universal APK.
-  ReleaseApk? apkFor(String? abi) {
-    ReleaseApk? withSuffix(String suffix) =>
-        apks.where((a) => a.name.endsWith('-$suffix.apk')).firstOrNull;
-    return (abi == null ? null : withSuffix(abi)) ?? withSuffix('universal');
+  /// The first asset named `…-<suffix>` for [suffixes] in order, e.g.
+  /// `arm64-v8a.apk` then `universal.apk`.
+  ReleaseAsset? assetFor(List<String> suffixes) {
+    for (final suffix in suffixes) {
+      final asset = assets.where((a) => a.name.endsWith('-$suffix'));
+      if (asset.isNotEmpty) return asset.first;
+    }
+    return null;
   }
 }
 
 @freezed
-abstract class ReleaseApk with _$ReleaseApk {
-  const factory ReleaseApk({
+abstract class ReleaseAsset with _$ReleaseAsset {
+  const factory ReleaseAsset({
     required String name,
     required String url,
 
     /// Hex SHA-256 from GitHub's asset digest, when available.
     String? sha256,
-  }) = _ReleaseApk;
+  }) = _ReleaseAsset;
 }

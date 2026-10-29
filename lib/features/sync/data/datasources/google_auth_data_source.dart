@@ -1,4 +1,9 @@
+import 'dart:io';
+
 import 'package:bacakomik_app/core/constants/variables.dart';
+import 'package:bacakomik_app/core/storage/hive_boxes.dart';
+import 'package:bacakomik_app/features/sync/data/datasources/desktop_google_auth_data_source.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:injectable/injectable.dart';
 
@@ -20,7 +25,16 @@ abstract interface class GoogleAuthDataSource {
   Future<void> clearAccessToken(String token);
 }
 
-@LazySingleton(as: GoogleAuthDataSource)
+@module
+abstract class GoogleAuthModule {
+  @lazySingleton
+  GoogleAuthDataSource googleAuth(@Named(HiveBoxes.sync) Box<String> box) =>
+      Platform.isAndroid || Platform.isIOS
+      ? GoogleAuthDataSourceImpl()
+      : DesktopGoogleAuthDataSource(box);
+}
+
+/// Android and iOS, through `google_sign_in`.
 class GoogleAuthDataSourceImpl implements GoogleAuthDataSource {
   static const scopes = ['https://www.googleapis.com/auth/drive.appdata'];
 

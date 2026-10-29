@@ -29,10 +29,9 @@ class GitHubReleaseModel {
     version: tagName.replaceFirst(RegExp('^v'), ''),
     notes: body,
     pageUrl: htmlUrl,
-    apks: [
+    assets: [
       for (final a in assets)
-        if (a.name.endsWith('.apk'))
-          ReleaseApk(name: a.name, url: a.downloadUrl, sha256: a.sha256),
+        ReleaseAsset(name: a.name, url: a.downloadUrl, sha256: a.sha256),
     ],
   );
 }

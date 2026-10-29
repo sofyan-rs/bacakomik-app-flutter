@@ -174,8 +174,8 @@ import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart'
     as _i629;
 import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart'
     as _i256;
-import 'package:bacakomik_app/features/update/data/datasources/apk_installer.dart'
-    as _i984;
+import 'package:bacakomik_app/features/update/data/datasources/app_installer.dart'
+    as _i864;
 import 'package:bacakomik_app/features/update/data/datasources/update_remote_data_source.dart'
     as _i714;
 import 'package:bacakomik_app/features/update/data/repositories/update_repository_impl.dart'
@@ -201,6 +201,8 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final registerModule = _$RegisterModule();
     final storageModule = _$StorageModule();
+    final appInstallerModule = _$AppInstallerModule();
+    final googleAuthModule = _$GoogleAuthModule();
     gh.factory<_i750.FilterCubit>(() => _i750.FilterCubit());
     gh.lazySingleton<_i895.Connectivity>(() => registerModule.connectivity);
     gh.lazySingleton<_i738.HiveInterface>(() => registerModule.hive);
@@ -278,9 +280,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i738.Box<String>>(instanceName: 'bookmarks'),
       ),
     );
-    gh.lazySingleton<_i609.GoogleAuthDataSource>(
-      () => _i609.GoogleAuthDataSourceImpl(),
-    );
     gh.lazySingleton<_i394.SettingsLocalDataSource>(
       () => _i394.SettingsLocalDataSourceImpl(
         gh<_i738.Box<String>>(instanceName: 'settings'),
@@ -300,7 +299,6 @@ extension GetItInjectableX on _i174.GetIt {
       instanceName: 'extensions',
       preResolve: true,
     );
-    gh.lazySingleton<_i984.ApkInstaller>(() => _i984.OtaApkInstaller());
     await gh.factoryAsync<_i738.Box<String>>(
       () => storageModule.comicCategoriesBox,
       instanceName: 'comic_categories',
@@ -327,6 +325,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i58.ExtensionBridge>(),
       ),
     );
+    gh.lazySingleton<_i864.AppInstaller>(
+      () => appInstallerModule.installer(
+        gh<_i361.Dio>(instanceName: 'files_dio'),
+      ),
+    );
     gh.lazySingleton<_i764.NetworkInfo>(
       () => _i764.NetworkInfoImpl(gh<_i895.Connectivity>()),
     );
@@ -348,6 +351,11 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i32.CategoryLocalDataSourceImpl(
         gh<_i738.Box<String>>(instanceName: 'categories'),
         gh<_i738.Box<String>>(instanceName: 'comic_categories'),
+      ),
+    );
+    gh.lazySingleton<_i609.GoogleAuthDataSource>(
+      () => googleAuthModule.googleAuth(
+        gh<_i738.Box<String>>(instanceName: 'sync'),
       ),
     );
     gh.lazySingleton<_i152.BackupRepository>(
@@ -468,13 +476,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i593.LibraryJournal>(),
       ),
     );
-    gh.lazySingleton<_i533.UpdateRepository>(
-      () => _i106.UpdateRepositoryImpl(
-        gh<_i714.UpdateRemoteDataSource>(),
-        gh<_i984.ApkInstaller>(),
-        gh<_i764.NetworkInfo>(),
-      ),
-    );
     gh.factory<_i729.GetHistory>(
       () => _i729.GetHistory(gh<_i55.HistoryRepository>()),
     );
@@ -538,6 +539,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i494.PendingReadRepository>(),
         gh<_i55.HistoryRepository>(),
         gh<_i1011.Clock>(),
+      ),
+    );
+    gh.lazySingleton<_i533.UpdateRepository>(
+      () => _i106.UpdateRepositoryImpl(
+        gh<_i714.UpdateRemoteDataSource>(),
+        gh<_i864.AppInstaller>(),
+        gh<_i764.NetworkInfo>(),
       ),
     );
     gh.lazySingleton<_i665.DownloadRepository>(
@@ -791,3 +799,7 @@ extension GetItInjectableX on _i174.GetIt {
 class _$RegisterModule extends _i600.RegisterModule {}
 
 class _$StorageModule extends _i446.StorageModule {}
+
+class _$AppInstallerModule extends _i864.AppInstallerModule {}
+
+class _$GoogleAuthModule extends _i609.GoogleAuthModule {}

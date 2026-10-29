@@ -10,9 +10,10 @@ abstract interface class UpdateRepository {
   /// Version name of the installed app, e.g. `1.0.0`.
   Future<String> installedVersion();
 
-  /// Preferred ABI of the device, e.g. `arm64-v8a`.
-  Future<String?> deviceAbi();
+  /// Endings of the release assets that install on this device, best
+  /// first (see [AppRelease.assetFor]).
+  Future<List<String>> assetSuffixes();
 
-  /// Downloads [apk] and opens Android's installer.
-  Stream<UpdateProgress> install(ReleaseApk apk);
+  /// Downloads [asset] and installs it.
+  Stream<UpdateProgress> install(ReleaseAsset asset);
 }

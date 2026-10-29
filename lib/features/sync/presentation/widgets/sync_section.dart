@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart';
@@ -27,16 +30,17 @@ class SyncSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
           child: ListGroup(
             children: [
-              if (!state.signedIn)
-                ListRow(
-                  icon: LucideIcons300.cloud,
-                  title: AppText.syncDrive,
-                  subtitle: state.status == SyncStatus.signingIn
-                      ? AppText.syncSigningIn
-                      : AppText.syncDriveDescription,
-                  onTap: state.busy ? null : cubit.signIn,
-                )
-              else ...[
+              if (!state.signedIn) ...[
+                if (_canSignIn)
+                  ListRow(
+                    icon: LucideIcons300.cloud,
+                    title: AppText.syncDrive,
+                    subtitle: state.status == SyncStatus.signingIn
+                        ? AppText.syncSigningIn
+                        : AppText.syncDriveDescription,
+                    onTap: state.busy ? null : cubit.signIn,
+                  ),
+              ] else ...[
                 ListRow(
                   icon: state.status == SyncStatus.failed
                       ? LucideIcons300.cloudAlert
@@ -59,6 +63,12 @@ class SyncSection extends StatelessWidget {
       ],
     );
   }
+
+  /// Desktop builds made without a Google desktop client cannot sign in.
+  static bool get _canSignIn =>
+      Platform.isAndroid ||
+      Platform.isIOS ||
+      AppVariables.googleDesktopClientId.isNotEmpty;
 
   static String _status(SyncState state) => switch (state.status) {
     SyncStatus.syncing => AppText.syncing,

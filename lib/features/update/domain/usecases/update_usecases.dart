@@ -24,7 +24,7 @@ class CheckForUpdate implements UseCase<AppRelease?, NoParams> {
   }
 }
 
-/// Downloads the APK of [AppRelease] that fits the device and installs it.
+/// Downloads the asset of [AppRelease] that fits the device and installs it.
 @injectable
 class InstallUpdate {
   const InstallUpdate(this._repository);
@@ -32,11 +32,11 @@ class InstallUpdate {
   final UpdateRepository _repository;
 
   Stream<UpdateProgress> call(AppRelease release) async* {
-    final apk = release.apkFor(await _repository.deviceAbi());
-    if (apk == null) {
-      yield const UpdateInstallFailed('No APK for this device');
+    final asset = release.assetFor(await _repository.assetSuffixes());
+    if (asset == null) {
+      yield const UpdateInstallFailed('No release asset for this device');
       return;
     }
-    yield* _repository.install(apk);
+    yield* _repository.install(asset);
   }
 }

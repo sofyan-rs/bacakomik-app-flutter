@@ -1,7 +1,7 @@
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/network/network_info.dart';
 import 'package:bacakomik_app/core/network/remote_call.dart';
-import 'package:bacakomik_app/features/update/data/datasources/apk_installer.dart';
+import 'package:bacakomik_app/features/update/data/datasources/app_installer.dart';
 import 'package:bacakomik_app/features/update/data/datasources/update_remote_data_source.dart';
 import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
 import 'package:bacakomik_app/features/update/domain/entities/update_progress.dart';
@@ -14,7 +14,7 @@ class UpdateRepositoryImpl implements UpdateRepository {
   const UpdateRepositoryImpl(this._remote, this._installer, this._networkInfo);
 
   final UpdateRemoteDataSource _remote;
-  final ApkInstaller _installer;
+  final AppInstaller _installer;
   final NetworkInfo _networkInfo;
 
   @override
@@ -27,8 +27,9 @@ class UpdateRepositoryImpl implements UpdateRepository {
   Future<String> installedVersion() => _installer.installedVersion();
 
   @override
-  Future<String?> deviceAbi() => _installer.deviceAbi();
+  Future<List<String>> assetSuffixes() => _installer.assetSuffixes();
 
   @override
-  Stream<UpdateProgress> install(ReleaseApk apk) => _installer.install(apk);
+  Stream<UpdateProgress> install(ReleaseAsset asset) =>
+      _installer.install(asset);
 }

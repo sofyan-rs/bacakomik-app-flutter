@@ -1,4 +1,4 @@
-/// Progress of downloading and installing an update APK.
+/// Progress of downloading and installing an update.
 sealed class UpdateProgress {
   const UpdateProgress();
 }
@@ -10,7 +10,8 @@ final class UpdateDownloading extends UpdateProgress {
   final int percent;
 }
 
-/// The download finished and Android's installer was opened.
+/// The download finished and the installer took over: Android's, or on
+/// desktop a script that replaces the app once it quits.
 final class UpdateInstalling extends UpdateProgress {
   const UpdateInstalling();
 }

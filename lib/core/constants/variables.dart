@@ -20,6 +20,17 @@ class AppVariables {
   static const String googleServerClientId =
       '805931733064-tmhv2feicbtujdn9snfbp0e30liidr91.apps.googleusercontent.com';
 
+  /// OAuth client of type "Desktop app" in the same project, for sign-in in
+  /// the browser on Windows, macOS and Linux. Google treats a desktop
+  /// client's secret as public; it is passed at build time
+  /// (`--dart-define`) only to keep it out of the repo. Empty: no sync.
+  static const String googleDesktopClientId = String.fromEnvironment(
+    'GOOGLE_DESKTOP_CLIENT_ID',
+  );
+  static const String googleDesktopClientSecret = String.fromEnvironment(
+    'GOOGLE_DESKTOP_CLIENT_SECRET',
+  );
+
   static const String githubRepo = 'sofyan-rs/bacakomik-app-flutter';
   static const String reportLink = 'https://github.com/$githubRepo/issues/new';
   static const String latestReleaseApi =
