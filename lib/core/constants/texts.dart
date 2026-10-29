@@ -61,6 +61,7 @@ class AppText {
   static const String titleCopied = 'Title copied to clipboard';
   static const String copyTitle = 'Copy title';
   static const String successSaveImg = 'Image saved to gallery.';
+  static const String successSaveImgFile = 'Image saved.';
   static const String failedSaveImg = "Couldn't save image.";
 
   // Bookmarks Screen Text
