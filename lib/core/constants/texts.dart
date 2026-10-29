@@ -400,6 +400,7 @@ class AppText {
       'Add anyway keeps both as separate entries.';
   static const String migrate = 'Migrate';
   static const String addAnyway = 'Add anyway';
+  static const String viewBookmarkedSeries = 'View bookmarked series';
   static const String migrated = 'Migrated to this source';
   static const String stopRefresh = 'Stop updating bookmarks';
 

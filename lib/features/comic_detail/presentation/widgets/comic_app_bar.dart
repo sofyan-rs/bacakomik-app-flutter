@@ -259,6 +259,14 @@ class ComicAppBar extends StatelessWidget {
         showSnackBar(context: context, message: AppText.migrated);
       case DuplicateChoice.add:
         await _add(context);
+      case DuplicateChoice.open:
+        final bookmark = existing.first;
+        await ComicDetailsScreen.open(
+          context,
+          slug: bookmark.slug,
+          title: bookmark.comicDetails.title,
+          cover: bookmark.comicDetails.coverImg,
+        );
     }
   }
 
