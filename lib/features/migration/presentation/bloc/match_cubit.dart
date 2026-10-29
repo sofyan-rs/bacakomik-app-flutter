@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bacakomik_app/core/domain/entities/comic.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/migration/domain/entities/library_import.dart';
@@ -30,7 +31,7 @@ enum MatchStatus {
   error,
 }
 
-/// One comic looked up by title in the target source.
+/// One comic looked up by title in the target sources.
 class MatchItem {
   const MatchItem({
     required this.title,
@@ -55,7 +56,7 @@ class MatchItem {
 
   final MatchStatus status;
 
-  /// The comic in the target source; set when [status] is found or done.
+  /// The comic in a target source; set when [status] is found or done.
   final Comic? match;
 
   /// Error of a failed search or migration.
@@ -116,9 +117,10 @@ class MatchState {
   );
 }
 
-/// Finds comics by title in one source, one at a time with a pause between
-/// searches so sites do not block the user. A result with the same title
-/// (case, spacing and punctuation ignored) is picked automatically; the
+/// Finds comics by title in the target sources, one at a time with a pause
+/// between searches so sites do not block the user. Each comic is looked up
+/// in [targets] in order until one has a result with the same title (case,
+/// spacing and punctuation ignored), which is picked automatically; the
 /// rest wait for the user. [apply] then migrates or imports the picks.
 @injectable
 class MatchCubit extends Cubit<MatchState> {
@@ -135,18 +137,18 @@ class MatchCubit extends Cubit<MatchState> {
 
   late MatchMode mode;
 
-  /// Source the comics are looked up in.
-  late String target;
+  /// Sources the comics are looked up in, most wanted first.
+  late List<String> targets;
 
   DateTime? _lastRequest;
 
   void start({
     required MatchMode mode,
-    required String target,
+    required List<String> targets,
     required List<MatchItem> items,
   }) {
     this.mode = mode;
-    this.target = target;
+    this.targets = targets;
     emit(MatchState(items: items));
     unawaited(_searchAll());
   }
@@ -162,37 +164,55 @@ class MatchCubit extends Cubit<MatchState> {
     }
   }
 
+  /// Looks item [i] up in each of [targetsOf] it in turn, until one finds
+  /// it. Failed only when every source failed.
   Future<void> _searchItem(int i) async {
     _update(i, state.items[i].copyWith(status: MatchStatus.searching));
     final first = state.items[i];
-    Either<Failure, List<Comic>>? firstResult;
+    Failure? failure;
+    var answered = false;
     Comic? found;
-    for (final query in [first.title, ...altQueries(first)]) {
-      final result = await search(query);
-      if (isClosed) return;
-      // The user may have picked or skipped it meanwhile.
-      if (state.items[i].status != MatchStatus.searching) return;
-      firstResult ??= result;
-      found = result.fold(
-        (_) => null,
-        (comics) => exactMatch(first.title, comics, altTitles: first.altTitles),
-      );
-      // A failed first search is reported; alternative titles won't help.
-      if (found != null || result.isLeft()) break;
+    for (final source in targetsOf(first)) {
+      for (final query in [first.title, ...altQueries(first)]) {
+        final result = await search(query, source: source);
+        if (isClosed) return;
+        // The user may have picked or skipped it meanwhile.
+        if (state.items[i].status != MatchStatus.searching) return;
+        found = result.fold(
+          (f) {
+            failure ??= f;
+            return null;
+          },
+          (comics) {
+            answered = true;
+            return exactMatch(first.title, comics, altTitles: first.altTitles);
+          },
+        );
+        // A failed search moves on to the next source; alternative titles
+        // won't help.
+        if (found != null || result.isLeft()) break;
+      }
+      if (found != null) break;
     }
     final item = state.items[i];
-    _update(i, switch ((found, firstResult)) {
+    _update(i, switch ((found, failure)) {
       (final comic?, _) => item.copyWith(
         status: MatchStatus.found,
         match: comic,
       ),
-      (_, Left(value: final failure)) => item.copyWith(
+      (_, final failure?) when !answered => item.copyWith(
         status: MatchStatus.failed,
         message: failure.message,
       ),
       _ => item.copyWith(status: MatchStatus.notFound),
     });
   }
+
+  /// [targets] [item] is looked up in: all but the source it is moved from.
+  List<String> targetsOf(MatchItem item) => [
+    for (final t in targets)
+      if (item.fromKey == null || ComicKey.sourceOf(item.fromKey!) != t) t,
+  ];
 
   /// Most alternative titles searched for an item whose title finds nothing.
   static const maxAltQueries = 2;
@@ -213,10 +233,11 @@ class MatchCubit extends Cubit<MatchState> {
     ].take(maxAltQueries).toList();
   }
 
-  /// A title search in [target]. Requests run one at a time, [gap] apart,
-  /// also when the user searches while the automatic search runs.
-  Future<Either<Failure, List<Comic>>> search(String query) =>
-      _serial(() => _search((sourceId: target, query: query)));
+  /// A title search in [source], the first of [targets] by default.
+  /// Requests run one at a time, [gap] apart, also when the user searches
+  /// while the automatic search runs.
+  Future<Either<Failure, List<Comic>>> search(String query, {String? source}) =>
+      _serial(() => _search((sourceId: source ?? targets.first, query: query)));
 
   /// The user picked [comic] for item [i].
   void pick(int i, Comic comic) => _update(

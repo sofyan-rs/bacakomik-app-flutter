@@ -12,12 +12,14 @@ import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit
 import 'package:bacakomik_app/features/migration/presentation/bloc/match_cubit.dart';
 import 'package:bacakomik_app/features/migration/presentation/pages/match_screen.dart';
 import 'package:bacakomik_app/features/migration/presentation/widgets/source_choice_sheet.dart';
+import 'package:bacakomik_app/features/migration/presentation/widgets/target_sources_sheet.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// Picks bookmarks and a target source for [MatchScreen] in
+/// Picks bookmarks and the target sources, in search order, for
+/// [MatchScreen] in
 /// [MatchMode.migrate]. Opened from Migration with every bookmark of one
 /// source, or with [keys] preselected (a selection in Bookmarks, or one
 /// comic from its page).
@@ -39,7 +41,9 @@ class SourceMigrationScreen extends StatefulWidget {
 class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
   final _manager = getIt<ExtensionManager>();
   String? _from;
-  String? _to;
+
+  /// Sources to migrate to, searched in this order.
+  var _to = <String>[];
 
   /// Keys of the checked bookmarks.
   late final Set<String> _checked = {...?widget.keys};
@@ -76,7 +80,7 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
     if (picked == null || !mounted) return;
     setState(() {
       _from = picked;
-      if (_to == picked) _to = null;
+      _to = [..._to]..remove(picked);
       _checked
         ..clear()
         ..addAll([
@@ -94,11 +98,9 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
         ? null
         : {for (final k in keys) ComicKey.sourceOf(k)};
     final from = _from ?? (only?.length == 1 ? only!.single : null);
-    final picked = await showSourceChoiceSheet(
+    final picked = await showTargetSourcesSheet(
       context,
-      title: AppText.migrateTo,
       selected: _to,
-      emptyMessage: AppText.noOtherSource,
       choices: [
         for (final s in sources)
           if (s.id != from) (id: s.id, name: s.name, detail: s.domain),
@@ -107,16 +109,20 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
     if (picked != null && mounted) setState(() => _to = picked);
   }
 
+  /// Checked and with a target other than its own source.
+  bool _movable(Bookmark b) =>
+      _checked.contains(b.slug) &&
+      _to.any((t) => t != ComicKey.sourceOf(b.slug));
+
   void _findMatches(List<Bookmark> candidates) {
-    final to = _to;
-    if (to == null) return;
+    if (_to.isEmpty) return;
     MatchScreen.open(
       context,
       mode: MatchMode.migrate,
-      target: to,
+      targets: _to,
       items: [
         for (final b in candidates)
-          if (_checked.contains(b.slug) && ComicKey.sourceOf(b.slug) != to)
+          if (_movable(b))
             MatchItem(
               title: b.comicDetails.title,
               altTitles: splitAltTitles(
@@ -135,15 +141,12 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
     final bookmarks = context.watch<BookmarkCubit>().state;
     final candidates = _candidates(bookmarks);
     final sources = context.watch<SourcesCubit>().state;
-    final toName = sources.installed
-        .where((s) => s.id == _to)
-        .firstOrNull
-        ?.name;
-    final count = candidates
-        .where(
-          (b) => _checked.contains(b.slug) && ComicKey.sourceOf(b.slug) != _to,
-        )
-        .length;
+    final toNames = [
+      for (final id in _to)
+        sources.installed.where((s) => s.id == id).firstOrNull?.name ??
+            _manager.nameOf(id),
+    ];
+    final count = candidates.where(_movable).length;
     final allChecked = candidates.every((b) => _checked.contains(b.slug));
 
     return Scaffold(
@@ -180,7 +183,19 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
                           ListRow(
                             icon: LucideIcons300.arrowRightLeft,
                             title: AppText.migrateTo,
-                            value: toName ?? AppText.pickSource,
+                            // Several in order below, too long for a value.
+                            subtitle: toNames.length > 1
+                                ? toNames.join(' → ')
+                                : null,
+                            value: switch (toNames) {
+                              [] => AppText.pickSource,
+                              [final name] => name,
+                              _ => AppText.count(
+                                toNames.length,
+                                AppText.sourceLower,
+                                AppText.sourcesLower,
+                              ),
+                            },
                             showChevron: true,
                             onTap: _pickTo,
                           ),
@@ -299,7 +314,7 @@ class _SourceMigrationScreenState extends State<SourceMigrationScreen> {
                 '${AppText.findMatches} · '
                 '${AppText.count(count, AppText.comic, AppText.comics)}',
             leading: LucideIcons300.search,
-            onTap: _to == null || count == 0
+            onTap: _to.isEmpty || count == 0
                 ? null
                 : () => _findMatches(candidates),
           ),

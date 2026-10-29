@@ -418,6 +418,12 @@ class AppText {
       'Bookmarks and read chapters from a .csv export';
   static const String migrateFrom = 'From';
   static const String migrateTo = 'To';
+  static const String migrateToOrderHint =
+      'Searched in this order: a comic not found in one is looked up in the '
+      'next. Drag to reorder.';
+  static const String removeSource = 'Remove source';
+  static const String sourceLower = 'source';
+  static const String sourcesLower = 'sources';
   static const String importComixTo = 'Search the titles in';
   static const String pickSource = 'Pick a source';
   static const String noBookmarksToMigrate = 'No bookmarks to migrate';

@@ -10,51 +10,52 @@ import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/migration/presentation/bloc/match_cubit.dart';
 import 'package:bacakomik_app/features/migration/presentation/widgets/match_search_sheet.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/missing_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Looks up [items] by title in [target], lets the user fix the matches,
-/// then migrates or imports them ([MatchMode]).
+/// Looks up [items] by title in [targets], in order, lets the user fix the
+/// matches, then migrates or imports them ([MatchMode]).
 class MatchScreen extends StatelessWidget {
   const MatchScreen({
     super.key,
     required this.mode,
-    required this.target,
+    required this.targets,
     required this.items,
   });
 
   final MatchMode mode;
-  final String target;
+  final List<String> targets;
   final List<MatchItem> items;
 
   static Future<void> open(
     BuildContext context, {
     required MatchMode mode,
-    required String target,
+    required List<String> targets,
     required List<MatchItem> items,
   }) => Navigator.of(context).push(
     MaterialPageRoute(
-      builder: (_) => MatchScreen(mode: mode, target: target, items: items),
+      builder: (_) => MatchScreen(mode: mode, targets: targets, items: items),
     ),
   );
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => getIt<MatchCubit>(),
-    child: _MatchView(mode: mode, target: target, items: items),
+    child: _MatchView(mode: mode, targets: targets, items: items),
   );
 }
 
 class _MatchView extends StatefulWidget {
   const _MatchView({
     required this.mode,
-    required this.target,
+    required this.targets,
     required this.items,
   });
 
   final MatchMode mode;
-  final String target;
+  final List<String> targets;
   final List<MatchItem> items;
 
   @override
@@ -63,8 +64,13 @@ class _MatchView extends StatefulWidget {
 
 class _MatchViewState extends State<_MatchView> {
   final _manager = getIt<ExtensionManager>();
-  late var _installed = _manager.meta(widget.target) != null;
+  late var _missing = _firstMissing();
   var _started = false;
+
+  /// A target that is not installed (Comix to import from, say), offered
+  /// before searching.
+  String? _firstMissing() =>
+      widget.targets.where((t) => _manager.meta(t) == null).firstOrNull;
 
   @override
   void initState() {
@@ -73,12 +79,12 @@ class _MatchViewState extends State<_MatchView> {
   }
 
   void _start() {
-    _installed = _manager.meta(widget.target) != null;
-    if (!_installed || _started) return;
+    _missing = _firstMissing();
+    if (_missing != null || _started) return;
     _started = true;
     context.read<MatchCubit>().start(
       mode: widget.mode,
-      target: widget.target,
+      targets: widget.targets,
       items: widget.items,
     );
   }
@@ -89,6 +95,7 @@ class _MatchViewState extends State<_MatchView> {
       context,
       cubit: cubit,
       title: item.title,
+      sources: cubit.targetsOf(item),
     );
     if (picked == null) return;
     switch (picked) {
@@ -108,11 +115,15 @@ class _MatchViewState extends State<_MatchView> {
 
   @override
   Widget build(BuildContext context) {
-    final target = _manager.nameOf(widget.target);
+    // The first target, and how many come after it: one line.
+    final targets = [
+      _manager.nameOf(widget.targets.first),
+      if (widget.targets.length > 1) '+${widget.targets.length - 1}',
+    ].join(' ');
     final title = widget.mode == MatchMode.migrate
         ? AppText.migrateSource
         : AppText.importComix;
-    if (!_installed) {
+    if (_missing case final missing?) {
       return Scaffold(
         body: SafeArea(
           child: Column(
@@ -120,7 +131,7 @@ class _MatchViewState extends State<_MatchView> {
               DotTopBar(title: title),
               Expanded(
                 child: MissingSource(
-                  sourceId: widget.target,
+                  sourceId: missing,
                   onInstalled: () => setState(_start),
                 ),
               ),
@@ -144,7 +155,7 @@ class _MatchViewState extends State<_MatchView> {
                   // Outside the scroll view so the title stays put.
                   DotTopBar(
                     title: title,
-                    subtitle: '${AppText.migrateTo} $target',
+                    subtitle: '${AppText.migrateTo} $targets',
                   ),
                   Expanded(
                     child: CustomScrollView(
@@ -198,6 +209,15 @@ class _MatchViewState extends State<_MatchView> {
                           itemCount: state.items.length,
                           itemBuilder: (context, i) => _MatchRow(
                             item: state.items[i],
+                            // Which source it was found in, when there are
+                            // several.
+                            source:
+                                widget.targets.length > 1 &&
+                                    state.items[i].match != null
+                                ? context.sourceNameOf(
+                                    state.items[i].match!.slug,
+                                  )
+                                : null,
                             onTap:
                                 state.phase == MatchPhase.applying ||
                                     state.phase == MatchPhase.finished
@@ -271,9 +291,16 @@ class _MatchViewState extends State<_MatchView> {
 }
 
 class _MatchRow extends StatelessWidget {
-  const _MatchRow({required this.item, required this.onTap});
+  const _MatchRow({
+    required this.item,
+    required this.source,
+    required this.onTap,
+  });
 
   final MatchItem item;
+
+  /// Source name of [MatchItem.match].
+  final String? source;
   final VoidCallback? onTap;
 
   @override
@@ -305,6 +332,7 @@ class _MatchRow extends StatelessWidget {
       subtitleWidget: Text(
         [
           status,
+          ?source,
           if (item.lastRead case final chapter?) '${AppText.readTo} $chapter',
         ].join(' · '),
         style: DotlineText.bodyS.copyWith(color: color),

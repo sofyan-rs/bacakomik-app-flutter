@@ -23,12 +23,14 @@ Comic comic(String slug, String title, [List<String> altTitles = const []]) =>
       altTitles: altTitles,
     );
 
-/// Answers searches from [results] by query and records the queries.
+/// Answers searches from [results] by `source|query`, else by query, and
+/// records the queries and the sources they ran in.
 class FakeExplore implements ExploreRepository {
   FakeExplore(this.results);
 
   final Map<String, Either<Failure, List<Comic>>> results;
   final queries = <String>[];
+  final sources = <String>[];
 
   @override
   Future<Either<Failure, List<Comic>>> explore(
@@ -36,7 +38,10 @@ class FakeExplore implements ExploreRepository {
     int page,
   ) async {
     queries.add(filter.query);
-    return results[filter.query] ?? right(const []);
+    sources.add(filter.source);
+    return results['${filter.source}|${filter.query}'] ??
+        results[filter.query] ??
+        right(const []);
   }
 }
 
@@ -139,8 +144,10 @@ void main() {
   group('MatchCubit', () {
     Future<(MatchItem, List<String>)> run(
       MatchItem item,
-      Map<String, Either<Failure, List<Comic>>> results,
-    ) async {
+      Map<String, Either<Failure, List<Comic>>> results, {
+      List<String> targets = const ['mangadex-en'],
+      List<String>? sources,
+    }) async {
       final explore = FakeExplore(results);
       final cubit = MatchCubit(
         SearchSource(explore),
@@ -148,14 +155,11 @@ void main() {
         UnusedImport(),
         StepClock(),
       );
-      cubit.start(
-        mode: MatchMode.migrate,
-        target: 'mangadex-en',
-        items: [item],
-      );
+      cubit.start(mode: MatchMode.migrate, targets: targets, items: [item]);
       await cubit.stream.firstWhere((s) => s.phase == MatchPhase.review);
       final result = cubit.state.items.single;
       await cubit.close();
+      if (sources != null) expect(explore.sources, sources);
       return (result, explore.queries);
     }
 
@@ -208,6 +212,64 @@ void main() {
       );
       expect(queries, ['A', 'B', 'C']);
       expect(item.status, MatchStatus.notFound);
+    });
+
+    group('with several targets', () {
+      test('looks in the next source when one finds nothing', () async {
+        final (item, queries) = await run(
+          const MatchItem(title: 'A', altTitles: ['B'], fromKey: 'old:a'),
+          {
+            's2|A': right([comic('s2:a', 'A')]),
+          },
+          targets: ['s1', 's2', 's3'],
+          sources: ['s1', 's1', 's2'],
+        );
+        expect(queries, ['A', 'B', 'A']);
+        expect(item.status, MatchStatus.found);
+        expect(item.match?.slug, 's2:a');
+      });
+
+      test('a failed source moves on to the next', () async {
+        final (item, _) = await run(
+          const MatchItem(title: 'A', fromKey: 'old:a'),
+          {
+            's1|A': left(const ServerFailure('boom')),
+            's2|A': right([comic('s2:a', 'A')]),
+          },
+          targets: ['s1', 's2'],
+        );
+        expect(item.status, MatchStatus.found);
+        expect(item.match?.slug, 's2:a');
+      });
+
+      test('failed only when every source failed', () async {
+        final (failed, _) = await run(
+          const MatchItem(title: 'A', fromKey: 'old:a'),
+          {
+            's1|A': left(const ServerFailure('boom')),
+            's2|A': left(const ServerFailure('down')),
+          },
+          targets: ['s1', 's2'],
+        );
+        expect(failed.status, MatchStatus.failed);
+        expect(failed.message, 'boom');
+
+        final (notFound, _) = await run(
+          const MatchItem(title: 'A', fromKey: 'old:a'),
+          {'s1|A': left(const ServerFailure('boom'))},
+          targets: ['s1', 's2'],
+        );
+        expect(notFound.status, MatchStatus.notFound);
+      });
+
+      test("skips the comic's own source", () async {
+        await run(
+          const MatchItem(title: 'A', fromKey: 's1:a'),
+          {},
+          targets: ['s1', 's2'],
+          sources: ['s2'],
+        );
+      });
     });
   });
 }

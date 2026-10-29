@@ -60,7 +60,7 @@ class MigrationScreen extends StatelessWidget {
     MatchScreen.open(
       context,
       mode: MatchMode.import,
-      target: target,
+      targets: [target],
       items: [
         for (final e in entries)
           MatchItem(title: e.title, lastRead: e.lastRead),

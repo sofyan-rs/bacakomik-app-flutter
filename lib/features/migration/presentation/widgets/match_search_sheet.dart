@@ -1,6 +1,8 @@
 import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/core/domain/entities/comic.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
+import 'package:bacakomik_app/core/source/extension_manager.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
@@ -15,22 +17,29 @@ class MatchPick {
   final Comic? comic;
 }
 
-/// Searches the target source of [cubit], starting with [title], and lets
-/// the user pick the match or skip. Null when dismissed.
+/// Searches one of [sources] with [cubit], starting with [title] in the
+/// first, and lets the user pick the match or skip. Null when dismissed.
 Future<MatchPick?> showMatchSearchSheet(
   BuildContext context, {
   required MatchCubit cubit,
   required String title,
+  required List<String> sources,
 }) => showDotSheet<MatchPick>(
   context: context,
-  builder: (_) => _MatchSearchSheet(cubit: cubit, title: title),
+  builder: (_) =>
+      _MatchSearchSheet(cubit: cubit, title: title, sources: sources),
 );
 
 class _MatchSearchSheet extends StatefulWidget {
-  const _MatchSearchSheet({required this.cubit, required this.title});
+  const _MatchSearchSheet({
+    required this.cubit,
+    required this.title,
+    required this.sources,
+  });
 
   final MatchCubit cubit;
   final String title;
+  final List<String> sources;
 
   @override
   State<_MatchSearchSheet> createState() => _MatchSearchSheetState();
@@ -38,6 +47,7 @@ class _MatchSearchSheet extends StatefulWidget {
 
 class _MatchSearchSheetState extends State<_MatchSearchSheet> {
   late final _query = TextEditingController(text: widget.title);
+  late var _source = widget.sources.firstOrNull;
   List<Comic> _results = const [];
   String? _error;
   var _loading = false;
@@ -65,7 +75,7 @@ class _MatchSearchSheetState extends State<_MatchSearchSheet> {
       _loading = true;
       _error = null;
     });
-    final result = await widget.cubit.search(query);
+    final result = await widget.cubit.search(query, source: _source);
     if (!mounted || run != _run) return;
     setState(() {
       _loading = false;
@@ -96,6 +106,27 @@ class _MatchSearchSheetState extends State<_MatchSearchSheet> {
             onSubmitted: (_) => _search(),
             onClear: _query.clear,
           ),
+          if (widget.sources.length > 1) ...[
+            const SizedBox(height: DotSpace.s3),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                spacing: DotSpace.s2,
+                children: [
+                  for (final source in widget.sources)
+                    DotChip(
+                      label: getIt<ExtensionManager>().nameOf(source),
+                      selected: source == _source,
+                      onTap: () {
+                        if (source == _source) return;
+                        _source = source;
+                        _search();
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: DotSpace.s3),
           Expanded(
             child: _loading
