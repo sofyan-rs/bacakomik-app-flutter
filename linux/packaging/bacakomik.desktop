@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=BacaKomik
+Comment=Read manga, manhwa and manhua
+Exec=bacakomik
+Icon=bacakomik
+Categories=Graphics;Viewer;
+Terminal=false
+StartupWMClass=bacakomik

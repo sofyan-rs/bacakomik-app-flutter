@@ -1,10 +1,17 @@
 # BacaKomik
 
-An Android reader for manga, manhwa and manhua from several sources. Each source is a small JavaScript extension the app installs from an extension repo, so new sites can be added without an app update. Browse and search comics, read chapters online or download them to read offline, and keep a personal library of bookmarks, categories and reading history. The library lives on the device; you can export it to a backup file or, optionally, sync it across devices through your own Google Drive.
+A reader for manga, manhwa and manhua from several sources. Each source is a small JavaScript extension the app installs from an extension repo, so new sites can be added without an app update. Browse and search comics, read chapters online or download them to read offline, and keep a personal library of bookmarks, categories and reading history. The library lives on the device; you can export it to a backup file or, optionally, sync it across devices through your own Google Drive.
 
 ## Download
 
-Get the APK from the [Releases](https://github.com/sofyan-rs/bacakomik-app-flutter/releases) page; `arm64-v8a` fits almost every phone. Android 7.0 or newer. The app checks for new releases and updates itself. More on the [website](https://bacakomik.kurodev.org).
+Get it from the [Releases](https://github.com/sofyan-rs/bacakomik-app-flutter/releases) page:
+
+- **Android:** the APK; `arm64-v8a` fits almost every phone. Android 7.0 or newer.
+- **Windows:** `windows-setup.exe` (Windows 10 and 11, 64-bit).
+- **macOS:** the `.dmg` (macOS 12 or newer). Not signed yet: open it the first time with right click → Open.
+- **Linux:** the `.AppImage` (64-bit). The web view needs WPE WebKit (`libwpewebkit-1.1-0` and `libwpebackend-fdo-1.0-1` on Debian and Ubuntu).
+
+The app checks for new releases and updates itself (on Linux when run from the AppImage). More on the [website](https://bacakomik.kurodev.org).
 
 ## Screenshots
 
@@ -65,7 +72,8 @@ Some extensions are reimplemented from the Tachiyomi / Mihon extensions in [keiy
 
 ## Requirements
 
-- Android 7.0+ (API 24); Mihon extensions need Android 9+ (API 28)
+- Android 7.0+ (API 24); Mihon extensions need Android 9+ (API 28) and are Android only
+- Windows 10+ (x64), macOS 12+, Linux x64
 - To build: Flutter (stable, Dart 3.13), JDK 17, Android SDK 37
 
 ## Build
@@ -74,9 +82,12 @@ Some extensions are reimplemented from the Tachiyomi / Mihon extensions in [keiy
 flutter pub get
 dart run build_runner build -d   # regenerate freezed / json / injectable / assets code
 flutter run                      # debug build on a connected device
+flutter run -d macos --dart-define-from-file=dart_defines.local.json   # desktop (windows / linux too)
 flutter analyze
 flutter test
 ```
+
+Google Drive sync on desktop needs an OAuth client of type "Desktop app": put `GOOGLE_DESKTOP_CLIENT_ID` and `GOOGLE_DESKTOP_CLIENT_SECRET` in `dart_defines.local.json` (git-ignored); without them the desktop build hides sync. `integration_test/` holds a desktop smoke test against live sources (`flutter test integration_test/desktop_smoke_test.dart -d macos`).
 
 Release signing and testing extensions locally are described in [Contributing](docs/CONTRIBUTION.md).
 

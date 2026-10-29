@@ -1,31 +1,48 @@
 name: Release
 
-# Push a tag like v1.2.0 to build signed APKs and publish a GitHub release.
-# The tag must match `version:` in pubspec.yaml (without the build number).
-# Notes come from .github/release-notes/<tag>.md, else GitHub's generated notes.
+# Push a tag like v1.2.0 to build signed APKs and the desktop apps, and
+# publish a GitHub release. The tag must match `version:` in pubspec.yaml
+# (without the build number). Notes come from .github/release-notes/<tag>.md,
+# else GitHub's generated notes.
+#
+# Run it by hand (workflow_dispatch) to build every platform without
+# publishing; the files are kept as workflow artifacts.
+#
+# Asset names are what the in-app updater looks for (ReleaseAsset suffixes in
+# lib/features/update/data/datasources/app_installer.dart).
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  version:
     runs-on: ubuntu-latest
-    env:
-      TAG: ${{ github.ref_name }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Check tag matches pubspec version
+        id: version
         run: |
           VERSION=$(grep -E '^version:' pubspec.yaml | sed -E 's/version: *([^+]+).*/\1/')
-          if [ "v$VERSION" != "$TAG" ]; then
-            echo "::error::Tag $TAG does not match pubspec version $VERSION"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match pubspec version $VERSION"
             exit 1
           fi
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  android:
+    needs: version
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-java@v4
         with:
@@ -71,6 +88,159 @@ jobs:
           done
           cp app-release.apk "../../../../dist/BacaKomik-$VERSION-universal.apk"
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/
+
+  macos:
+    needs: version
+    runs-on: macos-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build
+        env:
+          GOOGLE_DESKTOP_CLIENT_ID: ${{ secrets.GOOGLE_DESKTOP_CLIENT_ID }}
+          GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+        run: |
+          flutter pub get
+          flutter build macos --release \
+            --dart-define=GOOGLE_DESKTOP_CLIENT_ID="$GOOGLE_DESKTOP_CLIENT_ID" \
+            --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET="$GOOGLE_DESKTOP_CLIENT_SECRET"
+
+      # The zip is what the updater installs; the dmg is for first installs.
+      - name: Package
+        run: |
+          mkdir -p dist dmg
+          cd build/macos/Build/Products/Release
+          ditto -c -k --keepParent BacaKomik.app "$GITHUB_WORKSPACE/dist/BacaKomik-$VERSION-macos.zip"
+          cp -R BacaKomik.app "$GITHUB_WORKSPACE/dmg/"
+          ln -s /Applications "$GITHUB_WORKSPACE/dmg/Applications"
+          hdiutil create -volname BacaKomik -srcfolder "$GITHUB_WORKSPACE/dmg" -ov -format UDZO \
+            "$GITHUB_WORKSPACE/dist/BacaKomik-$VERSION-macos.dmg"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build
+        env:
+          GOOGLE_DESKTOP_CLIENT_ID: ${{ secrets.GOOGLE_DESKTOP_CLIENT_ID }}
+          GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+        run: |
+          flutter pub get
+          flutter build windows --release \
+            --dart-define=GOOGLE_DESKTOP_CLIENT_ID="$GOOGLE_DESKTOP_CLIENT_ID" \
+            --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET="$GOOGLE_DESKTOP_CLIENT_SECRET"
+          # Flutter apps need the VC++ runtime, which not every PC has.
+          cp /c/Windows/System32/{msvcp140,vcruntime140,vcruntime140_1}.dll build/windows/x64/runner/Release/
+
+      - name: Build installer
+        run: |
+          ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          [ -f "$ISCC" ] || choco install innosetup -y --no-progress
+          "$ISCC" "/DAppVersion=$VERSION" windows/packaging/installer.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/
+
+  linux:
+    needs: version
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # GTK and the toolchain for Flutter, GStreamer for audioplayers, WPE
+      # WebKit, libsecret and Wayland for flutter_inappwebview.
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libstdc++-12-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libsecret-1-dev libwayland-dev libepoxy-dev libwpe-1.0-dev libwpebackend-fdo-1.0-dev
+          sudo apt-get install -y libwpewebkit-1.1-dev || sudo apt-get install -y libwpewebkit-2.0-dev
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build
+        env:
+          GOOGLE_DESKTOP_CLIENT_ID: ${{ secrets.GOOGLE_DESKTOP_CLIENT_ID }}
+          GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+        run: |
+          flutter pub get
+          flutter build linux --release \
+            --dart-define=GOOGLE_DESKTOP_CLIENT_ID="$GOOGLE_DESKTOP_CLIENT_ID" \
+            --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET="$GOOGLE_DESKTOP_CLIENT_SECRET"
+
+      - name: Build AppImage
+        run: |
+          APPDIR=build/AppDir
+          mkdir -p "$APPDIR/usr/bin" dist
+          cp -r build/linux/x64/release/bundle/. "$APPDIR/usr/bin/"
+          cp linux/packaging/bacakomik.desktop linux/packaging/bacakomik.png "$APPDIR/"
+          cat > "$APPDIR/AppRun" <<'SH'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/bacakomik" "$@"
+          SH
+          chmod +x "$APPDIR/AppRun"
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run "$APPDIR" \
+            "dist/BacaKomik-$VERSION-linux-x86_64.AppImage"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [version, android, macos, windows, linux]
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
       - name: Write release notes
         env:
           GH_TOKEN: ${{ github.token }}
@@ -94,10 +264,24 @@ jobs:
           | \`BacaKomik-$VERSION-universal.apk\` | Any device, if you're unsure (bigger download) |
 
           Requires Android 7.0 or newer. Installed apps check for this update on start.
+
+          ## Desktop
+
+          | File | For |
+          |---|---|
+          | \`BacaKomik-$VERSION-windows-setup.exe\` | Windows 10 and 11 (64-bit) |
+          | \`BacaKomik-$VERSION-macos.dmg\` | macOS 12 or newer, Intel and Apple silicon |
+          | \`BacaKomik-$VERSION-linux-x86_64.AppImage\` | Linux (64-bit) |
+
+          The desktop apps are not signed yet. On macOS, open the app the first time with
+          right click → Open (or run \`xattr -cr /Applications/BacaKomik.app\`). On Windows,
+          SmartScreen may ask: More info → Run anyway. On Linux, make the AppImage executable;
+          the web view needs WPE WebKit (\`sudo apt install libwpewebkit-1.1-0 libwpebackend-fdo-1.0-1\`
+          on Debian and Ubuntu).
           MD
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$TAG" dist/*.apk --title "$TAG" --notes-file notes.md --verify-tag
+          gh release create "$TAG" dist/* --title "$TAG" --notes-file notes.md --verify-tag
