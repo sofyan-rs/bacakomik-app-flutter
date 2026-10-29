@@ -1135,7 +1135,15 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       },
       itemBuilder: (context, index) {
         if (index == pages.length) {
-          return SingleChildScrollView(child: _chapterEnd(chapter));
+          // Centred on its page, still scrollable on a short screen.
+          return LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(child: _chapterEnd(chapter)),
+              ),
+            ),
+          );
         }
         return Padding(
           padding: EdgeInsets.symmetric(
