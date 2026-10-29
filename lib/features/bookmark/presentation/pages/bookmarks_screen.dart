@@ -193,7 +193,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       BookmarkGrouping.source => [
         for (final slug in {
           for (final item in all)
-            ComicKey.sourceOf(item.bookmark.slug): item.bookmark.slug,
+            for (final key in item.bookmark.sourceKeys)
+              ComicKey.sourceOf(key): key,
         }.values)
           Segment(
             value: ComicKey.sourceOf(slug),
@@ -221,7 +222,10 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       BookmarkGrouping.status => item.matches(
         BookmarkFilter.values.byName(group),
       ),
-      BookmarkGrouping.source => ComicKey.sourceOf(slug) == group,
+      // A merged comic is in the tab of each of its sources.
+      BookmarkGrouping.source => item.bookmark.sourceKeys.any(
+        (key) => ComicKey.sourceOf(key) == group,
+      ),
       BookmarkGrouping.category =>
         group == _uncategorizedTab
             ? categories.idsOf(slug).isEmpty
@@ -246,7 +250,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             if (item.matches(filter)) add(filter.name);
           }
         case BookmarkGrouping.source:
-          add(ComicKey.sourceOf(slug));
+          item.bookmark.sourceKeys.map(ComicKey.sourceOf).toSet().forEach(add);
         case BookmarkGrouping.category:
           final ids = categories.idsOf(slug);
           if (ids.isEmpty) add(_uncategorizedTab);
