@@ -1203,6 +1203,19 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     );
   }
 
+  /// The chapter on screen on its site. Its series, not [widget.comicSlug]:
+  /// a merged comic reads chapters of other sources.
+  void _openWebView() {
+    final slug = _current?.slug ?? widget.slug;
+    final series = seriesKeyOfChapter(slug);
+    WebViewScreen.openSeries(
+      context,
+      sourceId: ComicKey.sourceOf(series),
+      key: series,
+      chapter: series == slug ? null : slug.substring(series.length + 1),
+    );
+  }
+
   Widget _topBar(ChapterContent? chapter) {
     final c = Dotline.of(context);
     final number = chapter?.chapterNumber;
@@ -1253,12 +1266,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                       DotMenuItem(
                         label: AppText.openWebView,
                         icon: LucideIcons300.globe,
-                        onTap: () => WebViewScreen.openSeries(
-                          context,
-                          sourceId: ComicKey.sourceOf(widget.comicSlug),
-                          key: widget.comicSlug,
-                          chapter: number,
-                        ),
+                        onTap: _openWebView,
                       ),
                   ],
                 ),
