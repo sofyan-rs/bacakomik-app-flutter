@@ -9,6 +9,7 @@ import 'package:bacakomik_app/features/history/domain/entities/read_progress.dar
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/widgets/history_groups.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -99,7 +100,11 @@ class HistoryComicCard extends StatelessWidget {
               const SizedBox(width: DotSpace.s3),
               Flexible(
                 child: Text(
-                  context.sourceNameOf(item.comicSlug).toUpperCase(),
+                  // The source of the chapter read last: a merged comic
+                  // reads chapters of several.
+                  context
+                      .sourceNameOf(seriesKeyOfChapter(item.latestHistory.slug))
+                      .toUpperCase(),
                   style: DotlineText.label.copyWith(color: c.inkFaint),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
