@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bacakomik_app/app/app.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
@@ -16,7 +17,12 @@ import 'package:path_provider/path_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  hiveDirectory = (await getApplicationDocumentsDirectory()).path;
+  // Desktop documents folders belong to the user, not to app data.
+  hiveDirectory =
+      (Platform.isAndroid || Platform.isIOS
+              ? await getApplicationDocumentsDirectory()
+              : await getApplicationSupportDirectory())
+          .path;
   Hive.init(hiveDirectory);
   await configureDependencies();
   // Sources must exist before the first screen loads comics.
