@@ -58,6 +58,7 @@ class ChapterTile extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         onLongPress: onLongPress,
+        onSecondaryTap: onLongPress,
         child: AnimatedContainer(
           duration: DotMotion.press,
           decoration: BoxDecoration(

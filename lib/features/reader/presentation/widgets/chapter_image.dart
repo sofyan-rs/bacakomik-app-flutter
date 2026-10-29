@@ -7,6 +7,7 @@ import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 
 import 'dart:io';
+import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:bacakomik_app/core/network/image_cache.dart';
 
-/// One chapter page. Long press to save it to the gallery.
+/// One chapter page. Long press (or right click) to save it.
 ///
 /// The reader loads pages in batches; until [load] is true only the dotted
 /// placeholder with the page number shows. A page from the network that
@@ -157,9 +158,12 @@ class _ChapterImgState extends State<ChapterImg> {
     // Decode at screen size instead of the source size; webtoon pages can be
     // thousands of pixels tall and take tens of MB each at full resolution.
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final pageWidth = min(
+      MediaQuery.sizeOf(context).width,
+      DotSize.readerMaxWidth,
+    );
     final cacheWidth = widget.fit == PageFit.width
-        ? (screenWidth * dpr).round()
+        ? (pageWidth * dpr).round()
         : null;
     final cacheHeight = widget.fit == PageFit.height && widget.fitHeight != null
         ? (widget.fitHeight! * dpr).round()
@@ -245,6 +249,7 @@ class _ChapterImgState extends State<ChapterImg> {
 
     return GestureDetector(
       onLongPress: () => _showSaveSheet(context),
+      onSecondaryTap: () => _showSaveSheet(context),
       child: image,
     );
   }

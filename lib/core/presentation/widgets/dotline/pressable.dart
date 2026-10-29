@@ -2,7 +2,8 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Tap target that shrinks to [DotMotion.pressScale] while pressed.
-/// Dotline uses this instead of Material ink ripples.
+/// Dotline uses this instead of Material ink ripples. A right click runs
+/// [onLongPress].
 class Pressable extends StatefulWidget {
   const Pressable({
     super.key,
@@ -43,6 +44,8 @@ class _PressableState extends State<Pressable> {
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         onLongPress: widget.onLongPress,
+        // A right click does what a long press does, for mice.
+        onSecondaryTap: widget.onLongPress,
         onTapDown: _enabled ? (_) => _setPressed(true) : null,
         onTapUp: _enabled ? (_) => _setPressed(false) : null,
         onTapCancel: _enabled ? () => _setPressed(false) : null,

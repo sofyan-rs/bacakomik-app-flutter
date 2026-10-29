@@ -16,6 +16,7 @@ import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart';
 import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -101,6 +102,7 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
               return MaterialApp(
                 debugShowCheckedModeBanner: false,
                 title: AppVariables.appName,
+                scrollBehavior: const _DragScrollBehavior(),
                 theme: DotlineThemes.light,
                 darkTheme: DotlineThemes.dark,
                 themeMode: switch (settings.themeMode) {
@@ -116,4 +118,16 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
       ),
     );
   }
+}
+
+/// Mice drag lists too, as touch does: pull to refresh and the sideways
+/// rows work without a touchscreen.
+class _DragScrollBehavior extends MaterialScrollBehavior {
+  const _DragScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    ...super.dragDevices,
+    PointerDeviceKind.mouse,
+  };
 }

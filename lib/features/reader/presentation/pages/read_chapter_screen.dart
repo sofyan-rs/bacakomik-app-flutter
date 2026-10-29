@@ -877,46 +877,98 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           _anchor = null;
         }
       },
-      child: Scaffold(
-        backgroundColor: c.bg,
-        body: BlocConsumer<ReaderBloc, ReaderState>(
-          listener: (context, state) {
-            if (state is ReaderLoaded) {
-              final pages = state.chapter.images.length;
-              final segment = _Segment(
-                widget.slug,
-                _linked(widget.slug, state.chapter),
-              );
-              _segments
-                ..clear()
-                ..add(segment);
-              _current = segment;
-              // A chapter that got shorter since the last visit.
-              if (_page.value >= pages) _page.value = 0;
-              _updateItems();
-              _startLoading(segment);
-              _saveProgress(opening: true);
-              if (pages > 0 && _page.value >= pages - 1) _scheduleSave();
-              _autoHide = Timer(const Duration(seconds: 2), () {
-                if (mounted) _setControls(false);
-              });
-            }
-          },
-          builder: (context, state) {
-            final chapter = state is ReaderLoaded ? _current?.content : null;
-            return Stack(
-              children: [
-                Positioned.fill(child: _body(state, settings)),
-                _topBar(chapter),
-                if (chapter != null && settings.progressBar)
-                  _progressBar(chapter, settings),
-                if (chapter != null) _bottomPill(chapter, settings),
-              ],
-            );
-          },
+      child: CallbackShortcuts(
+        bindings: _shortcuts(settings),
+        child: Focus(
+          autofocus: true,
+          child: Scaffold(
+            backgroundColor: c.bg,
+            body: BlocConsumer<ReaderBloc, ReaderState>(
+              listener: (context, state) {
+                if (state is ReaderLoaded) {
+                  final pages = state.chapter.images.length;
+                  final segment = _Segment(
+                    widget.slug,
+                    _linked(widget.slug, state.chapter),
+                  );
+                  _segments
+                    ..clear()
+                    ..add(segment);
+                  _current = segment;
+                  // A chapter that got shorter since the last visit.
+                  if (_page.value >= pages) _page.value = 0;
+                  _updateItems();
+                  _startLoading(segment);
+                  _saveProgress(opening: true);
+                  if (pages > 0 && _page.value >= pages - 1) _scheduleSave();
+                  _autoHide = Timer(const Duration(seconds: 2), () {
+                    if (mounted) _setControls(false);
+                  });
+                }
+              },
+              builder: (context, state) {
+                final chapter = state is ReaderLoaded
+                    ? _current?.content
+                    : null;
+                return Stack(
+                  children: [
+                    Positioned.fill(child: _body(state, settings)),
+                    _topBar(chapter),
+                    if (chapter != null && settings.progressBar)
+                      _progressBar(chapter, settings),
+                    if (chapter != null) _bottomPill(chapter, settings),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
+  }
+
+  /// Keyboard reading: arrows, space and the page keys move through the
+  /// pages (sideways arrows follow the reading direction), Escape leaves.
+  Map<ShortcutActivator, VoidCallback> _shortcuts(AppSettings settings) {
+    const line = 0.25;
+    const screen = 0.85;
+    final rtl = settings.readingDirection == ReadingDirection.rightToLeft;
+    void step(double fraction) => _keyStep(settings, fraction);
+    return {
+      const SingleActivator(LogicalKeyboardKey.arrowDown): () => step(line),
+      const SingleActivator(LogicalKeyboardKey.arrowUp): () => step(-line),
+      const SingleActivator(LogicalKeyboardKey.space): () => step(screen),
+      const SingleActivator(LogicalKeyboardKey.space, shift: true): () =>
+          step(-screen),
+      const SingleActivator(LogicalKeyboardKey.pageDown): () => step(screen),
+      const SingleActivator(LogicalKeyboardKey.pageUp): () => step(-screen),
+      const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+          step(rtl ? -screen : screen),
+      const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+          step(rtl ? screen : -screen),
+      const SingleActivator(LogicalKeyboardKey.escape): () =>
+          Navigator.of(context).maybePop(),
+    };
+  }
+
+  /// Forward when [fraction] is positive, else back: in the vertical reader
+  /// by that share of the screen, otherwise one page.
+  void _keyStep(AppSettings settings, double fraction) {
+    final current = _current;
+    if (current == null) return;
+    if (settings.readingDirection == ReadingDirection.vertical) {
+      _scrollOffset.animateScroll(
+        offset: (_viewport?.height ?? 0) * fraction,
+        duration: DotMotion.slide,
+        curve: DotMotion.slideCurve,
+      );
+    } else {
+      _goToPage(
+        _page.value + fraction.sign.toInt(),
+        current.images.length,
+        settings.readingDirection,
+      );
+    }
   }
 
   Widget _body(ReaderState state, AppSettings settings) {
@@ -1082,17 +1134,22 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           : null,
       itemCount: _items.length,
       itemBuilder: (context, index) => switch (_items[index]) {
-        _PageItem(:final segment, :final page) => Padding(
-          padding: EdgeInsets.only(bottom: settings.pageGap ? DotSpace.s2 : 0),
-          child: ChapterImg(
-            key: ValueKey(segment.images[page]),
-            chapterImage: segment.images[page],
-            isFile: segment.content.isOffline,
-            page: page + 1,
-            headers: segment.content.imageHeaders,
-            load: page < segment.loadLimit,
-            fit: settings.pageFit,
-            fitHeight: height,
+        _PageItem(:final segment, :final page) => _limitWidth(
+          settings,
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: settings.pageGap ? DotSpace.s2 : 0,
+            ),
+            child: ChapterImg(
+              key: ValueKey(segment.images[page]),
+              chapterImage: segment.images[page],
+              isFile: segment.content.isOffline,
+              page: page + 1,
+              headers: segment.content.imageHeaders,
+              load: page < segment.loadLimit,
+              fit: settings.pageFit,
+              fitHeight: height,
+            ),
           ),
         ),
         _BreakItem(:final segment, :final next) => _chapterBreak(segment, next),
@@ -1169,23 +1226,38 @@ class _ReadChapterViewState extends State<_ReadChapterView>
             horizontal: settings.pageGap ? DotSpace.s1 : 0,
           ),
           child: Center(
-            child: ChapterImg(
-              key: ValueKey(pages[index]),
-              chapterImage: pages[index],
-              isFile: chapter.isOffline,
-              page: index + 1,
-              headers: chapter.imageHeaders,
-              load: index < (_current?.loadLimit ?? 0),
-              fit: settings.pageFit,
-              fitHeight: settings.pageFit == PageFit.height
-                  ? MediaQuery.sizeOf(context).height
-                  : null,
+            child: _limitWidth(
+              settings,
+              ChapterImg(
+                key: ValueKey(pages[index]),
+                chapterImage: pages[index],
+                isFile: chapter.isOffline,
+                page: index + 1,
+                headers: chapter.imageHeaders,
+                load: index < (_current?.loadLimit ?? 0),
+                fit: settings.pageFit,
+                fitHeight: settings.pageFit == PageFit.height
+                    ? MediaQuery.sizeOf(context).height
+                    : null,
+              ),
             ),
           ),
         );
       },
     );
   }
+
+  /// A page fitted to width, centred and no wider than
+  /// [DotSize.readerMaxWidth].
+  Widget _limitWidth(AppSettings settings, Widget page) =>
+      settings.pageFit == PageFit.width
+      ? Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: DotSize.readerMaxWidth),
+            child: page,
+          ),
+        )
+      : page;
 
   Widget _animatedControl({required bool top, required Widget child}) {
     final animate = !MediaQuery.disableAnimationsOf(context);

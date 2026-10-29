@@ -66,6 +66,14 @@ abstract final class DotSize {
 
   /// Screens at least this wide move the nav to a left rail.
   static const navRailMinWidth = 600.0;
+
+  /// Screens at least this wide put a comic's chapters beside its details:
+  /// tablets in landscape and desktop windows.
+  static const splitMinWidth = 840.0;
+
+  /// Widest a chapter page grows when fitted to width, so wide windows
+  /// read like a phone column instead of pages taller than the screen.
+  static const readerMaxWidth = 800.0;
 }
 
 /// Only for floating elements: bottom nav, chapter navigation pill, menus.

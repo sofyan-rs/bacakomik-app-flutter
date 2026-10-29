@@ -433,74 +433,124 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                   ),
             body: SafeArea(
               bottom: false,
-              child: RefreshIndicator(
-                color: Dotline.of(context).ink,
-                backgroundColor: Dotline.of(context).surface,
-                onRefresh: _load,
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: DotTopBar(
-                        // Hidden until the source is installed.
-                        actions: [
-                          if (!_sourceMissing) ...[
-                            if (bookmark != null)
-                              RoundIconButton(
-                                icon: LucideIcons300.gitMerge,
-                                semanticLabel: AppText.mergedSources,
-                                iconSize: DotSize.iconSmall,
-                                onTap: () => _editSources(
-                                  bookmark,
-                                  details?.title ?? widget.title,
-                                ),
-                              ),
-                            // Migrating would drop the other merged sources.
-                            if (bookmark != null && !bookmark.isMerged)
-                              RoundIconButton(
-                                icon: LucideIcons300.arrowRightLeft,
-                                semanticLabel: AppText.migrateSource,
-                                iconSize: DotSize.iconSmall,
-                                onTap: () => SourceMigrationScreen.open(
-                                  context,
-                                  keys: {widget.slug},
-                                ),
-                              ),
-                            RoundIconButton(
-                              icon: LucideIcons300.globe,
-                              semanticLabel: AppText.openWebView,
-                              iconSize: DotSize.iconSmall,
-                              onTap: () => _openWebView(bookmark),
-                            ),
-                            RoundIconButton(
-                              icon: LucideIcons300.share2,
-                              semanticLabel: AppText.share,
-                              iconSize: DotSize.iconSmall,
-                              onTap: () =>
-                                  _share(details?.title ?? widget.title),
-                            ),
-                          ],
-                        ],
+              child: switch (state) {
+                ComicDetailsLoaded()
+                    when !_sourceMissing &&
+                        MediaQuery.sizeOf(context).width >=
+                            DotSize.splitMinWidth =>
+                  _split(state, _topBar(bookmark, details)),
+                _ => _refreshable(
+                  CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(child: _topBar(bookmark, details)),
+                      SliverToBoxAdapter(
+                        child: DetailCover(
+                          cover: details?.coverImg ?? widget.cover,
+                        ),
                       ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: DetailCover(
-                        cover: details?.coverImg ?? widget.cover,
+                      ..._body(state),
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: DotSpace.s6),
                       ),
-                    ),
-                    ..._body(state),
-                    const SliverToBoxAdapter(
-                      child: SizedBox(height: DotSpace.s6),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              },
             ),
           ),
         );
       },
     );
   }
+
+  Widget _refreshable(Widget child) => RefreshIndicator(
+    color: Dotline.of(context).ink,
+    backgroundColor: Dotline.of(context).surface,
+    onRefresh: _load,
+    child: child,
+  );
+
+  /// Wide screens: details on the left, chapters on the right, each half
+  /// scrolling on its own under the top bar.
+  Widget _split(ComicDetailsLoaded state, Widget topBar) {
+    const end = SliverToBoxAdapter(child: SizedBox(height: DotSpace.s6));
+    return Column(
+      children: [
+        topBar,
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _refreshable(
+                  CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: DetailCover(cover: state.comicDetails.coverImg),
+                      ),
+                      _info(state.comicDetails, state.chaptersLoading),
+                      end,
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: CustomScrollView(
+                  primary: false,
+                  slivers: [
+                    _chapters(
+                      state.comicDetails,
+                      state.chaptersLoading,
+                      top: 0,
+                    ),
+                    end,
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _topBar(Bookmark? bookmark, ComicDetails? details) => DotTopBar(
+    // Hidden until the source is installed.
+    actions: [
+      if (!_sourceMissing) ...[
+        if (bookmark != null)
+          RoundIconButton(
+            icon: LucideIcons300.gitMerge,
+            semanticLabel: AppText.mergedSources,
+            iconSize: DotSize.iconSmall,
+            onTap: () => _editSources(bookmark, details?.title ?? widget.title),
+          ),
+        // Migrating would drop the other merged sources.
+        if (bookmark != null && !bookmark.isMerged)
+          RoundIconButton(
+            icon: LucideIcons300.arrowRightLeft,
+            semanticLabel: AppText.migrateSource,
+            iconSize: DotSize.iconSmall,
+            onTap: () =>
+                SourceMigrationScreen.open(context, keys: {widget.slug}),
+          ),
+        RoundIconButton(
+          icon: LucideIcons300.globe,
+          semanticLabel: AppText.openWebView,
+          iconSize: DotSize.iconSmall,
+          onTap: () => _openWebView(bookmark),
+        ),
+        RoundIconButton(
+          icon: LucideIcons300.share2,
+          semanticLabel: AppText.share,
+          iconSize: DotSize.iconSmall,
+          onTap: () => _share(details?.title ?? widget.title),
+        ),
+      ],
+    ],
+  );
 
   Bookmark? get _bookmark => context
       .watch<BookmarkCubit>()
@@ -517,51 +567,8 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
         ]
       : switch (state) {
           ComicDetailsLoaded(:final comicDetails, :final chaptersLoading) => [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                DotSpace.s4,
-                DotSpace.s5,
-                DotSpace.s4,
-                0,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: ComicInfo(
-                  details: comicDetails,
-                  chaptersLoading: chaptersLoading,
-                  // A merged comic names its first source and counts the
-                  // rest; the merge sheet lists them.
-                  source: switch (_bookmark) {
-                    final b? when b.isMerged =>
-                      '${context.sourceNameOf(b.sourceKeys.first)} '
-                          '+${b.sourceKeys.length - 1}',
-                    _ => context.sourceLabelOf(widget.slug),
-                  },
-                  onGenreTap: _exploreGenre,
-                  canTapGenre: (genre) =>
-                      _features?.genreFilter(genre.slug, genre.name) != null,
-                ),
-              ),
-            ),
-            ComicChapters(
-              comicDetails: comicDetails,
-              loading: chaptersLoading || _sourceLoading,
-              onOpenChapter: (chapter) => _read(comicDetails, chapter.slug),
-              onToggleSelected: _toggleSelected,
-              isSelected: _isSelected,
-              isSelecting: _selected.isNotEmpty,
-              onScanlators: _scanlators.isEmpty ? null : _pickScanlator,
-              sources: switch (_bookmark) {
-                final b? when b.isMerged => b.sourceKeys,
-                _ => const [],
-              },
-              source: _chapterSource,
-              sourceChapters: _sourceLoading
-                  ? const []
-                  : _sourceChapters[_chapterSource],
-              onPickSource: _pickChapterSource,
-              keepDuplicates: _bookmark?.keepDuplicates ?? false,
-              onKeepDuplicates: _setKeepDuplicates,
-            ),
+            _info(comicDetails, chaptersLoading),
+            _chapters(comicDetails, chaptersLoading),
           ],
           ComicDetailsNoInternet() => [
             SliverToBoxAdapter(child: EmptyState.offline(onAction: _load)),
@@ -578,6 +585,57 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
           ComicDetailsInitial() ||
           ComicDetailsLoading() => [SliverToBoxAdapter(child: _loadingTitle())],
         };
+
+  Widget _info(ComicDetails comicDetails, bool chaptersLoading) =>
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(
+          DotSpace.s4,
+          DotSpace.s5,
+          DotSpace.s4,
+          0,
+        ),
+        sliver: SliverToBoxAdapter(
+          child: ComicInfo(
+            details: comicDetails,
+            chaptersLoading: chaptersLoading,
+            // A merged comic names its first source and counts the
+            // rest; the merge sheet lists them.
+            source: switch (_bookmark) {
+              final b? when b.isMerged =>
+                '${context.sourceNameOf(b.sourceKeys.first)} '
+                    '+${b.sourceKeys.length - 1}',
+              _ => context.sourceLabelOf(widget.slug),
+            },
+            onGenreTap: _exploreGenre,
+            canTapGenre: (genre) =>
+                _features?.genreFilter(genre.slug, genre.name) != null,
+          ),
+        ),
+      );
+
+  Widget _chapters(
+    ComicDetails comicDetails,
+    bool chaptersLoading, {
+    double top = DotSpace.s6,
+  }) => ComicChapters(
+    top: top,
+    comicDetails: comicDetails,
+    loading: chaptersLoading || _sourceLoading,
+    onOpenChapter: (chapter) => _read(comicDetails, chapter.slug),
+    onToggleSelected: _toggleSelected,
+    isSelected: _isSelected,
+    isSelecting: _selected.isNotEmpty,
+    onScanlators: _scanlators.isEmpty ? null : _pickScanlator,
+    sources: switch (_bookmark) {
+      final b? when b.isMerged => b.sourceKeys,
+      _ => const [],
+    },
+    source: _chapterSource,
+    sourceChapters: _sourceLoading ? const [] : _sourceChapters[_chapterSource],
+    onPickSource: _pickChapterSource,
+    keepDuplicates: _bookmark?.keepDuplicates ?? false,
+    onKeepDuplicates: _setKeepDuplicates,
+  );
 
   /// Title from the previous screen while the details load, with a loader
   /// unless [loading] is false.

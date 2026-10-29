@@ -34,6 +34,7 @@ class ComicChapters extends StatefulWidget {
     this.keepDuplicates = false,
     this.onKeepDuplicates,
     this.loading = false,
+    this.top = DotSpace.s6,
   });
 
   final ComicDetails comicDetails;
@@ -64,6 +65,9 @@ class ComicChapters extends StatefulWidget {
 
   /// Turns [keepDuplicates] on or off.
   final void Function(bool keep)? onKeepDuplicates;
+
+  /// Space above the heading: less beside the details on wide screens.
+  final double top;
 
   /// The list is still loading: a loader instead of rows.
   final bool loading;
@@ -194,9 +198,9 @@ class _ComicChaptersState extends State<ComicChapters> {
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               DotSpace.s4,
-              DotSpace.s6,
+              widget.top,
               DotSpace.s4,
               DotSpace.s3,
             ),

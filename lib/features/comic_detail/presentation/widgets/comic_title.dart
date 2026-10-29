@@ -27,6 +27,7 @@ class ComicTitle extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onLongPress: () => _copy(context),
+        onSecondaryTap: () => _copy(context),
         child: Text(
           title,
           style: DotlineText.title.copyWith(color: c.ink),
