@@ -5,29 +5,31 @@
       "id": "bacakomik",
       "name": "BacaKomik",
       "lang": "id",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "apiVersion": 1,
       "baseUrl": "https://bacakomik.my",
       "urlPatterns": [
         "^/komik/([^/?#]+)"
       ],
       "nsfw": false,
-      "file": "extensions/bacakomik.v1.3.0.js",
-      "sha256": "6b94cf9c798ca69ac3420ab1330282223d67bc33c3c620600b2ff9181f9f8733"
+      "file": "extensions/bacakomik.v1.3.1.js",
+      "sha256": "dd60ceb17c85a9b51348812ca10278efd5f68bf04852aebb615f0b6684fb9412",
+      "icon": "icon/bacakomik.png"
     },
     {
       "id": "voratoon",
       "name": "VoraToon",
       "lang": "id",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "apiVersion": 1,
       "baseUrl": "https://voratoon.co",
       "urlPatterns": [
         "^/(?:series|comic)/([^/?#]+)"
       ],
       "nsfw": false,
-      "file": "extensions/voratoon.v1.4.0.js",
-      "sha256": "0d3f887ca54d8a8ad1c90e1f9383e37703fdaf291ade866130bb2c23c911cd75"
+      "file": "extensions/voratoon.v1.4.1.js",
+      "sha256": "5bfb06d9352b085cc3321e14240b9b97f98026a85cec33ee77e194f35f908370",
+      "icon": "icon/voratoon.png"
     }
   ]
 }

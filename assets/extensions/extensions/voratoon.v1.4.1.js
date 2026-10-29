@@ -190,8 +190,10 @@
       }
     },
 
-    webUrl(slug) {
-      return `${BASE}/series/${enc(slug)}`
+    // Chapter pages are keyed by the chapter index: /series/<slug>/chapter/271.5
+    webUrl(slug, number) {
+      const series = `${BASE}/series/${enc(slug)}`
+      return number == null ? series : `${series}/chapter/${enc(String(number))}`
     },
 
     async series(slug) {

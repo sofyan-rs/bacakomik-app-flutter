@@ -2,6 +2,7 @@
 // BacaKomik: thin wrapper over our own JSON API, which already speaks the contract.
 (() => {
   const BASE = 'https://api-bacakomik.kurodev.org'
+  const SITE = 'https://bacakomik.my'
 
   /** @param {string} path */
   async function get(path) {
@@ -35,6 +36,22 @@
       rating: num(d.rating),
       totalChapters: num(d.totalChapters),
     }
+  }
+
+  // Chapter pages live at /<site slug>-chapter-<n>/, but the site slug can differ
+  // from ours (`883432-eleceed` -> `eleceed-chapter-1`) and numbers can be padded
+  // (`00-1` = 0.1), so read the real link off the series page. Falls back to it.
+  /** @param {string} series @param {number} number */
+  async function chapterUrl(series, number) {
+    try {
+      const res = await http.fetch({ url: series })
+      const re = /href="(https:\/\/bacakomik\.my\/[^"]+-chapter-(\d+)(?:-(\d+))?\/?)"/g
+      let m
+      while ((m = re.exec(res.body || ''))) {
+        if (Number(`${m[2]}.${m[3] || 0}`) === number) return m[1]
+      }
+    } catch (_) {}
+    return series
   }
 
   const ALL = { value: '', label: 'All' }
@@ -118,8 +135,9 @@
       }
     },
 
-    webUrl(slug) {
-      return `https://bacakomik.my/komik/${enc(slug)}/`
+    webUrl(slug, number) {
+      const series = `${SITE}/komik/${enc(slug)}/`
+      return number == null ? series : chapterUrl(series, Number(number))
     },
 
     async series(slug) {
