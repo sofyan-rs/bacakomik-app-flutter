@@ -397,7 +397,21 @@ class AppText {
       'You bookmarked this series from';
   static const String duplicateMessage =
       'Migrate moves that bookmark and its reading history here. '
+      'Merge keeps one entry that reads chapters from both sources. '
       'Add anyway keeps both as separate entries.';
+  static const String mergeSources = 'Merge';
+  static const String merged = 'Merged';
+  static const String mergedSources = 'Merged sources';
+  static const String mergedSourcesHint =
+      'Each chapter comes from the first source that has it; title, cover '
+      'and info from the first. Drag to reorder.';
+  static const String noOtherSourceToMerge =
+      'Install another source to merge with.';
+  static const String mergeSearchHint = 'Search this series in another source';
+  static const String allSources = 'All sources';
+  static const String chapterSources = 'Sources';
+  static const String chapterSourcesHint =
+      'Show the chapters taken from one source.';
   static const String migrate = 'Migrate';
   static const String addAnyway = 'Add anyway';
   static const String viewBookmarkedSeries = 'View bookmarked series';

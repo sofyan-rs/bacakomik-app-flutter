@@ -20,6 +20,7 @@ import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dar
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -647,6 +648,23 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     _saveProgress(opening: true);
   }
 
+  /// [content] of the chapter [slug], whose previous and next chapters are
+  /// those of a merged comic's list ([isMergedList]), which may come from
+  /// other sources, rather than the source's own.
+  ChapterContent _linked(String slug, ChapterContent content) {
+    final chapters = widget.comicDetails.chapters;
+    if (!isMergedList(chapters)) return content;
+    final i = chapters.indexWhere((c) => c.slug == slug);
+    if (i < 0) return content;
+    // Newest first.
+    return content.copyWith(
+      nextChapterSlug: i > 0 ? chapters[i - 1].slug : null,
+      previousChapterSlug: i + 1 < chapters.length
+          ? chapters[i + 1].slug
+          : null,
+    );
+  }
+
   /// Adds the chapter after the last one to the end of the list.
   Future<void> _fetchNext() async {
     if (!_moreAfter || _nextFetch != _Fetch.idle) return;
@@ -660,7 +678,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       return;
     }
     result.fold((_) => setState(() => _nextFetch = _Fetch.failed), (content) {
-      final segment = _Segment(slug, content);
+      final segment = _Segment(slug, _linked(slug, content));
       setState(() {
         _nextFetch = _Fetch.idle;
         _segments.add(segment);
@@ -690,7 +708,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       content,
     ) {
       // Read from its end, upwards: each page loads as it comes on screen.
-      final segment = _Segment(slug, content)
+      final segment = _Segment(slug, _linked(slug, content))
         ..loadLimit = content.images.length;
       final shown = _itemPositions.itemPositions.value.where(
         (p) => p.index < _items.length && _items[p.index] is! _HeadItem,
@@ -867,7 +885,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           listener: (context, state) {
             if (state is ReaderLoaded) {
               final pages = state.chapter.images.length;
-              final segment = _Segment(widget.slug, state.chapter);
+              final segment = _Segment(
+                widget.slug,
+                _linked(widget.slug, state.chapter),
+              );
               _segments
                 ..clear()
                 ..add(segment);

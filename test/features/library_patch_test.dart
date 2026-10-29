@@ -5,6 +5,7 @@ import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_
 import 'package:bacakomik_app/features/bookmark/data/repositories/bookmark_repository_impl.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecases.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/merge_sources.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
@@ -363,6 +364,8 @@ void main() {
         comicDetails,
         ApplyPendingReads(pendingReads, historyRepo, clock),
         clock,
+        FetchMergedChapters(comicDetails),
+        AlignMergedHistory(historyRepo),
       ),
       MigrateComic(repo, historyRepo, noCategories(), clock),
       CompleteImportedComic(
@@ -372,6 +375,17 @@ void main() {
       ),
       RecordingNotifier(),
       clock,
+      MergeComic(
+        repo,
+        historyRepo,
+        noCategories(),
+        comicDetails,
+        pendingReads,
+        AlignMergedHistory(historyRepo),
+        clock,
+      ),
+      SetMergedSources(repo),
+      AlignMergedHistory(historyRepo),
     );
 
     Future<void> matchesReload() async {

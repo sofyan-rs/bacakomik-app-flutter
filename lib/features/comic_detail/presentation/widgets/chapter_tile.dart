@@ -26,6 +26,7 @@ class ChapterTile extends StatelessWidget {
     required this.isLast,
     required this.onTap,
     required this.onLongPress,
+    this.source,
   });
 
   final Chapter chapter;
@@ -40,6 +41,9 @@ class ChapterTile extends StatelessWidget {
   final bool isLast;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
+
+  /// Name of the source the chapter is read from, shown in a merged list.
+  final String? source;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +119,7 @@ class ChapterTile extends StatelessWidget {
           const SizedBox(width: DotSpace.s3),
         ],
         Text(
-          ChapterDate.short(chapter.date),
+          [?source, ChapterDate.short(chapter.date)].join(' · '),
           style: DotlineText.data.copyWith(color: c.inkFaint),
         ),
       ],

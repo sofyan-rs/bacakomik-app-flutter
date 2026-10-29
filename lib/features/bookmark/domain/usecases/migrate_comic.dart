@@ -85,7 +85,8 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
         () => _categories.saveComicCategories([
           ComicCategories(slug: to, categoryIds: categoryIds, updatedDate: now),
         ]),
-      if (_pending case final pending?) () => _movePending(pending, from, to),
+      if (_pending case final pending?)
+        () => movePendingReads(pending, from, to),
       () => _history.removeComicHistory(from),
       () => _bookmarks.removeBookmarks([from]),
     ];
@@ -95,26 +96,28 @@ class MigrateComic implements UseCase<Unit, MigrateComicParams> {
     }
     return right(unit);
   }
+}
 
-  Future<Either<Failure, Unit>> _movePending(
-    PendingReadRepository pending,
-    String from,
-    String to,
-  ) async {
-    final moving = await pending.pendingOf(from);
-    if (moving case Left(value: final failure)) return left(failure);
-    final read = moving.getOrElse((_) => null);
-    if (read == null || from == to) return right(unit);
-    final waiting = await pending.pendingOf(to);
-    if (waiting case Left(value: final failure)) return left(failure);
-    final merged = switch (waiting.getOrElse((_) => null)) {
-      final there? => there.merge(read),
-      null => read,
-    };
-    final saved = await pending.save({to: merged});
-    if (saved.isLeft()) return saved;
-    return pending.remove(from);
-  }
+/// Moves the progress an import left waiting for [from] to [to], joined
+/// with what already waits there.
+Future<Either<Failure, Unit>> movePendingReads(
+  PendingReadRepository pending,
+  String from,
+  String to,
+) async {
+  final moving = await pending.pendingOf(from);
+  if (moving case Left(value: final failure)) return left(failure);
+  final read = moving.getOrElse((_) => null);
+  if (read == null || from == to) return right(unit);
+  final waiting = await pending.pendingOf(to);
+  if (waiting case Left(value: final failure)) return left(failure);
+  final merged = switch (waiting.getOrElse((_) => null)) {
+    final there? => there.merge(read),
+    null => read,
+  };
+  final saved = await pending.save({to: merged});
+  if (saved.isLeft()) return saved;
+  return pending.remove(from);
 }
 
 /// When the earliest of the bookmarks under [slugs] was added (its

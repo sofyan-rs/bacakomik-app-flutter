@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
 import 'package:bacakomik_app/core/error/failures.dart';
 import 'package:bacakomik_app/core/notifications/progress_notifier.dart';
+import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecases.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/merge_sources.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
 import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_refresh_queue.dart';
@@ -33,6 +35,9 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     this._completeImportedComic,
     this._notifier,
     this._clock,
+    this._mergeComic,
+    this._setMergedSources,
+    this._alignHistory,
   ) : super(const []) {
     _cancelRequests = _notifier.cancelRequests
         .where((id) => id == ProgressIds.bookmarkRefresh)
@@ -49,6 +54,9 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   final CompleteImportedComic _completeImportedComic;
   final ProgressNotifier _notifier;
   final Clock _clock;
+  final MergeComic _mergeComic;
+  final SetMergedSources _setMergedSources;
+  final AlignMergedHistory _alignHistory;
 
   /// Counts in-memory edits, so a [load] that read the box before an edit
   /// landed reads again instead of dropping it.
@@ -153,6 +161,11 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
     notifier: _notifier,
     onResult: _onRefreshed,
     timeout: refreshTimeout,
+    sourcesOf: (key) => {
+      for (final k
+          in state.where((b) => b.slug == key).firstOrNull?.sourceKeys ?? [key])
+        ComicKey.sourceOf(k),
+    },
   );
 
   /// Whether a refresh run is going; Bookmarks shows a stop button.
@@ -206,6 +219,25 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
   List<Bookmark> sameSeriesAs(String slug, String title) =>
       sameSeries(state, slug, title);
 
+  /// The bookmark [key] is merged into, when it is one of the other
+  /// sources of a merged bookmark.
+  Bookmark? mergedInto(String key) => state
+      .where((b) => b.slug != key && b.sourceKeys.contains(key))
+      .firstOrNull;
+
+  /// Merges the series [add] into the bookmark [into]; see [MergeComic].
+  /// The caller reloads history.
+  Future<void> merge({
+    required String into,
+    required String add,
+    ComicDetails? details,
+  }) => _thenReload(_mergeComic((into: into, add: add, details: details)));
+
+  /// Reorders or removes the sources of the merged bookmark [key]; see
+  /// [SetMergedSources].
+  Future<void> setMergedSources(String key, List<String> keys) =>
+      _thenReload(_setMergedSources((key: key, keys: keys)));
+
   /// Moves the bookmark and read history of [from] to [to]. The caller
   /// reloads history.
   Future<void> migrate({
@@ -234,7 +266,17 @@ class BookmarkCubit extends Cubit<List<Bookmark>> {
         return false;
       case Right(value: (:final bookmark, :final historyChanged)):
         if (bookmark != null && isBookmark(bookmark.slug)) _put(bookmark);
-        return historyChanged;
+        // The read chapters of a merged comic follow its chapter list.
+        final merged = state.where((b) => b.slug == key).firstOrNull;
+        if (!fresh || merged == null || !merged.isMerged) return historyChanged;
+        final aligned = await _alignHistory((
+          key: key,
+          chapters: details.chapters,
+        ));
+        return aligned.fold((failure) {
+          _log(failure);
+          return historyChanged;
+        }, (changed) => historyChanged || changed);
     }
   }
 

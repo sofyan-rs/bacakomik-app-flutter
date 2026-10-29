@@ -14,8 +14,8 @@ typedef RefreshCall = Future<Either<Failure, RefreshResult>> Function(
 );
 
 /// Checks bookmarks for new chapters, by key: up to [maxParallel] at once
-/// and at most one per source ([ComicKey.sourceOf]), since a site may block
-/// a burst of requests. Shows `done / total` in a notification while it
+/// and at most one per source ([sourcesOf]), since a site may block a
+/// burst of requests. Shows `done / total` in a notification while it
 /// runs, then how many comics changed.
 ///
 /// [add] while running joins the run; [cancel] stops it; [drop] forgets
@@ -30,7 +30,10 @@ class BookmarkRefreshQueue {
     required this.onResult,
     this.maxParallel = 3,
     this.timeout = const Duration(seconds: 90),
+    this.sourcesOf = _sourceOfKey,
   });
+
+  static Set<String> _sourceOfKey(String key) => {ComicKey.sourceOf(key)};
 
   /// Checks one comic; its writes must stop once the token is cancelled.
   final RefreshCall refresh;
@@ -41,6 +44,10 @@ class BookmarkRefreshQueue {
   onResult;
 
   final int maxParallel;
+
+  /// Sources a comic's check sends requests to: its key's, or every
+  /// source of a merged bookmark. It waits until all of them are free.
+  final Set<String> Function(String key) sourcesOf;
 
   /// A comic that takes longer is skipped, so one stuck site cannot hold
   /// up the rest. Its source stays busy until its work ends (at most
@@ -164,15 +171,15 @@ class BookmarkRefreshQueue {
   void _startJobs() {
     for (var i = 0; i < _queue.length && _running.length < maxParallel;) {
       final key = _queue[i];
-      final source = ComicKey.sourceOf(key);
-      if (_busySources.contains(source)) {
+      final sources = sourcesOf(key);
+      if (sources.any(_busySources.contains)) {
         i++;
         continue;
       }
       _queue.removeAt(i);
       final job = _running[key] = _Job();
-      _busySources.add(source);
-      unawaited(_check(key, source, job));
+      _busySources.addAll(sources);
+      unawaited(_check(key, sources, job));
     }
   }
 
@@ -192,7 +199,7 @@ class BookmarkRefreshQueue {
     );
   }
 
-  Future<void> _check(String key, String source, _Job job) async {
+  Future<void> _check(String key, Set<String> sources, _Job job) async {
     final work = Future.sync(() => refresh(key, job.token)).catchError(
       (Object e) => left<Failure, RefreshResult>(ServerFailure('$e')),
     );
@@ -216,12 +223,12 @@ class BookmarkRefreshQueue {
       unawaited(
         Future.any<void>([work.then((_) {}), Future<void>.delayed(timeout)])
             .whenComplete(() {
-              _busySources.remove(source);
+              _busySources.removeAll(sources);
               _wakeUp();
             }),
       );
     } else {
-      _busySources.remove(source);
+      _busySources.removeAll(sources);
     }
     if (result == null) {
       // Abandoned: its writes are skipped from now on; one already begun

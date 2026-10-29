@@ -19,6 +19,9 @@ BookmarkModel _$BookmarkModelFromJson(Map<String, dynamic> json) =>
         json['addedDate'],
         const EpochMillisConverter().fromJson,
       ),
+      mergedKeys: (json['mergedKeys'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
     );
 
 Map<String, dynamic> _$BookmarkModelToJson(BookmarkModel instance) =>
@@ -30,6 +33,7 @@ Map<String, dynamic> _$BookmarkModelToJson(BookmarkModel instance) =>
         instance.addedDate,
         const EpochMillisConverter().toJson,
       ),
+      'mergedKeys': ?instance.mergedKeys,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(

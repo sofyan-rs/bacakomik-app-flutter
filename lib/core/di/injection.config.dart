@@ -40,6 +40,8 @@ import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_rep
     as _i851;
 import 'package:bacakomik_app/features/bookmark/domain/usecases/bookmark_usecases.dart'
     as _i501;
+import 'package:bacakomik_app/features/bookmark/domain/usecases/merge_sources.dart'
+    as _i360;
 import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart'
     as _i823;
 import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart'
@@ -547,13 +549,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1011.Clock>(),
       ),
     );
-    gh.factory<_i380.GetComicDetails>(
-      () => _i380.GetComicDetails(
-        gh<_i282.ComicDetailRepository>(),
-        gh<_i665.DownloadRepository>(),
-        gh<_i851.BookmarkRepository>(),
-        gh<_i55.HistoryRepository>(),
-      ),
+    gh.factory<_i360.SetMergedSources>(
+      () => _i360.SetMergedSources(gh<_i851.BookmarkRepository>()),
     );
     gh.factory<_i230.MihonImportCubit>(
       () => _i230.MihonImportCubit(
@@ -620,13 +617,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i471.ReaderBloc>(
       () => _i471.ReaderBloc(gh<_i681.GetChapterContent>()),
     );
-    gh.factory<_i1060.RefreshBookmark>(
-      () => _i1060.RefreshBookmark(
-        gh<_i851.BookmarkRepository>(),
-        gh<_i282.ComicDetailRepository>(),
-        gh<_i442.ApplyPendingReads>(),
-        gh<_i1011.Clock>(),
-      ),
+    gh.factory<_i360.FetchMergedChapters>(
+      () => _i360.FetchMergedChapters(gh<_i282.ComicDetailRepository>()),
     );
     gh.factory<_i568.HomeBloc>(() => _i568.HomeBloc(gh<_i611.GetHome>()));
     gh.factory<_i853.CategoryCubit>(
@@ -641,6 +633,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i328.GetLatestComics>(
       () => _i328.GetLatestComics(gh<_i655.LatestRepository>()),
+    );
+    gh.factory<_i360.AlignMergedHistory>(
+      () => _i360.AlignMergedHistory(gh<_i55.HistoryRepository>()),
     );
     gh.factory<_i823.MigrateComic>(
       () => _i823.MigrateComic(
@@ -667,14 +662,22 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i866.CategoryRepository>(),
       ),
     );
+    gh.factory<_i360.MergeComic>(
+      () => _i360.MergeComic(
+        gh<_i851.BookmarkRepository>(),
+        gh<_i55.HistoryRepository>(),
+        gh<_i866.CategoryRepository>(),
+        gh<_i282.ComicDetailRepository>(),
+        gh<_i494.PendingReadRepository>(),
+        gh<_i360.AlignMergedHistory>(),
+        gh<_i1011.Clock>(),
+      ),
+    );
     gh.factory<_i687.BackupCubit>(
       () => _i687.BackupCubit(
         gh<_i81.BackupLibrary>(),
         gh<_i81.RestoreLibrary>(),
       ),
-    );
-    gh.factory<_i1013.ComicDetailsBloc>(
-      () => _i1013.ComicDetailsBloc(gh<_i380.GetComicDetails>()),
     );
     gh.factory<_i88.GetDownloads>(
       () => _i88.GetDownloads(gh<_i665.DownloadRepository>()),
@@ -722,16 +725,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i768.LatestBloc>(
       () => _i768.LatestBloc(gh<_i328.GetLatestComics>()),
     );
-    gh.factory<_i518.BookmarkCubit>(
-      () => _i518.BookmarkCubit(
-        gh<_i501.GetBookmarks>(),
-        gh<_i501.SaveBookmarks>(),
-        gh<_i501.RemoveBookmarks>(),
-        gh<_i1060.RefreshBookmark>(),
-        gh<_i823.MigrateComic>(),
-        gh<_i442.CompleteImportedComic>(),
-        gh<_i231.ProgressNotifier>(),
+    gh.factory<_i380.GetComicDetails>(
+      () => _i380.GetComicDetails(
+        gh<_i282.ComicDetailRepository>(),
+        gh<_i665.DownloadRepository>(),
+        gh<_i851.BookmarkRepository>(),
+        gh<_i55.HistoryRepository>(),
+        gh<_i360.FetchMergedChapters>(),
+      ),
+    );
+    gh.factory<_i1060.RefreshBookmark>(
+      () => _i1060.RefreshBookmark(
+        gh<_i851.BookmarkRepository>(),
+        gh<_i282.ComicDetailRepository>(),
+        gh<_i442.ApplyPendingReads>(),
         gh<_i1011.Clock>(),
+        gh<_i360.FetchMergedChapters>(),
+        gh<_i360.AlignMergedHistory>(),
       ),
     );
     gh.factory<_i57.MatchCubit>(
@@ -755,6 +765,24 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i794.ExploreBloc>(
       () => _i794.ExploreBloc(gh<_i520.ExploreComics>()),
+    );
+    gh.factory<_i1013.ComicDetailsBloc>(
+      () => _i1013.ComicDetailsBloc(gh<_i380.GetComicDetails>()),
+    );
+    gh.factory<_i518.BookmarkCubit>(
+      () => _i518.BookmarkCubit(
+        gh<_i501.GetBookmarks>(),
+        gh<_i501.SaveBookmarks>(),
+        gh<_i501.RemoveBookmarks>(),
+        gh<_i1060.RefreshBookmark>(),
+        gh<_i823.MigrateComic>(),
+        gh<_i442.CompleteImportedComic>(),
+        gh<_i231.ProgressNotifier>(),
+        gh<_i1011.Clock>(),
+        gh<_i360.MergeComic>(),
+        gh<_i360.SetMergedSources>(),
+        gh<_i360.AlignMergedHistory>(),
+      ),
     );
     return this;
   }

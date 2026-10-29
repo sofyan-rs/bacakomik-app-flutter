@@ -4,10 +4,12 @@ import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/chapter_tile.dart';
 import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -25,6 +27,7 @@ class ComicChapters extends StatefulWidget {
     required this.isSelected,
     required this.isSelecting,
     this.onScanlators,
+    this.sources = const [],
     this.loading = false,
   });
 
@@ -36,6 +39,10 @@ class ComicChapters extends StatefulWidget {
 
   /// Opens the scanlator picker; null hides its button (one scanlator).
   final VoidCallback? onScanlators;
+
+  /// Series keys of a merged comic, in order: the list can show the
+  /// chapters of one of them. Empty for a comic with one source.
+  final List<String> sources;
 
   /// The list is still loading: a loader instead of rows.
   final bool loading;
@@ -50,6 +57,9 @@ class _ComicChaptersState extends State<ComicChapters> {
   var _searching = false;
   final _query = TextEditingController();
 
+  /// Series key whose chapters alone are shown; null for all.
+  String? _source;
+
   @override
   void dispose() {
     _query.dispose();
@@ -57,7 +67,10 @@ class _ComicChaptersState extends State<ComicChapters> {
   }
 
   List<Chapter> get _chapters {
-    final all = widget.comicDetails.chapters;
+    final source = _shownSource;
+    final all = source == null
+        ? widget.comicDetails.chapters
+        : chaptersOf(widget.comicDetails.chapters, source);
     final query = _query.text.trim();
     final filtered = query.isEmpty
         ? all
@@ -70,6 +83,52 @@ class _ComicChaptersState extends State<ComicChapters> {
               )
               .toList();
     return _newestFirst ? filtered : filtered.reversed.toList();
+  }
+
+  /// [_source] while it is still one of the comic's sources.
+  String? get _shownSource => widget.sources.contains(_source) ? _source : null;
+
+  /// Like the scanlator picker: all sources, or the chapters of one.
+  Future<void> _pickSource() async {
+    final c = Dotline.of(context);
+    final picked = await showDotSheet<({String? key})>(
+      context: context,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const ActionSheetHeader(
+            icon: LucideIcons300.gitMerge,
+            title: AppText.chapterSources,
+            subtitle: AppText.chapterSourcesHint,
+          ),
+          const SizedBox(height: DotSpace.s4),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                ListGroup(
+                  background: c.bg,
+                  children: [
+                    for (final key in [null, ...widget.sources])
+                      ListRow(
+                        title: key == null
+                            ? AppText.allSources
+                            : context.sourceNameOf(key),
+                        trailing: key == _shownSource
+                            ? Icon(LucideIcons300.check, color: c.ink)
+                            : null,
+                        onTap: () => Navigator.of(context).pop((key: key)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (picked != null && mounted) setState(() => _source = picked.key);
   }
 
   void _toggleSearch() => setState(() {
@@ -109,6 +168,18 @@ class _ComicChaptersState extends State<ComicChapters> {
                       style: DotlineText.data.copyWith(color: c.inkFaint),
                     ),
                     const Spacer(),
+                    if (widget.sources.length > 1) ...[
+                      RoundIconButton(
+                        icon: LucideIcons300.gitMerge,
+                        semanticLabel: AppText.chapterSources,
+                        iconSize: DotSize.iconSmall,
+                        // Filled while one source is picked.
+                        background: _shownSource == null ? null : c.ink,
+                        foreground: _shownSource == null ? null : c.onInk,
+                        onTap: _pickSource,
+                      ),
+                      const SizedBox(width: DotSpace.s2),
+                    ],
                     if (widget.onScanlators case final onTap?) ...[
                       RoundIconButton(
                         icon: LucideIcons300.users,
@@ -177,6 +248,9 @@ class _ComicChaptersState extends State<ComicChapters> {
                     ? widget.onToggleSelected(selected)
                     : widget.onOpenChapter(chapter),
                 onLongPress: () => widget.onToggleSelected(selected),
+                source: widget.sources.length > 1
+                    ? context.sourceNameOf(seriesKeyOfChapter(chapter.slug))
+                    : null,
               );
             },
           ),

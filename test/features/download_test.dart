@@ -22,6 +22,7 @@ import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.da
 import 'package:bacakomik_app/features/reader/domain/repositories/reader_repository.dart';
 import 'package:bacakomik_app/features/reader/domain/usecases/get_chapter_content.dart';
 import 'package:dio/dio.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/merge_sources.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
@@ -495,7 +496,13 @@ void main() {
         comics = FakeComicDetailRepository();
         bookmarks = FakeBookmarks();
         history = FakeHistory();
-        getDetails = GetComicDetails(comics, repo, bookmarks, history);
+        getDetails = GetComicDetails(
+          comics,
+          repo,
+          bookmarks,
+          history,
+          FetchMergedChapters(comics),
+        );
       });
 
       test('fails offline for a comic outside the library', () async {

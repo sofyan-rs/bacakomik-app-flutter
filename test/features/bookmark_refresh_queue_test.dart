@@ -99,6 +99,33 @@ void main() {
     expect(queue.refreshing.value, isFalse);
   });
 
+  test('a merged comic waits until all its sources are free', () async {
+    queue.dispose();
+    queue = BookmarkRefreshQueue(
+      refresh: source.call,
+      notifier: notifier,
+      onResult: (key, result, {required late}) => results.add((key, late)),
+      sourcesOf: (key) => key == 'x:m' ? {'x', 'y'} : {key.split(':').first},
+    );
+
+    final run = queue.add(['y:1', 'x:m', 'x:1', 'z:1']);
+    await pumpEventQueue();
+    // x:m also reads y, busy with y:1; x:1 goes first, so x:m waits on x too.
+    expect(source.started, ['y:1', 'x:1', 'z:1']);
+
+    source.finish('y:1');
+    await pumpEventQueue();
+    expect(source.started, ['y:1', 'x:1', 'z:1']);
+
+    source.finish('x:1');
+    await pumpEventQueue();
+    expect(source.started.last, 'x:m');
+
+    source.finish('z:1');
+    source.finish('x:m');
+    await run;
+  });
+
   test('Stop abandons running comics and cancels their tokens', () async {
     final run = queue.add(['x:1', 'y:1', 'x:2']);
     await pumpEventQueue();

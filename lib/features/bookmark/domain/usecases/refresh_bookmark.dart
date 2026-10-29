@@ -4,6 +4,7 @@ import 'package:bacakomik_app/core/usecase/usecase.dart';
 import 'package:bacakomik_app/core/utils/clock.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:bacakomik_app/features/bookmark/domain/usecases/merge_sources.dart';
 import 'package:bacakomik_app/features/comic_detail/domain/repositories/comic_detail_repository.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/apply_pending_reads.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
@@ -35,6 +36,10 @@ class RefreshCancelToken {
 /// left for it is applied. The save goes through
 /// [BookmarkRepository.updateBookmark], so a bookmark removed while the
 /// requests ran stays removed.
+///
+/// A merged bookmark checks every source ([FetchMergedChapters]), takes
+/// its details from the first, and its read chapters follow the merged
+/// list ([AlignMergedHistory]).
 @injectable
 class RefreshBookmark implements UseCase<RefreshResult, String> {
   const RefreshBookmark(
@@ -42,12 +47,16 @@ class RefreshBookmark implements UseCase<RefreshResult, String> {
     this._comicDetails,
     this._applyPendingReads,
     this._clock,
+    this._mergedChapters,
+    this._alignHistory,
   );
 
   final BookmarkRepository _bookmarks;
   final ComicDetailRepository _comicDetails;
   final ApplyPendingReads _applyPendingReads;
   final Clock _clock;
+  final FetchMergedChapters _mergedChapters;
+  final AlignMergedHistory _alignHistory;
 
   static const _unchanged = (saved: null, historyChanged: false, failure: null);
 
@@ -63,7 +72,11 @@ class RefreshBookmark implements UseCase<RefreshResult, String> {
     final bookmark = stored.getOrElse((_) => null);
     if (bookmark == null || cancelled()) return right(_unchanged);
 
-    final chapters = await _comicDetails.getChapters(key);
+    final keys = bookmark.sourceKeys;
+    final merged = bookmark.isMerged;
+    final chapters = merged
+        ? await _mergedChapters(keys, bookmark.comicDetails.chapters)
+        : await _comicDetails.getChapters(key);
     if (chapters case Left(value: final failure)) {
       return right((saved: null, historyChanged: false, failure: failure));
     }
@@ -74,7 +87,7 @@ class RefreshBookmark implements UseCase<RefreshResult, String> {
 
     final ComicDetails details;
     if (grew || imported) {
-      final loaded = await _comicDetails.getSeries(key, fresh);
+      final loaded = await _comicDetails.getSeries(keys.first, fresh);
       if (loaded case Left(value: final failure)) {
         return right((saved: null, historyChanged: false, failure: failure));
       }
@@ -90,7 +103,12 @@ class RefreshBookmark implements UseCase<RefreshResult, String> {
       details: details,
     ), imported: imported);
     if (applied case Left(value: final failure)) return left(failure);
-    final historyChanged = applied.getOrElse((_) => false);
+    var historyChanged = applied.getOrElse((_) => false);
+    if (merged && !cancelled()) {
+      final aligned = await _alignHistory((key: key, chapters: fresh));
+      if (aligned case Left(value: final failure)) return left(failure);
+      historyChanged |= aligned.getOrElse((_) => false);
+    }
     if ((!grew && !imported) || cancelled()) {
       return right((
         saved: null,

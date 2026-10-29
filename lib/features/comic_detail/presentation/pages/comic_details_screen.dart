@@ -11,7 +11,9 @@ import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/deep_links.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/bloc/comic_details_bloc.dart';
+import 'package:bacakomik_app/features/comic_detail/presentation/widgets/merged_sources_sheet.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_app_bar.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_chapters.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_cover.dart';
@@ -233,6 +235,30 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     );
   }
 
+  /// Edits the sources the bookmark reads from: series added are merged
+  /// in, then the order and removals saved, and the comic loaded again.
+  Future<void> _editSources(Bookmark bookmark, String title) async {
+    final edit = await showMergedSourcesSheet(
+      context,
+      slug: widget.slug,
+      keys: bookmark.sourceKeys,
+      title: title,
+    );
+    if (edit == null || !mounted) return;
+    final bookmarks = context.read<BookmarkCubit>();
+    final history = context.read<HistoryCubit>();
+    for (final key in edit.added) {
+      await bookmarks.merge(into: widget.slug, add: key);
+    }
+    await bookmarks.setMergedSources(widget.slug, edit.keys);
+    if (!mounted) return;
+    await history.load();
+    if (edit.added.isNotEmpty && mounted) {
+      showSnackBar(context: context, message: AppText.merged);
+    }
+    await _load();
+  }
+
   /// Explore filtered by [genre] alone, in this comic's source, on top of
   /// the tabs.
   void _exploreGenre(Genre genre) {
@@ -315,6 +341,11 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
       listener: _onLoaded,
       builder: (context, state) {
         final details = state is ComicDetailsLoaded ? state.comicDetails : null;
+        final bookmark = context
+            .watch<BookmarkCubit>()
+            .state
+            .where((b) => b.slug == widget.slug)
+            .firstOrNull;
         // Bookmarking or downloading waits for the chapter list.
         final ready = state is ComicDetailsLoaded && !state.chaptersLoading;
         return PopScope(
@@ -347,9 +378,18 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                         // Hidden until the source is installed.
                         actions: [
                           if (!_sourceMissing) ...[
-                            if (context.watch<BookmarkCubit>().isBookmark(
-                              widget.slug,
-                            ))
+                            if (bookmark != null)
+                              RoundIconButton(
+                                icon: LucideIcons300.gitMerge,
+                                semanticLabel: AppText.mergedSources,
+                                iconSize: DotSize.iconSmall,
+                                onTap: () => _editSources(
+                                  bookmark,
+                                  details?.title ?? widget.title,
+                                ),
+                              ),
+                            // Migrating would drop the other merged sources.
+                            if (bookmark != null && !bookmark.isMerged)
                               RoundIconButton(
                                 icon: LucideIcons300.arrowRightLeft,
                                 semanticLabel: AppText.migrateSource,
@@ -399,6 +439,12 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     );
   }
 
+  Bookmark? get _bookmark => context
+      .watch<BookmarkCubit>()
+      .state
+      .where((b) => b.slug == widget.slug)
+      .firstOrNull;
+
   List<Widget> _body(ComicDetailsState state) => _sourceMissing
       ? [
           SliverToBoxAdapter(child: _loadingTitle(loading: false)),
@@ -419,7 +465,14 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                 child: ComicInfo(
                   details: comicDetails,
                   chaptersLoading: chaptersLoading,
-                  source: context.sourceLabelOf(widget.slug),
+                  // A merged comic names its first source and counts the
+                  // rest; the merge sheet lists them.
+                  source: switch (_bookmark) {
+                    final b? when b.isMerged =>
+                      '${context.sourceNameOf(b.sourceKeys.first)} '
+                          '+${b.sourceKeys.length - 1}',
+                    _ => context.sourceLabelOf(widget.slug),
+                  },
                   onGenreTap: _exploreGenre,
                   canTapGenre: (genre) =>
                       _features?.genreFilter(genre.slug, genre.name) != null,
@@ -434,6 +487,10 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
               isSelected: _isSelected,
               isSelecting: _selected.isNotEmpty,
               onScanlators: _scanlators.isEmpty ? null : _pickScanlator,
+              sources: switch (_bookmark) {
+                final b? when b.isMerged => b.sourceKeys,
+                _ => const [],
+              },
             ),
           ],
           ComicDetailsNoInternet() => [

@@ -9,11 +9,12 @@ import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-enum DuplicateChoice { migrate, add, open }
+enum DuplicateChoice { migrate, merge, add, open }
 
 /// Asked when bookmarking a series already bookmarked from another source:
-/// move the bookmark and read history here, keep both as separate entries,
-/// or open the bookmarked one. Null when cancelled.
+/// move the bookmark and read history here, merge this source into it,
+/// keep both as separate entries, or open the bookmarked one. Null when
+/// cancelled.
 Future<DuplicateChoice?> showDuplicateSheet(
   BuildContext context,
   Bookmark existing,
@@ -43,6 +44,12 @@ Future<DuplicateChoice?> showDuplicateSheet(
             label: AppText.migrate,
             leading: LucideIcons300.arrowRightLeft,
             onTap: () => Navigator.of(context).pop(DuplicateChoice.migrate),
+          ),
+          const SizedBox(height: DotSpace.s3),
+          DotButton.outline(
+            label: AppText.mergeSources,
+            leading: LucideIcons300.gitMerge,
+            onTap: () => Navigator.of(context).pop(DuplicateChoice.merge),
           ),
           const SizedBox(height: DotSpace.s3),
           DotButton.outline(

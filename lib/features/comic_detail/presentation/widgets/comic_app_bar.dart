@@ -243,7 +243,11 @@ class ComicAppBar extends StatelessWidget {
       showSnackBar(context: context, message: AppText.removedFromBookmark);
       return;
     }
-    final existing = cubit.sameSeriesAs(comicSlug, comicDetails.title);
+    // A source already merged into a bookmark counts as that bookmark.
+    final existing = [
+      ?cubit.mergedInto(comicSlug),
+      ...cubit.sameSeriesAs(comicSlug, comicDetails.title),
+    ];
     if (existing.isEmpty) return _add(context);
     final choice = await showDuplicateSheet(context, existing.first);
     if (!context.mounted || choice == null) return;
@@ -257,6 +261,26 @@ class ComicAppBar extends StatelessWidget {
         if (!context.mounted) return;
         context.read<HistoryCubit>().load();
         showSnackBar(context: context, message: AppText.migrated);
+      case DuplicateChoice.merge:
+        final into = existing.first;
+        await cubit.merge(
+          into: into.slug,
+          add: comicSlug,
+          details: comicDetails,
+        );
+        if (!context.mounted) return;
+        context.read<HistoryCubit>().load();
+        showSnackBar(context: context, message: AppText.merged);
+        // This page becomes the merged entry's.
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => ComicDetailsScreen(
+              slug: into.slug,
+              title: into.comicDetails.title,
+              cover: into.comicDetails.coverImg,
+            ),
+          ),
+        );
       case DuplicateChoice.add:
         await _add(context);
       case DuplicateChoice.open:

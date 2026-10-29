@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bacakomik_app/core/storage/hive_boxes.dart';
 import 'package:bacakomik_app/core/storage/json_box.dart';
 import 'package:bacakomik_app/features/history/data/models/read_history_model.dart';
@@ -8,9 +10,11 @@ import 'package:injectable/injectable.dart';
 /// Read chapters in one box, the details of their comics in another (one
 /// record per comic).
 ///
-/// Entries are keyed by chapter slug, `<comicSlug>/<number>` (see
-/// `ApiFormat.chapterSlug`), so a comic's entries are found by key without
-/// decoding them.
+/// Entries are keyed by chapter slug, `<seriesKey>/<number>` (see
+/// `ApiFormat.chapterSlug`). The comic an entry belongs to is usually that
+/// series, but a merged bookmark keeps chapters of other series under its
+/// own key, so the comic is read from the stored JSON, without decoding the
+/// rest of the entry.
 abstract interface class HistoryLocalDataSource {
   List<ReadHistoryModel> getEntries();
 
@@ -19,10 +23,10 @@ abstract interface class HistoryLocalDataSource {
   /// Every entry key (chapter slug), without decoding.
   List<String> entryKeys();
 
-  /// Keys of the entries of [comicSlugs], by key.
+  /// Keys of the entries of [comicSlugs].
   List<String> entryKeysOf(Set<String> comicSlugs);
 
-  /// Those of [comicSlugs] that still have an entry, by key.
+  /// Those of [comicSlugs] that still have an entry.
   Set<String> comicsWithEntries(Set<String> comicSlugs);
 
   Map<String, HistoryComicModel> getComics();
@@ -71,10 +75,20 @@ class HistoryLocalDataSourceImpl implements HistoryLocalDataSource {
   final JsonBox<ReadHistoryModel> _entries;
   final JsonBox<HistoryComicModel> _comics;
 
-  /// The comic part of a chapter slug; null without a `/`.
-  static String? _comicOf(String chapterSlug) {
-    final i = chapterSlug.lastIndexOf('/');
-    return i > 0 ? chapterSlug.substring(0, i) : null;
+  static final _comicSlugField = RegExp(r'"comicSlug":("(?:[^"\\]|\\.)*")');
+
+  /// The `comicSlug` of the entry stored under [key], read from its JSON;
+  /// null when absent or unreadable.
+  String? _comicOf(String key) {
+    final raw = _entries.raw(key);
+    if (raw == null) return null;
+    final match = _comicSlugField.firstMatch(raw);
+    if (match == null) return null;
+    final value = match.group(1)!;
+    // Escapes are rare in keys; only then is the string decoded.
+    return value.contains('\\')
+        ? jsonDecode(value) as String
+        : value.substring(1, value.length - 1);
   }
 
   @override
