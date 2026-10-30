@@ -787,6 +787,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   void _showChapterList(String currentSlug) {
     final chapters = widget.comicDetails.chapters;
     final current = chapters.indexWhere((c) => c.slug == currentSlug);
+    final history = _history.index;
     showDotSheet<void>(
       context: context,
       builder: (sheetContext) {
@@ -813,19 +814,50 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                       itemBuilder: (_, index) {
                         final chapter = chapters[index];
                         final isCurrent = index == current;
+                        final read = history.chapter(chapter.slug);
+                        final finished = read?.isFinished ?? false;
                         return ListRow(
                           title: AppText.chapterName(
                             chapter.number,
                             chapter.title,
                           ),
-                          value: chapter.date,
+                          // As in the comic's chapter list: a finished
+                          // chapter is faint with a check, a started one
+                          // shows its page.
+                          muted: finished && !isCurrent,
                           trailing: isCurrent
                               ? Icon(
                                   LucideIcons300.bookOpen,
                                   size: DotSize.iconSmall,
                                   color: c.ink,
                                 )
-                              : null,
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (finished) ...[
+                                      Icon(
+                                        LucideIcons300.check,
+                                        size: 18,
+                                        color: c.inkFaint,
+                                      ),
+                                      const SizedBox(width: DotSpace.s3),
+                                    ] else if (read?.page case final page?) ...[
+                                      Text(
+                                        '${page + 1} / ${read?.pageCount}',
+                                        style: DotlineText.data.copyWith(
+                                          color: c.ink,
+                                        ),
+                                      ),
+                                      const SizedBox(width: DotSpace.s3),
+                                    ],
+                                    Text(
+                                      chapter.date,
+                                      style: DotlineText.data.copyWith(
+                                        color: c.inkFaint,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                           onTap: () {
                             Navigator.of(sheetContext).pop();
                             if (!isCurrent) _openChapter(chapter.slug);

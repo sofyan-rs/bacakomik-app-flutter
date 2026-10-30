@@ -95,6 +95,7 @@ class ListRow extends StatefulWidget {
     this.trailing,
     this.onTap,
     this.destructive = false,
+    this.muted = false,
     this.showChevron,
   });
 
@@ -118,6 +119,9 @@ class ListRow extends StatefulWidget {
   /// Icon and title in `accentText`.
   final bool destructive;
 
+  /// Title in `inkFaint`, e.g. a chapter already read.
+  final bool muted;
+
   /// Defaults to true when the row is tappable and has no value/trailing.
   final bool? showChevron;
 
@@ -131,7 +135,11 @@ class _ListRowState extends State<ListRow> {
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
-    final titleColor = widget.destructive ? c.accentText : c.ink;
+    final titleColor = widget.destructive
+        ? c.accentText
+        : widget.muted
+        ? c.inkFaint
+        : c.ink;
     final chevron =
         widget.showChevron ??
         (widget.onTap != null &&
