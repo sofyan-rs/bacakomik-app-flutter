@@ -1,2 +1,7 @@
 #include "../../Flutter/Flutter-Debug.xcconfig"
 #include "Warnings.xcconfig"
+
+// Debug builds (flutter run, integration tests) get their own bundle id, so
+// their data folder (~/Library/Application Support/<bundle id>) is never the
+// installed app's.
+BUNDLE_ID_SUFFIX = .debug

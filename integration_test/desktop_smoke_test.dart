@@ -13,6 +13,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+
+import 'data_isolation.dart';
+
 import 'package:path_provider/path_provider.dart';
 
 /// Walks home → comic → reader on a real build, against live sources, and
@@ -22,6 +25,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('home, comic and reader load', (tester) async {
+    await expectIsolatedData();
     app.main();
     await _waitFor(tester, find.byType(ComicSliderCard));
     await _shot(tester, 'home');

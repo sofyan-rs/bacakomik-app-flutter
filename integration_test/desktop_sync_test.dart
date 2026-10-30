@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
+import 'data_isolation.dart';
+
 /// Signs in to Google in the browser and syncs once. Needs a person to
 /// finish the browser sign-in, and the desktop client:
 /// `flutter test integration_test/desktop_sync_test.dart -d macos
@@ -13,6 +15,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('signs in and syncs', (tester) async {
+    await expectIsolatedData();
     app.main();
     await _until(tester, () => find.byType(RootScreen).evaluate().isNotEmpty);
     final sync = tester.element(find.byType(RootScreen)).read<SyncCubit>();

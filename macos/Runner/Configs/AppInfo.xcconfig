@@ -8,7 +8,7 @@
 PRODUCT_NAME = BacaKomik
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = org.kurodev.bacakomik
+PRODUCT_BUNDLE_IDENTIFIER = org.kurodev.bacakomik$(BUNDLE_ID_SUFFIX)
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 org.kurodev. All rights reserved.
