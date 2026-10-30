@@ -70,6 +70,10 @@ dev_dependencies:
 # Linux has no in-app web view: the real implementation needs WPE WebKit,
 # which most distributions do not ship (see third_party/).
 dependency_overrides:
+  # macOS: messages from extension scripts reached the wrong engine and
+  # crashed once it was disposed (third_party/flutter_js/BACAKOMIK_PATCH.md).
+  flutter_js:
+    path: third_party/flutter_js
   flutter_inappwebview_linux:
     path: third_party/flutter_inappwebview_linux_stub
 
