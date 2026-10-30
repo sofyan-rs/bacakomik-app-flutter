@@ -186,8 +186,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
             libstdc++-12-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-            libsecret-1-dev libwayland-dev libepoxy-dev libwpe-1.0-dev libwpebackend-fdo-1.0-dev
-          sudo apt-get install -y libwpewebkit-1.1-dev || sudo apt-get install -y libwpewebkit-2.0-dev
+            libsecret-1-dev libwayland-dev libepoxy-dev
+          # WPE package names differ between releases: the first WPE WebKit
+          # found, and the backend packages that exist.
+          apt-cache search --names-only wpe
+          installed=
+          for p in libwpewebkit-1.1-dev libwpewebkit-2.0-dev libwpewebkit-1.0-dev; do
+            if apt-cache show "$p" >/dev/null 2>&1; then
+              sudo apt-get install -y "$p" && installed=$p && break
+            fi
+          done
+          [ -n "$installed" ] || { echo "::error::No WPE WebKit dev package"; exit 1; }
+          for p in libwpe-1.0-dev libwpebackend-fdo-1.0-dev; do
+            if apt-cache show "$p" >/dev/null 2>&1; then sudo apt-get install -y "$p"; fi
+          done
 
       - uses: subosito/flutter-action@v2
         with:
