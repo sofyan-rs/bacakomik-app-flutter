@@ -110,7 +110,11 @@ jobs:
         env:
           GOOGLE_DESKTOP_CLIENT_ID: ${{ secrets.GOOGLE_DESKTOP_CLIENT_ID }}
           GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+        # CocoaPods instead of Swift Package Manager: the Podfile raises every
+        # plugin to macOS 12, and flutter_inappwebview_macos at its declared
+        # 10.14 fails newer Xcode's availability checks.
         run: |
+          flutter config --no-enable-swift-package-manager
           flutter pub get
           flutter build macos --release \
             --dart-define=GOOGLE_DESKTOP_CLIENT_ID="$GOOGLE_DESKTOP_CLIENT_ID" \
@@ -161,6 +165,9 @@ jobs:
           cp /c/Windows/System32/{msvcp140,vcruntime140,vcruntime140_1}.dll build/windows/x64/runner/Release/
 
       - name: Build installer
+        env:
+          # Keeps Git Bash from turning /DAppVersion=… into a path.
+          MSYS_NO_PATHCONV: '1'
         run: |
           ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
           [ -f "$ISCC" ] || choco install innosetup -y --no-progress

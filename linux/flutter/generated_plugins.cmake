@@ -5,7 +5,6 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links_linux
   audioplayers_linux
-  flutter_inappwebview_linux
   flutter_js
   url_launcher_linux
 )
