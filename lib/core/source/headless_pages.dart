@@ -6,6 +6,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
+/// Whether this platform has a WebView. Linux does not: its implementation
+/// needs WPE WebKit, which most distributions do not ship (see
+/// `third_party/flutter_inappwebview_linux_stub`).
+final bool webViewAvailable = kIsWeb || !io.Platform.isLinux;
+
 /// Hidden WebViews that run extension scripts inside a site, for sites that
 /// only answer a real browser (strict Cloudflare rules, tokens their own
 /// JavaScript makes). One page per extension, kept [keepAlive] after its
@@ -63,6 +68,11 @@ class HeadlessPages {
   /// [script] as the body of an async function in it and returns its
   /// result. Runs of one extension go one at a time.
   Future<Object?> run(String extensionId, String url, String script) {
+    if (!webViewAvailable) {
+      return Future.error(
+        ServerException('This source needs a WebView, which Linux lacks'),
+      );
+    }
     Future<Object?> next(_) => _run(extensionId, Uri.parse(url), script);
     final previous = _queues[extensionId] ?? Future<Object?>.value();
     return _queues[extensionId] = previous.then(next, onError: next);

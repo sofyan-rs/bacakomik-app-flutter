@@ -6,6 +6,7 @@ import 'package:bacakomik_app/core/di/injection.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
 import 'package:bacakomik_app/core/source/extension_bridge.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
+import 'package:bacakomik_app/core/source/headless_pages.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:flutter/foundation.dart';
@@ -24,15 +25,22 @@ class WebViewScreen extends StatefulWidget {
   final String sourceId;
   final String url;
 
+  /// Where there is no WebView (Linux), opens [url] in the browser.
   static Future<void> open(
     BuildContext context, {
     required String sourceId,
     required String url,
-  }) => Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => WebViewScreen(sourceId: sourceId, url: url),
-    ),
-  );
+  }) async {
+    if (!webViewAvailable) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => WebViewScreen(sourceId: sourceId, url: url),
+      ),
+    );
+  }
 
   /// Opens the page of the series [key] on its site, or of its [chapter].
   static Future<void> openSeries(

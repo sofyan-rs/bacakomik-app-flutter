@@ -67,6 +67,12 @@ dev_dependencies:
   json_serializable: ^6.14.1
   mocktail: ^1.0.5
 
+# Linux has no in-app web view: the real implementation needs WPE WebKit,
+# which most distributions do not ship (see third_party/).
+dependency_overrides:
+  flutter_inappwebview_linux:
+    path: third_party/flutter_inappwebview_linux_stub
+
 flutter_gen:
   output: lib/core/assets/
   integrations:

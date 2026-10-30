@@ -1,0 +1,23 @@
+name: flutter_inappwebview_linux
+description: >-
+  Empty stand-in for flutter_inappwebview's Linux implementation, which
+  links WPE WebKit; Ubuntu 24.04 and most distributions do not ship it, so
+  the app would not start there. The Linux app opens pages in the browser
+  instead (see pubspec.yaml dependency_overrides).
+version: 0.1.0-beta.1
+publish_to: none
+
+environment:
+  sdk: ^3.0.0
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    implements: flutter_inappwebview
+    platforms:
+      linux:
+        dartPluginClass: InAppWebViewLinuxStub
