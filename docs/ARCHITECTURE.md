@@ -164,7 +164,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 **Dotline** is a monochrome, dark-first design system: pure black (light: `#F2F2F2`), flat surfaces, hairlines, pills, dots.
 
 - **Red is a signal, not a colour.** `accent` at most once or twice per screen (NEW dot, `+N` badge, delete). Selected chips and switches use `ink`.
-- **Doto only for screen titles** and the app name, never under 24 px. Numbers use `DotlineText.stat` / `statS`; labels use uppercase Geist Mono.
+- **Doto only for screen titles** and the app name, never under 22 px. Numbers use `DotlineText.stat` / `statS`; labels use uppercase Geist Mono.
 - **No gradients or glass**, except the bottom fade behind the nav. Depth is `bg` → `surface` → `surfaceRaised`; `shadowFloat` only for menus and the reader's chapter pill.
 - **Comic types are labels, not colours** (same black pill for all).
 - **Motion:** 140 ms presses (scale 0.97, no ripple), ~320 ms sliding indicators; respect `MediaQuery.disableAnimationsOf`.
