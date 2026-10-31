@@ -389,6 +389,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           // down; they stay while comics are selected or a search is typed.
           child: ScrollAwayHeader(
             keepShown: _selected.isNotEmpty || _queryFocus.hasFocus,
+            showOn: _group,
             header: Column(
               children: [
                 if (_selected.isEmpty)

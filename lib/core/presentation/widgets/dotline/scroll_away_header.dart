@@ -12,11 +12,16 @@ class ScrollAwayHeader extends StatefulWidget {
     required this.header,
     required this.body,
     this.keepShown = false,
+    this.showOn,
   });
 
   final Widget header;
   final Widget body;
   final bool keepShown;
+
+  /// What the body shows, e.g. the open tab: when it changes the body is
+  /// new, without a scroll to bring the header back, so it comes back now.
+  final Object? showOn;
 
   /// How far the body scrolls before the header may hide.
   static const hideAfter = 120.0;
@@ -47,7 +52,7 @@ class _ScrollAwayHeaderState extends State<ScrollAwayHeader> {
   void didUpdateWidget(ScrollAwayHeader oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Held in place: it stays shown after, until the next scroll down.
-    if (widget.keepShown) _shown = true;
+    if (widget.keepShown || widget.showOn != oldWidget.showOn) _shown = true;
   }
 
   @override
