@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:bacakomik_app/core/constants/texts.dart';
@@ -56,5 +57,58 @@ void main() {
     verify(() => cache.removeFile(url)).called(1);
     expect(find.text(AppText.pageNotLoaded), findsOneWidget);
     expect(tester.getSize(find.byType(ChapterImg)).height, failedHeight);
+  });
+
+  group('page height', () {
+    Widget page(String image, {bool isFile = false, bool load = true}) =>
+        MaterialApp(
+          theme: DotlineThemes.dark,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: SizedBox(
+                width: 400,
+                child: ChapterImg(
+                  chapterImage: image,
+                  page: 1,
+                  isFile: isFile,
+                  load: load,
+                ),
+              ),
+            ),
+          ),
+        );
+
+    testWidgets('a page seen before keeps its height while it loads', (
+      tester,
+    ) async {
+      await tester.pumpWidget(page('https://example.com/new.jpg', load: false));
+      expect(tester.getSize(find.byType(ChapterImg)).height, 480);
+
+      rememberPageAspect('https://example.com/seen.jpg', const Size(10, 30));
+      await tester.pumpWidget(
+        page('https://example.com/seen.jpg', load: false),
+      );
+      expect(tester.getSize(find.byType(ChapterImg)).height, 1200);
+    });
+
+    testWidgets('the height is learnt from the image shown', (tester) async {
+      // 1 x 2 pixels.
+      final file = File('${Directory.systemTemp.createTempSync().path}/p.png')
+        ..writeAsBytesSync(
+          base64Decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAIAAAAW4yFwAAAADklEQVR4nGP4z8DA'
+            'AMQACf4B/4PiLjgAAAAASUVORK5CYII=',
+          ),
+        );
+      await tester.runAsync(() async {
+        await tester.pumpWidget(page(file.path, isFile: true));
+        for (var i = 0; i < 20 && pageAspectOf(file.path) == null; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+        }
+      });
+      expect(pageAspectOf(file.path), 2);
+      expect(tester.getSize(find.byType(ChapterImg)).height, 800);
+    });
   });
 }
