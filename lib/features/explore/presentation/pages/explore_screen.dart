@@ -325,7 +325,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   RoundIconButton(
-                    icon: LucideIcons300.slidersHorizontal,
+                    icon: LucideIcons300.funnel,
                     semanticLabel: AppText.filter,
                     outlined: true,
                     onTap: () => showFilterSheet(context, onApply: _load),
