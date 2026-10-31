@@ -40,7 +40,7 @@ void main() {
     );
     await _shot(tester, 'home');
 
-    // Explore: the header and filters stay while the results scroll, and
+    // Explore: the header and filters hide while the results scroll down, and
     // the search field shows from its button or from Home's search.
     final tabs = RootTabsScope.read(tester.element(find.byType(RootScreen)));
     tabs.select(RootTabs.explore);
@@ -53,16 +53,17 @@ void main() {
     );
     final search = _button(AppText.exploreSearchHint);
     expect(find.byType(SearchField), findsNothing);
-    final headerTop = tester.getTopLeft(search).dy;
-    await tester.drag(
-      find.descendant(
-        of: find.byType(ExploreScreen),
-        matching: find.byType(CustomScrollView),
-      ),
-      const Offset(0, -500),
+    // Scrolling down hides the header, scrolling up brings it back.
+    final results = find.descendant(
+      of: find.byType(ExploreScreen),
+      matching: find.byType(CustomScrollView),
     );
+    await tester.drag(results, const Offset(0, -500));
     await _settle(tester, const Duration(seconds: 1));
-    expect(tester.getTopLeft(search).dy, headerTop);
+    expect(search.hitTestable(), findsNothing);
+    await tester.drag(results, const Offset(0, 100));
+    await _settle(tester, const Duration(seconds: 1));
+    expect(search.hitTestable(), findsOneWidget);
     await _shot(tester, 'explore');
     await tester.tap(search);
     await _settle(tester, const Duration(seconds: 1));

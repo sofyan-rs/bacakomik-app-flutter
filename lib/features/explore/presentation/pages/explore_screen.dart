@@ -55,6 +55,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
   /// search already set.
   var _searching = false;
 
+  /// The header slides away while the results scroll down and comes back as
+  /// soon as they scroll up ([_onScroll]).
+  var _headerShown = true;
+
+  /// How far the results scroll before the header may hide.
+  static const _hideAfter = 120.0;
+
   @override
   void initState() {
     super.initState();
@@ -111,7 +118,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   /// Shows the search field and focuses it.
   void _focusSearch() {
-    if (!_searching) setState(() => _searching = true);
+    if (!_searching || !_headerShown) {
+      setState(() {
+        _searching = true;
+        _headerShown = true;
+      });
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _queryFocus.requestFocus();
     });
@@ -125,6 +137,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
       _query.clear();
       _search('');
     }
+  }
+
+  bool _onScroll(ScrollUpdateNotification n) {
+    if (n.depth != 0) return false;
+    final delta = n.scrollDelta ?? 0;
+    final shown =
+        n.metrics.pixels <= 0 ||
+        _queryFocus.hasFocus ||
+        switch (delta) {
+          < -2 => true,
+          > 2 when n.metrics.pixels > _hideAfter => false,
+          _ => _headerShown,
+        };
+    if (shown != _headerShown) setState(() => _headerShown = shown);
+    return false;
   }
 
   void _onQueryChanged(String text) {
@@ -181,24 +208,38 @@ class _ExploreScreenState extends State<ExploreScreen> {
             builder: (context, state) {
               return Column(
                 children: [
-                  // The header, search and filters stay put; only the
-                  // results scroll.
-                  _header(state),
-                  _controls(filter),
+                  // The header, search and filters stay above the results;
+                  // they slide away while the results scroll down.
+                  ClipRect(
+                    child: AnimatedAlign(
+                      alignment: Alignment.bottomCenter,
+                      heightFactor: _headerShown ? 1 : 0,
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : DotMotion.slide,
+                      curve: DotMotion.slideCurve,
+                      child: Column(
+                        children: [_header(state), _controls(filter)],
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: RefreshIndicator(
                       color: Dotline.of(context).ink,
                       backgroundColor: Dotline.of(context).surface,
                       onRefresh: _load,
-                      child: CustomScrollView(
-                        controller: _scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          ..._results(state),
-                          SliverPadding(
-                            padding: EdgeInsets.only(bottom: bottomInset),
-                          ),
-                        ],
+                      child: NotificationListener<ScrollUpdateNotification>(
+                        onNotification: _onScroll,
+                        child: CustomScrollView(
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
+                            ..._results(state),
+                            SliverPadding(
+                              padding: EdgeInsets.only(bottom: bottomInset),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -248,48 +289,49 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   /// The source's quick filter group: segments when it has few options,
-  /// else a row of chips.
-  List<Widget> _quickPicker(ExploreFilter filter) {
+  /// else a row of chips. Null when it has none.
+  Widget? _quickPicker(ExploreFilter filter) {
     final features = context.watch<SourcesCubit>().state.features;
     final group = features.quick;
     if (group == null || group.multi || group.options.length < 2) {
-      return const [];
+      return null;
     }
     final selected = features.valueOf(filter.values, group.key).firstOrNull;
-    return [
-      if (group.options.length <= 4)
-        SegmentedControl<String>(
-          selected: selected ?? '',
-          onChanged: (value) => _setQuick(group, value),
-          segments: [
-            for (final o in group.options)
-              Segment(value: o.value, label: o.label),
+    if (group.options.length <= 4) {
+      return SegmentedControl<String>(
+        selected: selected ?? '',
+        onChanged: (value) => _setQuick(group, value),
+        segments: [
+          for (final o in group.options)
+            Segment(value: o.value, label: o.label),
+        ],
+      );
+    }
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final (i, o) in group.options.indexed) ...[
+            if (i > 0) const SizedBox(width: DotSpace.s2),
+            DotChip(
+              label: o.label,
+              selected: selected == o.value,
+              onTap: () => _setQuick(group, o.value),
+            ),
           ],
-        )
-      else
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final (i, o) in group.options.indexed) ...[
-                if (i > 0) const SizedBox(width: DotSpace.s2),
-                DotChip(
-                  label: o.label,
-                  selected: selected == o.value,
-                  onTap: () => _setQuick(group, o.value),
-                ),
-              ],
-            ],
-          ),
-        ),
-      const SizedBox(height: DotSpace.s4),
-    ];
+        ],
+      ),
+    );
   }
 
+  /// Search (when shown), then the quick filters with the filter button at
+  /// their end; what the filter sets is spelt out below only when it is not
+  /// the source's default.
   Widget _controls(ExploreFilter filter) {
     final c = Dotline.of(context);
     final features = context.watch<SourcesCubit>().state.features;
     final count = activeFilterCount(filter, features);
+    final quick = _quickPicker(filter);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DotSpace.s4,
@@ -314,54 +356,38 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
             const SizedBox(height: DotSpace.s4),
           ],
-          ..._quickPicker(filter),
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  filterSummary(filter, features),
-                  style: DotlineText.label.copyWith(color: c.inkFaint),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              Expanded(child: quick ?? const SizedBox.shrink()),
               const SizedBox(width: DotSpace.s3),
-              Pressable(
-                semanticLabel: AppText.filter,
-                onTap: () => showFilterSheet(context, onApply: _load),
-                child: Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(DotRadius.pill),
-                    border: Border.all(
-                      color: c.lineStrong,
-                      width: DotSize.stroke,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  RoundIconButton(
+                    icon: LucideIcons300.slidersHorizontal,
+                    semanticLabel: AppText.filter,
+                    outlined: true,
+                    onTap: () => showFilterSheet(context, onApply: _load),
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      top: -DotSpace.s1,
+                      right: -DotSpace.s1,
+                      child: CountBadge(count: count),
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        LucideIcons300.slidersHorizontal,
-                        size: DotSize.iconSmall,
-                        color: c.ink,
-                      ),
-                      const SizedBox(width: DotSpace.s2),
-                      Text(
-                        AppText.filter.toUpperCase(),
-                        style: DotlineText.label.copyWith(color: c.ink),
-                      ),
-                      if (count > 0) ...[
-                        const SizedBox(width: DotSpace.s2),
-                        CountBadge(count: count),
-                      ],
-                    ],
-                  ),
-                ),
+                ],
               ),
             ],
           ),
+          if (count > 0) ...[
+            const SizedBox(height: DotSpace.s3),
+            Text(
+              filterSummary(filter, features),
+              style: DotlineText.label.copyWith(color: c.inkFaint),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );
