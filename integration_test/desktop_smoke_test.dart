@@ -1,6 +1,11 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:bacakomik_app/app/root_screen.dart';
+import 'package:bacakomik_app/app/root_tabs.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/comic_cover.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/search_field.dart';
+import 'package:bacakomik_app/features/explore/presentation/pages/explore_screen.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/round_icon_button.dart';
@@ -27,8 +32,54 @@ void main() {
   testWidgets('home, comic and reader load', (tester) async {
     await expectIsolatedData();
     app.main();
-    await _waitFor(tester, find.byType(ComicSliderCard));
+    // The first visit loads the bundled sources and their home page.
+    await _waitFor(
+      tester,
+      find.byType(ComicSliderCard),
+      timeout: const Duration(seconds: 90),
+    );
     await _shot(tester, 'home');
+
+    // Explore: the header and filters stay while the results scroll, and
+    // the search field shows from its button or from Home's search.
+    final tabs = RootTabsScope.read(tester.element(find.byType(RootScreen)));
+    tabs.select(RootTabs.explore);
+    await _waitFor(
+      tester,
+      find.descendant(
+        of: find.byType(ExploreScreen),
+        matching: find.byType(ComicCover),
+      ),
+    );
+    final search = _button(AppText.exploreSearchHint);
+    expect(find.byType(SearchField), findsNothing);
+    final headerTop = tester.getTopLeft(search).dy;
+    await tester.drag(
+      find.descendant(
+        of: find.byType(ExploreScreen),
+        matching: find.byType(CustomScrollView),
+      ),
+      const Offset(0, -500),
+    );
+    await _settle(tester, const Duration(seconds: 1));
+    expect(tester.getTopLeft(search).dy, headerTop);
+    await _shot(tester, 'explore');
+    await tester.tap(search);
+    await _settle(tester, const Duration(seconds: 1));
+    expect(find.byType(SearchField), findsOneWidget);
+    await _shot(tester, 'explore_search');
+    await tester.tap(search);
+    await _settle(tester, const Duration(seconds: 1));
+    expect(find.byType(SearchField), findsNothing);
+    tabs.select(RootTabs.home);
+    await _settle(tester, const Duration(seconds: 1));
+    tabs.openExploreSearch();
+    await _settle(tester, const Duration(seconds: 1));
+    expect(find.byType(SearchField), findsOneWidget);
+    // The field Home's search shows hides again, back to Home.
+    await tester.tap(search);
+    tabs.select(RootTabs.home);
+    await _settle(tester, const Duration(seconds: 1));
 
     await tester.tap(find.byType(ComicSliderCard).first);
     await _waitFor(tester, find.textContaining(' · Ch. '));
@@ -50,8 +101,20 @@ void main() {
 
     Navigator.of(tester.element(find.byType(ChapterImg).first)).pop();
     await _settle(tester, const Duration(seconds: 2));
+    // On a narrow window the chapters are below the details, not built
+    // until scrolled to.
+    for (
+      var i = 0;
+      i < 20 && find.byType(ChapterTile).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.drag(
+        find.byType(CustomScrollView).last,
+        const Offset(0, -300),
+      );
+      await _settle(tester, const Duration(milliseconds: 300));
+    }
     final tile = find.byType(ChapterTile).first;
-    await tester.ensureVisible(tile);
     await tester.longPress(tile);
     await _settle(tester, const Duration(seconds: 1));
     await tester.tap(_button(AppText.download));
