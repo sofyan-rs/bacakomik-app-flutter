@@ -40,6 +40,7 @@ class AppText {
   static const String saveImg = 'Save image';
   static const String seeCover = 'View cover';
   static const String rating = 'Rating';
+  static const String score = 'Score';
   static const String chapter = 'Chapter';
   static const String chapters = 'Chapters';
   static const String chapterLower = 'chapter';
