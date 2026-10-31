@@ -137,6 +137,14 @@ void main() {
       expect(cubit.index.isFinished('a/1'), isTrue);
     });
 
+    test('the end card is saved as the last page', () async {
+      // Opening a chapter at its end card (index 13 of 13 pages) showed
+      // "14 / 13" in the chapter list.
+      await save(13, 13, canFinish: false);
+      expect(cubit.index.chapter('a/1')?.page, 12);
+      expect(cubit.index.isFinished('a/1'), isFalse);
+    });
+
     test('markAllRead dates the highest number latest in any order', () async {
       final oldestFirst = sampleComicDetails.copyWith(
         chapters: const [

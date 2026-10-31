@@ -65,6 +65,8 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     bool quiet = false,
   }) {
     if (pageCount <= 0) return Future.value();
+    // The reader's end card is one past the last page; it reads as the last.
+    page = page.clamp(0, pageCount - 1);
     final finished =
         (canFinish && page >= pageCount - 1) ||
         (index.chapter(slug)?.isFinished ?? false);
