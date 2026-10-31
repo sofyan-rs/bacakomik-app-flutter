@@ -55,12 +55,7 @@ class LastReadComic extends StatelessWidget {
               cover: details.coverImg,
               heroTag: heroTag,
             ),
-            child: Container(
-              padding: const EdgeInsets.all(DotSpace.s4),
-              decoration: BoxDecoration(
-                color: c.surface,
-                borderRadius: BorderRadius.circular(DotRadius.l),
-              ),
+            child: _HoverPanel(
               child: Row(
                 children: [
                   SizedBox(
@@ -140,6 +135,39 @@ class LastReadComic extends StatelessWidget {
         // Part of this section: no gap above New Series without history.
         const SizedBox(height: DotSpace.s5),
       ],
+    );
+  }
+}
+
+/// The card's `surface` panel, `surfaceRaised` under a mouse. Too wide to
+/// grow like the covers do.
+class _HoverPanel extends StatefulWidget {
+  const _HoverPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_HoverPanel> createState() => _HoverPanelState();
+}
+
+class _HoverPanelState extends State<_HoverPanel> {
+  var _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: DotMotion.press,
+        padding: const EdgeInsets.all(DotSpace.s4),
+        decoration: BoxDecoration(
+          color: _hovered ? c.surfaceRaised : c.surface,
+          borderRadius: BorderRadius.circular(DotRadius.l),
+        ),
+        child: widget.child,
+      ),
     );
   }
 }

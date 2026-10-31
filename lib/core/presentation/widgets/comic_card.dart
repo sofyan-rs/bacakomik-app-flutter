@@ -43,6 +43,7 @@ class ComicCard extends StatelessWidget {
     final c = Dotline.of(context);
     return Pressable(
       semanticLabel: title,
+      hoverScale: DotMotion.hoverScale,
       onTap: () => ComicDetailsScreen.open(
         context,
         slug: slug,

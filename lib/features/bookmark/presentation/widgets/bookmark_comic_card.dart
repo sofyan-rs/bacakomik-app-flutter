@@ -40,6 +40,7 @@ class BookmarkComicCard extends StatelessWidget {
       selected: isSelected,
       child: Pressable(
         semanticLabel: details.title,
+        hoverScale: DotMotion.hoverScale,
         onTap: () => onTap(heroTag),
         onLongPress: onLongPress,
         child: Column(

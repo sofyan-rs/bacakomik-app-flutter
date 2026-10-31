@@ -73,6 +73,18 @@ ThemeData dotlineTheme(DotlineColors c, Brightness brightness) {
         borderRadius: BorderRadius.circular(DotRadius.l),
       ),
     ),
+    tooltipTheme: TooltipThemeData(
+      decoration: BoxDecoration(
+        color: c.ink,
+        borderRadius: BorderRadius.circular(DotRadius.s),
+      ),
+      textStyle: DotlineText.bodyS.copyWith(color: c.onInk),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DotSpace.s3,
+        vertical: DotSpace.s2,
+      ),
+      waitDuration: const Duration(milliseconds: 500),
+    ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: c.ink,
       contentTextStyle: DotlineText.body.copyWith(color: c.onInk),
