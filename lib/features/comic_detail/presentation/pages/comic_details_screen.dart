@@ -433,49 +433,51 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
             .firstOrNull;
         // Bookmarking or downloading waits for the chapter list.
         final ready = state is ComicDetailsLoaded && !state.chaptersLoading;
+        final split =
+            !_sourceMissing &&
+            MediaQuery.sizeOf(context).width >= DotSize.splitMinWidth;
+        final bar = details == null || !ready
+            ? null
+            : ComicAppBar(
+                comicSlug: widget.slug,
+                comicDetails: details,
+                selectedChapters: _selected.values.toList(),
+                selectAllChapter: _setSelected,
+                unselectAllChapter: () => _setSelected(const []),
+                onRead: (slug) => _read(details, slug),
+              );
         return PopScope(
           canPop: _selected.isEmpty,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _setSelected(const []);
           },
           child: Scaffold(
-            bottomNavigationBar: details == null || !ready
-                ? null
-                : ComicAppBar(
-                    comicSlug: widget.slug,
-                    comicDetails: details,
-                    selectedChapters: _selected.values.toList(),
-                    selectAllChapter: _setSelected,
-                    unselectAllChapter: () => _setSelected(const []),
-                    onRead: (slug) => _read(details, slug),
-                  ),
+            // Split: under the chapters instead, see _split.
+            bottomNavigationBar: split ? null : bar,
             body: SafeArea(
               bottom: false,
-              child: switch (state) {
-                ComicDetailsLoaded()
-                    when !_sourceMissing &&
-                        MediaQuery.sizeOf(context).width >=
-                            DotSize.splitMinWidth =>
-                  _split(state, _topBar(bookmark, details)),
-                _ => _refreshable(
-                  CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(child: _topBar(bookmark, details)),
-                      SliverToBoxAdapter(
-                        child: DetailCover(
-                          heroTag: widget.heroTag,
-                          cover: details?.coverImg ?? widget.cover,
-                        ),
+              // Split from the first frame, not once loaded, so the cover
+              // flies straight to its place on the left.
+              child: split
+                  ? _split(state, _topBar(bookmark, details), bar)
+                  : _refreshable(
+                      CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          SliverToBoxAdapter(child: _topBar(bookmark, details)),
+                          SliverToBoxAdapter(
+                            child: DetailCover(
+                              heroTag: widget.heroTag,
+                              cover: details?.coverImg ?? widget.cover,
+                            ),
+                          ),
+                          ..._body(state),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: DotSpace.s6),
+                          ),
+                        ],
                       ),
-                      ..._body(state),
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: DotSpace.s6),
-                      ),
-                    ],
-                  ),
-                ),
-              },
+                    ),
             ),
           ),
         );
@@ -491,8 +493,11 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   );
 
   /// Wide screens: details on the left, chapters on the right, each half
-  /// scrolling on its own under the top bar.
-  Widget _split(ComicDetailsLoaded state, Widget topBar) {
+  /// scrolling on its own under the top bar. While loading, the left half
+  /// shows the title and loader and the right half stays empty. [bar], the
+  /// read and selection actions, sits under the chapters.
+  Widget _split(ComicDetailsState state, Widget topBar, Widget? bar) {
+    final loaded = state is ComicDetailsLoaded ? state : null;
     const end = SliverToBoxAdapter(child: SizedBox(height: DotSpace.s6));
     return Column(
       children: [
@@ -508,26 +513,37 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                     slivers: [
                       SliverToBoxAdapter(
                         child: DetailCover(
-                          cover: state.comicDetails.coverImg,
+                          cover: loaded?.comicDetails.coverImg ?? widget.cover,
                           heroTag: widget.heroTag,
                         ),
                       ),
-                      _info(state.comicDetails, state.chaptersLoading),
+                      if (loaded != null)
+                        _info(loaded.comicDetails, loaded.chaptersLoading)
+                      else
+                        ..._body(state),
                       end,
                     ],
                   ),
                 ),
               ),
               Expanded(
-                child: CustomScrollView(
-                  primary: false,
-                  slivers: [
-                    _chapters(
-                      state.comicDetails,
-                      state.chaptersLoading,
-                      top: 0,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: CustomScrollView(
+                        primary: false,
+                        slivers: [
+                          if (loaded != null)
+                            _chapters(
+                              loaded.comicDetails,
+                              loaded.chaptersLoading,
+                              top: 0,
+                            ),
+                          end,
+                        ],
+                      ),
                     ),
-                    end,
+                    ?bar,
                   ],
                 ),
               ),
