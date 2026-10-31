@@ -25,14 +25,18 @@ class LatestChapterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final heroTag = CoverHeroTag(context, cover);
     return ListRow(
       leading: SizedBox(
         width: 44,
         height: 60,
-        child: ComicCover(
-          imageUrl: cover,
-          radius: DotRadius.s,
-          aspectRatio: null,
+        child: CoverHero(
+          tag: heroTag,
+          child: ComicCover(
+            imageUrl: cover,
+            radius: DotRadius.s,
+            aspectRatio: null,
+          ),
         ),
       ),
       title: title,
@@ -47,6 +51,7 @@ class LatestChapterCard extends StatelessWidget {
         slug: slug,
         title: title,
         cover: cover,
+        heroTag: heroTag,
       ),
     );
   }

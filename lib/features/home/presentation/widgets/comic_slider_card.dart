@@ -27,6 +27,7 @@ class ComicSliderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final heroTag = CoverHeroTag(context, cover);
     final c = Dotline.of(context);
     return SizedBox(
       width: width,
@@ -37,11 +38,19 @@ class ComicSliderCard extends StatelessWidget {
           slug: slug,
           title: title,
           cover: cover,
+          heroTag: heroTag,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ComicCover(imageUrl: cover, radius: DotRadius.m, typeLabel: type),
+            CoverHero(
+              tag: heroTag,
+              child: ComicCover(
+                imageUrl: cover,
+                radius: DotRadius.m,
+                typeLabel: type,
+              ),
+            ),
             const SizedBox(height: DotSpace.s3),
             Text(
               title,

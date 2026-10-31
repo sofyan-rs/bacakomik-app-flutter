@@ -37,6 +37,7 @@ class LastReadComic extends StatelessWidget {
         ? bookmarked
         : latest.comicDetails;
     final progress = ReadProgress.of(details, latest.chapterNumber);
+    final heroTag = CoverHeroTag(context, details.coverImg);
     final resume = ResumeChapter.of(latest, details.chapters);
 
     return Column(
@@ -52,6 +53,7 @@ class LastReadComic extends StatelessWidget {
               slug: latest.comicSlug,
               title: details.title,
               cover: details.coverImg,
+              heroTag: heroTag,
             ),
             child: Container(
               padding: const EdgeInsets.all(DotSpace.s4),
@@ -63,7 +65,10 @@ class LastReadComic extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 84,
-                    child: ComicCover(imageUrl: details.coverImg),
+                    child: CoverHero(
+                      tag: heroTag,
+                      child: ComicCover(imageUrl: details.coverImg),
+                    ),
                   ),
                   const SizedBox(width: DotSpace.s4),
                   Expanded(

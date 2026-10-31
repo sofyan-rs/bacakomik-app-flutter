@@ -42,6 +42,7 @@ class HistoryComicCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final details = item.comicDetails;
+    final heroTag = CoverHeroTag(context, details.coverImg);
     final latest = item.latestHistory;
     final progress = ReadProgress.of(details, latest.chapterNumber);
 
@@ -76,10 +77,13 @@ class HistoryComicCard extends StatelessWidget {
           leading: SizedBox(
             width: 44,
             height: 60,
-            child: ComicCover(
-              imageUrl: details.coverImg,
-              radius: DotRadius.s,
-              aspectRatio: null,
+            child: CoverHero(
+              tag: heroTag,
+              child: ComicCover(
+                imageUrl: details.coverImg,
+                radius: DotRadius.s,
+                aspectRatio: null,
+              ),
             ),
           ),
           title: details.title,
@@ -117,6 +121,7 @@ class HistoryComicCard extends StatelessWidget {
             slug: item.comicSlug,
             title: details.title,
             cover: details.coverImg,
+            heroTag: heroTag,
           ),
         ),
       ),

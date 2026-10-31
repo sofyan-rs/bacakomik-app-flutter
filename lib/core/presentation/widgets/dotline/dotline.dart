@@ -4,6 +4,7 @@ library;
 export 'badges.dart';
 export 'bottom_fade.dart';
 export 'comic_cover.dart';
+export 'cover_hero.dart';
 export 'dot_button.dart';
 export 'dot_chip.dart';
 export 'dot_loader.dart';

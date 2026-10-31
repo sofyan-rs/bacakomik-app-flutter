@@ -9,9 +9,12 @@ import 'package:bacakomik_app/core/network/image_cache.dart';
 
 /// Centered detail cover. Tap to view it large and save it to the gallery.
 class DetailCover extends StatelessWidget {
-  const DetailCover({super.key, required this.cover});
+  const DetailCover({super.key, required this.cover, this.heroTag});
 
   final String? cover;
+
+  /// The card's cover flying in, see [CoverHero].
+  final CoverHeroTag? heroTag;
 
   static const width = 168.0;
 
@@ -57,7 +60,14 @@ class DetailCover extends StatelessWidget {
         child: Pressable(
           semanticLabel: AppText.seeCover,
           onTap: url.isEmpty ? null : () => _showLarge(context, url),
-          child: ComicCover(imageUrl: url, radius: DotRadius.m),
+          child: switch (heroTag) {
+            final tag? => Hero(
+              tag: tag,
+              flightShuttleBuilder: CoverHero.shuttle,
+              child: ComicCover(imageUrl: url, radius: DotRadius.m),
+            ),
+            null => ComicCover(imageUrl: url, radius: DotRadius.m),
+          },
         ),
       ),
     );

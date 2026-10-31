@@ -467,13 +467,14 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                             item: item,
                             isSelected: _selected.contains(slug),
                             onLongPress: () => _toggleSelected(slug),
-                            onTap: _selected.isNotEmpty
-                                ? () => _toggleSelected(slug)
-                                : () => ComicDetailsScreen.open(
+                            onTap: (heroTag) => _selected.isNotEmpty
+                                ? _toggleSelected(slug)
+                                : ComicDetailsScreen.open(
                                     context,
                                     slug: slug,
                                     title: item.bookmark.comicDetails.title,
                                     cover: item.bookmark.comicDetails.coverImg,
+                                    heroTag: heroTag,
                                   ),
                           );
                         },

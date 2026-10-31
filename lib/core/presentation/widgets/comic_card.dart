@@ -39,6 +39,7 @@ class ComicCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final heroTag = CoverHeroTag(context, cover);
     final c = Dotline.of(context);
     return Pressable(
       semanticLabel: title,
@@ -47,11 +48,15 @@ class ComicCard extends StatelessWidget {
         slug: slug,
         title: title,
         cover: cover,
+        heroTag: heroTag,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ComicCover(imageUrl: cover, typeLabel: type),
+          CoverHero(
+            tag: heroTag,
+            child: ComicCover(imageUrl: cover, typeLabel: type),
+          ),
           const SizedBox(height: DotSpace.s2),
           Text(
             title,

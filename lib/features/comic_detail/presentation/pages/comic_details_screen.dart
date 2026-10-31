@@ -44,22 +44,31 @@ class ComicDetailsScreen extends StatelessWidget {
     required this.title,
     required this.slug,
     this.cover,
+    this.heroTag,
   });
 
   final String title;
   final String slug;
   final String? cover;
 
+  /// The tapped card's cover flies into this screen's ([CoverHero]).
+  final CoverHeroTag? heroTag;
+
   static Future<void> open(
     BuildContext context, {
     required String slug,
     required String title,
     String? cover,
+    CoverHeroTag? heroTag,
   }) {
     return Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            ComicDetailsScreen(slug: slug, title: title, cover: cover),
+        builder: (_) => ComicDetailsScreen(
+          slug: slug,
+          title: title,
+          cover: cover,
+          heroTag: heroTag,
+        ),
       ),
     );
   }
@@ -68,7 +77,12 @@ class ComicDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<ComicDetailsBloc>(),
-      child: _ComicDetailsView(title: title, slug: slug, cover: cover),
+      child: _ComicDetailsView(
+        title: title,
+        slug: slug,
+        cover: cover,
+        heroTag: heroTag,
+      ),
     );
   }
 }
@@ -78,11 +92,15 @@ class _ComicDetailsView extends StatefulWidget {
     required this.title,
     required this.slug,
     this.cover,
+    this.heroTag,
   });
 
   final String title;
   final String slug;
   final String? cover;
+
+  /// The tapped card's cover flies into this screen's ([CoverHero]).
+  final CoverHeroTag? heroTag;
 
   @override
   State<_ComicDetailsView> createState() => _ComicDetailsViewState();
@@ -446,6 +464,7 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                       SliverToBoxAdapter(child: _topBar(bookmark, details)),
                       SliverToBoxAdapter(
                         child: DetailCover(
+                          heroTag: widget.heroTag,
                           cover: details?.coverImg ?? widget.cover,
                         ),
                       ),
@@ -488,7 +507,10 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       SliverToBoxAdapter(
-                        child: DetailCover(cover: state.comicDetails.coverImg),
+                        child: DetailCover(
+                          cover: state.comicDetails.coverImg,
+                          heroTag: widget.heroTag,
+                        ),
                       ),
                       _info(state.comicDetails, state.chaptersLoading),
                       end,
