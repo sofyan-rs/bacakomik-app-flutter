@@ -10,8 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// "Reader settings": direction, page size, keep awake, page gap,
-/// progress bar, infinite scroll, auto-scroll speed. Saved
-/// right away through [SettingsCubit].
+/// progress bar, infinite scroll, auto-scroll speed; on wide screens also
+/// page width and two pages. Saved right away through [SettingsCubit].
 class ReaderSettingsSheet extends StatelessWidget {
   const ReaderSettingsSheet({super.key});
 
@@ -20,6 +20,8 @@ class ReaderSettingsSheet extends StatelessWidget {
     final c = Dotline.of(context);
     final settings = context.watch<SettingsCubit>().state;
     final cubit = context.read<SettingsCubit>();
+    // Only wide screens have room for a choice of widths or two pages.
+    final wide = MediaQuery.sizeOf(context).width >= DotSize.splitMinWidth;
 
     Widget label(String text) => Padding(
       padding: const EdgeInsets.only(top: DotSpace.s5, bottom: DotSpace.s3),
@@ -68,6 +70,20 @@ class ReaderSettingsSheet extends StatelessWidget {
             Segment(value: PageFit.height, label: AppText.fitHeight),
           ],
         ),
+        if (wide && settings.pageFit == PageFit.width) ...[
+          label(AppText.pageWidth),
+          SegmentedControl<ReaderWidth>(
+            background: c.bg,
+            selected: settings.readerWidth,
+            onChanged: (w) => cubit.update((s) => s.copyWith(readerWidth: w)),
+            segments: const [
+              Segment(value: ReaderWidth.narrow, label: AppText.widthNarrow),
+              Segment(value: ReaderWidth.medium, label: AppText.widthMedium),
+              Segment(value: ReaderWidth.wide, label: AppText.widthWide),
+              Segment(value: ReaderWidth.full, label: AppText.widthFull),
+            ],
+          ),
+        ],
         const SizedBox(height: DotSpace.s5),
         ListGroup(
           background: c.bg,
@@ -85,6 +101,19 @@ class ReaderSettingsSheet extends StatelessWidget {
                 (s) => s.copyWith(keepScreenOn: !s.keepScreenOn),
               ),
             ),
+            if (wide)
+              ListRow(
+                title: AppText.twoPages,
+                subtitle: AppText.twoPagesHint,
+                trailing: DotSwitch(
+                  value: settings.twoPages,
+                  semanticLabel: AppText.twoPages,
+                  onChanged: (v) =>
+                      cubit.update((s) => s.copyWith(twoPages: v)),
+                ),
+                onTap: () =>
+                    cubit.update((s) => s.copyWith(twoPages: !s.twoPages)),
+              ),
             ListRow(
               title: AppText.pageGap,
               subtitle: AppText.pageGapHint,

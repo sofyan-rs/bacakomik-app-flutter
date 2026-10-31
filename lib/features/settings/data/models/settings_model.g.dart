@@ -29,6 +29,14 @@ SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
             unknownValue: PageFit.width,
           ) ??
           PageFit.width,
+      readerWidth:
+          $enumDecodeNullable(
+            _$ReaderWidthEnumMap,
+            json['readerWidth'],
+            unknownValue: ReaderWidth.medium,
+          ) ??
+          ReaderWidth.medium,
+      twoPages: json['twoPages'] as bool? ?? false,
       keepScreenOn: json['keepScreenOn'] as bool? ?? true,
       pageGap: json['pageGap'] as bool? ?? false,
       progressBar: json['progressBar'] as bool? ?? true,
@@ -64,6 +72,8 @@ Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
       'themeMode': _$AppThemeModeEnumMap[instance.themeMode]!,
       'readingDirection': _$ReadingDirectionEnumMap[instance.readingDirection]!,
       'pageFit': _$PageFitEnumMap[instance.pageFit]!,
+      'readerWidth': _$ReaderWidthEnumMap[instance.readerWidth]!,
+      'twoPages': instance.twoPages,
       'keepScreenOn': instance.keepScreenOn,
       'pageGap': instance.pageGap,
       'progressBar': instance.progressBar,
@@ -90,6 +100,13 @@ const _$ReadingDirectionEnumMap = {
 };
 
 const _$PageFitEnumMap = {PageFit.width: 'width', PageFit.height: 'height'};
+
+const _$ReaderWidthEnumMap = {
+  ReaderWidth.narrow: 'narrow',
+  ReaderWidth.medium: 'medium',
+  ReaderWidth.wide: 'wide',
+  ReaderWidth.full: 'full',
+};
 
 const _$BookmarkGroupingEnumMap = {
   BookmarkGrouping.status: 'status',

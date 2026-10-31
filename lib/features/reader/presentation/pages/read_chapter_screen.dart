@@ -12,6 +12,7 @@ import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.d
 import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
 import 'package:bacakomik_app/features/reader/domain/usecases/get_chapter_content.dart';
 import 'package:bacakomik_app/features/reader/presentation/bloc/reader_bloc.dart';
+import 'package:bacakomik_app/features/reader/presentation/page_spreads.dart';
 import 'package:bacakomik_app/features/reader/presentation/reader_wakelock.dart';
 import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_end.dart';
 import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image.dart';
@@ -155,6 +156,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   var _scrollOffset = ScrollOffsetController();
   final _itemPositions = ItemPositionsListener.create();
   PageController? _pageController;
+
+  /// Whether [_pageController] counts spreads ([PageSpreads]) or pages. A
+  /// change of mode (the setting, or the window resized) makes a new one.
+  var _controllerSpreads = false;
   final _zoom = TransformationController();
   TapDownDetails? _doubleTap;
   var _zoomed = false;
@@ -800,7 +805,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       }
     } else {
       _pageController?.animateToPage(
-        target,
+        _controllerSpreads ? PageSpreads(pageCount).spreadOf(target) : target,
         duration: DotMotion.slide,
         curve: DotMotion.slideCurve,
       );
@@ -1018,9 +1023,14 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         curve: DotMotion.slideCurve,
       );
     } else {
+      final pages = current.images.length;
+      final back = fraction < 0;
       _goToPage(
-        _page.value + fraction.sign.toInt(),
-        current.images.length,
+        // Back from a spread goes to the one before, not its first page.
+        back && _controllerSpreads
+            ? PageSpreads(pages).pageBefore(_page.value)
+            : _page.value + (back ? -1 : 1),
+        pages,
         settings.readingDirection,
       );
     }
@@ -1210,6 +1220,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
               load: page < segment.loadLimit,
               fit: settings.pageFit,
               fitHeight: height,
+              maxWidth: _pageWidth(settings),
             ),
           ),
         ),
@@ -1253,25 +1264,77 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     );
   }
 
+  /// Two pages side by side: on a wide, landscape viewport, in the sideways
+  /// directions, when the setting is on.
+  bool _useSpreads(AppSettings settings) {
+    final viewport = _viewport;
+    return settings.twoPages &&
+        settings.readingDirection != ReadingDirection.vertical &&
+        viewport != null &&
+        viewport.width >= DotSize.splitMinWidth &&
+        viewport.width > viewport.height;
+  }
+
   Widget _horizontalPages(ChapterContent chapter, AppSettings settings) {
     final pages = chapter.images;
+    final spreads = PageSpreads(pages.length);
+    final useSpreads = _useSpreads(settings);
+    if (useSpreads != _controllerSpreads) {
+      // Still attached to the page view being replaced: dispose after it.
+      final old = _pageController;
+      _pageController = null;
+      _controllerSpreads = useSpreads;
+      if (old != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
+      }
+    }
+    final page = _page.value.clamp(0, pages.length);
     final controller = _pageController ??= PageController(
-      initialPage: _page.value.clamp(0, pages.length),
+      initialPage: useSpreads ? spreads.spreadOf(page) : page,
     );
+    final rtl = settings.readingDirection == ReadingDirection.rightToLeft;
+    // Two pages always fit the screen whole, whatever the page size.
+    final fit = useSpreads ? PageFit.height : settings.pageFit;
+    final fitHeight = fit == PageFit.height
+        ? MediaQuery.sizeOf(context).height
+        : null;
+
+    Widget image(int index, {Alignment alignment = Alignment.center}) =>
+        ChapterImg(
+          key: ValueKey(pages[index]),
+          chapterImage: pages[index],
+          isFile: chapter.isOffline,
+          page: index + 1,
+          headers: chapter.imageHeaders,
+          load: index < (_current?.loadLimit ?? 0),
+          fit: fit,
+          fitHeight: fitHeight,
+          maxWidth: _pageWidth(settings),
+          alignment: alignment,
+        );
+
+    final viewCount = useSpreads ? spreads.count : pages.length;
     return PageView.builder(
+      key: ValueKey(useSpreads),
       controller: controller,
-      reverse: settings.readingDirection == ReadingDirection.rightToLeft,
-      itemCount: pages.length + 1,
+      reverse: rtl,
+      itemCount: viewCount + 1,
       physics: _zoomed || _pinching
           ? const NeverScrollableScrollPhysics()
           : null,
-      onPageChanged: (page) {
+      onPageChanged: (index) {
+        // A spread counts as read up to its last page.
+        final page = !useSpreads
+            ? index
+            : index >= spreads.count
+            ? pages.length
+            : spreads.last(index);
         _page.value = page;
         _onPageReached(page);
         _scheduleSave();
       },
       itemBuilder: (context, index) {
-        if (index == pages.length) {
+        if (index == viewCount) {
           // Centred on its page, still scrollable on a short screen.
           return LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
@@ -1282,39 +1345,56 @@ class _ReadChapterViewState extends State<_ReadChapterView>
             ),
           );
         }
-        return Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: settings.pageGap ? DotSpace.s1 : 0,
-          ),
-          child: Center(
-            child: _limitWidth(
-              settings,
-              ChapterImg(
-                key: ValueKey(pages[index]),
-                chapterImage: pages[index],
-                isFile: chapter.isOffline,
-                page: index + 1,
-                headers: chapter.imageHeaders,
-                load: index < (_current?.loadLimit ?? 0),
-                fit: settings.pageFit,
-                fitHeight: settings.pageFit == PageFit.height
-                    ? MediaQuery.sizeOf(context).height
-                    : null,
-              ),
+        final shown = useSpreads ? spreads.pages(index) : [index];
+        if (shown.length == 1) {
+          return Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: settings.pageGap ? DotSpace.s1 : 0,
             ),
-          ),
+            child: Center(
+              child: useSpreads
+                  ? image(shown.first)
+                  : _limitWidth(settings, image(shown.first)),
+            ),
+          );
+        }
+        // Right to left, the earlier page is on the right. Each half leans
+        // on the spine; the page gap, if on, is the space between them.
+        final ordered = rtl ? shown.reversed.toList() : shown;
+        return Row(
+          children: [
+            for (var i = 0; i < ordered.length; i++) ...[
+              if (i > 0 && settings.pageGap) const SizedBox(width: DotSpace.s2),
+              Expanded(
+                child: image(
+                  ordered[i],
+                  alignment: i == 0
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                ),
+              ),
+            ],
+          ],
         );
       },
     );
   }
 
-  /// A page fitted to width, centred and no wider than
-  /// [DotSize.readerMaxWidth].
+  /// The reader width setting in pixels; Full is the window's width.
+  double _pageWidth(AppSettings settings) => switch (settings.readerWidth) {
+    ReaderWidth.narrow => DotSize.readerNarrowWidth,
+    ReaderWidth.medium => DotSize.readerMaxWidth,
+    ReaderWidth.wide => DotSize.readerWideWidth,
+    ReaderWidth.full => MediaQuery.sizeOf(context).width,
+  };
+
+  /// A page fitted to width, centred and no wider than the reader width
+  /// setting.
   Widget _limitWidth(AppSettings settings, Widget page) =>
       settings.pageFit == PageFit.width
       ? Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: DotSize.readerMaxWidth),
+            constraints: BoxConstraints(maxWidth: _pageWidth(settings)),
             child: page,
           ),
         )

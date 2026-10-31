@@ -75,6 +75,10 @@ abstract final class DotSize {
   /// read like a phone column instead of pages taller than the screen.
   static const readerMaxWidth = 800.0;
 
+  /// The reader width setting's other steps; [readerMaxWidth] is Medium.
+  static const readerNarrowWidth = 600.0;
+  static const readerWideWidth = 1000.0;
+
   /// Widest a list or settings screen's content grows; wider windows centre
   /// it so rows don't stretch edge to edge.
   static const contentMaxWidth = 720.0;

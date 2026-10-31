@@ -10,6 +10,8 @@ class SettingsModel {
     this.themeMode = AppThemeMode.system,
     this.readingDirection = ReadingDirection.vertical,
     this.pageFit = PageFit.width,
+    this.readerWidth = ReaderWidth.medium,
+    this.twoPages = false,
     this.keepScreenOn = true,
     this.pageGap = false,
     this.progressBar = true,
@@ -26,6 +28,8 @@ class SettingsModel {
     themeMode: e.themeMode,
     readingDirection: e.readingDirection,
     pageFit: e.pageFit,
+    readerWidth: e.readerWidth,
+    twoPages: e.twoPages,
     keepScreenOn: e.keepScreenOn,
     pageGap: e.pageGap,
     progressBar: e.progressBar,
@@ -50,6 +54,11 @@ class SettingsModel {
   @JsonKey(unknownEnumValue: PageFit.width)
   final PageFit pageFit;
 
+  @JsonKey(unknownEnumValue: ReaderWidth.medium)
+  final ReaderWidth readerWidth;
+
+  final bool twoPages;
+
   final bool keepScreenOn;
   final bool pageGap;
   final bool progressBar;
@@ -73,6 +82,8 @@ class SettingsModel {
     themeMode: themeMode,
     readingDirection: readingDirection,
     pageFit: pageFit,
+    readerWidth: readerWidth,
+    twoPages: twoPages,
     keepScreenOn: keepScreenOn,
     pageGap: pageGap,
     progressBar: progressBar,

@@ -30,6 +30,8 @@ class ChapterImg extends StatefulWidget {
     this.load = true,
     this.fit = PageFit.width,
     this.fitHeight,
+    this.maxWidth = DotSize.readerMaxWidth,
+    this.alignment = Alignment.center,
     this.headers = const {},
     @visibleForTesting this.cacheManager,
   });
@@ -55,6 +57,14 @@ class ChapterImg extends StatefulWidget {
 
   /// Height used with [PageFit.height] in the vertical reader.
   final double? fitHeight;
+
+  /// Widest the page is shown fitted to width (the reader width setting),
+  /// so it decodes sharp enough for it.
+  final double maxWidth;
+
+  /// Where the image sits in a box wider than it, e.g. against the spine
+  /// in a two-page spread.
+  final Alignment alignment;
 
   @override
   State<ChapterImg> createState() => _ChapterImgState();
@@ -175,10 +185,7 @@ class _ChapterImgState extends State<ChapterImg> {
     // Decode at screen size instead of the source size; webtoon pages can be
     // thousands of pixels tall and take tens of MB each at full resolution.
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final pageWidth = min(
-      MediaQuery.sizeOf(context).width,
-      DotSize.readerMaxWidth,
-    );
+    final pageWidth = min(MediaQuery.sizeOf(context).width, widget.maxWidth);
     final cacheWidth = widget.fit == PageFit.width
         ? (pageWidth * dpr).round()
         : null;
@@ -247,6 +254,7 @@ class _ChapterImgState extends State<ChapterImg> {
             cacheWidth: cacheWidth,
             cacheHeight: cacheHeight,
             fit: boxFit,
+            alignment: widget.alignment,
             frameBuilder: (_, child, frame, sync) => frame == null && !sync
                 ? placeholder()
                 : _ReportSize(onSize: measured, child: child),
@@ -263,6 +271,7 @@ class _ChapterImgState extends State<ChapterImg> {
             memCacheWidth: cacheWidth,
             memCacheHeight: cacheHeight,
             fit: boxFit,
+            alignment: widget.alignment,
             imageBuilder: (_, provider) => _ReportSize(
               onSize: measured,
               child: Image(
@@ -270,6 +279,7 @@ class _ChapterImgState extends State<ChapterImg> {
                 width: double.infinity,
                 height: widget.fitHeight,
                 fit: boxFit,
+                alignment: widget.alignment,
               ),
             ),
             fadeInDuration: DotMotion.press,

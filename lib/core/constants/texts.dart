@@ -237,6 +237,14 @@ class AppText {
   static const String pageSize = 'Page size';
   static const String fitWidth = 'Fit width';
   static const String fitHeight = 'Fit height';
+  static const String pageWidth = 'Page width';
+  static const String widthNarrow = 'Narrow';
+  static const String widthMedium = 'Medium';
+  static const String widthWide = 'Wide';
+  static const String widthFull = 'Full';
+  static const String twoPages = 'Two pages';
+  static const String twoPagesHint =
+      'Side by side on wide screens, in the sideways directions';
   static const String incognito = 'Incognito mode';
   static const String incognitoDescription = 'Reading is not saved to history';
   static const String keepScreenOn = 'Keep screen on';

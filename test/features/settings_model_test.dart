@@ -12,6 +12,8 @@ void main() {
       themeMode: AppThemeMode.dark,
       readingDirection: ReadingDirection.rightToLeft,
       pageFit: PageFit.height,
+      readerWidth: ReaderWidth.wide,
+      twoPages: true,
       keepScreenOn: false,
       pageGap: true,
       progressBar: false,

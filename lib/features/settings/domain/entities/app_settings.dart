@@ -20,6 +20,10 @@ enum ReadingDirection {
 /// How a page is scaled in the reader.
 enum PageFit { width, height }
 
+/// Widest a page fitted to width grows on a wide screen. Phones are
+/// narrower than all but [full] anyway.
+enum ReaderWidth { narrow, medium, wide, full }
+
 /// What the tabs on the Bookmarks screen split bookmarks by.
 enum BookmarkGrouping {
   /// All / Updated / Completed.
@@ -70,6 +74,11 @@ abstract class AppSettings with _$AppSettings {
     @Default(AppThemeMode.system) AppThemeMode themeMode,
     @Default(ReadingDirection.vertical) ReadingDirection readingDirection,
     @Default(PageFit.width) PageFit pageFit,
+    @Default(ReaderWidth.medium) ReaderWidth readerWidth,
+
+    /// Sideways directions on a wide, landscape screen: two pages side by
+    /// side, the first (the cover) alone.
+    @Default(false) bool twoPages,
 
     /// Keep the screen awake while a chapter is open.
     @Default(true) bool keepScreenOn,
