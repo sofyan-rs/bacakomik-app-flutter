@@ -19,6 +19,7 @@ import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settin
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:flutter/services.dart';
@@ -170,6 +171,12 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   Size? _viewport;
   BuildContext? _listContext;
   var _adjustingZoom = false;
+
+  /// After a pan the viewer flings on by itself, moving each frame to an
+  /// absolute offset from where the fling started; [_panVertical] holds it
+  /// at [_pinY], so the list must scroll by the step from the last frame
+  /// ([_flingY]), not by the whole way flung so far each frame.
+  double? _flingY;
 
   /// Fingers on the reader. With two or more, the page list stops scrolling
   /// so its drag recognizer leaves the gesture arena and the pinch wins.
@@ -343,7 +350,9 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         (scale - pinScale).abs() < 0.001 &&
         !_zoomAnimation.isAnimating;
     if (panned) {
-      _scrollList(-(y - pinY) / scale);
+      final step = zoomedPanStep(y: y, pinY: pinY, flingY: _flingY);
+      _scrollList(step.down / scale);
+      _flingY = step.flingY;
       y = pinY;
     } else {
       y = y.clamp(-(scale - 1) * size.height, 0.0);
@@ -628,12 +637,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         pageOnScreen(
           page: page,
           pageCount: segment.images.length,
-          lastPageBottom: positions
-              .where(
-                (p) => p.index == _indexOf(segment, segment.images.length - 1),
-              )
-              .firstOrNull
-              ?.itemTrailingEdge,
+          lastPageBottom: _bottomOf(
+            positions,
+            _indexOf(segment, segment.images.length - 1),
+          ),
         ),
       ),
       _BreakItem(:final segment) ||
@@ -648,6 +655,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       _scheduleSave();
     }
   }
+
+  /// Where the item at [index] ends on screen, if it is on screen.
+  static double? _bottomOf(List<ItemPosition> positions, int index) =>
+      positions.where((p) => p.index == index).firstOrNull?.itemTrailingEdge;
 
   /// Reading went on into another chapter of the list: the one left is
   /// saved where it was left, then this one as opened.
@@ -1040,6 +1051,16 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                 // unbounded because [_panVertical] keeps it in place and
                 // scrolls the list instead.
                 panEnabled: _zoomed,
+                onInteractionStart: (_) => _flingY = null,
+                // A one-finger pan that flings: see [_flingY].
+                onInteractionEnd: (details) => _flingY =
+                    vertical &&
+                        _zoomed &&
+                        details.pointerCount == 1 &&
+                        details.velocity.pixelsPerSecond.distance >=
+                            kMinFlingVelocity
+                    ? _pinY
+                    : null,
                 boundaryMargin: vertical
                     ? const EdgeInsets.all(double.infinity)
                     : EdgeInsets.zero,
@@ -1528,3 +1549,19 @@ int pageOnScreen({
   }
   return last;
 }
+
+/// One move of the zoomed vertical reader's viewer, which is held at [pinY]
+/// while the page list scrolls instead: how far the list goes down (in
+/// screen pixels, before dividing by the zoom) and the next [flingY].
+///
+/// A pan moves the viewer by its own step from [pinY]. The fling after it
+/// moves the viewer to an absolute offset from the fling's start each
+/// frame; with [flingY] (the last frame's offset) only the step since then
+/// scrolls the list. Without it, every frame scrolled the whole way flung
+/// so far, and a small flick went pages away.
+@visibleForTesting
+({double down, double? flingY}) zoomedPanStep({
+  required double y,
+  required double pinY,
+  double? flingY,
+}) => (down: -(y - (flingY ?? pinY)), flingY: flingY == null ? null : y);
