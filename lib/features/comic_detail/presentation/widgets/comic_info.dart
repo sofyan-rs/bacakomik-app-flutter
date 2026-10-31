@@ -70,7 +70,7 @@ class _ComicInfoState extends State<ComicInfo> {
     final tiles = [
       (widget.chaptersLoading ? '…' : '${d.chapters.length}', AppText.chapter),
       if (year != '-') (year, AppText.released),
-      if (hasRating) ('★ ${d.rating.trim()}', AppText.score),
+      if (hasRating) (d.rating.trim(), AppText.score),
     ];
     final meta = d.type == '-' ? '' : d.type;
     final sourceLine = [
