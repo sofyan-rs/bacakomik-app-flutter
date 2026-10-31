@@ -31,6 +31,7 @@ android {
         versionCode flutter.versionCode
         versionName flutter.versionName
         multiDexEnabled true
+        manifestPlaceholders = [appLabel: "BacaKomik"]
         ndk {
             debugSymbolLevel 'FULL'
         }
@@ -47,6 +48,17 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+        }
+        // Debug and profile builds install next to the released app, so
+        // trying one on a phone never replaces it (a different signature
+        // would make Flutter uninstall it, data and all).
+        debug {
+            applicationIdSuffix ".dev"
+            manifestPlaceholders = [appLabel: "BacaKomik Dev"]
+        }
+        profile {
+            applicationIdSuffix ".dev"
+            manifestPlaceholders = [appLabel: "BacaKomik Dev"]
         }
     }
 }

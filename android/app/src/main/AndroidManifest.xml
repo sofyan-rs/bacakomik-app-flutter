@@ -11,7 +11,7 @@
 
        <!-- Cleartext: some Mihon extensions' sites are plain http (Mihon allows it too). -->
        <application
-        android:label="BacaKomik"
+        android:label="${appLabel}"
         android:name=".BacaKomikApplication"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"
