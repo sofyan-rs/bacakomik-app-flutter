@@ -171,28 +171,30 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
               ],
             ),
             // The tabs stay put too; search and the lists scroll.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DotSpace.s4,
-                DotSpace.s2,
-                DotSpace.s4,
-                DotSpace.s4,
-              ),
-              child: SegmentedControl<_Tab>(
-                selected: _tab,
-                onChanged: (tab) => setState(() => _tab = tab),
-                segments: [
-                  Segment(
-                    value: _Tab.installed,
-                    label: state.updateCount > 0
-                        ? '${AppText.installed} · ${state.updateCount}'
-                        : AppText.installed,
-                  ),
-                  const Segment(
-                    value: _Tab.available,
-                    label: AppText.available,
-                  ),
-                ],
+            CenteredContent(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DotSpace.s4,
+                  DotSpace.s2,
+                  DotSpace.s4,
+                  DotSpace.s4,
+                ),
+                child: SegmentedControl<_Tab>(
+                  selected: _tab,
+                  onChanged: (tab) => setState(() => _tab = tab),
+                  segments: [
+                    Segment(
+                      value: _Tab.installed,
+                      label: state.updateCount > 0
+                          ? '${AppText.installed} · ${state.updateCount}'
+                          : AppText.installed,
+                    ),
+                    const Segment(
+                      value: _Tab.available,
+                      label: AppText.available,
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -203,10 +205,12 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
                 child: CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    ...switch (_tab) {
-                      _Tab.installed => _installed(state),
-                      _Tab.available => _available(state),
-                    },
+                    SliverCenteredContent(
+                      slivers: switch (_tab) {
+                        _Tab.installed => _installed(state),
+                        _Tab.available => _available(state),
+                      },
+                    ),
                     SliverPadding(
                       padding: EdgeInsets.only(
                         bottom: bottomInset + DotSpace.s5,

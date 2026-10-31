@@ -76,32 +76,35 @@ class ImportScreen extends StatelessWidget {
             // Outside the scroll view so the title stays put.
             const DotTopBar(title: AppText.importFromApps),
             Expanded(
-              child: ListView(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DotSpace.s4,
+              child: LayoutBuilder(
+                builder: (context, constraints) => ListView(
+                  padding: contentInset(constraints.maxWidth),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DotSpace.s4,
+                      ),
+                      child: ListGroup(
+                        children: [
+                          ListRow(
+                            icon: LucideIcons300.archiveRestore,
+                            title: AppText.importMihon,
+                            subtitle: AppText.importMihonDescription,
+                            showChevron: true,
+                            onTap: () => MihonImportScreen.open(context),
+                          ),
+                          ListRow(
+                            icon: LucideIcons300.fileSpreadsheet,
+                            title: AppText.importComix,
+                            subtitle: AppText.importComixDescription,
+                            showChevron: true,
+                            onTap: () => _importComix(context),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: ListGroup(
-                      children: [
-                        ListRow(
-                          icon: LucideIcons300.archiveRestore,
-                          title: AppText.importMihon,
-                          subtitle: AppText.importMihonDescription,
-                          showChevron: true,
-                          onTap: () => MihonImportScreen.open(context),
-                        ),
-                        ListRow(
-                          icon: LucideIcons300.fileSpreadsheet,
-                          title: AppText.importComix,
-                          subtitle: AppText.importComixDescription,
-                          showChevron: true,
-                          onTap: () => _importComix(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

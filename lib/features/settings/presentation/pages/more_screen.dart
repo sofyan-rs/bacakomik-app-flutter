@@ -73,39 +73,42 @@ class _MoreScreenState extends State<MoreScreen> {
           child: Column(
             children: [
               // Outside the list so the title stays put.
-              const ScreenHeader(title: AppText.more),
+              const CenteredContent(child: ScreenHeader(title: AppText.more)),
               Expanded(
-                child: ListView(
-                  padding: EdgeInsets.only(
-                    bottom: DotSpace.s4 + MediaQuery.paddingOf(context).bottom,
-                  ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DotSpace.s4,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: StatTile(
-                              value: '$bookmarks',
-                              label: AppText.bookmark,
-                              labelOnTop: true,
-                            ),
-                          ),
-                          const SizedBox(width: DotSpace.s3),
-                          Expanded(
-                            child: StatTile(
-                              value: '$chaptersRead',
-                              label: AppText.chaptersRead,
-                              labelOnTop: true,
-                            ),
-                          ),
-                        ],
-                      ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) => ListView(
+                    padding: contentInset(constraints.maxWidth).copyWith(
+                      bottom:
+                          DotSpace.s4 + MediaQuery.paddingOf(context).bottom,
                     ),
-                    Settings(appVersion: _appVersion),
-                  ],
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DotSpace.s4,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: StatTile(
+                                value: '$bookmarks',
+                                label: AppText.bookmark,
+                                labelOnTop: true,
+                              ),
+                            ),
+                            const SizedBox(width: DotSpace.s3),
+                            Expanded(
+                              child: StatTile(
+                                value: '$chaptersRead',
+                                label: AppText.chaptersRead,
+                                labelOnTop: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Settings(appVersion: _appVersion),
+                    ],
+                  ),
                 ),
               ),
             ],

@@ -63,73 +63,82 @@ class _MihonImportView extends StatelessWidget {
                   Expanded(
                     child: CustomScrollView(
                       slivers: [
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              DotSpace.s4,
-                              0,
-                              DotSpace.s4,
-                              DotSpace.s4,
-                            ),
-                            child: Text(switch (state.phase) {
-                              MihonImportPhase.finished => switch (state
-                                  .result) {
-                                final r? =>
-                                  '${AppText.importDone} · ${r.added} ${AppText.added}'
-                                      '${r.existing > 0 ? ' · ${r.existing} ${AppText.alreadyInLibrary}' : ''}'
-                                      '${r.sameTitle > 0 ? ' · ${r.sameTitle} ${AppText.sameTitleElsewhere}' : ''}'
-                                      '${r.chaptersRead > 0 ? ' · ${r.chaptersRead} ${AppText.chaptersMarkedRead}' : ''}. '
-                                      '${AppText.mihonLoadHint}',
-                                null => AppText.importDone,
-                              },
-                              _ => AppText.mihonHint,
-                            }, style: DotlineText.bodyS.copyWith(color: c.inkFaint)),
-                          ),
-                        ),
-                        if (state.phase == MihonImportPhase.reading)
-                          const SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.all(DotSpace.s6),
-                              child: Center(child: DotLoader()),
-                            ),
-                          ),
-                        if (state.supported.isNotEmpty) ...[
-                          const SliverToBoxAdapter(
-                            child: SectionLabel(label: AppText.sources),
-                          ),
-                          SliverListGroup(
-                            itemCount: state.supported.length,
-                            itemBuilder: (context, i) => _GroupRow(
-                              group: state.supported[i],
-                              state: state,
-                            ),
-                          ),
-                        ],
-                        if (state.unsupported.isNotEmpty) ...[
-                          const SliverToBoxAdapter(
-                            child: SectionLabel(
-                              label: AppText.notAvailableHere,
-                            ),
-                          ),
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: DotSpace.s4,
-                              ),
-                              child: Text(
-                                [
-                                  for (final g in state.unsupported)
-                                    '${g.name} (${g.total})',
-                                ].join(' · '),
-                                style: DotlineText.bodyS.copyWith(
-                                  color: c.inkFaint,
+                        SliverCenteredContent(
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  DotSpace.s4,
+                                  0,
+                                  DotSpace.s4,
+                                  DotSpace.s4,
+                                ),
+                                child: Text(
+                                  switch (state.phase) {
+                                    MihonImportPhase.finished => switch (state
+                                        .result) {
+                                      final r? =>
+                                        '${AppText.importDone} · ${r.added} ${AppText.added}'
+                                            '${r.existing > 0 ? ' · ${r.existing} ${AppText.alreadyInLibrary}' : ''}'
+                                            '${r.sameTitle > 0 ? ' · ${r.sameTitle} ${AppText.sameTitleElsewhere}' : ''}'
+                                            '${r.chaptersRead > 0 ? ' · ${r.chaptersRead} ${AppText.chaptersMarkedRead}' : ''}. '
+                                            '${AppText.mihonLoadHint}',
+                                      null => AppText.importDone,
+                                    },
+                                    _ => AppText.mihonHint,
+                                  },
+                                  style: DotlineText.bodyS.copyWith(
+                                    color: c.inkFaint,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                        const SliverToBoxAdapter(
-                          child: SizedBox(height: DotSpace.s4),
+                            if (state.phase == MihonImportPhase.reading)
+                              const SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: EdgeInsets.all(DotSpace.s6),
+                                  child: Center(child: DotLoader()),
+                                ),
+                              ),
+                            if (state.supported.isNotEmpty) ...[
+                              const SliverToBoxAdapter(
+                                child: SectionLabel(label: AppText.sources),
+                              ),
+                              SliverListGroup(
+                                itemCount: state.supported.length,
+                                itemBuilder: (context, i) => _GroupRow(
+                                  group: state.supported[i],
+                                  state: state,
+                                ),
+                              ),
+                            ],
+                            if (state.unsupported.isNotEmpty) ...[
+                              const SliverToBoxAdapter(
+                                child: SectionLabel(
+                                  label: AppText.notAvailableHere,
+                                ),
+                              ),
+                              SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: DotSpace.s4,
+                                  ),
+                                  child: Text(
+                                    [
+                                      for (final g in state.unsupported)
+                                        '${g.name} (${g.total})',
+                                    ].join(' · '),
+                                    style: DotlineText.bodyS.copyWith(
+                                      color: c.inkFaint,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SliverToBoxAdapter(
+                              child: SizedBox(height: DotSpace.s4),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -139,34 +148,36 @@ class _MihonImportView extends StatelessWidget {
             ),
             bottomNavigationBar: SafeArea(
               top: false,
-              child: Padding(
-                padding: const EdgeInsets.all(DotSpace.s4),
-                child: switch (state.phase) {
-                  MihonImportPhase.idle ||
-                  MihonImportPhase.reading => DotButton(
-                    label: state.phase == MihonImportPhase.reading
-                        ? AppText.readingFile
-                        : AppText.chooseFile,
-                    leading: LucideIcons300.fileUp,
-                    onTap: state.phase == MihonImportPhase.reading
-                        ? null
-                        : cubit.pickFile,
-                  ),
-                  MihonImportPhase.loaded => DotButton(
-                    label:
-                        '${AppText.importCount} '
-                        '${AppText.count(state.selectedCount, AppText.comic, AppText.comics)}',
-                    onTap: state.selectedCount == 0 ? null : cubit.import,
-                  ),
-                  MihonImportPhase.importing => const DotButton(
-                    label: AppText.importing,
-                    onTap: null,
-                  ),
-                  MihonImportPhase.finished => DotButton(
-                    label: AppText.done,
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
-                },
+              child: CenteredContent(
+                child: Padding(
+                  padding: const EdgeInsets.all(DotSpace.s4),
+                  child: switch (state.phase) {
+                    MihonImportPhase.idle ||
+                    MihonImportPhase.reading => DotButton(
+                      label: state.phase == MihonImportPhase.reading
+                          ? AppText.readingFile
+                          : AppText.chooseFile,
+                      leading: LucideIcons300.fileUp,
+                      onTap: state.phase == MihonImportPhase.reading
+                          ? null
+                          : cubit.pickFile,
+                    ),
+                    MihonImportPhase.loaded => DotButton(
+                      label:
+                          '${AppText.importCount} '
+                          '${AppText.count(state.selectedCount, AppText.comic, AppText.comics)}',
+                      onTap: state.selectedCount == 0 ? null : cubit.import,
+                    ),
+                    MihonImportPhase.importing => const DotButton(
+                      label: AppText.importing,
+                      onTap: null,
+                    ),
+                    MihonImportPhase.finished => DotButton(
+                      label: AppText.done,
+                      onTap: () => Navigator.of(context).pop(),
+                    ),
+                  },
+                ),
               ),
             ),
           ),

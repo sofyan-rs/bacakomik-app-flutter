@@ -74,6 +74,16 @@ abstract final class DotSize {
   /// Widest a chapter page grows when fitted to width, so wide windows
   /// read like a phone column instead of pages taller than the screen.
   static const readerMaxWidth = 800.0;
+
+  /// Widest a list or settings screen's content grows; wider windows centre
+  /// it so rows don't stretch edge to edge.
+  static const contentMaxWidth = 720.0;
+
+  /// Same for the home tab, which has room for latest chapters in columns.
+  static const feedMaxWidth = 1200.0;
+
+  /// Widest a sheet grows when shown as a centred dialog on wide screens.
+  static const dialogMaxWidth = 480.0;
 }
 
 /// Only for floating elements: bottom nav, chapter navigation pill, menus.
@@ -94,6 +104,9 @@ abstract final class DotMotion {
 
   /// Pressed buttons shrink to this scale.
   static const pressScale = 0.97;
+
+  /// Covers grow to this scale under a mouse.
+  static const hoverScale = 1.03;
 
   /// Sliding selection indicators (nav circle, segmented pill).
   static const slide = Duration(milliseconds: 320);

@@ -69,19 +69,23 @@ class _LatestChapterMoreState extends State<LatestChapterMore> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 const SliverPadding(padding: EdgeInsets.only(top: DotSpace.s2)),
-                SliverListGroup(
-                  itemCount: comics.length,
-                  itemBuilder: (context, index) {
-                    final comic = comics[index];
-                    return LatestChapterCard(
-                      title: comic.title,
-                      cover: comic.coverImg,
-                      chapter: comic.latestChapter,
-                      type: comic.type,
-                      isCompleted: comic.completed,
-                      slug: comic.slug,
-                    );
-                  },
+                SliverCenteredContent(
+                  slivers: [
+                    SliverListGroup(
+                      itemCount: comics.length,
+                      itemBuilder: (context, index) {
+                        final comic = comics[index];
+                        return LatestChapterCard(
+                          title: comic.title,
+                          cover: comic.coverImg,
+                          chapter: comic.latestChapter,
+                          type: comic.type,
+                          isCompleted: comic.completed,
+                          slug: comic.slug,
+                        );
+                      },
+                    ),
+                  ],
                 ),
                 SliverToBoxAdapter(
                   child: isLoadMore

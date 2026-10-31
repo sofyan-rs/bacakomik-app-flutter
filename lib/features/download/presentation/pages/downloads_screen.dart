@@ -62,35 +62,39 @@ class DownloadsScreen extends StatelessWidget {
               child: SlidableAutoCloseBehavior(
                 child: CustomScrollView(
                   slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DotSpace.s4,
-                        DotSpace.s3,
-                        DotSpace.s4,
-                        DotSpace.s5,
-                      ),
-                      sliver: SliverToBoxAdapter(child: _stats(library)),
-                    ),
-                    if (library.chapters.isEmpty)
-                      const SliverToBoxAdapter(
-                        child: EmptyState(
-                          icon: LucideIcons300.download,
-                          title: AppText.downloadsEmpty,
-                          message: AppText.downloadsEmptyHint,
+                    SliverCenteredContent(
+                      slivers: [
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            DotSpace.s4,
+                            DotSpace.s3,
+                            DotSpace.s4,
+                            DotSpace.s5,
+                          ),
+                          sliver: SliverToBoxAdapter(child: _stats(library)),
                         ),
-                      ),
-                    if (pending.isNotEmpty)
-                      ..._queue(context, library, pending),
-                    for (final (comic, chapters) in groups) ...[
-                      DownloadComicGroup(
-                        key: ValueKey(comic.slug),
-                        comic: comic,
-                        chapters: chapters,
-                      ),
-                      const SliverPadding(
-                        padding: EdgeInsets.only(bottom: DotSpace.s3),
-                      ),
-                    ],
+                        if (library.chapters.isEmpty)
+                          const SliverToBoxAdapter(
+                            child: EmptyState(
+                              icon: LucideIcons300.download,
+                              title: AppText.downloadsEmpty,
+                              message: AppText.downloadsEmptyHint,
+                            ),
+                          ),
+                        if (pending.isNotEmpty)
+                          ..._queue(context, library, pending),
+                        for (final (comic, chapters) in groups) ...[
+                          DownloadComicGroup(
+                            key: ValueKey(comic.slug),
+                            comic: comic,
+                            chapters: chapters,
+                          ),
+                          const SliverPadding(
+                            padding: EdgeInsets.only(bottom: DotSpace.s3),
+                          ),
+                        ],
+                      ],
+                    ),
                     SliverPadding(
                       padding: EdgeInsets.only(
                         bottom: bottomInset + DotSpace.s4,
