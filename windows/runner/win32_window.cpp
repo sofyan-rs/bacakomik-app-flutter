@@ -197,6 +197,22 @@ Win32Window::MessageHandler(HWND hwnd,
 
       return 0;
     }
+    case WM_GETMINMAXINFO: {
+      // Narrower than a phone, the layout overflows: keep the client area
+      // at least 400x640 logical pixels, frame added on top.
+      UINT dpi = FlutterDesktopGetDpiForMonitor(
+          MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST));
+      double scale_factor = dpi / 96.0;
+      RECT frame = {0, 0, Scale(400, scale_factor), Scale(640, scale_factor)};
+      AdjustWindowRectEx(&frame,
+                         static_cast<DWORD>(GetWindowLong(hwnd, GWL_STYLE)),
+                         FALSE,
+                         static_cast<DWORD>(GetWindowLong(hwnd, GWL_EXSTYLE)));
+      auto info = reinterpret_cast<MINMAXINFO*>(lparam);
+      info->ptMinTrackSize.x = frame.right - frame.left;
+      info->ptMinTrackSize.y = frame.bottom - frame.top;
+      return 0;
+    }
     case WM_SIZE: {
       RECT rect = GetClientArea();
       if (child_content_ != nullptr) {
