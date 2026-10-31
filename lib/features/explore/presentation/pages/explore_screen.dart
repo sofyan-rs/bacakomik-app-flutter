@@ -16,6 +16,7 @@ import 'package:bacakomik_app/features/explore/presentation/widgets/filter_comic
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/widgets/source_picker_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
@@ -176,37 +177,51 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final filter = context.watch<FilterCubit>().state;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: BlocListener<FilterCubit, ExploreFilter>(
-          listenWhen: (previous, current) => previous.source != current.source,
-          listener: _onSourceChanged,
-          child: BlocBuilder<ExploreBloc, ComicListState>(
-            builder: (context, state) {
-              return ScrollAwayHeader(
-                keepShown: _queryFocus.hasFocus,
-                header: Column(children: [_header(state), _controls(filter)]),
-                body: RefreshIndicator(
-                  color: Dotline.of(context).ink,
-                  backgroundColor: Dotline.of(context).surface,
-                  onRefresh: _load,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    // Scrolling the results ends typing, so the header can go.
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    slivers: [
-                      ..._results(state),
-                      SliverPadding(
-                        padding: EdgeInsets.only(bottom: bottomInset),
-                      ),
-                    ],
+    // Escape while typing closes the search, as the × does; otherwise it
+    // goes on to the app's Escape (back).
+    return Focus(
+      onKeyEvent: (_, event) {
+        if (!_searching ||
+            event is! KeyDownEvent ||
+            event.logicalKey != LogicalKeyboardKey.escape) {
+          return KeyEventResult.ignored;
+        }
+        _toggleSearch();
+        return KeyEventResult.handled;
+      },
+      child: Scaffold(
+        body: SafeArea(
+          bottom: false,
+          child: BlocListener<FilterCubit, ExploreFilter>(
+            listenWhen: (previous, current) =>
+                previous.source != current.source,
+            listener: _onSourceChanged,
+            child: BlocBuilder<ExploreBloc, ComicListState>(
+              builder: (context, state) {
+                return ScrollAwayHeader(
+                  keepShown: _queryFocus.hasFocus,
+                  header: Column(children: [_header(state), _controls(filter)]),
+                  body: RefreshIndicator(
+                    color: Dotline.of(context).ink,
+                    backgroundColor: Dotline.of(context).surface,
+                    onRefresh: _load,
+                    child: CustomScrollView(
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      // Scrolling the results ends typing, so the header can go.
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      slivers: [
+                        ..._results(state),
+                        SliverPadding(
+                          padding: EdgeInsets.only(bottom: bottomInset),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),

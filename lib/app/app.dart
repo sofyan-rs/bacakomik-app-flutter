@@ -1,3 +1,4 @@
+import 'package:bacakomik_app/app/app_shortcuts.dart';
 import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/app/splash_screen.dart';
 import 'package:bacakomik_app/core/theme/dotline_theme.dart';
@@ -32,6 +33,7 @@ class BacaKomikApp extends StatefulWidget {
 
 class _BacaKomikAppState extends State<BacaKomikApp> {
   final _tabs = RootTabs();
+  final _navigator = GlobalKey<NavigatorState>();
 
   @override
   void dispose() {
@@ -102,6 +104,12 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
               return MaterialApp(
                 debugShowCheckedModeBanner: false,
                 title: AppVariables.appName,
+                navigatorKey: _navigator,
+                builder: (context, child) => AppShortcuts(
+                  navigator: _navigator,
+                  tabs: _tabs,
+                  child: child!,
+                ),
                 scrollBehavior: const _DragScrollBehavior(),
                 theme: DotlineThemes.light,
                 darkTheme: DotlineThemes.dark,
