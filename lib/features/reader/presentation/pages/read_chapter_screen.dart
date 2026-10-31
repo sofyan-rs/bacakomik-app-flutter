@@ -19,7 +19,6 @@ import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settin
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:flutter/services.dart';
@@ -1052,15 +1051,11 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                 // scrolls the list instead.
                 panEnabled: _zoomed,
                 onInteractionStart: (_) => _flingY = null,
-                // A one-finger pan that flings: see [_flingY].
-                onInteractionEnd: (details) => _flingY =
-                    vertical &&
-                        _zoomed &&
-                        details.pointerCount == 1 &&
-                        details.velocity.pixelsPerSecond.distance >=
-                            kMinFlingVelocity
-                    ? _pinY
-                    : null,
+                // A pan may fling on: see [_flingY]. Set after every gesture
+                // (the finger lifted is no longer counted in [details], and
+                // without a fling it changes nothing); the next one clears it.
+                onInteractionEnd: (_) =>
+                    _flingY = vertical && _zoomed ? _pinY : null,
                 boundaryMargin: vertical
                     ? const EdgeInsets.all(double.infinity)
                     : EdgeInsets.zero,
