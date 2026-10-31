@@ -51,10 +51,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
   var _searchRequests = 0;
   var _filterRequests = 0;
 
+  /// The search field is shown: by its button, Home's search button, or a
+  /// search already set.
+  var _searching = false;
+
   @override
   void initState() {
     super.initState();
     _query.text = context.read<FilterCubit>().state.query;
+    _searching = _query.text.isNotEmpty;
     // Built on the tab's first visit (RootScreen), so this is when Explore
     // first asks its source.
     _load();
@@ -95,6 +100,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       _filterRequests = tabs.filterRequests;
       _debounce?.cancel();
       _query.text = context.read<FilterCubit>().state.query;
+      if (_query.text.isNotEmpty) setState(() => _searching = true);
       if (_scrollController.hasClients) _scrollController.jumpTo(0);
       _load();
     }
@@ -103,9 +109,23 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _focusSearch();
   }
 
-  void _focusSearch() => WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (mounted) _queryFocus.requestFocus();
-  });
+  /// Shows the search field and focuses it.
+  void _focusSearch() {
+    if (!_searching) setState(() => _searching = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _queryFocus.requestFocus();
+    });
+  }
+
+  /// The search button: shows the field, or hides it and drops the search.
+  void _toggleSearch() {
+    if (!_searching) return _focusSearch();
+    setState(() => _searching = false);
+    if (_query.text.isNotEmpty) {
+      _query.clear();
+      _search('');
+    }
+  }
 
   void _onQueryChanged(String text) {
     _debounce?.cancel();
@@ -159,22 +179,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
           listener: _onSourceChanged,
           child: BlocBuilder<ExploreBloc, ComicListState>(
             builder: (context, state) {
-              return RefreshIndicator(
-                color: Dotline.of(context).ink,
-                backgroundColor: Dotline.of(context).surface,
-                onRefresh: _load,
-                child: CustomScrollView(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(child: _header(state)),
-                    SliverToBoxAdapter(child: _controls(filter)),
-                    ..._results(state),
-                    SliverPadding(
-                      padding: EdgeInsets.only(bottom: bottomInset),
+              return Column(
+                children: [
+                  // The header, search and filters stay put; only the
+                  // results scroll.
+                  _header(state),
+                  _controls(filter),
+                  Expanded(
+                    child: RefreshIndicator(
+                      color: Dotline.of(context).ink,
+                      backgroundColor: Dotline.of(context).surface,
+                      onRefresh: _load,
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          ..._results(state),
+                          SliverPadding(
+                            padding: EdgeInsets.only(bottom: bottomInset),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               );
             },
           ),
@@ -201,6 +229,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
               url: source.baseUrl,
             ),
           ),
+        RoundIconButton(
+          icon: _searching ? LucideIcons300.x : LucideIcons300.search,
+          semanticLabel: AppText.exploreSearchHint,
+          onTap: _toggleSearch,
+        ),
       ],
       subtitleWidget: SourceSubtitle(
         source: source,
@@ -224,7 +257,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
     final selected = features.valueOf(filter.values, group.key).firstOrNull;
     return [
-      const SizedBox(height: DotSpace.s4),
       if (group.options.length <= 4)
         SegmentedControl<String>(
           selected: selected ?? '',
@@ -250,6 +282,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ],
           ),
         ),
+      const SizedBox(height: DotSpace.s4),
     ];
   }
 
@@ -267,19 +300,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SearchField(
-            hint: AppText.exploreSearchHint,
-            controller: _query,
-            focusNode: _queryFocus,
-            onChanged: _onQueryChanged,
-            onSubmitted: _search,
-            onClear: () {
-              _query.clear();
-              _search('');
-            },
-          ),
+          if (_searching) ...[
+            SearchField(
+              hint: AppText.exploreSearchHint,
+              controller: _query,
+              focusNode: _queryFocus,
+              onChanged: _onQueryChanged,
+              onSubmitted: _search,
+              onClear: () {
+                _query.clear();
+                _search('');
+              },
+            ),
+            const SizedBox(height: DotSpace.s4),
+          ],
           ..._quickPicker(filter),
-          const SizedBox(height: DotSpace.s4),
           Row(
             children: [
               Expanded(
