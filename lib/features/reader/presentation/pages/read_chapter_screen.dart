@@ -597,7 +597,8 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     });
   }
 
-  /// The first page whose bottom is below the top third of the screen.
+  /// The first page whose bottom is below the top third of the screen, or
+  /// the last page once it is all on screen ([pageOnScreen]).
   /// With infinite scroll, an end of the list on screen fetches the chapter
   /// beyond it.
   void _onItemPositions() {
@@ -622,7 +623,19 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     if (visible.isEmpty) return;
     final index = visible.reduce((a, b) => a.index < b.index ? a : b).index;
     final (segment, page) = switch (_items[index]) {
-      _PageItem(:final segment, :final page) => (segment, page),
+      _PageItem(:final segment, :final page) => (
+        segment,
+        pageOnScreen(
+          page: page,
+          pageCount: segment.images.length,
+          lastPageBottom: positions
+              .where(
+                (p) => p.index == _indexOf(segment, segment.images.length - 1),
+              )
+              .firstOrNull
+              ?.itemTrailingEdge,
+        ),
+      ),
       _BreakItem(:final segment) ||
       _TailItem(:final segment) => (segment, segment.images.length),
       _HeadItem() => (_current!, _page.value),
@@ -1495,4 +1508,23 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       ),
     );
   }
+}
+
+/// The page counted as read in the vertical reader: [page] (the first one
+/// whose bottom is below the top third of the screen), or the chapter's last
+/// page once its bottom is on screen ([lastPageBottom] at most 1, the
+/// viewport's height). Short last pages, credits strips, can all fit below
+/// that third, where none of them would count, and the chapter would never
+/// finish.
+@visibleForTesting
+int pageOnScreen({
+  required int page,
+  required int pageCount,
+  double? lastPageBottom,
+}) {
+  final last = pageCount - 1;
+  if (page >= last || lastPageBottom == null || lastPageBottom > 1) {
+    return page;
+  }
+  return last;
 }
