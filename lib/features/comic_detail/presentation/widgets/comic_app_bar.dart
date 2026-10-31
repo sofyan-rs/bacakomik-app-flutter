@@ -138,10 +138,26 @@ class ComicAppBar extends StatelessWidget {
           onTap: unselectAllChapter,
         ),
         const SizedBox(width: DotSpace.s3),
+        // The count over its label, each on one line: between five buttons
+        // a phone leaves too little room for "12 SELECTED" on one.
         Expanded(
-          child: Text(
-            '${selectedChapters.length} ${AppText.selected}'.toUpperCase(),
-            style: DotlineText.label.copyWith(color: c.ink),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${selectedChapters.length}',
+                style: DotlineText.headline.copyWith(color: c.ink),
+                maxLines: 1,
+              ),
+              Text(
+                AppText.selected.toUpperCase(),
+                style: DotlineText.label.copyWith(color: c.inkFaint),
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.fade,
+              ),
+            ],
           ),
         ),
         RoundIconButton(
