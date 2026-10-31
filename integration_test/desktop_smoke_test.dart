@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:bacakomik_app/app/root_screen.dart';
 import 'package:bacakomik_app/app/root_tabs.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/comic_cover.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/dot_menu.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/search_field.dart';
 import 'package:bacakomik_app/features/explore/presentation/pages/explore_screen.dart';
 import 'package:bacakomik_app/core/constants/texts.dart';
@@ -122,7 +123,10 @@ void main() {
     await _settle(tester, const Duration(seconds: 25));
     await _shot(tester, 'download');
 
-    await tester.tap(_button(AppText.openWebView));
+    // The comic's actions are in its ⋮ menu.
+    await tester.tap(find.byType(DotMenuButton));
+    await _settle(tester, const Duration(seconds: 1));
+    await tester.tap(find.text(AppText.openWebView));
     await _settle(tester, const Duration(seconds: 12));
     await _shot(tester, 'webview');
   });

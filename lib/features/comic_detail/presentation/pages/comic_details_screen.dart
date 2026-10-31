@@ -538,39 +538,41 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     );
   }
 
+  /// The comic's actions in one ⋮ menu; hidden until the source is
+  /// installed.
   Widget _topBar(Bookmark? bookmark, ComicDetails? details) => DotTopBar(
-    // Hidden until the source is installed.
     actions: [
-      if (!_sourceMissing) ...[
-        if (bookmark != null)
-          RoundIconButton(
-            icon: LucideIcons300.gitMerge,
-            semanticLabel: AppText.mergedSources,
-            iconSize: DotSize.iconSmall,
-            onTap: () => _editSources(bookmark, details?.title ?? widget.title),
-          ),
-        // Migrating would drop the other merged sources.
-        if (bookmark != null && !bookmark.isMerged)
-          RoundIconButton(
-            icon: LucideIcons300.arrowRightLeft,
-            semanticLabel: AppText.migrateSource,
-            iconSize: DotSize.iconSmall,
-            onTap: () =>
-                SourceMigrationScreen.open(context, keys: {widget.slug}),
-          ),
-        RoundIconButton(
-          icon: LucideIcons300.globe,
-          semanticLabel: AppText.openWebView,
-          iconSize: DotSize.iconSmall,
-          onTap: () => _openWebView(bookmark),
+      if (!_sourceMissing)
+        DotMenuButton(
+          semanticLabel: AppText.more,
+          items: [
+            if (bookmark != null)
+              DotMenuItem(
+                label: AppText.mergedSources,
+                icon: LucideIcons300.gitMerge,
+                onTap: () =>
+                    _editSources(bookmark, details?.title ?? widget.title),
+              ),
+            // Migrating would drop the other merged sources.
+            if (bookmark != null && !bookmark.isMerged)
+              DotMenuItem(
+                label: AppText.migrateSource,
+                icon: LucideIcons300.arrowRightLeft,
+                onTap: () =>
+                    SourceMigrationScreen.open(context, keys: {widget.slug}),
+              ),
+            DotMenuItem(
+              label: AppText.openWebView,
+              icon: LucideIcons300.globe,
+              onTap: () => _openWebView(bookmark),
+            ),
+            DotMenuItem(
+              label: AppText.share,
+              icon: LucideIcons300.share2,
+              onTap: () => _share(details?.title ?? widget.title),
+            ),
+          ],
         ),
-        RoundIconButton(
-          icon: LucideIcons300.share2,
-          semanticLabel: AppText.share,
-          iconSize: DotSize.iconSmall,
-          onTap: () => _share(details?.title ?? widget.title),
-        ),
-      ],
     ],
   );
 
