@@ -15,15 +15,20 @@ class ComicSliderCard extends StatelessWidget {
     required this.chapter,
     required this.type,
     required this.slug,
+    this.width = phoneWidth,
   });
 
-  static const width = 132.0;
+  static const phoneWidth = 132.0;
+
+  /// On wide screens, where [phoneWidth] covers look like thumbnails.
+  static const wideWidth = 176.0;
 
   final String title;
   final String cover;
   final String chapter;
   final String type;
   final String slug;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +38,7 @@ class ComicSliderCard extends StatelessWidget {
       width: width,
       child: Pressable(
         semanticLabel: title,
+        hoverScale: DotMotion.hoverScale,
         onTap: () => ComicDetailsScreen.open(
           context,
           slug: slug,

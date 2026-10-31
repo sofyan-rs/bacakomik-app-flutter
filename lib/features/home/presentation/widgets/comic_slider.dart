@@ -9,24 +9,42 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// "NEW SERIES" horizontal strip.
 class ComicSlider extends StatelessWidget {
-  const ComicSlider({super.key, required this.state});
+  const ComicSlider({super.key, required this.state, this.inset = 0});
 
   final HomeLoaded state;
+
+  /// Space on each side of the home column. The label stays inside it; the
+  /// strip starts in line with the column but scrolls out to the window
+  /// edges, so a card cut off at the edge reads as "more this way".
+  final double inset;
 
   @override
   Widget build(BuildContext context) {
     final newSeries = state.home.newSeries;
+    final cardWidth = MediaQuery.sizeOf(context).width >= DotSize.splitMinWidth
+        ? ComicSliderCard.wideWidth
+        : ComicSliderCard.phoneWidth;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionLabel(
-          label:
-              context.watch<SourcesCubit>().state.features.featuredLabel ??
-              AppText.newSeries,
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: inset),
+          child: SectionLabel(
+            label:
+                context.watch<SourcesCubit>().state.features.featuredLabel ??
+                AppText.newSeries,
+          ),
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+          // Room above and below for a cover grown by hover, which the
+          // strip would otherwise clip.
+          padding: EdgeInsets.fromLTRB(
+            inset + DotSpace.s4,
+            DotSpace.s2,
+            DotSpace.s4,
+            DotSpace.s2,
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -38,6 +56,7 @@ class ComicSlider extends StatelessWidget {
                   chapter: newSeries[i].latestChapter,
                   type: newSeries[i].type,
                   slug: newSeries[i].slug,
+                  width: cardWidth,
                 ),
               ],
             ],

@@ -99,14 +99,22 @@ class _HomeScreenState extends State<HomeScreen> {
               onRefresh: () async => _refreshData(state),
               builder: (context, child, controller) =>
                   _kururin(state, child, controller),
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.only(bottom: bottomInset),
-                children: [
-                  _header(state),
-                  const LastReadComic(),
-                  ..._content(state),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) => ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.only(bottom: bottomInset + DotSpace.s5),
+                  children: [
+                    _column(_header(state)),
+                    _column(const LastReadComic()),
+                    ..._content(
+                      state,
+                      contentInset(
+                        constraints.maxWidth,
+                        DotSize.feedMaxWidth,
+                      ).left,
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -141,23 +149,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<Widget> _content(HomeState state) => switch (state) {
+  /// Keeps [child] in the home column on wide screens.
+  Widget _column(Widget child) =>
+      CenteredContent(maxWidth: DotSize.feedMaxWidth, child: child);
+
+  /// [inset] is the space beside the home column, for the slider that
+  /// scrolls past it.
+  List<Widget> _content(HomeState state, double inset) => switch (state) {
     HomeLoaded() => [
       // Hidden when the source has nothing for it (see showFeatured).
       if (state.home.newSeries.isNotEmpty) ...[
-        ComicSlider(state: state),
+        ComicSlider(state: state, inset: inset),
         const SizedBox(height: DotSpace.s5),
       ],
-      LatestChapter(state: state),
+      _column(LatestChapter(state: state)),
     ],
     HomeNoInternet() => [
-      EmptyState.offline(onAction: () => _refreshData(state)),
+      _column(EmptyState.offline(onAction: () => _refreshData(state))),
     ],
     HomeError(:final message) => [
-      SourceError(
-        message: message,
-        sourceId: context.read<SourcesCubit>().state.activeId,
-        onRetry: () => _refreshData(state),
+      _column(
+        SourceError(
+          message: message,
+          sourceId: context.read<SourcesCubit>().state.activeId,
+          onRetry: () => _refreshData(state),
+        ),
       ),
     ],
     HomeInitial() || HomeLoading() => [
