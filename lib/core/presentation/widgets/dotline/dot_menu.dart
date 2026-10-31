@@ -19,8 +19,10 @@ class DotMenuItem {
   final bool destructive;
 }
 
-/// Round ⋮ button that opens a 248-wide `surface` menu with hairlines between
-/// rows. The trigger turns `surfaceRaised` while open.
+/// Round ⋮ button that opens a [width]-wide `surface` menu with hairlines
+/// between rows, its right edge under the button's (the buttons sit at the
+/// top right, so the menu keeps the screen's margin). The trigger turns
+/// `surfaceRaised` while open.
 class DotMenuButton extends StatelessWidget {
   const DotMenuButton({
     super.key,
@@ -33,18 +35,23 @@ class DotMenuButton extends StatelessWidget {
   final String semanticLabel;
   final double iconSize;
 
+  static const width = 224.0;
+
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     return MenuAnchor(
-      alignmentOffset: const Offset(0, DotSpace.s2),
+      alignmentOffset: const Offset(
+        -(width - DotSize.touchTarget),
+        DotSpace.s2,
+      ),
       style: MenuStyle(
         backgroundColor: WidgetStatePropertyAll(c.surface),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         elevation: const WidgetStatePropertyAll(0),
         shadowColor: const WidgetStatePropertyAll(Colors.transparent),
         padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-        fixedSize: const WidgetStatePropertyAll(Size.fromWidth(248)),
+        fixedSize: const WidgetStatePropertyAll(Size.fromWidth(width)),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DotRadius.m),
@@ -90,9 +97,11 @@ class _DotMenuRow extends StatelessWidget {
     return MenuItemButton(
       onPressed: item.onTap,
       style: ButtonStyle(
-        minimumSize: const WidgetStatePropertyAll(Size(248, 52)),
+        minimumSize: const WidgetStatePropertyAll(
+          Size(DotMenuButton.width, 52),
+        ),
         padding: const WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: DotSpace.s5),
+          EdgeInsets.symmetric(horizontal: DotSpace.s4),
         ),
         overlayColor: WidgetStatePropertyAll(c.surfaceRaised),
         splashFactory: NoSplash.splashFactory,
