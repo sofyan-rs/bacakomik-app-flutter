@@ -137,7 +137,8 @@ class AppText {
       'them. Covers, bookmarks, reading history and downloads are kept.';
 
   static const String backupData = 'Back up data';
-  static const String backupDataDescription = 'Bookmarks and reading history';
+  static const String backupDataDescription =
+      'Bookmarks, categories and reading history';
   static const String successBackupData = 'Data backed up';
   static const String failedBackupData = "Couldn't back up data";
 
@@ -155,20 +156,25 @@ class AppText {
   static const String syncing = 'Syncing…';
   static const String syncFailed = 'Sync failed, tap to try again';
   static const String syncNever = 'Never synced';
-  static const String syncLast = 'Last';
+  static const String syncLast = 'Last synced';
   static const String syncSignOut = 'Disconnect Google Drive';
   static const String syncSignOutDescription =
-      'Data on this device stays saved';
+      'Syncing stops. Data on this device stays saved.';
+  static const String syncDisconnect = 'Disconnect';
+  static const String googleDrive = 'Google Drive';
 
   static const String bugReport = 'Report a bug or suggestion';
+  static const String bugReportDescription = 'Opens GitHub Issues';
   static const String aboutApp = 'About the app';
+  static const String aboutAppDescription = 'Developer and website';
   static const String website = 'Kurodev website';
   static const String linkFailed = "Couldn't open the link";
   static const String chaptersRead = 'Chapters read';
   static const String sources = 'Sources';
   static const String library = 'Library';
-  static const String backupAndSync = 'Backup & sync';
-  static const String theme = 'Theme';
+  static const String sync = 'Sync';
+  static const String backup = 'Backup';
+  static const String appearance = 'Appearance';
   static const String about = 'About';
   static const String themeSystem = 'System';
   static const String themeLight = 'Light';
@@ -423,9 +429,9 @@ class AppText {
   static const String stopRefresh = 'Stop updating bookmarks';
 
   // Migration
-  static const String migration = 'Migration';
-  static const String migrationDescription =
-      'Move series to another source, or import from other apps';
+  static const String importFromApps = 'Import from other apps';
+  static const String importFromAppsDescription =
+      'Mihon, Tachiyomi or Comix.to';
   static const String migrateSource = 'Migrate source';
   static const String migrateSourceDescription =
       'Move bookmarks and reading history to another source';

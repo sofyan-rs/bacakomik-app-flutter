@@ -14,7 +14,8 @@ import 'package:bacakomik_app/features/settings/presentation/widgets/app_info.da
 import 'package:bacakomik_app/features/settings/presentation/widgets/clear_cache_sheet.dart';
 import 'package:bacakomik_app/features/sync/presentation/widgets/sync_section.dart';
 import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
-import 'package:bacakomik_app/features/migration/presentation/pages/migration_screen.dart';
+import 'package:bacakomik_app/features/migration/presentation/pages/import_screen.dart';
+import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -22,10 +23,32 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bacakomik_app/features/category/presentation/pages/categories_screen.dart';
 import 'package:bacakomik_app/core/network/image_cache.dart';
 
-/// More groups: incognito mode, SOURCES, LIBRARY (categories, downloads,
-/// cache), BACKUP & SYNC, THEME, ABOUT.
-class Settings extends StatelessWidget {
-  const Settings({super.key});
+/// More groups: incognito mode, SOURCES (extensions, migrate source),
+/// LIBRARY (categories, downloads, cache), SYNC, BACKUP (file, restore,
+/// import), APPEARANCE, ABOUT.
+class Settings extends StatefulWidget {
+  const Settings({super.key, this.appVersion = ''});
+
+  /// Shown next to "Check for updates".
+  final String appVersion;
+
+  @override
+  State<Settings> createState() => _SettingsState();
+}
+
+class _SettingsState extends State<Settings> {
+  int _cacheBytes = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCacheSize();
+  }
+
+  Future<void> _loadCacheSize() async {
+    final bytes = await comicImageCache.store.getCacheSize();
+    if (mounted) setState(() => _cacheBytes = bytes);
+  }
 
   Future<void> _clearCache(BuildContext context) async {
     final confirmed = await showDotSheet<bool>(
@@ -34,6 +57,7 @@ class Settings extends StatelessWidget {
     );
     if (confirmed != true) return;
     await comicImageCache.emptyCache();
+    await _loadCacheSize();
     if (context.mounted) {
       showSnackBar(context: context, message: AppText.cacheCleared);
     }
@@ -54,6 +78,9 @@ class Settings extends StatelessWidget {
     final busy = context.watch<BackupCubit>().state is BackupBusy;
     final checkingUpdate = context.select<UpdateCubit, bool>(
       (u) => u.state is UpdateChecking,
+    );
+    final updateAvailable = context.select<UpdateCubit, bool>(
+      (u) => u.state is UpdateAvailable,
     );
     final themeMode = context.select<SettingsCubit, AppThemeMode>(
       (s) => s.state.themeMode,
@@ -114,6 +141,13 @@ class Settings extends StatelessWidget {
                 showChevron: true,
                 onTap: () => ExtensionsScreen.open(context),
               ),
+              ListRow(
+                icon: LucideIcons300.arrowRightLeft,
+                title: AppText.migrateSource,
+                subtitle: AppText.migrateSourceDescription,
+                showChevron: true,
+                onTap: () => SourceMigrationScreen.open(context),
+              ),
             ],
           ),
         ),
@@ -144,36 +178,46 @@ class Settings extends StatelessWidget {
                 icon: LucideIcons300.trash2,
                 title: AppText.clearCache,
                 subtitle: AppText.clearCacheDescription,
+                value: _cacheBytes == 0 ? null : formatBytes(_cacheBytes),
+                showChevron: false,
                 onTap: () => _clearCache(context),
               ),
             ],
           ),
         ),
-        SyncSection(
-          backup: [
-            ListRow(
-              icon: LucideIcons300.database,
-              title: AppText.backupData,
-              subtitle: AppText.backupDataDescription,
-              onTap: busy ? null : () => context.read<BackupCubit>().backup(),
-            ),
-            ListRow(
-              icon: LucideIcons300.rotateCcw,
-              title: AppText.restoreData,
-              subtitle: AppText.restoreDataDescription,
-              onTap: busy ? null : () => context.read<BackupCubit>().restore(),
-            ),
-            ListRow(
-              icon: LucideIcons300.arrowRightLeft,
-              title: AppText.migration,
-              subtitle: AppText.migrationDescription,
-              showChevron: true,
-              onTap: () => MigrationScreen.open(context),
-            ),
-          ],
+        const SyncSection(),
+        const SizedBox(height: DotSpace.s3),
+        const SectionLabel(label: AppText.backup),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+          child: ListGroup(
+            children: [
+              ListRow(
+                icon: LucideIcons300.database,
+                title: AppText.backupData,
+                subtitle: AppText.backupDataDescription,
+                onTap: busy ? null : () => context.read<BackupCubit>().backup(),
+              ),
+              ListRow(
+                icon: LucideIcons300.rotateCcw,
+                title: AppText.restoreData,
+                subtitle: AppText.restoreDataDescription,
+                onTap: busy
+                    ? null
+                    : () => context.read<BackupCubit>().restore(),
+              ),
+              ListRow(
+                icon: LucideIcons300.archiveRestore,
+                title: AppText.importFromApps,
+                subtitle: AppText.importFromAppsDescription,
+                showChevron: true,
+                onTap: () => ImportScreen.open(context),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: DotSpace.s3),
-        const SectionLabel(label: AppText.theme),
+        const SectionLabel(label: AppText.appearance),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
           child: SegmentedControl<AppThemeMode>(
@@ -215,22 +259,32 @@ class Settings extends StatelessWidget {
               ListRow(
                 icon: LucideIcons300.refreshCw,
                 title: AppText.checkUpdate,
+                value: updateAvailable
+                    ? AppText.updateAvailable
+                    : widget.appVersion.isEmpty
+                    ? null
+                    : 'v${widget.appVersion}',
+                showChevron: true,
                 onTap: checkingUpdate
                     ? null
                     : () => context.read<UpdateCubit>().check(),
               ),
               ListRow(
-                icon: LucideIcons300.bug,
-                title: AppText.bugReport,
-                onTap: () => _reportBug(context),
-              ),
-              ListRow(
                 icon: LucideIcons300.info,
                 title: AppText.aboutApp,
+                subtitle: AppText.aboutAppDescription,
+                showChevron: true,
                 onTap: () => showDotSheet<void>(
                   context: context,
                   builder: (_) => const AppInfo(),
                 ),
+              ),
+              ListRow(
+                icon: LucideIcons300.bug,
+                title: AppText.bugReport,
+                subtitle: AppText.bugReportDescription,
+                showChevron: true,
+                onTap: () => _reportBug(context),
               ),
             ],
           ),

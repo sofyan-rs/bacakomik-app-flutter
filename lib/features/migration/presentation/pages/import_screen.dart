@@ -9,24 +9,23 @@ import 'package:bacakomik_app/features/migration/domain/usecases/pick_files.dart
 import 'package:bacakomik_app/features/migration/presentation/bloc/match_cubit.dart';
 import 'package:bacakomik_app/features/migration/presentation/pages/match_screen.dart';
 import 'package:bacakomik_app/features/migration/presentation/pages/mihon_import_screen.dart';
-import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
 import 'package:bacakomik_app/features/migration/presentation/widgets/source_choice_sheet.dart';
 import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// More → Migration: migrate bookmarks between sources, or import a library
-/// from Mihon/Tachiyomi or Comix.to.
-class MigrationScreen extends StatelessWidget {
-  const MigrationScreen({super.key});
+/// More → Import from other apps: a library from Mihon/Tachiyomi or
+/// Comix.to. Migrating between sources is its own row in More.
+class ImportScreen extends StatelessWidget {
+  const ImportScreen({super.key});
 
   /// Source the Comix.to export is searched in unless another is picked.
   static const comixSource = 'comix';
 
   static Future<void> open(BuildContext context) =>
       Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const MigrationScreen()));
+          .push(MaterialPageRoute(builder: (_) => const ImportScreen()));
 
   Future<void> _importComix(BuildContext context) async {
     final picked = await getIt<PickComixCsv>()(const NoParams());
@@ -75,7 +74,7 @@ class MigrationScreen extends StatelessWidget {
         child: Column(
           children: [
             // Outside the scroll view so the title stays put.
-            const DotTopBar(title: AppText.migration),
+            const DotTopBar(title: AppText.importFromApps),
             Expanded(
               child: ListView(
                 children: [
@@ -85,13 +84,6 @@ class MigrationScreen extends StatelessWidget {
                     ),
                     child: ListGroup(
                       children: [
-                        ListRow(
-                          icon: LucideIcons300.arrowRightLeft,
-                          title: AppText.migrateSource,
-                          subtitle: AppText.migrateSourceDescription,
-                          showChevron: true,
-                          onTap: () => SourceMigrationScreen.open(context),
-                        ),
                         ListRow(
                           icon: LucideIcons300.archiveRestore,
                           title: AppText.importMihon,

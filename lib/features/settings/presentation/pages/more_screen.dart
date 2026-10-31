@@ -1,8 +1,5 @@
 import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
 import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:bacakomik_app/core/utils/utils.dart';
 import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
@@ -14,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-/// More tab: library stats, data actions, theme, about.
+/// More tab: library stats and the settings groups.
 class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});
 
@@ -50,7 +47,6 @@ class _MoreScreenState extends State<MoreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final c = Dotline.of(context);
     final bookmarks = context.select<BookmarkCubit, int>((b) => b.state.length);
     final chaptersRead = context.select<HistoryCubit, int>(
       (h) => h.state.length,
@@ -108,13 +104,7 @@ class _MoreScreenState extends State<MoreScreen> {
                         ],
                       ),
                     ),
-                    const Settings(),
-                    const SizedBox(height: DotSpace.s5),
-                    Text(
-                      '${AppVariables.appName} $_appVersion'.toUpperCase(),
-                      style: DotlineText.label.copyWith(color: c.inkFaint),
-                      textAlign: TextAlign.center,
-                    ),
+                    Settings(appVersion: _appVersion),
                   ],
                 ),
               ),
