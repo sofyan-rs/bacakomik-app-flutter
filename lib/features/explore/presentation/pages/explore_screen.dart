@@ -55,18 +55,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
   /// search already set.
   var _searching = false;
 
-  /// The header slides away while the results scroll down and comes back as
-  /// soon as they scroll up ([_onScroll]).
-  var _headerShown = true;
-
-  /// How far the results scroll before the header may hide.
-  static const _hideAfter = 120.0;
-
   @override
   void initState() {
     super.initState();
     _query.text = context.read<FilterCubit>().state.query;
     _searching = _query.text.isNotEmpty;
+    // The header stays while the search is typed in.
+    _queryFocus.addListener(_onFocus);
     // Built on the tab's first visit (RootScreen), so this is when Explore
     // first asks its source.
     _load();
@@ -89,8 +84,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
   }
 
+  void _onFocus() => setState(() {});
+
   @override
   void dispose() {
+    _queryFocus.removeListener(_onFocus);
     _tabs?.removeListener(_onTabs);
     _debounce?.cancel();
     _query.dispose();
@@ -118,12 +116,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   /// Shows the search field and focuses it.
   void _focusSearch() {
-    if (!_searching || !_headerShown) {
-      setState(() {
-        _searching = true;
-        _headerShown = true;
-      });
-    }
+    if (!_searching) setState(() => _searching = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _queryFocus.requestFocus();
     });
@@ -137,21 +130,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
       _query.clear();
       _search('');
     }
-  }
-
-  bool _onScroll(ScrollUpdateNotification n) {
-    if (n.depth != 0) return false;
-    final delta = n.scrollDelta ?? 0;
-    final shown =
-        n.metrics.pixels <= 0 ||
-        _queryFocus.hasFocus ||
-        switch (delta) {
-          < -2 => true,
-          > 2 when n.metrics.pixels > _hideAfter => false,
-          _ => _headerShown,
-        };
-    if (shown != _headerShown) setState(() => _headerShown = shown);
-    return false;
   }
 
   void _onQueryChanged(String text) {
@@ -206,44 +184,27 @@ class _ExploreScreenState extends State<ExploreScreen> {
           listener: _onSourceChanged,
           child: BlocBuilder<ExploreBloc, ComicListState>(
             builder: (context, state) {
-              return Column(
-                children: [
-                  // The header, search and filters stay above the results;
-                  // they slide away while the results scroll down.
-                  ClipRect(
-                    child: AnimatedAlign(
-                      alignment: Alignment.bottomCenter,
-                      heightFactor: _headerShown ? 1 : 0,
-                      duration: MediaQuery.disableAnimationsOf(context)
-                          ? Duration.zero
-                          : DotMotion.slide,
-                      curve: DotMotion.slideCurve,
-                      child: Column(
-                        children: [_header(state), _controls(filter)],
+              return ScrollAwayHeader(
+                keepShown: _queryFocus.hasFocus,
+                header: Column(children: [_header(state), _controls(filter)]),
+                body: RefreshIndicator(
+                  color: Dotline.of(context).ink,
+                  backgroundColor: Dotline.of(context).surface,
+                  onRefresh: _load,
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    // Scrolling the results ends typing, so the header can go.
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    slivers: [
+                      ..._results(state),
+                      SliverPadding(
+                        padding: EdgeInsets.only(bottom: bottomInset),
                       ),
-                    ),
+                    ],
                   ),
-                  Expanded(
-                    child: RefreshIndicator(
-                      color: Dotline.of(context).ink,
-                      backgroundColor: Dotline.of(context).surface,
-                      onRefresh: _load,
-                      child: NotificationListener<ScrollUpdateNotification>(
-                        onNotification: _onScroll,
-                        child: CustomScrollView(
-                          controller: _scrollController,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          slivers: [
-                            ..._results(state),
-                            SliverPadding(
-                              padding: EdgeInsets.only(bottom: bottomInset),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               );
             },
           ),

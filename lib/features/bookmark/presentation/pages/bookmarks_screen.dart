@@ -40,6 +40,7 @@ class BookmarksScreen extends StatefulWidget {
 
 class _BookmarksScreenState extends State<BookmarksScreen> {
   final _query = TextEditingController();
+  final _queryFocus = FocusNode();
   var _searching = false;
 
   /// The search of the last build, to tell when it changes.
@@ -127,6 +128,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   @override
   void initState() {
     super.initState();
+    // The header stays while the search is typed in.
+    _queryFocus.addListener(_onFocus);
     final history = context.read<HistoryCubit>();
     _historyChanges = context.read<BookmarkCubit>().historyChanges.listen(
       (_) => history.load(),
@@ -137,6 +140,9 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   void dispose() {
     _historyChanges.cancel();
     _query.dispose();
+    _queryFocus
+      ..removeListener(_onFocus)
+      ..dispose();
     super.dispose();
   }
 
@@ -144,6 +150,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     () =>
         _selected.contains(slug) ? _selected.remove(slug) : _selected.add(slug),
   );
+
+  void _onFocus() => setState(() {});
 
   void _toggleSearch() => setState(() {
     _searching = !_searching;
@@ -377,105 +385,108 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       child: Scaffold(
         body: SafeArea(
           bottom: false,
-          child: Column(
-            children: [
-              // Outside the scroll view so the title stays put.
-              if (_selected.isEmpty)
-                ValueListenableBuilder(
-                  valueListenable: context.read<BookmarkCubit>().refreshing,
-                  builder: (_, refreshing, _) =>
-                      _header(all.length, updated, refreshing: refreshing),
-                )
-              else
-                _selectionHeader(),
-              // Search and tabs stay put too; only the grid scrolls.
-              if (_searching)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DotSpace.s4,
-                    0,
-                    DotSpace.s4,
-                    DotSpace.s4,
-                  ),
-                  child: SearchField(
-                    hint: AppText.searchBookmarkHint,
-                    controller: _query,
-                    autofocus: true,
-                    onChanged: (_) => setState(() {}),
-                    onClear: () => setState(_query.clear),
-                  ),
-                ),
-              if (all.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DotSpace.s4,
-                    0,
-                    DotSpace.s4,
-                    DotSpace.s4,
-                  ),
-                  child: ScrollableTabs<String>(
-                    selected: _group,
-                    onChanged: (g) => setState(() => _group = g),
-                    segments: tabs,
-                  ),
-                ),
-              Expanded(
-                child: GestureDetector(
-                  onHorizontalDragEnd: _selected.isEmpty
-                      ? (d) => _swipeTab(d, tabs)
-                      : null,
-                  child: RefreshIndicator(
-                    color: Dotline.of(context).ink,
-                    backgroundColor: Dotline.of(context).surface,
-                    // Not awaited: the notification shows progress, and pulling
-                    // again in another group adds that group to the running queue.
-                    // The comics on screen: the open group, narrowed by a search.
-                    onRefresh: () async => unawaited(
-                      context.read<BookmarkCubit>().updateBookmarkList([
-                        for (final item in shown) item.bookmark.slug,
-                      ]),
+          // The title, search and tabs slide away while the grid scrolls
+          // down; they stay while comics are selected or a search is typed.
+          child: ScrollAwayHeader(
+            keepShown: _selected.isNotEmpty || _queryFocus.hasFocus,
+            header: Column(
+              children: [
+                if (_selected.isEmpty)
+                  ValueListenableBuilder(
+                    valueListenable: context.read<BookmarkCubit>().refreshing,
+                    builder: (_, refreshing, _) =>
+                        _header(all.length, updated, refreshing: refreshing),
+                  )
+                else
+                  _selectionHeader(),
+                if (_searching)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DotSpace.s4,
+                      0,
+                      DotSpace.s4,
+                      DotSpace.s4,
                     ),
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        if (shown.isEmpty)
-                          SliverToBoxAdapter(child: _empty(all.isEmpty))
-                        else
-                          CoverGridSliver(
-                            itemCount: shown.length,
-                            textHeight: BookmarkComicCard.textHeight,
-                            itemBuilder: (context, index) {
-                              final item = shown[index];
-                              final slug = item.bookmark.slug;
-                              return BookmarkComicCard(
-                                item: item,
-                                isSelected: _selected.contains(slug),
-                                onLongPress: () => _toggleSelected(slug),
-                                onTap: _selected.isNotEmpty
-                                    ? () => _toggleSelected(slug)
-                                    : () => ComicDetailsScreen.open(
-                                        context,
-                                        slug: slug,
-                                        title: item.bookmark.comicDetails.title,
-                                        cover:
-                                            item.bookmark.comicDetails.coverImg,
-                                      ),
-                              );
-                            },
-                          ),
-                        SliverPadding(
-                          padding: EdgeInsets.only(
-                            bottom:
-                                DotSpace.s4 +
-                                MediaQuery.paddingOf(context).bottom,
-                          ),
-                        ),
-                      ],
+                    child: SearchField(
+                      hint: AppText.searchBookmarkHint,
+                      controller: _query,
+                      focusNode: _queryFocus,
+                      autofocus: true,
+                      onChanged: (_) => setState(() {}),
+                      onClear: () => setState(_query.clear),
                     ),
                   ),
+                if (all.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DotSpace.s4,
+                      0,
+                      DotSpace.s4,
+                      DotSpace.s4,
+                    ),
+                    child: ScrollableTabs<String>(
+                      selected: _group,
+                      onChanged: (g) => setState(() => _group = g),
+                      segments: tabs,
+                    ),
+                  ),
+              ],
+            ),
+            body: GestureDetector(
+              onHorizontalDragEnd: _selected.isEmpty
+                  ? (d) => _swipeTab(d, tabs)
+                  : null,
+              child: RefreshIndicator(
+                color: Dotline.of(context).ink,
+                backgroundColor: Dotline.of(context).surface,
+                // Not awaited: the notification shows progress, and pulling
+                // again in another group adds that group to the running queue.
+                // The comics on screen: the open group, narrowed by a search.
+                onRefresh: () async => unawaited(
+                  context.read<BookmarkCubit>().updateBookmarkList([
+                    for (final item in shown) item.bookmark.slug,
+                  ]),
+                ),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  // Scrolling the results ends typing, so the header can go.
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  slivers: [
+                    if (shown.isEmpty)
+                      SliverToBoxAdapter(child: _empty(all.isEmpty))
+                    else
+                      CoverGridSliver(
+                        itemCount: shown.length,
+                        textHeight: BookmarkComicCard.textHeight,
+                        itemBuilder: (context, index) {
+                          final item = shown[index];
+                          final slug = item.bookmark.slug;
+                          return BookmarkComicCard(
+                            item: item,
+                            isSelected: _selected.contains(slug),
+                            onLongPress: () => _toggleSelected(slug),
+                            onTap: _selected.isNotEmpty
+                                ? () => _toggleSelected(slug)
+                                : () => ComicDetailsScreen.open(
+                                    context,
+                                    slug: slug,
+                                    title: item.bookmark.comicDetails.title,
+                                    cover: item.bookmark.comicDetails.coverImg,
+                                  ),
+                          );
+                        },
+                      ),
+                    SliverPadding(
+                      padding: EdgeInsets.only(
+                        bottom:
+                            DotSpace.s4 + MediaQuery.paddingOf(context).bottom,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
