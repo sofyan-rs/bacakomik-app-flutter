@@ -246,7 +246,7 @@ export function page({ url, title, description, image, meta, missing = false }) 
     <h1>${escape(heading)}</h1>
     <p>${escape(desc)}</p>
     ${missing ? '' : `<a class="primary" href="${escape(intentLink(url))}">Open in the app</a>`}
-    <a class="secondary" href="${DOWNLOAD}">Download APK</a>
+    <a class="secondary" href="${DOWNLOAD}">Download the app</a>
   </main>
 </body>
 </html>`;
@@ -279,7 +279,7 @@ export function privacyPage() {
     <h1>Privacy Policy</h1>
     <p class="updated">Last updated ${PRIVACY_UPDATED}</p>
 
-    <p>${APP_NAME} is an Android app for reading comics, made by Kurodev.
+    <p>${APP_NAME} is an app for reading comics on Android and desktop, made by Kurodev.
     This page explains what data the app uses and where that data is
     sent.</p>
 
@@ -347,13 +347,13 @@ export function privacyPage() {
 
 export function homePage(origin) {
   const desc =
-    'An Android app for reading manga, manhwa and manhua from several sources.';
+    'An app for reading manga, manhwa and manhua from several sources, on Android, Windows, macOS and Linux.';
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${APP_NAME} — Read comics on Android</title>
+  <title>${APP_NAME} — Read comics on Android and desktop</title>
   <meta name="description" content="${escape(desc)}">
   <meta property="og:site_name" content="${APP_NAME}">
   <meta property="og:type" content="website">
@@ -381,7 +381,7 @@ export function homePage(origin) {
     <p class="brand">BACAKOMIK</p>
     <h1>${APP_NAME}</h1>
     <p>${escape(desc)} Free, without ads, made by Kurodev.</p>
-    <a class="button" href="${DOWNLOAD}">Download APK</a>
+    <a class="button" href="${DOWNLOAD}">Download the app</a>
 
     <h2>Features</h2>
     <ul>
