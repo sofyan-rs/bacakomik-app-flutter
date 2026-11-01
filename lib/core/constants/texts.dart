@@ -244,7 +244,7 @@ class AppText {
   static const String widthFull = 'Full';
   static const String twoPages = 'Two pages';
   static const String twoPagesHint =
-      'Side by side on wide screens, in the sideways directions';
+      'Side by side when the window is wider than tall';
   static const String incognito = 'Incognito mode';
   static const String incognitoDescription = 'Reading is not saved to history';
   static const String keepScreenOn = 'Keep screen on';
@@ -254,14 +254,13 @@ class AppText {
   static const String progressBar = 'Progress bar';
   static const String progressBarHint = 'Thin line at the bottom while reading';
   static const String infiniteScroll = 'Infinite scroll';
-  static const String infiniteScrollHint =
-      'Vertical: chapters run on into each other';
+  static const String infiniteScrollHint = 'Chapters run on into each other';
   static const String chapterLoadFailed = 'Could not load the chapter';
   static const String chaptersLoadingSlow =
       'Still loading the chapter list. Long series take a while.';
   static const String pageShort = 'Page';
   static const String autoScrollSpeed = 'Scroll speed';
-  static const String autoScrollHint = 'Vertical mode. Tap the screen to pause';
+  static const String autoScrollHint = 'Tap the screen to pause';
   static const String autoScrollStart = 'Start auto-scroll';
   static const String autoScrollStop = 'Stop auto-scroll';
   static const String slower = 'Slower';
