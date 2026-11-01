@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:bacakomik_app/core/constants/texts.dart';
 import 'package:bacakomik_app/core/di/injection.dart';
@@ -20,6 +21,7 @@ import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settin
 import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
 import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:flutter/services.dart';
@@ -182,6 +184,12 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   /// ([_flingY]), not by the whole way flung so far each frame.
   double? _flingY;
 
+  /// The viewer zooms on every turn of a mouse wheel, but in the reader the
+  /// wheel scrolls and Ctrl (⌘) + wheel zooms (see [_onPointerSignal]). A
+  /// wheel turn reaches the viewer as an interaction without pointers; the
+  /// viewer's matrix from before it is put back at its end.
+  Matrix4? _beforeWheel;
+
   /// Fingers on the reader. With two or more, the page list stops scrolling
   /// so its drag recognizer leaves the gesture arena and the pinch wins.
   var _pointers = 0;
@@ -324,6 +332,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   }
 
   void _onZoomChanged() {
+    if (_beforeWheel != null) return;
     final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
     if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
     if (!_adjustingZoom &&
@@ -384,6 +393,75 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       position.maxScrollExtent,
     );
     if (to != position.pixels) position.jumpTo(to);
+  }
+
+  /// Ctrl (⌘ on macOS) + mouse wheel zooms around the pointer. Zoomed, the
+  /// wheel moves the page instead, as a drag does; unzoomed, the pages
+  /// scroll by themselves.
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || event.kind != PointerDeviceKind.mouse) {
+      return;
+    }
+    final keys = HardwareKeyboard.instance;
+    final zoom = keys.isControlPressed || keys.isMetaPressed;
+    if (!zoom && !_zoomed) return;
+    GestureBinding.instance.pointerSignalResolver.register(event, (e) {
+      final scroll = e as PointerScrollEvent;
+      zoom ? _wheelZoom(scroll) : _wheelPan(scroll);
+    });
+  }
+
+  void _wheelZoom(PointerScrollEvent event) {
+    final dy = event.scrollDelta.dy;
+    if (dy == 0) return;
+    _zoomAnimation.stop();
+    final m = _zoom.value;
+    final scale = m.getMaxScaleOnAxis();
+    final next = (scale * math.exp(-dy / kDefaultMouseScrollToScaleFactor))
+        .clamp(1.0, 4.0);
+    if (next == scale) return;
+    final p = event.localPosition;
+    final change = next / scale;
+    _setZoom(
+      Matrix4.identity()
+        ..translateByDouble(p.dx, p.dy, 0, 1)
+        ..scaleByDouble(change, change, 1, 1)
+        ..translateByDouble(-p.dx, -p.dy, 0, 1)
+        ..multiply(m),
+    );
+  }
+
+  /// Zoomed: the wheel moves the page down (sideways with Shift). In the
+  /// vertical reader the list scrolls instead, as in [_panVertical].
+  void _wheelPan(PointerScrollEvent event) {
+    var d = event.scrollDelta;
+    if (HardwareKeyboard.instance.isShiftPressed) d = Offset(d.dy, d.dx);
+    final m = _zoom.value;
+    if (_settings.state.readingDirection == ReadingDirection.vertical) {
+      _scrollList(d.dy / m.getMaxScaleOnAxis());
+      d = Offset(d.dx, 0);
+    }
+    if (d == Offset.zero) return;
+    final t = m.getTranslation();
+    _setZoom(m.clone()..setTranslationRaw(t.x - d.dx, t.y - d.dy, t.z));
+  }
+
+  /// Sets the viewer to [m], keeping the zoomed page over the whole screen.
+  void _setZoom(Matrix4 m) {
+    final size = _viewport;
+    if (size == null) return;
+    final scale = m.getMaxScaleOnAxis();
+    if (scale <= 1.001) {
+      _zoom.value = Matrix4.identity();
+      return;
+    }
+    final t = m.getTranslation();
+    _zoom.value = m
+      ..setTranslationRaw(
+        t.x.clamp(-(scale - 1) * size.width, 0.0),
+        t.y.clamp(-(scale - 1) * size.height, 0.0),
+        t.z,
+      );
   }
 
   void _onPointerDown(PointerDownEvent _) {
@@ -1042,6 +1120,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         onPointerDown: _onPointerDown,
         onPointerUp: _onPointerUp,
         onPointerCancel: _onPointerUp,
+        onPointerSignal: _onPointerSignal,
         child: GestureDetector(
           onTap: () => _setControls(!_controlsVisible),
           onDoubleTapDown: (d) => _doubleTap = d,
@@ -1060,12 +1139,24 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                 // unbounded because [_panVertical] keeps it in place and
                 // scrolls the list instead.
                 panEnabled: _zoomed,
-                onInteractionStart: (_) => _flingY = null,
+                onInteractionStart: (details) {
+                  _flingY = null;
+                  if (details.pointerCount == 0) {
+                    _beforeWheel = _zoom.value.clone();
+                  }
+                },
                 // A pan may fling on: see [_flingY]. Set after every gesture
                 // (the finger lifted is no longer counted in [details], and
                 // without a fling it changes nothing); the next one clears it.
-                onInteractionEnd: (_) =>
-                    _flingY = vertical && _zoomed ? _pinY : null,
+                onInteractionEnd: (_) {
+                  final before = _beforeWheel;
+                  if (before != null) {
+                    _zoom.value = before;
+                    _beforeWheel = null;
+                    return;
+                  }
+                  _flingY = vertical && _zoomed ? _pinY : null;
+                },
                 boundaryMargin: vertical
                     ? const EdgeInsets.all(double.infinity)
                     : EdgeInsets.zero,
@@ -1259,7 +1350,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           _listContext = n.context ?? _listContext;
           return false;
         },
-        child: list,
+        child: _zoomKeysTurnWheel(list),
       ),
     );
   }
@@ -1347,14 +1438,28 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         }
         final shown = useSpreads ? spreads.pages(index) : [index];
         if (shown.length == 1) {
-          return Padding(
+          final single = Padding(
             padding: EdgeInsets.symmetric(
               horizontal: settings.pageGap ? DotSpace.s1 : 0,
             ),
-            child: Center(
-              child: useSpreads
-                  ? image(shown.first)
-                  : _limitWidth(settings, image(shown.first)),
+            child: useSpreads
+                ? image(shown.first)
+                : _limitWidth(settings, image(shown.first)),
+          );
+          if (fit == PageFit.height) return Center(child: single);
+          // Fitted to width, a page can be taller than the screen (a wide
+          // window): it scrolls down, centred when shorter.
+          return LayoutBuilder(
+            builder: (context, constraints) => _zoomKeysTurnWheel(
+              SingleChildScrollView(
+                physics: _zoomed || _pinching
+                    ? const NeverScrollableScrollPhysics()
+                    : null,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Center(child: single),
+                ),
+              ),
             ),
           );
         }
@@ -1377,6 +1482,25 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           ],
         );
       },
+    );
+  }
+
+  /// Ctrl (⌘) + wheel zooms (see [_onPointerSignal]). With these keys held
+  /// the scroll views in [child] take the wheel as sideways, so a vertical
+  /// one doesn't scroll as well.
+  Widget _zoomKeysTurnWheel(Widget child) {
+    final behavior = ScrollConfiguration.of(context);
+    return ScrollConfiguration(
+      behavior: behavior.copyWith(
+        pointerAxisModifiers: {
+          ...behavior.pointerAxisModifiers,
+          LogicalKeyboardKey.controlLeft,
+          LogicalKeyboardKey.controlRight,
+          LogicalKeyboardKey.metaLeft,
+          LogicalKeyboardKey.metaRight,
+        },
+      ),
+      child: child,
     );
   }
 
