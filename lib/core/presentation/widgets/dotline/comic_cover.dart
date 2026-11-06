@@ -53,7 +53,13 @@ class ComicCover extends StatelessWidget {
                 memCacheWidth: _decodeWidth(context, constraints.maxWidth),
                 fadeInDuration: DotMotion.press,
                 placeholder: (_, _) => const DotGridPlaceholder(),
-                errorWidget: (_, _, _) => const DotGridPlaceholder(),
+                errorWidget: (_, url, _) {
+                  // A file that is not an image (e.g. a bot check page
+                  // cached in its place) goes, so the next showing
+                  // downloads it again.
+                  coverImageCache.removeFile(url).ignore();
+                  return const DotGridPlaceholder();
+                },
               ),
             ),
           // "-" is what a source without a format maps to.
