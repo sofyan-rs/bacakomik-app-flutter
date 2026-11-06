@@ -22,6 +22,7 @@ import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_c
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_info.dart';
 import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
+import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
 import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
 import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
 import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
@@ -411,10 +412,31 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     _slowNote = null;
   }
 
+  /// Chapters read here that the list did not have, each fetched for once.
+  final _unlisted = <String>{};
+
+  /// The reader goes on to chapters the source added after this page
+  /// loaded (a bookmark's stored list, or one loaded a while ago): reading
+  /// one fetches the comic again, so the list has it on the way back.
+  void _onHistory(BuildContext context, List<ReadHistory> history) {
+    final state = context.read<ComicDetailsBloc>().state;
+    if (state is! ComicDetailsLoaded || state.chaptersLoading) return;
+    final read = history.latestOf(widget.slug)?.slug;
+    if (read == null || _unlisted.contains(read)) return;
+    if (state.comicDetails.chapters.any((c) => c.slug == read)) return;
+    _unlisted.add(read);
+    _load();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ComicDetailsBloc, ComicDetailsState>(
-      listener: _onChaptersLoading,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ComicDetailsBloc, ComicDetailsState>(
+          listener: _onChaptersLoading,
+        ),
+        BlocListener<HistoryCubit, List<ReadHistory>>(listener: _onHistory),
+      ],
       child: _content(),
     );
   }
