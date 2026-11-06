@@ -3,6 +3,8 @@ import 'package:bacakomik_app/core/error/exceptions.dart';
 import 'package:bacakomik_app/core/source/comic_key.dart';
 import 'package:bacakomik_app/core/source/extension_manager.dart';
 import 'package:bacakomik_app/core/source/extension_meta.dart';
+import 'package:bacakomik_app/core/source/extension_runtime.dart';
+import 'package:bacakomik_app/core/utils/cover_url.dart';
 import 'package:injectable/injectable.dart';
 
 /// Comic data from the installed sources. Series are addressed by
@@ -40,8 +42,9 @@ class SeriesRemoteDataSourceImpl implements SeriesRemoteDataSource {
     String? query,
     FilterValues filters = const {},
   }) async {
+    final backend = await _sources.backend(sourceId);
     final res = _map(
-      await _call(sourceId, 'browse', [
+      await backend.call('browse', [
         {
           'page': page,
           'limit': limit ?? 30,
@@ -52,18 +55,29 @@ class SeriesRemoteDataSourceImpl implements SeriesRemoteDataSource {
     );
     return [
       for (final item in _list(res['items']))
-        SeriesResponse.fromJson(item)
-            .copyWith(slug: ComicKey.of(sourceId, '${item['slug']}')),
+        _withCover(
+          SeriesResponse.fromJson(item),
+          backend,
+        ).copyWith(slug: ComicKey.of(sourceId, '${item['slug']}')),
     ];
   }
 
   @override
   Future<SeriesDetailResponse> getSeries(String key) async {
-    final res = _map(
-      await _call(ComicKey.sourceOf(key), 'series', [ComicKey.slugOf(key)]),
-    );
-    return SeriesDetailResponse.fromJson(res).copyWith(slug: key);
+    final backend = await _sources.backend(ComicKey.sourceOf(key));
+    final res = _map(await backend.call('series', [ComicKey.slugOf(key)]));
+    final series = SeriesDetailResponse.fromJson(res);
+    return series.copyWith(slug: key, cover: _absolute(series.cover, backend));
   }
+
+  static SeriesResponse _withCover(SeriesResponse s, SourceBackend backend) =>
+      s.copyWith(cover: _absolute(s.cover, backend));
+
+  /// A cover given as a path on the site, against the source's base URL.
+  static String? _absolute(String? cover, SourceBackend backend) =>
+      cover != null && backend is LoadedSource
+      ? absoluteCover(cover, backend.meta.baseUrl)
+      : cover;
 
   @override
   Future<List<ChapterResponse>> getChapters(String key) async {
