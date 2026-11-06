@@ -2,7 +2,7 @@ name: bacakomik_app
 description: "Manga application project."
 publish_to: "none"
 
-version: 2.14.1+32
+version: 2.14.2+33
 
 environment:
   sdk: ^3.13.0
