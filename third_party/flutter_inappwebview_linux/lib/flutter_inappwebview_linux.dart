@@ -122,7 +122,7 @@ class LinuxInAppWebViewController extends PlatformInAppWebViewController {
     final p = _params;
     if (p == null) return null;
     final url = switch (args['url']) {
-      final String u => WebUri(u),
+      final String u when u.isNotEmpty => WebUri(u),
       _ => null,
     };
     switch (method) {

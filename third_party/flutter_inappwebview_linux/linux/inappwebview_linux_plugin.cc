@@ -314,6 +314,29 @@ gboolean OnLoadFailed(GtkWidget*, int, const char* uri, GError* error,
   return FALSE;
 }
 
+// A certificate WebKit refuses (e.g. an ISP's block page standing in for
+// the site) is not a load-failed. Reported like other errors, so the app
+// shows its own page instead of WebKit's and a hidden page fails at once.
+gboolean OnTlsFailed(GtkWidget*, const char* uri, GTlsCertificate*,
+                     GTlsCertificateFlags errors, gpointer data) {
+  const char* description =
+      errors & G_TLS_CERTIFICATE_BAD_IDENTITY
+          ? "The certificate is not this site's: the network may be "
+            "blocking it"
+      : errors & G_TLS_CERTIFICATE_EXPIRED
+          ? "The site's certificate has expired"
+      : errors & G_TLS_CERTIFICATE_UNKNOWN_CA
+          ? "The site's certificate is not from a trusted authority"
+          : "The site's certificate was refused";
+  auto* view = static_cast<View*>(data);
+  FlValue* args = EventArgs(view);
+  SetString(args, "url", uri);
+  SetString(args, "description", description);
+  fl_value_set_string_take(args, "code", fl_value_new_int(errors));
+  Send("onReceivedError", args);
+  return TRUE;
+}
+
 void OnTitle(GObject*, GParamSpec*, gpointer data) {
   auto* view = static_cast<View*>(data);
   FlValue* args = EventArgs(view);
@@ -431,6 +454,8 @@ FlMethodResponse* Create(FlValue* args) {
                    view);
   g_signal_connect(view->web_view, "load-failed", G_CALLBACK(OnLoadFailed),
                    view);
+  g_signal_connect(view->web_view, "load-failed-with-tls-errors",
+                   G_CALLBACK(OnTlsFailed), view);
   g_signal_connect(view->web_view, "notify::title", G_CALLBACK(OnTitle), view);
   g_signal_connect(view->web_view, "notify::uri", G_CALLBACK(OnUri), view);
   g_signal_connect(view->web_view, "notify::estimated-load-progress",
