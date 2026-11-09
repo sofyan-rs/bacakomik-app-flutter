@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io' as io;
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/source/extension_bridge.dart';
-import 'package:bacakomik_app/core/source/extension_manager.dart';
-import 'package:bacakomik_app/core/source/headless_pages.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/utils/utils.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/di/injection.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/source/extension_bridge.dart';
+import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/source/headless_pages.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';

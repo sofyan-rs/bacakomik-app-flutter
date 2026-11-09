@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
-import 'package:bacakomik_app/features/category/domain/entities/category.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/features/category/domain/entities/category.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'library_backup.freezed.dart';

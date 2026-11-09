@@ -1,10 +1,10 @@
 import 'dart:math';
 
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/category/domain/entities/category.dart';
-import 'package:bacakomik_app/features/category/domain/usecases/category_usecases.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/category/domain/entities/category.dart';
+import 'package:yoru/features/category/domain/usecases/category_usecases.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';

@@ -1,5 +1,5 @@
 class AppVariables {
-  static const String appName = 'BacaKomik';
+  static const String appName = 'Yoru';
   static const String appDescription =
       'This app is developed by Kurodev with Flutter.';
   static const String baseUrl = String.fromEnvironment(
@@ -12,7 +12,11 @@ class AppVariables {
 
   /// Host of shared comic links. Its `/.well-known/assetlinks.json` lets
   /// Android open them in the app; see `hosting/`.
-  static const String linkHost = 'bacakomik.kurodev.org';
+  static const String linkHost = 'yoru.kurodev.org';
+
+  /// Host of links shared before the app was renamed to Yoru (2.17.0).
+  /// They still open the app.
+  static const String oldLinkHost = 'bacakomik.kurodev.org';
 
   /// OAuth client of type "Web application" in the Google Cloud project;
   /// Android sign-in needs it as the server client id. The Android clients

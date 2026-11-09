@@ -1,7 +1,7 @@
 // From Mihon's ChapterRecognition (Apache License 2.0,
 // https://github.com/mihonapp/mihon). Mihon finds the number in a chapter's
 // name when the extension leaves chapter_number unset (-1); many do.
-package org.kurodev.bacakomik.mihon
+package org.kurodev.yoru.mihon
 
 object ChapterRecognition {
     private const val NUMBER_PATTERN = """([0-9]+)(\.[0-9]+)?(\.?[a-z]+)?"""

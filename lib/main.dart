@@ -1,27 +1,29 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:bacakomik_app/app/app.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/core/network/cover_cache_migration.dart';
-import 'package:bacakomik_app/core/network/image_cache.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/source/extension_manager.dart';
-import 'package:bacakomik_app/core/storage/box_recovery.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
-import 'package:bacakomik_app/core/utils/cover_url.dart';
-import 'package:bacakomik_app/features/bookmark/data/models/bookmark_model.dart';
-import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_data_source.dart';
-import 'package:bacakomik_app/features/download/data/datasources/download_local_data_source.dart';
-import 'package:bacakomik_app/features/download/data/models/downloaded_chapter_model.dart';
-import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
-import 'package:bacakomik_app/features/history/data/models/read_history_model.dart';
+import 'package:yoru/app/app.dart';
+import 'package:yoru/core/di/injection.dart';
+import 'package:yoru/core/network/cover_cache_migration.dart';
+import 'package:yoru/core/network/image_cache.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/storage/box_recovery.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
+import 'package:yoru/core/storage/old_app_id_migration.dart';
+import 'package:yoru/core/utils/cover_url.dart';
+import 'package:yoru/features/bookmark/data/models/bookmark_model.dart';
+import 'package:yoru/features/bookmark/data/datasources/bookmark_local_data_source.dart';
+import 'package:yoru/features/download/data/datasources/download_local_data_source.dart';
+import 'package:yoru/features/download/data/models/downloaded_chapter_model.dart';
+import 'package:yoru/features/history/data/datasources/history_local_data_source.dart';
+import 'package:yoru/features/history/data/models/read_history_model.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await moveDataFromOldAppId();
   // Desktop documents folders belong to the user, not to app data.
   hiveDirectory =
       (Platform.isAndroid || Platform.isIOS

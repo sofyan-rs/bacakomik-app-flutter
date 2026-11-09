@@ -1,6 +1,6 @@
 # Contribution guide
 
-Recipes for working on BacaKomik. Read [ARCHITECTURE.md](ARCHITECTURE.md) once first.
+Recipes for working on Yoru. Read [ARCHITECTURE.md](ARCHITECTURE.md) once first.
 
 § numbers refer to this file; "ARCHITECTURE §n" to the other one.
 
@@ -71,7 +71,7 @@ bun scripts/bundle.ts ../bacakomik-app-flutter/assets/extensions bacakomik vorat
 2. Optionally write `.github/release-notes/v1.6.0.md` (otherwise notes come from commits).
 3. Commit, then `git tag v1.6.0 && git push origin v1.6.0`.
 
-`.github/workflows/release.yml` checks the tag against the pubspec, runs analyze and tests, and publishes signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs as `BacaKomik-<version>-<abi>.apk` with a "Which APK?" table. **Don't rename the assets or that heading**: installed apps find updates through them.
+`.github/workflows/release.yml` checks the tag against the pubspec, runs analyze and tests, and publishes signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs as `Yoru-<version>-<abi>.apk` with a "Which APK?" table. **Keep the asset suffixes (`-<abi>.apk`, `-windows-setup.exe`, `-macos.zip`, `-linux-x86_64.AppImage`) and that heading**: installed apps find updates through them. The prefix can change (it was `BacaKomik-` before 2.17.0).
 
 Secrets (Settings → Secrets → Actions): `KEYSTORE_BASE64` (`base64 -w0 upload-keystore.jks`), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Local signing reads `android/key.properties` (git-ignored: `storeFile`, `storePassword`, `keyAlias`, `keyPassword`). **Back up the keystore and password**; without them no update can ship. By hand: `flutter build apk --release --split-per-abi` (per ABI), `flutter build apk --release` (universal), `flutter build appbundle --release`.
 
@@ -96,7 +96,7 @@ Mihon extensions run in Kotlin, in `android/mihon` (ARCHITECTURE §8.9).
 1. **Kotlin tests** (no device): `cd android && ./gradlew :mihon:testDebugUnitTest` (chapter numbers, synopsis parsing, filters). Results in `build/mihon/test-results/`. Dart side: `flutter test test/core/mihon_test.dart`.
 2. **Always try a release build** (Recipe G): R8 runs only there, and a class it strips that an extension or native code needs only fails on the phone (an abort in `logcat -b crash`). Add keep rules to `android/mihon/consumer-rules.pro`.
 3. **On the phone:** add a Mihon repo (e.g. Keiyoushi's `index.min.json`), install two or three extensions (one HTML site, one API site, one behind Cloudflare), then Home, Explore search and filters, comic page, reader, download, settings, uninstall. For the Mihon import, a small `.tachibk` pushed to `/sdcard/Download` works; don't import test data into a library you keep.
-4. **Vendored code** (`eu/`, `mihon/`, `tachiyomi/`) comes from SCANCORE's `host/api` and keeps Mihon's package names, as extensions link against them. The host in `org/kurodev/bacakomik/mihon/host/` started as SCANCORE's `host/` (package `com.mediumdev.scancore.host`) and is now the app's own; porting a SCANCORE fix means diffing by hand (changes are marked `BACAKOMIK`). library versions in `android/mihon/build.gradle` follow Mihon's, and a new extension lib version goes into both `AndroidLoader.libs` and `supportedMihonLibs`.
+4. **Vendored code** (`eu/`, `mihon/`, `tachiyomi/`) comes from SCANCORE's `host/api` and keeps Mihon's package names, as extensions link against them. The host in `org/kurodev/yoru/mihon/host/` started as SCANCORE's `host/` (package `com.mediumdev.scancore.host`) and is now the app's own; porting a SCANCORE fix means diffing by hand (changes are marked `BACAKOMIK`). library versions in `android/mihon/build.gradle` follow Mihon's, and a new extension lib version goes into both `AndroidLoader.libs` and `supportedMihonLibs`.
 
 ---
 
@@ -112,7 +112,7 @@ Reading order: run the app; ARCHITECTURE §3–§4; `features/home/` end to end 
 
 **Code**
 - `flutter analyze` clean (`flutter_lints`). `dart format` new files; in old files format only what you change (ARCHITECTURE §12).
-- `package:bacakomik_app/...` imports. Comment *why*; `///` on public and non-obvious things.
+- `package:yoru/...` imports. Comment *why*; `///` on public and non-obvious things.
 - No `!` on values that can be null, no empty `catch`: return a `Failure` or `debugPrint`.
 - Strings in `AppText`, colours from `Dotline.of(context)`.
 
@@ -188,4 +188,4 @@ PR checklist (also in `.github/pull_request_template.md`):
 
 ## 9. Scope guard
 
-BacaKomik is a reader: **browse comics from installed sources, read chapters, keep a library on the device** (optionally synced via the user's Drive). New sites are extensions. Accounts, a server-side library or site code in the app start as a discussion issue, not a PR. Changes to stored data, backup or sync need a migration plan first.
+Yoru is a reader: **browse comics from installed sources, read chapters, keep a library on the device** (optionally synced via the user's Drive). New sites are extensions. Accounts, a server-side library or site code in the app start as a discussion issue, not a PR. Changes to stored data, backup or sync need a migration plan first.

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:bacakomik_app/features/migration/domain/entities/mihon_backup.dart';
+import 'package:yoru/features/migration/domain/entities/mihon_backup.dart';
 
 /// Reads the parts of a Mihon/Tachiyomi backup the import needs (forks such
 /// as TachiyomiSY add fields, which are skipped). The file

@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/pending_read.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/migration/domain/entities/pending_read.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Reading progress imported from another app, kept until the comic's

@@ -1,9 +1,9 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/migration/presentation/widgets/source_choice_sheet.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/migration/presentation/widgets/source_choice_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 

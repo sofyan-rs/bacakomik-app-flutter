@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/features/category/domain/entities/category.dart';
+import 'package:yoru/features/category/domain/entities/category.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'category_model.g.dart';

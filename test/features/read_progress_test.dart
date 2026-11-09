@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_progress.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/features/history/domain/entities/read_progress.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ComicDetails _details(List<String> numbers) => ComicDetails(

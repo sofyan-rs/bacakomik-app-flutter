@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/scroll_away_header.dart';
+import 'package:yoru/core/presentation/widgets/dotline/scroll_away_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

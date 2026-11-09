@@ -1,4 +1,4 @@
-package org.kurodev.bacakomik.mihon
+package org.kurodev.yoru.mihon
 
 /**
  * Mihon has no fields for alternative titles or a rating, so extensions put

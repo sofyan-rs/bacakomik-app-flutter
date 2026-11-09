@@ -1,7 +1,7 @@
-package org.kurodev.bacakomik.mihon
+package org.kurodev.yoru.mihon
 
 import android.content.Context
-import org.kurodev.bacakomik.mihon.host.HostError
+import org.kurodev.yoru.mihon.host.HostError
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive

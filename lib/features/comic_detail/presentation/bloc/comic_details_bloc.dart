@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/comic_detail/domain/usecases/get_comic_details.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/comic_detail/domain/usecases/get_comic_details.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';

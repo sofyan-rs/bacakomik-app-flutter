@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/network/network_info.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/network/network_info.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Runs a remote call after a connectivity check and maps errors to

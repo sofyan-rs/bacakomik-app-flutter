@@ -1,12 +1,12 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
-import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
-import 'package:bacakomik_app/features/bookmark/domain/usecases/merge_sources.dart';
-import 'package:bacakomik_app/features/comic_detail/domain/repositories/comic_detail_repository.dart';
-import 'package:bacakomik_app/features/download/domain/repositories/download_repository.dart';
-import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:yoru/features/bookmark/domain/usecases/merge_sources.dart';
+import 'package:yoru/features/comic_detail/domain/repositories/comic_detail_repository.dart';
+import 'package:yoru/features/download/domain/repositories/download_repository.dart';
+import 'package:yoru/features/history/domain/repositories/history_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

@@ -1,10 +1,11 @@
 # Link hosting
 
-`worker/` is a Cloudflare Worker for `bacakomik.kurodev.org`, the host of
-shared series links (`https://bacakomik.kurodev.org/series/<slug>`).
+`worker/` is a Cloudflare Worker for `yoru.kurodev.org`, the host of
+shared series links (`https://yoru.kurodev.org/series/<slug>`). It also
+serves `bacakomik.kurodev.org`, the host from before the rename to Yoru.
 
 - `/.well-known/assetlinks.json` lets Android verify the App Link, so the
-  link opens BacaKomik directly instead of the browser. It lists the
+  link opens Yoru directly instead of the browser. It lists the
   SHA-256 fingerprint of the release (upload) signing key in
   `src/index.js`. Update it if the key changes:
   `keytool -list -v -keystore <keystore.jks> -alias upload`.
@@ -37,6 +38,6 @@ Android verifies the link when the app is installed. After the first
 deploy, re-verify an installed app:
 
 ```sh
-adb shell pm verify-app-links --re-verify org.kurodev.bacakomik
-adb shell pm get-app-links org.kurodev.bacakomik   # bacakomik.kurodev.org: verified
+adb shell pm verify-app-links --re-verify org.kurodev.yoru
+adb shell pm get-app-links org.kurodev.yoru   # yoru.kurodev.org and bacakomik.kurodev.org: verified
 ```

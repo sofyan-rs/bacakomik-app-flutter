@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:bacakomik_app/core/di/register_module.dart';
-import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
-import 'package:bacakomik_app/features/update/domain/entities/update_progress.dart';
+import 'package:yoru/core/di/register_module.dart';
+import 'package:yoru/features/update/domain/entities/app_release.dart';
+import 'package:yoru/features/update/domain/entities/update_progress.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
@@ -157,7 +157,7 @@ class DesktopAppInstaller implements AppInstaller {
     final String script;
     final Map<String, String> env;
     if (Platform.isMacOS) {
-      // …/BacaKomik.app/Contents/MacOS/BacaKomik
+      // …/Yoru.app/Contents/MacOS/Yoru
       final app = File(Platform.resolvedExecutable).parent.parent.parent.path;
       script = r'''
 while kill -0 "$PID" 2>/dev/null; do sleep 0.3; done

@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Tap target that shrinks to [DotMotion.pressScale] while pressed.

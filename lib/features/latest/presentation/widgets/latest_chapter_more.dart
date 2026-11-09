@@ -1,13 +1,13 @@
-import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_card.dart';
-import 'package:bacakomik_app/features/latest/presentation/bloc/latest_bloc.dart';
+import 'package:yoru/core/presentation/bloc/comic_list_state.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/home/presentation/widgets/latest_chapter_card.dart';
+import 'package:yoru/features/latest/presentation/bloc/latest_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/source/presentation/widgets/source_error.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 
 /// Paginated latest chapters, in the same list group rows as the home tab.
 class LatestChapterMore extends StatefulWidget {

@@ -90,7 +90,7 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "kurodev" "\0"
-            VALUE "FileDescription", "BacaKomik" "\0"
+            VALUE "FileDescription", "Yoru" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "bacakomik" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 org.kurodev. All rights reserved." "\0"

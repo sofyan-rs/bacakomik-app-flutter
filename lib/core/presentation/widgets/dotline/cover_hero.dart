@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/network/image_cache.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/comic_cover.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/network/image_cache.dart';
+import 'package:yoru/core/presentation/widgets/dotline/comic_cover.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 

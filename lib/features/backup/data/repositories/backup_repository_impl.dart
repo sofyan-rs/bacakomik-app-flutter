@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/backup/data/datasources/backup_file_data_source.dart';
-import 'package:bacakomik_app/features/backup/domain/entities/library_backup.dart';
-import 'package:bacakomik_app/features/backup/domain/repositories/backup_repository.dart';
-import 'package:bacakomik_app/features/bookmark/data/models/bookmark_model.dart';
-import 'package:bacakomik_app/features/category/data/models/category_model.dart';
-import 'package:bacakomik_app/features/history/data/models/read_history_model.dart';
+import 'package:yoru/core/data/models/comic_details_model.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/backup/data/datasources/backup_file_data_source.dart';
+import 'package:yoru/features/backup/domain/entities/library_backup.dart';
+import 'package:yoru/features/backup/domain/repositories/backup_repository.dart';
+import 'package:yoru/features/bookmark/data/models/bookmark_model.dart';
+import 'package:yoru/features/category/data/models/category_model.dart';
+import 'package:yoru/features/history/data/models/read_history_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';

@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:background_downloader/background_downloader.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/network/image_cache.dart';
-import 'package:bacakomik_app/core/source/mihon_host.dart';
-import 'package:bacakomik_app/features/download/data/datasources/download_file_data_source.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/network/image_cache.dart';
+import 'package:yoru/core/source/mihon_host.dart';
+import 'package:yoru/features/download/data/datasources/download_file_data_source.dart';
 import 'package:injectable/injectable.dart';
 
 /// One chapter page to save.

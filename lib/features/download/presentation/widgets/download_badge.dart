@@ -1,8 +1,8 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 

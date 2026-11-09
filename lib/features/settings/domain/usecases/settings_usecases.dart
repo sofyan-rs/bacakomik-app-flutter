@@ -1,7 +1,7 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
-import 'package:bacakomik_app/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/domain/repositories/settings_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

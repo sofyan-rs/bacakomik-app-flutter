@@ -1,27 +1,27 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/core/utils/utils.dart';
-import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
-import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
-import 'package:bacakomik_app/features/download/presentation/pages/downloads_screen.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/pages/extensions_screen.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
-import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
-import 'package:bacakomik_app/features/settings/presentation/widgets/app_info.dart';
-import 'package:bacakomik_app/features/settings/presentation/widgets/clear_cache_sheet.dart';
-import 'package:bacakomik_app/features/sync/presentation/widgets/sync_section.dart';
-import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
-import 'package:bacakomik_app/features/migration/presentation/pages/import_screen.dart';
-import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/constants/variables.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/utils.dart';
+import 'package:yoru/features/backup/presentation/bloc/backup_cubit.dart';
+import 'package:yoru/features/download/presentation/bloc/download_cubit.dart';
+import 'package:yoru/features/download/presentation/pages/downloads_screen.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/source/presentation/pages/extensions_screen.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:yoru/features/settings/presentation/widgets/app_info.dart';
+import 'package:yoru/features/settings/presentation/widgets/clear_cache_sheet.dart';
+import 'package:yoru/features/sync/presentation/widgets/sync_section.dart';
+import 'package:yoru/features/update/presentation/bloc/update_cubit.dart';
+import 'package:yoru/features/migration/presentation/pages/import_screen.dart';
+import 'package:yoru/features/migration/presentation/pages/source_migration_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:bacakomik_app/features/category/presentation/pages/categories_screen.dart';
-import 'package:bacakomik_app/core/network/image_cache.dart';
+import 'package:yoru/features/category/presentation/pages/categories_screen.dart';
+import 'package:yoru/core/network/image_cache.dart';
 
 /// More groups: incognito mode, SOURCES (extensions, migrate source),
 /// LIBRARY (categories, downloads, cache), SYNC, BACKUP (file, restore,

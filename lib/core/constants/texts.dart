@@ -58,7 +58,7 @@ class AppText {
   static const String searchChapterHint = 'Chapter number';
   static const String sortChapter = 'Sort chapters';
   static const String share = 'Share';
-  static const String shareSuffix = 'read it on BacaKomik';
+  static const String shareSuffix = 'read it on Yoru';
   static const String titleCopied = 'Title copied to clipboard';
   static const String copyTitle = 'Copy title';
   static const String successSaveImg = 'Image saved to gallery.';
@@ -499,7 +499,7 @@ class AppText {
   static const String readingFile = 'Reading file…';
   static const String mihonHint =
       'In Mihon, open More → Backup and restore → Create backup, then pick '
-      'the .tachibk file here. Only bookmarked comics from sources BacaKomik '
+      'the .tachibk file here. Only bookmarked comics from sources Yoru '
       'has are imported, with their categories and read chapters. Run it '
       'again to bring read chapters to comics imported before.';
   static const String notAvailableHere = 'Not available here';

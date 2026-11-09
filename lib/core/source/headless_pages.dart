@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ffi' show DynamicLibrary;
 import 'dart:io' as io;
 
-import 'package:bacakomik_app/core/error/exceptions.dart';
+import 'package:yoru/core/error/exceptions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';

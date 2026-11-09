@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/network/image_cache.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/network/image_cache.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';

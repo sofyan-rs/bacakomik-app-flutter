@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/theme/dotline_theme.dart';
-import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/theme/dotline_theme.dart';
+import 'package:yoru/features/reader/presentation/widgets/chapter_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_test/flutter_test.dart';

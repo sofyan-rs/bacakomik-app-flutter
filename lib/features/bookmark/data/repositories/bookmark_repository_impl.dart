@@ -1,10 +1,10 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/storage/library_journal.dart';
-import 'package:bacakomik_app/core/storage/local_call.dart';
-import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_data_source.dart';
-import 'package:bacakomik_app/features/bookmark/data/models/bookmark_model.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
-import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/storage/library_journal.dart';
+import 'package:yoru/core/storage/local_call.dart';
+import 'package:yoru/features/bookmark/data/datasources/bookmark_local_data_source.dart';
+import 'package:yoru/features/bookmark/data/models/bookmark_model.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/features/bookmark/domain/repositories/bookmark_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

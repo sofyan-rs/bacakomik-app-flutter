@@ -1,5 +1,5 @@
 // From SCANCORE's AndroidSettings.kt (MIT, LICENSE-SCANCORE).
-package org.kurodev.bacakomik.mihon.host.android
+package org.kurodev.yoru.mihon.host.android
 
 import android.content.Context
 import androidx.preference.EditTextPreference
@@ -9,9 +9,9 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceScreen
 import androidx.preference.TwoStatePreference
-import org.kurodev.bacakomik.mihon.host.Configurable
-import org.kurodev.bacakomik.mihon.host.HostError
-import org.kurodev.bacakomik.mihon.host.SettingsBridge
+import org.kurodev.yoru.mihon.host.Configurable
+import org.kurodev.yoru.mihon.host.HostError
+import org.kurodev.yoru.mihon.host.SettingsBridge
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull

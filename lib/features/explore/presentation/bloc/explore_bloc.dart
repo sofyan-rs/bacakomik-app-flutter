@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
-import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.dart';
-import 'package:bacakomik_app/features/explore/domain/usecases/explore_comics.dart';
+import 'package:yoru/core/presentation/bloc/comic_list_state.dart';
+import 'package:yoru/features/explore/domain/entities/explore_filter.dart';
+import 'package:yoru/features/explore/domain/usecases/explore_comics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 

@@ -1,26 +1,26 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/app/root_tabs.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
-import 'package:bacakomik_app/core/presentation/widgets/comic_grid.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.dart';
-import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
-import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
-import 'package:bacakomik_app/features/explore/presentation/widgets/filter_comic.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_picker_sheet.dart';
+import 'package:yoru/app/root_tabs.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/bloc/comic_list_state.dart';
+import 'package:yoru/core/presentation/widgets/comic_grid.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/explore/domain/entities/explore_filter.dart';
+import 'package:yoru/features/explore/presentation/bloc/explore_bloc.dart';
+import 'package:yoru/features/explore/presentation/bloc/filter_cubit.dart';
+import 'package:yoru/features/explore/presentation/widgets/filter_comic.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/source/presentation/widgets/source_picker_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
-import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
+import 'package:yoru/features/source/presentation/pages/web_view_screen.dart';
+import 'package:yoru/features/source/presentation/widgets/source_error.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});

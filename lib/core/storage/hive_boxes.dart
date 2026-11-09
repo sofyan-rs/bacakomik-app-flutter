@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/storage/box_recovery.dart';
+import 'package:yoru/core/storage/box_recovery.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:bacakomik_app/core/source/extension_meta.dart';
+import 'package:yoru/core/source/extension_meta.dart';
 
 /// Mihon 0.20.1+ "extension store" index (`index_v2` in a repo's
 /// `repo.json`): a protobuf message, often gzipped. The repo's

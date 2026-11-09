@@ -1,5 +1,5 @@
-name: bacakomik_app
-description: "Manga application project."
+name: yoru
+description: "Yoru, a manga, manhwa and manhua reader."
 publish_to: "none"
 
 version: 2.16.0+37

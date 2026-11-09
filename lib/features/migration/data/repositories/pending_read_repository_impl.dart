@@ -1,9 +1,9 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/storage/box_recovery.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
-import 'package:bacakomik_app/core/storage/local_call.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/pending_read.dart';
-import 'package:bacakomik_app/features/migration/domain/repositories/pending_read_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/storage/box_recovery.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
+import 'package:yoru/core/storage/local_call.dart';
+import 'package:yoru/features/migration/domain/entities/pending_read.dart';
+import 'package:yoru/features/migration/domain/repositories/pending_read_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/mihon_store.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/mihon_store.dart';
 import 'package:dio/dio.dart';
 
 /// Mihon extension repos (e.g. Keiyoushi): a base URL with `repo.json`

@@ -1,8 +1,8 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
-import 'package:bacakomik_app/features/download/domain/repositories/download_repository.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/download/domain/entities/download_library.dart';
+import 'package:yoru/features/download/domain/repositories/download_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

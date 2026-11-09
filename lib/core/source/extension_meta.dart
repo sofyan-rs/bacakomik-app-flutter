@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
-import 'package:bacakomik_app/core/utils/version.dart';
+import 'package:yoru/core/utils/version.dart';
 
 /// Extension lib versions the Mihon host runs (`AndroidLoader.libs`).
 const supportedMihonLibs = {'1.4', '1.5', '1.6'};

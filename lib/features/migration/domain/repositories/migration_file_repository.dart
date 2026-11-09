@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/comix_csv.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/mihon_backup.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/migration/domain/entities/comix_csv.dart';
+import 'package:yoru/features/migration/domain/entities/mihon_backup.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Library files exported by other apps. Each pick returns null when the

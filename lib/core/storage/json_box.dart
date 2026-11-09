@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:bacakomik_app/core/storage/box_recovery.dart';
+import 'package:yoru/core/storage/box_recovery.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce/hive.dart';
 

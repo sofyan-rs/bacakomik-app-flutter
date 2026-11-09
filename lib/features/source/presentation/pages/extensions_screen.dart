@@ -1,21 +1,21 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/core/utils/language_names.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/extensions_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/extension_filters.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/extension_icon.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/mihon_settings_sheet.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/repos_sheet.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_picker_sheet.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/di/injection.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/language_names.dart';
+import 'package:yoru/features/source/presentation/bloc/extensions_cubit.dart';
+import 'package:yoru/features/source/presentation/widgets/extension_filters.dart';
+import 'package:yoru/features/source/presentation/widgets/extension_icon.dart';
+import 'package:yoru/features/source/presentation/widgets/mihon_settings_sheet.dart';
+import 'package:yoru/features/source/presentation/widgets/repos_sheet.dart';
+import 'package:yoru/features/source/presentation/widgets/source_picker_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/languages_sheet.dart';
+import 'package:yoru/features/source/presentation/widgets/languages_sheet.dart';
 
 /// Installed extensions with their updates, and the ones the repos offer,
 /// filtered by language.

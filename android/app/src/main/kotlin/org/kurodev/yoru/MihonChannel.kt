@@ -1,7 +1,7 @@
-package org.kurodev.bacakomik
+package org.kurodev.yoru
 
 import android.content.Context
-import org.kurodev.bacakomik.mihon.host.describeFailure
+import org.kurodev.yoru.mihon.host.describeFailure
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
@@ -12,8 +12,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
-import org.kurodev.bacakomik.mihon.MihonHost
-import org.kurodev.bacakomik.mihon.MihonProxy
+import org.kurodev.yoru.mihon.MihonHost
+import org.kurodev.yoru.mihon.MihonProxy
 
 /**
  * `bacakomik/mihon`: Dart's way to [MihonHost].

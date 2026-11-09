@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/domain/entities/comic.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
+import 'package:yoru/core/domain/entities/comic.dart';
+import 'package:yoru/core/error/failures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';

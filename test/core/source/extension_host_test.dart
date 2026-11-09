@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:bacakomik_app/core/source/extension_bridge.dart';
-import 'package:bacakomik_app/core/source/extension_runtime.dart';
-import 'package:bacakomik_app/core/storage/box_recovery.dart';
+import 'package:yoru/core/source/extension_bridge.dart';
+import 'package:yoru/core/source/extension_runtime.dart';
+import 'package:yoru/core/storage/box_recovery.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

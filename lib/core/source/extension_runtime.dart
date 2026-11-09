@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/extension_meta.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_js/flutter_js.dart';
 

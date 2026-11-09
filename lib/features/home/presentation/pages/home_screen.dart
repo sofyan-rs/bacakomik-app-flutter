@@ -1,24 +1,24 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:bacakomik_app/app/root_tabs.dart';
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter.dart';
-import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_picker_sheet.dart';
+import 'package:yoru/app/root_tabs.dart';
+import 'package:yoru/core/assets/assets.gen.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/constants/variables.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/home/presentation/bloc/home_bloc.dart';
+import 'package:yoru/features/home/presentation/widgets/comic_slider.dart';
+import 'package:yoru/features/home/presentation/widgets/last_read_comic.dart';
+import 'package:yoru/features/home/presentation/widgets/latest_chapter.dart';
+import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/source/presentation/widgets/source_picker_sheet.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
+import 'package:yoru/features/source/presentation/widgets/source_error.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

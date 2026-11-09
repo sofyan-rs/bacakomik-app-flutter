@@ -1,16 +1,16 @@
-package org.kurodev.bacakomik.mihon
+package org.kurodev.yoru.mihon
 
 import android.app.Application
 import android.content.Context
-import org.kurodev.bacakomik.mihon.host.ExtensionHost
-import org.kurodev.bacakomik.mihon.host.HostError
-import org.kurodev.bacakomik.mihon.host.MemoStore
-import org.kurodev.bacakomik.mihon.host.android.AndroidLoader
-import org.kurodev.bacakomik.mihon.host.android.AndroidSettings
-import org.kurodev.bacakomik.mihon.host.android.WebViewBrowserCheck
-import org.kurodev.bacakomik.mihon.host.android.WebViewCookieJar
-import org.kurodev.bacakomik.mihon.host.optString
-import org.kurodev.bacakomik.mihon.host.string
+import org.kurodev.yoru.mihon.host.ExtensionHost
+import org.kurodev.yoru.mihon.host.HostError
+import org.kurodev.yoru.mihon.host.MemoStore
+import org.kurodev.yoru.mihon.host.android.AndroidLoader
+import org.kurodev.yoru.mihon.host.android.AndroidSettings
+import org.kurodev.yoru.mihon.host.android.WebViewBrowserCheck
+import org.kurodev.yoru.mihon.host.android.WebViewCookieJar
+import org.kurodev.yoru.mihon.host.optString
+import org.kurodev.yoru.mihon.host.string
 import eu.kanade.tachiyomi.AppInfo
 import eu.kanade.tachiyomi.network.HostNetwork
 import eu.kanade.tachiyomi.network.JavaScriptEngine

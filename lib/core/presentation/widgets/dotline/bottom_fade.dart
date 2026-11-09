@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Fades scrolled content into `bg` at the bottom of the screen, behind the

@@ -1,10 +1,10 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/core/utils/utils.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/utils.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 
 import 'dart:io';
 import 'dart:math';
@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
-import 'package:bacakomik_app/core/network/image_cache.dart';
+import 'package:yoru/core/network/image_cache.dart';
 
 /// One chapter page. Long press (or right click) to save it.
 ///

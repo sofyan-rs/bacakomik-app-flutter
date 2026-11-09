@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:bacakomik_app/core/utils/utils.dart';
+import 'package:yoru/core/utils/utils.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
