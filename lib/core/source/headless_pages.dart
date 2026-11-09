@@ -12,6 +12,26 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 /// the app does not ship.
 final bool webViewAvailable = kIsWeb || !io.Platform.isLinux || _hasWebKitGtk();
 
+/// Why a certificate was refused, e.g. an ISP's block page answering for the
+/// site; worded as the Linux WebView words it.
+String certificateRefused(SslErrorType? code) {
+  if (code == SslErrorType.IDMISMATCH ||
+      code == SslErrorType.COMMON_NAME_IS_INCORRECT) {
+    return "The certificate is not this site's: the network may be "
+        'blocking it';
+  }
+  if (code == SslErrorType.EXPIRED) return "The site's certificate has expired";
+  if (code == SslErrorType.UNTRUSTED) {
+    return "The site's certificate is not from a trusted authority";
+  }
+  return "The site's certificate was refused";
+}
+
+/// Android cancels a refused certificate without reporting a load error
+/// (other platforms report one), so the app asks to hear of it there. Not
+/// elsewhere: macOS would ask about every certificate, good or not.
+final bool hearsOfCertificates = !kIsWeb && io.Platform.isAndroid;
+
 bool _hasWebKitGtk() {
   try {
     DynamicLibrary.open('libwebkit2gtk-4.1.so.0');
@@ -158,6 +178,25 @@ class HeadlessPages {
         ),
         onWebViewCreated: (c) => page.controller = c,
         onCreateWindow: (_, _) async => false,
+        onReceivedServerTrustAuthRequest: !hearsOfCertificates
+            ? null
+            : (_, challenge) {
+                if (challenge.protectionSpace.sslError == null) return null;
+                // The site itself, not something it embeds, answered with it.
+                if (challenge.protectionSpace.host == page.host &&
+                    !(page.loaded?.isCompleted ?? true)) {
+                  page.loaded!.completeError(
+                    ServerException(
+                      certificateRefused(
+                        challenge.protectionSpace.sslError?.code,
+                      ),
+                    ),
+                  );
+                }
+                return ServerTrustAuthResponse(
+                  action: ServerTrustAuthResponseAction.CANCEL,
+                );
+              },
         shouldOverrideUrlLoading: (_, action) async {
           final to = action.request.url?.host ?? '';
           final allowed =

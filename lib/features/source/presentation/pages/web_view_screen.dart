@@ -75,6 +75,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
   /// cannot draw over it), so it hides while the menu or [_error] shows.
   var _menuOpen = false;
 
+  /// The host of the page loading, which a refused certificate is for when
+  /// the page did not get past it (see [hearsOfCertificates]). From the
+  /// start: Android may report the load only once it is past it.
+  late String? _loadingHost = _url.host;
+
   @override
   void dispose() {
     unawaited(_saveCookies(_url));
@@ -208,7 +213,29 @@ class _WebViewScreenState extends State<WebViewScreen> {
                             _canGoBack = canGoBack;
                           });
                         },
-                        onLoadStart: (_, _) => setState(() => _error = null),
+                        onLoadStart: (_, url) => setState(() {
+                          _error = null;
+                          _loadingHost = url?.host;
+                        }),
+                        onReceivedServerTrustAuthRequest: !hearsOfCertificates
+                            ? null
+                            : (_, challenge) {
+                                if (challenge.protectionSpace.sslError ==
+                                    null) {
+                                  return null;
+                                }
+                                final space = challenge.protectionSpace;
+                                if (space.host == _loadingHost) {
+                                  setState(
+                                    () => _error = certificateRefused(
+                                      space.sslError?.code,
+                                    ),
+                                  );
+                                }
+                                return ServerTrustAuthResponse(
+                                  action: ServerTrustAuthResponseAction.CANCEL,
+                                );
+                              },
                         onReceivedError: (_, request, error) {
                           if (request.isForMainFrame ?? true) {
                             setState(() => _error = error.description);
