@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 
 /// Five dots with a light that moves across them. Replaces spinners.
 class DotLoader extends StatefulWidget {
-  const DotLoader({super.key, this.dots = 5});
+  const DotLoader({super.key, this.dots = 5, this.color});
 
   final int dots;
+
+  /// The light's colour, with the other dots dimmed from it. Defaults to
+  /// `ink` lit over `lineStrong` dots; on an `ink` fill pass `onInk`.
+  final Color? color;
 
   @override
   State<DotLoader> createState() => _DotLoaderState();
@@ -44,6 +48,7 @@ class _DotLoaderState extends State<DotLoader>
         animation: _controller,
         builder: (context, _) {
           final head = (_controller.value * widget.dots).floor();
+          final color = widget.color;
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -55,10 +60,10 @@ class _DotLoaderState extends State<DotLoader>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: i == head
-                        ? c.ink
+                        ? color ?? c.ink
                         : i == head - 1
-                        ? c.inkMuted
-                        : c.lineStrong,
+                        ? color?.withValues(alpha: .6) ?? c.inkMuted
+                        : color?.withValues(alpha: .25) ?? c.lineStrong,
                   ),
                 ),
             ],

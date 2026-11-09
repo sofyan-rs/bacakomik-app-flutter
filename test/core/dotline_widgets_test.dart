@@ -121,6 +121,19 @@ void main() {
     expect(changed, 'dark');
   });
 
+  testWidgets('DotButton while loading shows dots and ignores taps', (
+    tester,
+  ) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      _wrap(DotButton(label: 'Open', onTap: () => taps++, loading: true)),
+    );
+    expect(find.text('Open'), findsNothing);
+    expect(find.byType(DotLoader), findsOneWidget);
+    await tester.tap(find.byType(DotButton));
+    expect(taps, 0);
+  });
+
   testWidgets('FloatingNavBar selects the tab a drag ends on', (tester) async {
     final selected = <int>[];
     await tester.pumpWidget(
