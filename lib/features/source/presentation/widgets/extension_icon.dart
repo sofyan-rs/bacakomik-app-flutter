@@ -1,4 +1,5 @@
 import 'package:bacakomik_app/core/network/image_cache.dart';
+import 'package:bacakomik_app/core/presentation/widgets/dotline/comic_cover.dart';
 import 'package:bacakomik_app/core/source/extension_meta.dart';
 import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
@@ -26,6 +27,7 @@ class ExtensionIcon extends StatelessWidget {
       ),
     );
     final url = meta.iconUrl;
+    final width = (size * MediaQuery.devicePixelRatioOf(context)).round();
     return ClipRRect(
       borderRadius: BorderRadius.circular(DotRadius.s),
       child: SizedBox.square(
@@ -35,14 +37,17 @@ class ExtensionIcon extends StatelessWidget {
           child: url == null
               ? letter
               : CachedNetworkImage(
+                  key: coverKey(url),
                   cacheManager: coverImageCache,
                   imageUrl: url,
                   fit: BoxFit.cover,
-                  memCacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
-                      .round(),
+                  memCacheWidth: width,
                   fadeInDuration: DotMotion.press,
                   placeholder: (_, _) => letter,
-                  errorWidget: (_, _, _) => letter,
+                  errorWidget: (_, url, _) {
+                    forgetFailedCover(url, width);
+                    return letter;
+                  },
                 ),
         ),
       ),

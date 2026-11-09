@@ -51,13 +51,17 @@ class CoverHero extends StatelessWidget {
       child: tag.imageUrl.isEmpty
           ? const DotGridPlaceholder()
           : CachedNetworkImage(
+              key: coverKey(tag.imageUrl),
               cacheManager: coverImageCache,
               imageUrl: tag.imageUrl,
               fit: BoxFit.cover,
               memCacheWidth: tag.decodeWidth,
               fadeInDuration: Duration.zero,
               placeholder: (_, _) => const DotGridPlaceholder(),
-              errorWidget: (_, _, _) => const DotGridPlaceholder(),
+              errorWidget: (_, url, _) {
+                forgetFailedCover(url, tag.decodeWidth);
+                return const DotGridPlaceholder();
+              },
             ),
     );
   }

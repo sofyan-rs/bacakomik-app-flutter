@@ -8,6 +8,33 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bacakomik_app/core/network/image_cache.dart';
 
+/// Failures per cover URL this session; see [coverKey].
+final _coverFailures = <String, int>{};
+
+/// Key for a cover's image widget. It changes after the cover fails, so the
+/// next rebuild (a refresh) makes a new image that asks again, instead of
+/// keeping the one that failed.
+Key coverKey(String url) => ValueKey((url, _coverFailures[url] ?? 0));
+
+/// Forgets a cover that failed to load, so its next showing (a refresh,
+/// scrolling back, opening the screen again) downloads it again.
+///
+/// Flutter's memory cache keeps a failed image under its key for as long as
+/// the app runs: without this, a cover that failed while offline stays a
+/// placeholder until the app restarts. [decodeWidth] must match the
+/// `memCacheWidth` it was shown at, which is part of the key.
+void forgetFailedCover(String url, int? decodeWidth) {
+  _coverFailures[url] = (_coverFailures[url] ?? 0) + 1;
+  ResizeImage.resizeIfNeeded(
+    decodeWidth,
+    null,
+    CachedNetworkImageProvider(url, cacheManager: coverImageCache),
+  ).evict().ignore();
+  // A file that is not an image (e.g. a bot check page cached in its
+  // place) goes too.
+  coverImageCache.removeFile(url).ignore();
+}
+
 /// 2:3 cover with a faint dot grid while loading (no shimmer). Optional
 /// type label pinned top-left and an [overlay] (badge, rank number).
 class ComicCover extends StatelessWidget {
@@ -46,21 +73,22 @@ class ComicCover extends StatelessWidget {
             LayoutBuilder(
               // Decode at the size shown, not the source size: list
               // thumbnails are 44 wide while covers are often 600+.
-              builder: (context, constraints) => CachedNetworkImage(
-                cacheManager: coverImageCache,
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                memCacheWidth: _decodeWidth(context, constraints.maxWidth),
-                fadeInDuration: DotMotion.press,
-                placeholder: (_, _) => const DotGridPlaceholder(),
-                errorWidget: (_, url, _) {
-                  // A file that is not an image (e.g. a bot check page
-                  // cached in its place) goes, so the next showing
-                  // downloads it again.
-                  coverImageCache.removeFile(url).ignore();
-                  return const DotGridPlaceholder();
-                },
-              ),
+              builder: (context, constraints) {
+                final width = _decodeWidth(context, constraints.maxWidth);
+                return CachedNetworkImage(
+                  key: coverKey(imageUrl),
+                  cacheManager: coverImageCache,
+                  imageUrl: imageUrl,
+                  fit: BoxFit.cover,
+                  memCacheWidth: width,
+                  fadeInDuration: DotMotion.press,
+                  placeholder: (_, _) => const DotGridPlaceholder(),
+                  errorWidget: (_, url, _) {
+                    forgetFailedCover(url, width);
+                    return const DotGridPlaceholder();
+                  },
+                );
+              },
             ),
           // "-" is what a source without a format maps to.
           if (typeLabel case final label? when label != '-' && label.isNotEmpty)
