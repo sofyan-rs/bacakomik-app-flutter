@@ -25,19 +25,11 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
-# List of absolute paths to libraries that should be bundled with the plugin
-set(flutter_qjs_bundled_libraries
-  "$<TARGET_FILE:libquickjs_c_bridge_plugin.so>"
+# List of absolute paths to libraries that should be bundled with the plugin.
+# The app's CMakeLists installs `<plugin>_bundled_libraries` into bundle/lib.
+# BacaKomik patch: upstream named this `flutter_qjs_bundled_libraries` and
+# installed the .so into its own prefix, so the bundle shipped without it.
+set(flutter_js_bundled_libraries
+  "${CMAKE_CURRENT_SOURCE_DIR}/shared/libquickjs_c_bridge_plugin.so"
   PARENT_SCOPE
 )
-
-set(BUILD_BUNDLE_DIR "${PROJECT_BINARY_DIR}/bundle")
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${BUILD_BUNDLE_DIR}" CACHE PATH "..." FORCE)
-endif()
-set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
-
-set(QUICKJSC_BRIDGE "libquickjs_c_bridge_plugin.so")
-set(QUICKJSC_BRIDGE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shared/${QUICKJSC_BRIDGE}")
-install(CODE "file(REMOVE_RECURSE \"${INSTALL_BUNDLE_LIB_DIR}/${QUICKJSC_BRIDGE}\")" COMPONENT Runtime)
-install(FILES "${QUICKJSC_BRIDGE_PATH}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)

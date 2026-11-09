@@ -6,4 +6,4 @@ Exec=bacakomik
 Icon=bacakomik
 Categories=Graphics;Viewer;
 Terminal=false
-StartupWMClass=bacakomik
+StartupWMClass=org.kurodev.bacakomik
