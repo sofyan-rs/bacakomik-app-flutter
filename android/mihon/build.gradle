@@ -11,7 +11,7 @@ plugins {
 }
 
 android {
-    namespace "org.kurodev.bacakomik.mihon"
+    namespace "org.kurodev.yoru.mihon"
     compileSdk 37
 
     defaultConfig {

@@ -1,15 +1,15 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
-import 'package:bacakomik_app/core/storage/library_journal.dart';
-import 'package:bacakomik_app/features/bookmark/data/datasources/bookmark_local_data_source.dart';
-import 'package:bacakomik_app/features/bookmark/data/repositories/bookmark_repository_impl.dart';
-import 'package:bacakomik_app/features/category/data/datasources/category_local_data_source.dart';
-import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
-import 'package:bacakomik_app/features/history/data/repositories/history_repository_impl.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
-import 'package:bacakomik_app/features/sync/data/repositories/sync_repository_impl.dart';
-import 'package:bacakomik_app/features/sync/domain/entities/sync_snapshot.dart';
-import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
+import 'package:yoru/core/storage/library_journal.dart';
+import 'package:yoru/features/bookmark/data/datasources/bookmark_local_data_source.dart';
+import 'package:yoru/features/bookmark/data/repositories/bookmark_repository_impl.dart';
+import 'package:yoru/features/category/data/datasources/category_local_data_source.dart';
+import 'package:yoru/features/history/data/datasources/history_local_data_source.dart';
+import 'package:yoru/features/history/data/repositories/history_repository_impl.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
+import 'package:yoru/features/sync/data/repositories/sync_repository_impl.dart';
+import 'package:yoru/features/sync/domain/entities/sync_snapshot.dart';
+import 'package:yoru/features/sync/domain/usecases/migrate_library.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 

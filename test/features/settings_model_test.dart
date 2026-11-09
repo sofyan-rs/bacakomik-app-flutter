@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/features/settings/data/models/settings_model.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/data/models/settings_model.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

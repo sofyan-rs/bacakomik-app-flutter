@@ -1,7 +1,7 @@
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/extension_runtime.dart';
-import 'package:bacakomik_app/core/source/mihon_host.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/extension_runtime.dart';
+import 'package:yoru/core/source/mihon_host.dart';
 
 /// A source of a Mihon extension. Kotlin's `Contract` answers the same
 /// methods as a JS extension (`browse`, `series`, `chapters`, `chapter`,

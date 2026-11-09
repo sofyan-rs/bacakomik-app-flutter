@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/domain/entities/comic.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/bookmark/domain/usecases/migrate_comic.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/library_import.dart';
-import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
-import 'package:bacakomik_app/features/migration/domain/usecases/source_migration.dart';
+import 'package:yoru/core/domain/entities/comic.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/bookmark/domain/usecases/migrate_comic.dart';
+import 'package:yoru/features/migration/domain/entities/library_import.dart';
+import 'package:yoru/features/migration/domain/usecases/import_library.dart';
+import 'package:yoru/features/migration/domain/usecases/source_migration.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';

@@ -1,4 +1,4 @@
-package org.kurodev.bacakomik
+package org.kurodev.yoru
 
 import android.content.Context
 import android.os.Build

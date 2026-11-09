@@ -1,11 +1,11 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/update/data/models/github_release_model.dart';
-import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
-import 'package:bacakomik_app/core/utils/version.dart';
-import 'package:bacakomik_app/features/update/domain/entities/update_progress.dart';
-import 'package:bacakomik_app/features/update/domain/repositories/update_repository.dart';
-import 'package:bacakomik_app/features/update/domain/usecases/update_usecases.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/update/data/models/github_release_model.dart';
+import 'package:yoru/features/update/domain/entities/app_release.dart';
+import 'package:yoru/core/utils/version.dart';
+import 'package:yoru/features/update/domain/entities/update_progress.dart';
+import 'package:yoru/features/update/domain/repositories/update_repository.dart';
+import 'package:yoru/features/update/domain/usecases/update_usecases.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
@@ -13,7 +13,7 @@ import 'package:mocktail/mocktail.dart';
 class MockUpdateRepository extends Mock implements UpdateRepository {}
 
 ReleaseAsset apk(String suffix) => ReleaseAsset(
-  name: 'BacaKomik-1.1.0-$suffix.apk',
+  name: 'Yoru-1.1.0-$suffix.apk',
   url: 'https://example.com/$suffix.apk',
 );
 
@@ -71,8 +71,8 @@ void main() {
         version: '1.1.0',
         pageUrl: '',
         assets: [
-          ReleaseAsset(name: 'BacaKomik-1.1.0-macos.zip', url: 'm'),
-          ReleaseAsset(name: 'BacaKomik-1.1.0-windows-setup.exe', url: 'w'),
+          ReleaseAsset(name: 'Yoru-1.1.0-macos.zip', url: 'm'),
+          ReleaseAsset(name: 'Yoru-1.1.0-windows-setup.exe', url: 'w'),
         ],
       );
       expect(desktop.assetFor(['windows-setup.exe'])?.url, 'w');
@@ -91,7 +91,7 @@ void main() {
       'html_url': 'https://github.com/x/y/releases/tag/v1.1.0',
       'assets': [
         {
-          'name': 'BacaKomik-1.1.0-universal.apk',
+          'name': 'Yoru-1.1.0-universal.apk',
           'browser_download_url': 'https://example.com/u.apk',
           'digest': 'sha256:abc123',
         },
@@ -105,7 +105,7 @@ void main() {
     expect(model.version, '1.1.0');
     expect(model.assets, [
       const ReleaseAsset(
-        name: 'BacaKomik-1.1.0-universal.apk',
+        name: 'Yoru-1.1.0-universal.apk',
         url: 'https://example.com/u.apk',
         sha256: 'abc123',
       ),

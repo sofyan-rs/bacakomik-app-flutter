@@ -84,9 +84,9 @@ jobs:
           mkdir dist
           cd build/app/outputs/flutter-apk
           for abi in arm64-v8a armeabi-v7a x86_64; do
-            cp "app-$abi-release.apk" "../../../../dist/BacaKomik-$VERSION-$abi.apk"
+            cp "app-$abi-release.apk" "../../../../dist/Yoru-$VERSION-$abi.apk"
           done
-          cp app-release.apk "../../../../dist/BacaKomik-$VERSION-universal.apk"
+          cp app-release.apk "../../../../dist/Yoru-$VERSION-universal.apk"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -125,11 +125,11 @@ jobs:
         run: |
           mkdir -p dist dmg
           cd build/macos/Build/Products/Release
-          ditto -c -k --keepParent BacaKomik.app "$GITHUB_WORKSPACE/dist/BacaKomik-$VERSION-macos.zip"
-          cp -R BacaKomik.app "$GITHUB_WORKSPACE/dmg/"
+          ditto -c -k --keepParent Yoru.app "$GITHUB_WORKSPACE/dist/Yoru-$VERSION-macos.zip"
+          cp -R Yoru.app "$GITHUB_WORKSPACE/dmg/"
           ln -s /Applications "$GITHUB_WORKSPACE/dmg/Applications"
-          hdiutil create -volname BacaKomik -srcfolder "$GITHUB_WORKSPACE/dmg" -ov -format UDZO \
-            "$GITHUB_WORKSPACE/dist/BacaKomik-$VERSION-macos.dmg"
+          hdiutil create -volname Yoru -srcfolder "$GITHUB_WORKSPACE/dmg" -ov -format UDZO \
+            "$GITHUB_WORKSPACE/dist/Yoru-$VERSION-macos.dmg"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -225,7 +225,7 @@ jobs:
           wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
           ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run "$APPDIR" \
-            "dist/BacaKomik-$VERSION-linux-x86_64.AppImage"
+            "dist/Yoru-$VERSION-linux-x86_64.AppImage"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -264,10 +264,10 @@ jobs:
 
           | File | For |
           |---|---|
-          | \`BacaKomik-$VERSION-arm64-v8a.apk\` | Almost all phones from the last years |
-          | \`BacaKomik-$VERSION-armeabi-v7a.apk\` | Older 32-bit phones |
-          | \`BacaKomik-$VERSION-x86_64.apk\` | Emulators and Chromebooks |
-          | \`BacaKomik-$VERSION-universal.apk\` | Any device, if you're unsure (bigger download) |
+          | \`Yoru-$VERSION-arm64-v8a.apk\` | Almost all phones from the last years |
+          | \`Yoru-$VERSION-armeabi-v7a.apk\` | Older 32-bit phones |
+          | \`Yoru-$VERSION-x86_64.apk\` | Emulators and Chromebooks |
+          | \`Yoru-$VERSION-universal.apk\` | Any device, if you're unsure (bigger download) |
 
           Requires Android 7.0 or newer. Installed apps check for this update on start.
 
@@ -275,12 +275,12 @@ jobs:
 
           | File | For |
           |---|---|
-          | \`BacaKomik-$VERSION-windows-setup.exe\` | Windows 10 and 11 (64-bit) |
-          | \`BacaKomik-$VERSION-macos.dmg\` | macOS 12 or newer, Intel and Apple silicon |
-          | \`BacaKomik-$VERSION-linux-x86_64.AppImage\` | Linux (64-bit) |
+          | \`Yoru-$VERSION-windows-setup.exe\` | Windows 10 and 11 (64-bit) |
+          | \`Yoru-$VERSION-macos.dmg\` | macOS 12 or newer, Intel and Apple silicon |
+          | \`Yoru-$VERSION-linux-x86_64.AppImage\` | Linux (64-bit) |
 
           The desktop apps are not signed yet. On macOS, open the app the first time with
-          right click → Open (or run \`xattr -cr /Applications/BacaKomik.app\`). On Windows,
+          right click → Open (or run \`xattr -cr /Applications/Yoru.app\`). On Windows,
           SmartScreen may ask: More info → Run anyway. On Linux, make the AppImage executable;
           the in-app WebView needs WebKitGTK 4.1 (\`sudo apt install libwebkit2gtk-4.1-0\` on
           Debian and Ubuntu, \`webkit2gtk4.1\` on Fedora), which most desktops already have.

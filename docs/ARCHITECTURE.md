@@ -20,7 +20,7 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 
 - The app has **no content of its own**. Each site is a **source**, backed by a small JavaScript **extension** downloaded from a repo (§8.2) and run in an embedded JS engine on the phone (§8.3), or, on Android 9+, by a **Mihon extension** APK run in Kotlin (§8.9).
 - Screens talk to blocs, blocs call use cases, use cases call repositories. Only repositories know about sources, HTTP and storage (§3).
-- The library (bookmarks, categories, history, downloads, settings) lives **on the phone** in Hive (§7). It can be exported to a backup file (§7.4) or synced through one private file in the user's own Google Drive (§7.6). There is no BacaKomik account or server.
+- The library (bookmarks, categories, history, downloads, settings) lives **on the phone** in Hive (§7). It can be exported to a backup file (§7.4) or synced through one private file in the user's own Google Drive (§7.6). There is no Yoru account or server.
 
 ---
 
@@ -57,10 +57,10 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 | Downloads | `background_downloader` | Outside the Dart isolate (§7.5) |
 | Notifications | `flutter_local_notifications` | Bookmark refresh progress with Cancel (§6.1); needs `ActionBroadcastReceiver` in the manifest |
 | Sync / backup | `google_sign_in` + Drive REST; `file_picker` | §7.6, §7.4 |
-| Links, share, gallery | `app_links`, `share_plus`, `gal` | Links `https://bacakomik.kurodev.org/series/<slug>` open the app (`DeepLinks`, host in `hosting/worker`) |
+| Links, share, gallery | `app_links`, `share_plus`, `gal` | Links `https://yoru.kurodev.org/series/<slug>` (and the old host `bacakomik.kurodev.org`) open the app (`DeepLinks`, host in `hosting/worker`) |
 | Tests | `flutter_test`, `bloc_test`, `mocktail` | CONTRIBUTION §5 |
 
-Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the generators. App id `org.kurodev.bacakomik`; `minSdk` 24, `targetSdk` 36 (from Flutter), `compileSdk 37`, Java 17.
+Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the generators. App id `org.kurodev.yoru` (`org.kurodev.bacakomik` before 2.17.0); `minSdk` 24, `targetSdk` 36 (from Flutter), `compileSdk 37`, Java 17.
 
 ---
 
@@ -77,7 +77,7 @@ Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the gen
 | `android/…/MainActivity.kt` | `bacakomik/hidden_webviews` channel (§8.5); registers `MihonChannel` (`bacakomik/mihon`); asks for the display's fastest mode at its resolution (`preferredDisplayModeId`), as some phones keep apps at 60 Hz otherwise | Rarely |
 | `android/mihon/` | Runs Mihon extension APKs (§8.9) | When Mihon's API or a host call changes |
 | `android/app/src/main/AndroidManifest.xml` | Permissions, deep links, notification action receiver | Rarely |
-| `hosting/` | Cloudflare Worker for `bacakomik.kurodev.org` | Rarely |
+| `hosting/` | Cloudflare Worker for `yoru.kurodev.org` (and the old `bacakomik.kurodev.org`) | Rarely |
 | `test/` | Mirrors `lib/` | Yes |
 
 Features: `home`, `latest` ("See all"), `explore`, `comic_detail`, `reader`, `bookmark`, `category`, `history`, `settings` (More tab), `backup`, `sync`, `download`, `migration`, `source` (Extensions, source picker, WebView screen), `update`.
@@ -446,8 +446,8 @@ Details and chapters are separate `getMangaUpdate` calls, details first, one at 
 | Path | What |
 |---|---|
 | `eu/`, `mihon/`, `tachiyomi/`, `androidx/compose/runtime/Stable.kt` | Mihon's source API and network helpers (Apache 2.0), vendored from SCANCORE's `host/api`. Original package names: extensions link against them |
-| `org/kurodev/bacakomik/mihon/host/` | The extension host, from SCANCORE's (MIT, `LICENSE-SCANCORE`; was `com.mediumdev.scancore.host`), trimmed to what the app calls: `ExtensionHost` (calls, `getMangaUpdate` merging, memos, warm-up; loaded extensions cached per APK path), `Codec`, `MemoStore`, `Rpc`, `android/AndroidLoader`, `AndroidSettings`, `WebViewBrowserCheck` (hidden Cloudflare solver, `WebViewCookieJar`). Changes from SCANCORE are marked `BACAKOMIK` |
-| `org/kurodev/bacakomik/mihon/` | `MihonHost` (entry), `Contract`, `Filters`, `Description`, `ChapterRecognition`, `Images`, `Slugs`, `SourceIndex` |
+| `org/kurodev/yoru/mihon/host/` | The extension host, from SCANCORE's (MIT, `LICENSE-SCANCORE`; was `com.mediumdev.scancore.host`), trimmed to what the app calls: `ExtensionHost` (calls, `getMangaUpdate` merging, memos, warm-up; loaded extensions cached per APK path), `Codec`, `MemoStore`, `Rpc`, `android/AndroidLoader`, `AndroidSettings`, `WebViewBrowserCheck` (hidden Cloudflare solver, `WebViewCookieJar`). Changes from SCANCORE are marked `BACAKOMIK` |
+| `org/kurodev/yoru/mihon/` | `MihonHost` (entry), `Contract`, `Filters`, `Description`, `ChapterRecognition`, `Images`, `Slugs`, `SourceIndex` |
 
 `MihonHost.start` runs once per process (Dart calls it before the first call): the app's User-Agent (so WebView clearances work), `WebViewCookieJar`, the hidden browser check, Injekt singletons. Calls: `inspect` (path, signer; loads code only once the signer matches), `install`, `uninstall` (also drops the sources' `source_<id>` preferences), `call`, `preferences` / `setPreference` (a change unloads the extension), `userAgent`. `SourceIndex` (SharedPreferences `bacakomik_mihon_index`) maps source ids to their APK and signer, so a call naming only a source (a cover at start) finds its extension; extensions load on first use. `MihonChannel.kt` runs calls on `Dispatchers.IO`. `MihonHost.supported` is false below Android 9.
 

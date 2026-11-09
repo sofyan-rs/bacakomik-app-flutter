@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/app/lazy_indexed_stack.dart';
+import 'package:yoru/app/lazy_indexed_stack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,10 +1,10 @@
-import 'package:bacakomik_app/core/data/models/series_response.dart';
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/source/extension_manager.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/extension_runtime.dart';
-import 'package:bacakomik_app/core/utils/cover_url.dart';
+import 'package:yoru/core/data/models/series_response.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/extension_runtime.dart';
+import 'package:yoru/core/utils/cover_url.dart';
 import 'package:injectable/injectable.dart';
 
 /// Comic data from the installed sources. Series are addressed by

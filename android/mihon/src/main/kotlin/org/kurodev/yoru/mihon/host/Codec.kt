@@ -1,5 +1,5 @@
 // From SCANCORE's Codec.kt (MIT, LICENSE-SCANCORE).
-package org.kurodev.bacakomik.mihon.host
+package org.kurodev.yoru.mihon.host
 
 import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList

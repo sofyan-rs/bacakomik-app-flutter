@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/core/storage/box_recovery.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/core/storage/box_recovery.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';
 

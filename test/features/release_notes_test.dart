@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/theme/dotline_theme.dart';
-import 'package:bacakomik_app/features/update/presentation/widgets/release_notes.dart';
+import 'package:yoru/core/theme/dotline_theme.dart';
+import 'package:yoru/features/update/presentation/widgets/release_notes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

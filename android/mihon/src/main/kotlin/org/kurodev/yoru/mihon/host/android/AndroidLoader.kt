@@ -1,12 +1,12 @@
 // From SCANCORE's AndroidLoader.kt (MIT). BACAKOMIK: Aniyomi (anime) left out.
-package org.kurodev.bacakomik.mihon.host.android
+package org.kurodev.yoru.mihon.host.android
 
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import org.kurodev.bacakomik.mihon.host.ExtensionLoader
-import org.kurodev.bacakomik.mihon.host.HostError
-import org.kurodev.bacakomik.mihon.host.LoadedExtension
+import org.kurodev.yoru.mihon.host.ExtensionLoader
+import org.kurodev.yoru.mihon.host.HostError
+import org.kurodev.yoru.mihon.host.LoadedExtension
 import dalvik.system.DelegateLastClassLoader
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory
@@ -29,12 +29,12 @@ class AndroidLoader(
     ): LoadedExtension {
         val info = inspect(path)
         val signers = signers(info)
-        if (signer != null && signer.lowercase() !in signers) throw HostError("The extension is signed with a key BacaKomik did not trust.", 403)
+        if (signer != null && signer.lowercase() !in signers) throw HostError("The extension is signed with a key Yoru did not trust.", 403)
         val app = info.applicationInfo!!
         val meta = app.metaData ?: throw HostError("The extension does not say which sources it has.", 422)
         val lib = lib(info)
         if (lib.toDoubleOrNull() !in libs.map { it.toDouble() }) {
-            throw HostError("This extension uses lib $lib, which this BacaKomik does not run.", 426)
+            throw HostError("This extension uses lib $lib, which this Yoru does not run.", 426)
         }
         val classes =
             meta

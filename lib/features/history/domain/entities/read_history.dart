@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'read_history.freezed.dart';

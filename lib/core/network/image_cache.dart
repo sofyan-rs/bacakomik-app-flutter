@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/network/image_host_support.dart';
-import 'package:bacakomik_app/core/source/extension_bridge.dart';
-import 'package:bacakomik_app/core/source/headless_pages.dart';
-import 'package:bacakomik_app/core/source/mihon_host.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/network/image_host_support.dart';
+import 'package:yoru/core/source/extension_bridge.dart';
+import 'package:yoru/core/source/headless_pages.dart';
+import 'package:yoru/core/source/mihon_host.dart';
 import 'package:cronet_http/cronet_http.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';

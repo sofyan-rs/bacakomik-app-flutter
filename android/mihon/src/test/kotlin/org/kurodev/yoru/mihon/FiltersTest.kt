@@ -1,4 +1,4 @@
-package org.kurodev.bacakomik.mihon
+package org.kurodev.yoru.mihon
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray

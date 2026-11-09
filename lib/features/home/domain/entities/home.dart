@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/domain/entities/comic.dart';
+import 'package:yoru/core/domain/entities/comic.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'home.freezed.dart';

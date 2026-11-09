@@ -2,7 +2,7 @@
 // out, the line protocol's own calls (hello, setUserAgent, setCookies,
 // networkUse) dropped, and the source and its images opened to the app's
 // adapter (source(), image(), cover()).
-package org.kurodev.bacakomik.mihon.host
+package org.kurodev.yoru.mihon.host
 
 import android.content.SharedPreferences
 import androidx.preference.PreferenceScreen

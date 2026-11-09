@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/source/extension_meta.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

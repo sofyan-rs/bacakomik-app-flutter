@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
 
 /// How far a comic has been read, from the last read chapter: shown as
 /// `CH. 67 / 88` with a dot meter.

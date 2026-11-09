@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 
 /// [items] ordered by [sort] in [direction]. The sort is stable: with
 /// [BookmarkSort.updated], comics with the same date keep their order in

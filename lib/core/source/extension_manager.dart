@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bacakomik_app/core/di/register_module.dart';
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/source/extension_bridge.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/extension_runtime.dart';
-import 'package:bacakomik_app/core/source/mihon_host.dart';
-import 'package:bacakomik_app/core/source/mihon_installer.dart';
-import 'package:bacakomik_app/core/source/mihon_repo.dart';
-import 'package:bacakomik_app/core/source/mihon_source.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
+import 'package:yoru/core/di/register_module.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/source/extension_bridge.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/extension_runtime.dart';
+import 'package:yoru/core/source/mihon_host.dart';
+import 'package:yoru/core/source/mihon_installer.dart';
+import 'package:yoru/core/source/mihon_repo.dart';
+import 'package:yoru/core/source/mihon_source.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -421,7 +421,7 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   /// Validates [url] as a repo and adds it. Returns the repo.
   Future<ExtensionRepo> addRepo(String url) async {
     var clean = url.trim();
-    // Not a BacaKomik index: maybe a Mihon repo (its index, repo.json or
+    // Not a Yoru index: maybe a Mihon repo (its index, repo.json or
     // base URL).
     if (!(Uri.tryParse(clean)?.path.endsWith('index.json') ?? false)) {
       final mihon = MihonRepo.normalize(clean);

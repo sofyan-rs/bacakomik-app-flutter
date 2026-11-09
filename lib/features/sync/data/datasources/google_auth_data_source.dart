@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
-import 'package:bacakomik_app/features/sync/data/datasources/desktop_google_auth_data_source.dart';
+import 'package:yoru/core/constants/variables.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
+import 'package:yoru/features/sync/data/datasources/desktop_google_auth_data_source.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:injectable/injectable.dart';

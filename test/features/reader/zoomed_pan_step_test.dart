@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
+import 'package:yoru/features/reader/presentation/pages/read_chapter_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

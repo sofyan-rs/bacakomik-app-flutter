@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'settings_model.g.dart';

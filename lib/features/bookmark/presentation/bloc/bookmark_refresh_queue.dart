@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/notifications/progress_notifier.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/notifications/progress_notifier.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/features/bookmark/domain/usecases/refresh_bookmark.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 

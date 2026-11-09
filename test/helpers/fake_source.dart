@@ -1,7 +1,7 @@
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/extension_manager.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/extension_runtime.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/extension_runtime.dart';
 
 /// A recorded `method(...args)` call on a [FakeSourceBackend].
 typedef SourceCall = ({String method, List<Object?> args});

@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:yoru/core/data/models/comic_details_model.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'read_history_model.g.dart';

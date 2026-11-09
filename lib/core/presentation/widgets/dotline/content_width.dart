@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Horizontal inset that centres a [maxWidth] column inside [width], zero

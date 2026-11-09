@@ -1,8 +1,8 @@
-package org.kurodev.bacakomik
+package org.kurodev.yoru
 
 import android.app.Application
-import org.kurodev.bacakomik.mihon.MihonHost
-import org.kurodev.bacakomik.mihon.MihonProxy
+import org.kurodev.yoru.mihon.MihonHost
+import org.kurodev.yoru.mihon.MihonProxy
 
 class BacaKomikApplication : Application() {
     override fun onCreate() {

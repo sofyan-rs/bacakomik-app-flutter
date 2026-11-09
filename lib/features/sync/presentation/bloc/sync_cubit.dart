@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/storage/library_journal.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/sync/domain/usecases/migrate_library.dart';
-import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/storage/library_journal.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/sync/domain/usecases/migrate_library.dart';
+import 'package:yoru/features/sync/domain/usecases/sync_usecases.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

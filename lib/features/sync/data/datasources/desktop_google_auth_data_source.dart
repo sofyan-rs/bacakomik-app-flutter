@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/features/sync/data/datasources/google_auth_data_source.dart';
+import 'package:yoru/core/constants/variables.dart';
+import 'package:yoru/features/sync/data/datasources/google_auth_data_source.dart';
 import 'package:crypto/crypto.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:http/http.dart' as http;
@@ -123,11 +123,11 @@ class DesktopGoogleAuthDataSource implements GoogleAuthDataSource {
         ..statusCode = HttpStatus.ok
         ..headers.contentType = ContentType.html
         ..write(
-          '<!doctype html><meta charset="utf-8"><title>BacaKomik</title>'
+          '<!doctype html><meta charset="utf-8"><title>Yoru</title>'
           '<body style="font-family:sans-serif;text-align:center;'
           'padding-top:20vh">'
           '<h2>${ok ? 'Signed in' : 'Sign-in cancelled'}</h2>'
-          '<p>You can close this tab and go back to BacaKomik.</p>',
+          '<p>You can close this tab and go back to Yoru.</p>',
         );
       await request.response.close();
       return ok ? params['code'] : null;

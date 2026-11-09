@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:bacakomik_app/core/di/register_module.dart';
-import 'package:bacakomik_app/features/sync/data/datasources/google_auth_data_source.dart';
+import 'package:yoru/core/di/register_module.dart';
+import 'package:yoru/features/sync/data/datasources/google_auth_data_source.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 

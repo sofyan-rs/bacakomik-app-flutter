@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/chapter_date.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/chapter_date.dart';
 
 enum BookmarkFilter { all, updated, finished }
 

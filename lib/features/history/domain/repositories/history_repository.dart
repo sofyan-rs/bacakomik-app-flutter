@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class HistoryRepository {

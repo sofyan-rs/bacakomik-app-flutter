@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
-import 'package:bacakomik_app/features/reader/domain/usecases/get_chapter_content.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/reader/domain/entities/chapter_content.dart';
+import 'package:yoru/features/reader/domain/usecases/get_chapter_content.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';

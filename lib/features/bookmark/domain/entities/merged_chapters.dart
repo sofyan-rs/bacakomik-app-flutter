@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
 
 /// The series key of a chapter slug (`seriesKey/number`): the comic, and
 /// so the source, the chapter is read from.

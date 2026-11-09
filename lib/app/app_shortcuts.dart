@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/app/root_tabs.dart';
+import 'package:yoru/app/root_tabs.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';

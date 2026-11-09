@@ -1,8 +1,8 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/comix_csv.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/mihon_backup.dart';
-import 'package:bacakomik_app/features/migration/domain/repositories/migration_file_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/migration/domain/entities/comix_csv.dart';
+import 'package:yoru/features/migration/domain/entities/mihon_backup.dart';
+import 'package:yoru/features/migration/domain/repositories/migration_file_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

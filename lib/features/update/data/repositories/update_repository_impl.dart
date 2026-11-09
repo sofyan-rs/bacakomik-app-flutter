@@ -1,11 +1,11 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/network/network_info.dart';
-import 'package:bacakomik_app/core/network/remote_call.dart';
-import 'package:bacakomik_app/features/update/data/datasources/app_installer.dart';
-import 'package:bacakomik_app/features/update/data/datasources/update_remote_data_source.dart';
-import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
-import 'package:bacakomik_app/features/update/domain/entities/update_progress.dart';
-import 'package:bacakomik_app/features/update/domain/repositories/update_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/network/network_info.dart';
+import 'package:yoru/core/network/remote_call.dart';
+import 'package:yoru/features/update/data/datasources/app_installer.dart';
+import 'package:yoru/features/update/data/datasources/update_remote_data_source.dart';
+import 'package:yoru/features/update/domain/entities/app_release.dart';
+import 'package:yoru/features/update/domain/entities/update_progress.dart';
+import 'package:yoru/features/update/domain/repositories/update_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

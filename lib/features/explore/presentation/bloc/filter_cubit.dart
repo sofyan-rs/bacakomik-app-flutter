@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/features/explore/domain/entities/explore_filter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 

@@ -1,4 +1,4 @@
-package org.kurodev.bacakomik.mihon
+package org.kurodev.yoru.mihon
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

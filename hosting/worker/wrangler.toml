@@ -2,6 +2,10 @@ name = "bacakomik-links"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
-# Serves the whole host. kurodev.org must be a zone on the same Cloudflare
-# account; the DNS record is created on deploy.
-routes = [{ pattern = "bacakomik.kurodev.org", custom_domain = true }]
+# Serves the whole hosts. kurodev.org must be a zone on the same Cloudflare
+# account; the DNS records are created on deploy. bacakomik.kurodev.org is
+# the host from before the rename to Yoru; links shared then still work.
+routes = [
+  { pattern = "yoru.kurodev.org", custom_domain = true },
+  { pattern = "bacakomik.kurodev.org", custom_domain = true },
+]

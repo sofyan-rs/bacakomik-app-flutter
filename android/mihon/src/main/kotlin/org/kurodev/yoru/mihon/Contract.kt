@@ -1,8 +1,8 @@
-package org.kurodev.bacakomik.mihon
+package org.kurodev.yoru.mihon
 
 import android.content.SharedPreferences
-import org.kurodev.bacakomik.mihon.host.ExtensionHost
-import org.kurodev.bacakomik.mihon.host.HostError
+import org.kurodev.yoru.mihon.host.ExtensionHost
+import org.kurodev.yoru.mihon.host.HostError
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.async

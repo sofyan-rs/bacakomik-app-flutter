@@ -1,9 +1,9 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
 
 import 'dart:math';
 
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _details = ComicDetails(

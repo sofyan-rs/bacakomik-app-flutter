@@ -1,7 +1,7 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/home/domain/entities/home.dart';
-import 'package:bacakomik_app/features/home/domain/usecases/get_home.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/home/domain/entities/home.dart';
+import 'package:yoru/features/home/domain/usecases/get_home.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';

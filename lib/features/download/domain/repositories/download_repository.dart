@@ -1,7 +1,7 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
-import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/download/domain/entities/download_library.dart';
+import 'package:yoru/features/reader/domain/entities/chapter_content.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Chapters saved on the device for offline reading. Chapters download in

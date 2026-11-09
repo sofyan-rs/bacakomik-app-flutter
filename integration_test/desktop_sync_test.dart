@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/app/root_screen.dart';
-import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart';
-import 'package:bacakomik_app/main.dart' as app;
+import 'package:yoru/app/root_screen.dart';
+import 'package:yoru/features/sync/presentation/bloc/sync_cubit.dart';
+import 'package:yoru/main.dart' as app;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';

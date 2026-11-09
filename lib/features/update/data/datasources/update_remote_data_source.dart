@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/core/network/api_client.dart';
-import 'package:bacakomik_app/features/update/data/models/github_release_model.dart';
+import 'package:yoru/core/constants/variables.dart';
+import 'package:yoru/core/network/api_client.dart';
+import 'package:yoru/features/update/data/models/github_release_model.dart';
 import 'package:injectable/injectable.dart';
 
 abstract interface class UpdateRemoteDataSource {

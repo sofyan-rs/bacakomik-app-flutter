@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/features/reader/presentation/page_spreads.dart';
+import 'package:yoru/features/reader/presentation/page_spreads.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

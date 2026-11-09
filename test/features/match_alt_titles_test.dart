@@ -1,13 +1,13 @@
-import 'package:bacakomik_app/core/data/models/series_response.dart';
-import 'package:bacakomik_app/core/domain/entities/comic.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/utils/alt_titles.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/explore/domain/entities/explore_filter.dart';
-import 'package:bacakomik_app/features/explore/domain/repositories/explore_repository.dart';
-import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
-import 'package:bacakomik_app/features/migration/domain/usecases/source_migration.dart';
-import 'package:bacakomik_app/features/migration/presentation/bloc/match_cubit.dart';
+import 'package:yoru/core/data/models/series_response.dart';
+import 'package:yoru/core/domain/entities/comic.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/utils/alt_titles.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/explore/domain/entities/explore_filter.dart';
+import 'package:yoru/features/explore/domain/repositories/explore_repository.dart';
+import 'package:yoru/features/migration/domain/usecases/import_library.dart';
+import 'package:yoru/features/migration/domain/usecases/source_migration.dart';
+import 'package:yoru/features/migration/presentation/bloc/match_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

@@ -1,5 +1,5 @@
 // From SCANCORE's MemoStore.kt (MIT, LICENSE-SCANCORE).
-package org.kurodev.bacakomik.mihon.host
+package org.kurodev.yoru.mihon.host
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject

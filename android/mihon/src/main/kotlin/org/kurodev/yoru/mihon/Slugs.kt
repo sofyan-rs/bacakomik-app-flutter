@@ -1,9 +1,9 @@
-package org.kurodev.bacakomik.mihon
+package org.kurodev.yoru.mihon
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Base64
-import org.kurodev.bacakomik.mihon.host.HostError
+import org.kurodev.yoru.mihon.host.HostError
 import java.security.MessageDigest
 
 /**

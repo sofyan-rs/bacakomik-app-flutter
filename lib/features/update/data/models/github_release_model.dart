@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
+import 'package:yoru/features/update/domain/entities/app_release.dart';
 
 /// `GET /repos/{owner}/{repo}/releases/latest` from the GitHub API.
 class GitHubReleaseModel {

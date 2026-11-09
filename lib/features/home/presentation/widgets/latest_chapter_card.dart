@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:flutter/material.dart';
 
 /// Latest-chapter row inside a [ListGroup]. Shared by the home section and

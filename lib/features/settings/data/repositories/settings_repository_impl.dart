@@ -1,9 +1,9 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/storage/local_call.dart';
-import 'package:bacakomik_app/features/settings/data/datasources/settings_local_data_source.dart';
-import 'package:bacakomik_app/features/settings/data/models/settings_model.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
-import 'package:bacakomik_app/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/storage/local_call.dart';
+import 'package:yoru/features/settings/data/datasources/settings_local_data_source.dart';
+import 'package:yoru/features/settings/data/models/settings_model.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/domain/repositories/settings_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

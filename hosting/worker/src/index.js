@@ -1,8 +1,9 @@
-// Cloudflare Worker for bacakomik.kurodev.org, the host of shared links
-// (https://bacakomik.kurodev.org/series/<slug>).
+// Cloudflare Worker for yoru.kurodev.org, the host of shared links
+// (https://yoru.kurodev.org/series/<slug>). It serves bacakomik.kurodev.org,
+// the host from before the rename to Yoru, the same way.
 //
 // - /.well-known/assetlinks.json lets Android verify the App Link, so the
-//   link opens BacaKomik directly when it is installed.
+//   link opens Yoru directly when it is installed.
 // - /series/<key> is the fallback page when it is not (or when the link
 //   is opened in a browser). <key> is a slug for the default BacaKomik
 //   source, which gets Open Graph tags with the series title, cover and
@@ -13,7 +14,10 @@
 // - /privacy-policy is the privacy policy, linked from the Google sign-in consent
 //   screen used by Drive sync.
 
-const PACKAGE = 'org.kurodev.bacakomik';
+const PACKAGE = 'org.kurodev.yoru';
+// The app's id before it was renamed to Yoru (2.17.0). Installs that were
+// not moved over yet still open links.
+const OLD_PACKAGE = 'org.kurodev.bacakomik';
 
 // SHA-256 of the release (upload) signing key. Regenerate with
 // `keytool -list -v -keystore <keystore.jks> -alias upload` if it changes.
@@ -24,7 +28,7 @@ const FINGERPRINTS = [
 const API = 'https://api-bacakomik.kurodev.org';
 const DOWNLOAD =
   'https://github.com/sofyan-rs/bacakomik-app-flutter/releases/latest';
-const APP_NAME = 'BacaKomik';
+const APP_NAME = 'Yoru';
 const ISSUES =
   'https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new';
 
@@ -68,16 +72,14 @@ export default {
 };
 
 function assetLinks() {
-  const body = [
-    {
-      relation: ['delegate_permission/common.handle_all_urls'],
-      target: {
-        namespace: 'android_app',
-        package_name: PACKAGE,
-        sha256_cert_fingerprints: FINGERPRINTS,
-      },
+  const body = [PACKAGE, OLD_PACKAGE].map((packageName) => ({
+    relation: ['delegate_permission/common.handle_all_urls'],
+    target: {
+      namespace: 'android_app',
+      package_name: packageName,
+      sha256_cert_fingerprints: FINGERPRINTS,
     },
-  ];
+  }));
   return new Response(JSON.stringify(body, null, 2), {
     headers: {
       'Content-Type': 'application/json',
@@ -240,7 +242,7 @@ export function page({ url, title, description, image, meta, missing = false }) 
 </head>
 <body>
   <main>
-    <p class="brand">BACAKOMIK</p>
+    <p class="brand">YORU</p>
     ${image ? `<img src="${escape(image)}" alt="">` : ''}
     ${meta ? `<div class="meta">${escape(meta)}</div>` : ''}
     <h1>${escape(heading)}</h1>
@@ -275,7 +277,7 @@ export function privacyPage() {
 </head>
 <body>
   <main>
-    <p class="brand">BACAKOMIK</p>
+    <p class="brand">YORU</p>
     <h1>Privacy Policy</h1>
     <p class="updated">Last updated ${PRIVACY_UPDATED}</p>
 
@@ -378,7 +380,7 @@ export function homePage(origin) {
 </head>
 <body>
   <main>
-    <p class="brand">BACAKOMIK</p>
+    <p class="brand">YORU</p>
     <h1>${APP_NAME}</h1>
     <p>${escape(desc)} Free, without ads, made by Kurodev.</p>
     <a class="button" href="${DOWNLOAD}">Download the app</a>

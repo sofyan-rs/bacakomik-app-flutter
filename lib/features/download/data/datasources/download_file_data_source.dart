@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:bacakomik_app/core/network/image_cache.dart';
+import 'package:yoru/core/network/image_cache.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';

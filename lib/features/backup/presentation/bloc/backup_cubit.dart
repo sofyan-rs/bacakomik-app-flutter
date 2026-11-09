@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/backup/domain/entities/library_backup.dart';
-import 'package:bacakomik_app/features/backup/domain/usecases/backup_library.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/backup/domain/entities/library_backup.dart';
+import 'package:yoru/features/backup/domain/usecases/backup_library.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';

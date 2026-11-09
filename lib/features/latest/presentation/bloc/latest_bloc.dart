@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/presentation/bloc/comic_list_state.dart';
-import 'package:bacakomik_app/features/latest/domain/usecases/get_latest_comics.dart';
+import 'package:yoru/core/presentation/bloc/comic_list_state.dart';
+import 'package:yoru/features/latest/domain/usecases/get_latest_comics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 

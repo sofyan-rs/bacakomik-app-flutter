@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/core/data/models/comic_details_model.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'bookmark_model.g.dart';

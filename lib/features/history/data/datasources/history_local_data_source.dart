@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
-import 'package:bacakomik_app/core/storage/json_box.dart';
-import 'package:bacakomik_app/features/history/data/models/read_history_model.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
+import 'package:yoru/core/storage/json_box.dart';
+import 'package:yoru/features/history/data/models/read_history_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';

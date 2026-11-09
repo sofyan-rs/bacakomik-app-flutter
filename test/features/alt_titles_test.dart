@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/data/models/series_response.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_info.dart';
+import 'package:yoru/core/data/models/series_response.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/comic_info.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

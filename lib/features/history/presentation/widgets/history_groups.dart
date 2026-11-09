@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
 
 /// Comics last read on the same day, newest day first.
 class HistoryDay {

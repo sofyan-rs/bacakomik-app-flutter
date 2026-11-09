@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/headless_pages.dart';
-import 'package:bacakomik_app/core/storage/box_recovery.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/headless_pages.dart';
+import 'package:yoru/core/storage/box_recovery.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';

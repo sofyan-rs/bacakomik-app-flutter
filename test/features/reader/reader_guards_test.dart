@@ -1,13 +1,13 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
-import 'package:bacakomik_app/core/storage/library_journal.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
-import 'package:bacakomik_app/features/history/data/repositories/history_repository_impl.dart';
-import 'package:bacakomik_app/features/history/domain/usecases/history_usecases.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
-import 'package:bacakomik_app/features/reader/presentation/reader_wakelock.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
+import 'package:yoru/core/storage/library_journal.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/history/data/datasources/history_local_data_source.dart';
+import 'package:yoru/features/history/data/repositories/history_repository_impl.dart';
+import 'package:yoru/features/history/domain/usecases/history_usecases.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/features/reader/presentation/pages/read_chapter_screen.dart';
+import 'package:yoru/features/reader/presentation/reader_wakelock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 

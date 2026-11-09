@@ -1,10 +1,10 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter_card.dart';
-import 'package:bacakomik_app/features/latest/presentation/pages/latest_chapter_screen.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/home/presentation/bloc/home_bloc.dart';
+import 'package:yoru/features/home/presentation/widgets/latest_chapter_card.dart';
+import 'package:yoru/features/latest/presentation/pages/latest_chapter_screen.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

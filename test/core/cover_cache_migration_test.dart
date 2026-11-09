@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:bacakomik_app/core/network/cover_cache_migration.dart';
+import 'package:yoru/core/network/cover_cache_migration.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
