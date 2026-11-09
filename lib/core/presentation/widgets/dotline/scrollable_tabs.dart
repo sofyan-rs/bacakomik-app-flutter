@@ -3,11 +3,15 @@ import 'package:bacakomik_app/core/theme/dotline_colors.dart';
 import 'package:bacakomik_app/core/theme/dotline_text.dart';
 import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// [SegmentedControl] look for any number of tabs: few tabs share the width,
 /// many scroll sideways and the selected one is scrolled into view. As in
 /// [SegmentedControl], one `ink` pill slides to the selected tab; tabs differ
 /// in width here, so the pill is placed from the tabs' laid-out boxes.
+///
+/// When the tabs fit, dragging sideways moves the pill to the tab under the
+/// finger and letting go selects it. When they overflow, dragging scrolls.
 class ScrollableTabs<T> extends StatefulWidget {
   const ScrollableTabs({
     super.key,
@@ -38,6 +42,50 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
   /// The selected tab's box within the row; null until first laid out.
   Rect? _pill;
 
+  /// The tab under the finger while dragging along the row.
+  T? _drag;
+
+  /// The tab the pill shows: the dragged one, else the selected one.
+  T get _shown => _drag ?? widget.selected;
+
+  /// The tab whose box holds [x], in the row's coordinates.
+  T? _tabAt(double x) {
+    final row = _rowKey.currentContext?.findRenderObject();
+    if (row is! RenderBox) return null;
+    T? nearest;
+    var distance = double.infinity;
+    for (final segment in widget.segments) {
+      final tab = _keys[segment.value]?.currentContext?.findRenderObject();
+      if (tab is! RenderBox || !tab.hasSize) continue;
+      final left = tab.localToGlobal(Offset.zero, ancestor: row).dx;
+      final d = x < left
+          ? left - x
+          : x > left + tab.size.width
+          ? x - left - tab.size.width
+          : 0.0;
+      if (d < distance) {
+        distance = d;
+        nearest = segment.value;
+      }
+    }
+    return nearest;
+  }
+
+  void _dragTo(double x) {
+    final value = _tabAt(x);
+    if (value == null || value == _drag) return;
+    if (value != _shown) HapticFeedback.selectionClick();
+    setState(() => _drag = value);
+  }
+
+  void _endDrag() {
+    final value = _drag;
+    setState(() => _drag = null);
+    if (value != null && value != widget.selected) widget.onChanged(value);
+  }
+
+  void _cancelDrag() => setState(() => _drag = null);
+
   @override
   void didUpdateWidget(ScrollableTabs<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -48,7 +96,7 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
   /// after every build, since labels and counts change the tab widths.
   void _placePill() => WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!mounted) return;
-    final tab = _keys[widget.selected]?.currentContext?.findRenderObject();
+    final tab = _keys[_shown]?.currentContext?.findRenderObject();
     final row = _rowKey.currentContext?.findRenderObject();
     if (tab is! RenderBox || row is! RenderBox) return;
     if (!tab.hasSize || !row.hasSize) return;
@@ -94,63 +142,72 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
               height: _tabHeight,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: Stack(
-                  children: [
-                    if (pill != null)
-                      AnimatedPositioned(
-                        duration: duration,
-                        curve: DotMotion.slideCurve,
-                        left: pill.left,
-                        width: pill.width,
-                        top: 0,
-                        bottom: 0,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: c.ink,
-                            borderRadius: radius,
+                // Inside the scroll view, so drag positions are in the row's
+                // coordinates. The scroll view only takes drags when the tabs
+                // overflow; otherwise these handlers get them.
+                child: GestureDetector(
+                  onHorizontalDragStart: (d) => _dragTo(d.localPosition.dx),
+                  onHorizontalDragUpdate: (d) => _dragTo(d.localPosition.dx),
+                  onHorizontalDragEnd: (_) => _endDrag(),
+                  onHorizontalDragCancel: _cancelDrag,
+                  child: Stack(
+                    children: [
+                      if (pill != null)
+                        AnimatedPositioned(
+                          duration: duration,
+                          curve: DotMotion.slideCurve,
+                          left: pill.left,
+                          width: pill.width,
+                          top: 0,
+                          bottom: 0,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: c.ink,
+                              borderRadius: radius,
+                            ),
                           ),
                         ),
-                      ),
-                    Row(
-                      key: _rowKey,
-                      children: [
-                        for (final segment in widget.segments)
-                          ConstrainedBox(
-                            key: _keys.putIfAbsent(
-                              segment.value,
-                              GlobalKey.new,
-                            ),
-                            constraints: BoxConstraints(minWidth: minWidth),
-                            child: Semantics(
-                              button: true,
-                              selected: segment.value == widget.selected,
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => widget.onChanged(segment.value),
-                                child: Container(
-                                  height: _tabHeight,
-                                  alignment: Alignment.center,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: DotSpace.s4,
+                      Row(
+                        key: _rowKey,
+                        children: [
+                          for (final segment in widget.segments)
+                            ConstrainedBox(
+                              key: _keys.putIfAbsent(
+                                segment.value,
+                                GlobalKey.new,
+                              ),
+                              constraints: BoxConstraints(minWidth: minWidth),
+                              child: Semantics(
+                                button: true,
+                                selected: segment.value == widget.selected,
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => widget.onChanged(segment.value),
+                                  child: Container(
+                                    height: _tabHeight,
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: DotSpace.s4,
+                                    ),
+                                    // Until the pill is placed (the first
+                                    // frame), the selected tab has its own.
+                                    decoration: BoxDecoration(
+                                      color:
+                                          pill == null &&
+                                              segment.value == _shown
+                                          ? c.ink
+                                          : null,
+                                      borderRadius: radius,
+                                    ),
+                                    child: _label(c, segment, duration),
                                   ),
-                                  // Until the pill is placed (the first
-                                  // frame), the selected tab has its own.
-                                  decoration: BoxDecoration(
-                                    color:
-                                        pill == null &&
-                                            segment.value == widget.selected
-                                        ? c.ink
-                                        : null,
-                                    borderRadius: radius,
-                                  ),
-                                  child: _label(c, segment, duration),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -162,7 +219,7 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
 
   /// Label, then its [Segment.count] smaller and dimmed.
   Widget _label(DotlineColors c, Segment<T> segment, Duration duration) {
-    final selected = segment.value == widget.selected;
+    final selected = segment.value == _shown;
     final color = selected ? c.onInk : c.inkMuted;
     final label = AnimatedDefaultTextStyle(
       duration: duration,
