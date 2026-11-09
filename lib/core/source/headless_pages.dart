@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi' show DynamicLibrary;
 import 'dart:io' as io;
 
 import 'package:bacakomik_app/core/error/exceptions.dart';
@@ -6,10 +7,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-/// Whether this platform has a WebView. Linux does not: its implementation
-/// needs WPE WebKit, which most distributions do not ship (see
-/// `third_party/flutter_inappwebview_linux_stub`).
-final bool webViewAvailable = kIsWeb || !io.Platform.isLinux;
+/// Whether this platform has a WebView. On Linux that is WebKitGTK 4.1
+/// (`third_party/flutter_inappwebview_linux`), which most desktops have but
+/// the app does not ship.
+final bool webViewAvailable = kIsWeb || !io.Platform.isLinux || _hasWebKitGtk();
+
+bool _hasWebKitGtk() {
+  try {
+    DynamicLibrary.open('libwebkit2gtk-4.1.so.0');
+    return true;
+  } on ArgumentError {
+    return false;
+  }
+}
 
 /// Hidden WebViews that run extension scripts inside a site, for sites that
 /// only answer a real browser (strict Cloudflare rules, tokens their own
@@ -70,7 +80,9 @@ class HeadlessPages {
   Future<Object?> run(String extensionId, String url, String script) {
     if (!webViewAvailable) {
       return Future.error(
-        ServerException('This source needs a WebView, which Linux lacks'),
+        ServerException(
+          'This source needs a WebView: install WebKitGTK (webkit2gtk 4.1)',
+        ),
       );
     }
     Future<Object?> next(_) => _run(extensionId, Uri.parse(url), script);

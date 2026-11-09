@@ -646,7 +646,7 @@ packages:
   flutter_inappwebview_linux:
     dependency: "direct overridden"
     description:
-      path: "third_party/flutter_inappwebview_linux_stub"
+      path: "third_party/flutter_inappwebview_linux"
       relative: true
     source: path
     version: "0.1.0-beta.1"

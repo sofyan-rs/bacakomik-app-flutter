@@ -29,11 +29,18 @@ class DotMenuButton extends StatelessWidget {
     required this.items,
     this.semanticLabel = 'Menu',
     this.iconSize = DotSize.icon,
+    this.onOpen,
+    this.onClose,
   });
 
   final List<DotMenuItem> items;
   final String semanticLabel;
   final double iconSize;
+
+  /// Called when the menu opens and closes, e.g. to hide what would cover
+  /// it (a Linux web view, which Flutter cannot draw over).
+  final VoidCallback? onOpen;
+  final VoidCallback? onClose;
 
   static const width = 224.0;
 
@@ -41,6 +48,8 @@ class DotMenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     return MenuAnchor(
+      onOpen: onOpen,
+      onClose: onClose,
       alignmentOffset: const Offset(
         -(width - DotSize.touchTarget),
         DotSpace.s2,

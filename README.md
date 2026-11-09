@@ -9,7 +9,7 @@ Get it from the [Releases](https://github.com/sofyan-rs/bacakomik-app-flutter/re
 - **Android:** the APK; `arm64-v8a` fits almost every phone. Android 7.0 or newer.
 - **Windows:** `windows-setup.exe` (Windows 10 and 11, 64-bit).
 - **macOS:** the `.dmg` (macOS 12 or newer). Not signed yet: open it the first time with right click → Open.
-- **Linux:** the `.AppImage` (64-bit). No in-app WebView yet: "Open in WebView" opens the browser, and sources that need a WebView do not load.
+- **Linux:** the `.AppImage` (64-bit). The in-app WebView needs WebKitGTK 4.1, which most desktops already have (`libwebkit2gtk-4.1-0` on Debian and Ubuntu, `webkit2gtk4.1` on Fedora); without it "Open in WebView" opens the browser and sources that need a WebView do not load.
 
 The app checks for new releases and updates itself (on Linux when run from the AppImage). More on the [website](https://bacakomik.kurodev.org).
 

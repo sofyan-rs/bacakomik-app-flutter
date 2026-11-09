@@ -186,8 +186,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # GTK and the toolchain for Flutter, GStreamer for audioplayers. No
-      # WPE WebKit: Linux builds without a WebView (third_party/).
+      # GTK and the toolchain for Flutter, GStreamer for audioplayers. The
+      # WebView opens WebKitGTK at run time, so it needs nothing here
+      # (third_party/flutter_inappwebview_linux).
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -281,8 +282,8 @@ jobs:
           The desktop apps are not signed yet. On macOS, open the app the first time with
           right click → Open (or run \`xattr -cr /Applications/BacaKomik.app\`). On Windows,
           SmartScreen may ask: More info → Run anyway. On Linux, make the AppImage executable;
-          it has no in-app WebView yet, so "Open in WebView" opens the browser and sources that
-          need a WebView do not load.
+          the in-app WebView needs WebKitGTK 4.1 (\`sudo apt install libwebkit2gtk-4.1-0\` on
+          Debian and Ubuntu, \`webkit2gtk4.1\` on Fedora), which most desktops already have.
           MD
 
       - name: Publish release
