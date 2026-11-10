@@ -545,7 +545,7 @@ export function privacyPage() {
 
 // Home page features: a title and one line each.
 const FEATURES = [
-  ['Several sources', 'BacaKomik and VoraToon come bundled. More install as extensions, so new sites need no app update.'],
+  ['Several sources', 'Sources install as extensions, so new sites need no app update.'],
   ['Browse and search', 'Latest and popular comics, title search, and filters by the source’s own genres, type and status.'],
   ['A reader that remembers', 'Vertical strip or page by page, zoom and auto-scroll. Resumes at the page you stopped at.'],
   ['Bookmarks and history', 'Your own categories, new chapter badges, and a reading history that keeps the last page.'],
