@@ -12,7 +12,7 @@ Recipes for working on Yoru. Read [ARCHITECTURE.md](ARCHITECTURE.md) once first.
 2. Use a device or emulator on Android 7.0+ (API 24); test on a recent one (API 34+) too. Mihon extensions need Android 9+ (API 28). Cloudflare sources and Cronet need Google Play services.
 3. For extension work: [Bun](https://bun.sh) and access to the private `yoru-ext-source` repo. To write your own extension without that access, use the public extension source, [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source), served at `https://sofyan-rs.github.io/yoru-ext-public-source/index.json`.
 
-There is no server to configure. Content comes from the bundled extensions and the default repo `https://bacakomik-ext.kurodev.org/index.json`.
+There is no server to configure. Content comes from the bundled extensions and the default repo `https://yoru-ext.kurodev.org/index.json`.
 
 ---
 

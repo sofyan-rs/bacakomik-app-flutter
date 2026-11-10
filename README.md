@@ -55,7 +55,7 @@ Screenshots were taken on a real device (iQOO I2218, Android 16) running v2.0.0.
 The app reads extensions from this repo by default:
 
 ```
-https://bacakomik-ext.kurodev.org/index.json
+https://yoru-ext.kurodev.org/index.json
 ```
 
 A second repo is built from the public extension source (its extensions differ from the default repo's):

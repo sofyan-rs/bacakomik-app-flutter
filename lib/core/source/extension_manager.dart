@@ -70,7 +70,7 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
 
   /// Added on first run: the built `dist/` of the private extension source
   /// repo, served from a Cloudflare Worker.
-  static const defaultRepo = 'https://bacakomik-ext.kurodev.org/index.json';
+  static const defaultRepo = 'https://yoru-ext.kurodev.org/index.json';
 
   static const _bundledIndex = 'assets/extensions/index.json';
   static const _reposKey = 'repos';

@@ -11,10 +11,12 @@ const supportedMihonLibs = {'1.4', '1.5', '1.6'};
 /// newer one are listed but cannot be installed.
 const supportedExtensionApi = 1;
 
-/// Repo URLs that moved, old to new. The public extension repo is served by
-/// GitHub Pages, which does not redirect after a rename (bacakomik to yoru,
-/// 2.17.0), so a saved old URL would only get 404.
+/// Repo URLs that moved with the rename to Yoru (2.17.0), old to new. The
+/// public extension repo is served by GitHub Pages, which does not redirect
+/// after a rename, so its old URL only gets 404. The default repo still
+/// answers on its old host, for apps from before the rename.
 const _movedRepos = {
+  'https://bacakomik-ext.kurodev.org/': 'https://yoru-ext.kurodev.org/',
   'https://sofyan-rs.github.io/bacakomik-ext-public-source/':
       'https://sofyan-rs.github.io/yoru-ext-public-source/',
 };

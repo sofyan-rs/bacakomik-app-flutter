@@ -345,7 +345,7 @@ A source is one site; a multi-language extension is one source per enabled langu
 ### 8.2 Extensions and repos
 `ExtensionManager` owns installed extensions, repos and runtimes.
 
-- **Repos:** `index.json` URLs (and Mihon repos' `index.min.json`, §8.9), stored in `source_settings` → `repos`; default `https://bacakomik-ext.kurodev.org/index.json` (the built `dist/` of `yoru-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
+- **Repos:** `index.json` URLs (and Mihon repos' `index.min.json`, §8.9), stored in `source_settings` → `repos`; default `https://yoru-ext.kurodev.org/index.json` (the built `dist/` of `yoru-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
 - **`ExtensionMeta`:** `id` (`[a-z0-9_-]`, file name and key prefix), `name`, `lang`, semver `version`, `apiVersion` (app supports `supportedExtensionApi = 1`; higher is listed but not installable), `baseUrl`, `file`, `sha256`, `nsfw`, `languages`, and optional **`urlPatterns`**: regexes whose one capture group is the slug in a series URL path (`slugFromUrl`), used by the Mihon import (§6.4).
 - **Install:** download, check `sha256`, load once in a throwaway runtime (failing scripts aren't installed), save the script and meta. Updating = installing the newer version. `catalog()` fetches repos in parallel (a failing repo shows as an error) and sets `updateCount`.
 - **Uninstall** removes the script, meta, language setting, and each source's cookies, storage and hidden page.

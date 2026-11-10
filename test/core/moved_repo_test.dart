@@ -11,8 +11,15 @@ void main() {
     );
   });
 
+  test('the old default repo host points at the new one', () {
+    expect(
+      movedRepoUrl('https://bacakomik-ext.kurodev.org/index.json'),
+      'https://yoru-ext.kurodev.org/index.json',
+    );
+  });
+
   test('other URLs stay as they are', () {
-    const url = 'https://bacakomik-ext.kurodev.org/index.json';
+    const url = 'https://keiyoushi.github.io/extensions/index.min.json';
     expect(movedRepoUrl(url), url);
     expect(movedRepoUrl(null), isNull);
   });

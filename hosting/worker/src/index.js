@@ -476,7 +476,7 @@ export function privacyPage() {
     The bundled source for the site bacakomik.my reads from our server
     <code>api-bacakomik.kurodev.org</code>. Other sources are extensions:
     small scripts the app installs from an extension repo (by default
-    <code>bacakomik-ext.kurodev.org</code>, or a repo you add) and that
+    <code>yoru-ext.kurodev.org</code>, or a repo you add) and that
     connect directly to the comic site they read. These requests do not carry
     your Google account, bookmarks or reading history. Like any web server,
     our server and the comic sites can log your IP address and the time of a
