@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/backup/domain/entities/library_backup.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/backup/domain/entities/library_backup.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class BackupRepository {

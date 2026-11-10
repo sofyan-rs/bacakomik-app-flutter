@@ -40,6 +40,7 @@ class AppText {
   static const String saveImg = 'Save image';
   static const String seeCover = 'View cover';
   static const String rating = 'Rating';
+  static const String score = 'Score';
   static const String chapter = 'Chapter';
   static const String chapters = 'Chapters';
   static const String chapterLower = 'chapter';
@@ -57,7 +58,7 @@ class AppText {
   static const String searchChapterHint = 'Chapter number';
   static const String sortChapter = 'Sort chapters';
   static const String share = 'Share';
-  static const String shareSuffix = 'read it on BacaKomik';
+  static const String shareSuffix = 'read it on Yoru';
   static const String titleCopied = 'Title copied to clipboard';
   static const String copyTitle = 'Copy title';
   static const String successSaveImg = 'Image saved to gallery.';
@@ -137,7 +138,8 @@ class AppText {
       'them. Covers, bookmarks, reading history and downloads are kept.';
 
   static const String backupData = 'Back up data';
-  static const String backupDataDescription = 'Bookmarks and reading history';
+  static const String backupDataDescription =
+      'Bookmarks, categories and reading history';
   static const String successBackupData = 'Data backed up';
   static const String failedBackupData = "Couldn't back up data";
 
@@ -155,20 +157,25 @@ class AppText {
   static const String syncing = 'Syncing…';
   static const String syncFailed = 'Sync failed, tap to try again';
   static const String syncNever = 'Never synced';
-  static const String syncLast = 'Last';
+  static const String syncLast = 'Last synced';
   static const String syncSignOut = 'Disconnect Google Drive';
   static const String syncSignOutDescription =
-      'Data on this device stays saved';
+      'Syncing stops. Data on this device stays saved.';
+  static const String syncDisconnect = 'Disconnect';
+  static const String googleDrive = 'Google Drive';
 
   static const String bugReport = 'Report a bug or suggestion';
+  static const String bugReportDescription = 'Opens GitHub Issues';
   static const String aboutApp = 'About the app';
+  static const String aboutAppDescription = 'Developer and website';
   static const String website = 'Kurodev website';
   static const String linkFailed = "Couldn't open the link";
   static const String chaptersRead = 'Chapters read';
   static const String sources = 'Sources';
   static const String library = 'Library';
-  static const String backupAndSync = 'Backup & sync';
-  static const String theme = 'Theme';
+  static const String sync = 'Sync';
+  static const String backup = 'Backup';
+  static const String appearance = 'Appearance';
   static const String about = 'About';
   static const String themeSystem = 'System';
   static const String themeLight = 'Light';
@@ -230,6 +237,14 @@ class AppText {
   static const String pageSize = 'Page size';
   static const String fitWidth = 'Fit width';
   static const String fitHeight = 'Fit height';
+  static const String pageWidth = 'Page width';
+  static const String widthNarrow = 'Narrow';
+  static const String widthMedium = 'Medium';
+  static const String widthWide = 'Wide';
+  static const String widthFull = 'Full';
+  static const String twoPages = 'Two pages';
+  static const String twoPagesHint =
+      'Side by side when the window is wider than tall';
   static const String incognito = 'Incognito mode';
   static const String incognitoDescription = 'Reading is not saved to history';
   static const String keepScreenOn = 'Keep screen on';
@@ -239,14 +254,13 @@ class AppText {
   static const String progressBar = 'Progress bar';
   static const String progressBarHint = 'Thin line at the bottom while reading';
   static const String infiniteScroll = 'Infinite scroll';
-  static const String infiniteScrollHint =
-      'Vertical: chapters run on into each other';
+  static const String infiniteScrollHint = 'Chapters run on into each other';
   static const String chapterLoadFailed = 'Could not load the chapter';
   static const String chaptersLoadingSlow =
       'Still loading the chapter list. Long series take a while.';
   static const String pageShort = 'Page';
   static const String autoScrollSpeed = 'Scroll speed';
-  static const String autoScrollHint = 'Vertical mode. Tap the screen to pause';
+  static const String autoScrollHint = 'Tap the screen to pause';
   static const String autoScrollStart = 'Start auto-scroll';
   static const String autoScrollStop = 'Stop auto-scroll';
   static const String slower = 'Slower';
@@ -423,12 +437,32 @@ class AppText {
   static const String stopRefresh = 'Stop updating bookmarks';
 
   // Migration
-  static const String migration = 'Migration';
-  static const String migrationDescription =
-      'Move series to another source, or import from other apps';
+  static const String importFromApps = 'Import from other apps';
+  static const String importFromAppsDescription =
+      'Mihon, Tachiyomi or Comix.to';
   static const String migrateSource = 'Migrate source';
   static const String migrateSourceDescription =
       'Move bookmarks and reading history to another source';
+  static const String dnsOverHttps = 'DNS over HTTPS';
+  static const String dnsOverHttpsDescription =
+      'Reach sites your network’s DNS blocks';
+  static const String dnsOff = 'Off';
+  static const String dnsOffDescription = 'Use the network’s DNS';
+  static const String dnsCustom = 'Custom';
+  static const String dnsCustomDescription = 'Your own DoH server';
+  static const String dnsCustomHint = 'dns.example.com or https://…/dns-query';
+  static const String dnsCustomInvalid =
+      'Enter a server address (https only, not http)';
+  static const String dnsUseCustom = 'Use this server';
+  static const String dnsCoverageAndroid =
+      'On Android this covers Mihon extensions. JS extensions, images and '
+      'web views keep the network’s DNS.';
+  static const String dnsCoverageDesktop =
+      'Covers extensions, images and downloads. Web views keep the '
+      'network’s DNS.';
+  static const String dnsPrivateDnsHint =
+      'For the whole phone, including web views, set Private DNS in '
+      'Android’s network settings (e.g. one.one.one.one).';
   static const String importMihon = 'Import from Mihon / Tachiyomi';
   static const String importMihonDescription =
       'Bookmarks from a .tachibk backup';
@@ -485,7 +519,7 @@ class AppText {
   static const String readingFile = 'Reading file…';
   static const String mihonHint =
       'In Mihon, open More → Backup and restore → Create backup, then pick '
-      'the .tachibk file here. Only bookmarked comics from sources BacaKomik '
+      'the .tachibk file here. Only bookmarked comics from sources Yoru '
       'has are imported, with their categories and read chapters. Run it '
       'again to bring read chapters to comics imported before.';
   static const String notAvailableHere = 'Not available here';

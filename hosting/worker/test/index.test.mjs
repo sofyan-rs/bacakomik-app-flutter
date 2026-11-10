@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 const get = (path) =>
-  worker.fetch(new Request(`https://bacakomik.kurodev.org${path}`), {}, ctx);
+  worker.fetch(new Request(`https://yoru.kurodev.org${path}`), {}, ctx);
 
 function mockApi(status, data) {
   globalThis.fetch = async (url) => {
@@ -25,9 +25,14 @@ test('assetlinks.json names the app and its signing key', async () => {
   const res = await get('/.well-known/assetlinks.json');
   assert.equal(res.status, 200);
   assert.equal(res.headers.get('Content-Type'), 'application/json');
-  const [entry] = await res.json();
-  assert.equal(entry.target.package_name, 'org.kurodev.bacakomik');
-  assert.equal(entry.target.sha256_cert_fingerprints.length, 1);
+  const entries = await res.json();
+  assert.deepEqual(
+    entries.map((e) => e.target.package_name),
+    ['org.kurodev.yoru', 'org.kurodev.bacakomik'],
+  );
+  for (const entry of entries) {
+    assert.equal(entry.target.sha256_cert_fingerprints.length, 1);
+  }
 });
 
 test('series page carries the Open Graph preview', async () => {
@@ -45,7 +50,7 @@ test('series page carries the Open Graph preview', async () => {
   assert.equal(res.status, 200);
   assert.match(
     body,
-    /<meta property="og:title" content="Magic &lt;Emperor&gt; — BacaKomik">/,
+    /<meta property="og:title" content="Magic &lt;Emperor&gt; — Yoru">/,
   );
   assert.match(
     body,
@@ -53,11 +58,11 @@ test('series page carries the Open Graph preview', async () => {
   );
   assert.match(
     body,
-    /og:url" content="https:\/\/bacakomik\.kurodev\.org\/series\/magic-emperor"/,
+    /og:url" content="https:\/\/yoru\.kurodev\.org\/series\/magic-emperor"/,
   );
   assert.match(
     body,
-    /intent:\/\/bacakomik\.kurodev\.org\/series\/magic-emperor#Intent;scheme=https;package=org\.kurodev\.bacakomik;/,
+    /intent:\/\/yoru\.kurodev\.org\/series\/magic-emperor#Intent;scheme=https;package=org\.kurodev\.yoru;/,
   );
   assert.match(body, /manhua · ongoing · 2018/);
 });
@@ -97,9 +102,21 @@ test('home page describes the app and links the privacy policy', async () => {
   const res = await get('/');
   const body = await res.text();
   assert.equal(res.status, 200);
-  assert.match(body, /<h1>BacaKomik<\/h1>/);
+  assert.match(body, /<h1>Yoru<\/h1>/);
   assert.match(body, /href="\/privacy-policy"/);
   assert.match(body, /Google\s+Drive/);
+  assert.match(body, /<link rel="icon" type="image\/png" sizes="32x32" href="\/favicon-32.png">/);
+});
+
+test('favicons are the app icon as PNG', async () => {
+  for (const path of ['/favicon.ico', '/favicon-32.png', '/favicon-64.png', '/apple-touch-icon.png']) {
+    const res = await get(path);
+    assert.equal(res.status, 200, path);
+    assert.equal(res.headers.get('Content-Type'), 'image/png', path);
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    // PNG signature.
+    assert.deepEqual([...bytes.slice(0, 4)], [0x89, 0x50, 0x4e, 0x47], path);
+  }
 });
 
 test('other paths', async () => {
@@ -108,7 +125,7 @@ test('other paths', async () => {
   assert.equal((await get('/series/%3Cx%3E')).status, 404);
   assert.equal((await get('/random')).status, 404);
   const post = await worker.fetch(
-    new Request('https://bacakomik.kurodev.org/', { method: 'POST' }),
+    new Request('https://yoru.kurodev.org/', { method: 'POST' }),
     {},
     ctx,
   );

@@ -1,9 +1,9 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
@@ -24,7 +24,9 @@ class BookmarkComicCard extends StatelessWidget {
 
   final BookmarkProgress item;
   final bool isSelected;
-  final VoidCallback onTap;
+
+  /// With the cover's tag, for its flight to the details ([CoverHero]).
+  final void Function(CoverHeroTag heroTag) onTap;
   final VoidCallback onLongPress;
 
   @override
@@ -32,54 +34,59 @@ class BookmarkComicCard extends StatelessWidget {
     final c = Dotline.of(context);
     final details = item.bookmark.comicDetails;
     final lang = context.sourceOf(item.bookmark.slug)?.lang;
+    final heroTag = CoverHeroTag(context, details.coverImg);
 
     return Semantics(
       selected: isSelected,
       child: Pressable(
         semanticLabel: details.title,
-        onTap: onTap,
+        hoverScale: DotMotion.hoverScale,
+        onTap: () => onTap(heroTag),
         onLongPress: onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ComicCover(
-              imageUrl: details.coverImg,
-              overlay: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (isSelected)
-                    ColoredBox(color: c.bg.withValues(alpha: 0.55)),
-                  if (lang != null && !isSelected)
-                    Positioned(
-                      top: DotSpace.s2,
-                      left: DotSpace.s2,
-                      child: LangBadge(lang: lang),
-                    ),
-                  if (item.hasUpdate)
-                    Positioned(
-                      top: DotSpace.s2,
-                      right: DotSpace.s2,
-                      child: UpdateBadge(count: item.newChapters),
-                    ),
-                  if (isSelected)
-                    Positioned(
-                      top: DotSpace.s2,
-                      left: DotSpace.s2,
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: c.ink,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          LucideIcons300.check,
-                          size: 16,
-                          color: c.onInk,
+            CoverHero(
+              tag: heroTag,
+              child: ComicCover(
+                imageUrl: details.coverImg,
+                overlay: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (isSelected)
+                      ColoredBox(color: c.bg.withValues(alpha: 0.55)),
+                    if (lang != null && !isSelected)
+                      Positioned(
+                        top: DotSpace.s2,
+                        left: DotSpace.s2,
+                        child: LangBadge(lang: lang),
+                      ),
+                    if (item.hasUpdate)
+                      Positioned(
+                        top: DotSpace.s2,
+                        right: DotSpace.s2,
+                        child: UpdateBadge(count: item.newChapters),
+                      ),
+                    if (isSelected)
+                      Positioned(
+                        top: DotSpace.s2,
+                        left: DotSpace.s2,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: c.ink,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            LucideIcons300.check,
+                            size: 16,
+                            color: c.onInk,
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: DotSpace.s2),

@@ -1,11 +1,12 @@
-import 'package:bacakomik_app/core/domain/entities/comic.dart';
-import 'package:bacakomik_app/core/presentation/widgets/comic_card.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/domain/entities/comic.dart';
+import 'package:yoru/core/presentation/widgets/comic_card.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Cover grid used by Explore, search and bookmarks: 3 columns on phones,
-/// more on wide screens (cells stay about 150 wide). Each cell is a 2:3
+/// more on wide screens (cells stay about 150 wide, 190 on tablets and
+/// desktop so covers don't shrink to thumbnails). Each cell is a 2:3
 /// cover plus [textHeight] of text under it.
 class CoverGridSliver extends StatelessWidget {
   const CoverGridSliver({
@@ -20,15 +21,26 @@ class CoverGridSliver extends StatelessWidget {
   final double textHeight;
 
   static const _maxCellWidth = 150.0;
+  static const _maxCellWidthWide = 190.0;
 
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: DotSpace.s4),
+      // The top leaves room for a first-row cover grown by hover, which the
+      // scroll view would otherwise clip.
+      padding: const EdgeInsets.fromLTRB(
+        DotSpace.s4,
+        DotSpace.s2,
+        DotSpace.s4,
+        0,
+      ),
       sliver: SliverLayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.crossAxisExtent;
-          final columns = (width / _maxCellWidth).floor().clamp(3, 8);
+          final maxCell = width >= DotSize.splitMinWidth
+              ? _maxCellWidthWide
+              : _maxCellWidth;
+          final columns = (width / maxCell).floor().clamp(3, 12);
           final cellWidth = (width - DotSpace.s3 * (columns - 1)) / columns;
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

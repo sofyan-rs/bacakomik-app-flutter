@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:bacakomik_app/features/sync/data/datasources/desktop_google_auth_data_source.dart';
+import 'package:yoru/features/sync/data/datasources/desktop_google_auth_data_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:http/http.dart' as http;

@@ -1,15 +1,45 @@
 import 'dart:async';
+import 'dart:ffi' show DynamicLibrary;
 import 'dart:io' as io;
 
-import 'package:bacakomik_app/core/error/exceptions.dart';
+import 'package:yoru/core/error/exceptions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-/// Whether this platform has a WebView. Linux does not: its implementation
-/// needs WPE WebKit, which most distributions do not ship (see
-/// `third_party/flutter_inappwebview_linux_stub`).
-final bool webViewAvailable = kIsWeb || !io.Platform.isLinux;
+/// Whether this platform has a WebView. On Linux that is WebKitGTK 4.1
+/// (`third_party/flutter_inappwebview_linux`), which most desktops have but
+/// the app does not ship.
+final bool webViewAvailable = kIsWeb || !io.Platform.isLinux || _hasWebKitGtk();
+
+/// Why a certificate was refused, e.g. an ISP's block page answering for the
+/// site; worded as the Linux WebView words it.
+String certificateRefused(SslErrorType? code) {
+  if (code == SslErrorType.IDMISMATCH ||
+      code == SslErrorType.COMMON_NAME_IS_INCORRECT) {
+    return "The certificate is not this site's: the network may be "
+        'blocking it';
+  }
+  if (code == SslErrorType.EXPIRED) return "The site's certificate has expired";
+  if (code == SslErrorType.UNTRUSTED) {
+    return "The site's certificate is not from a trusted authority";
+  }
+  return "The site's certificate was refused";
+}
+
+/// Android cancels a refused certificate without reporting a load error
+/// (other platforms report one), so the app asks to hear of it there. Not
+/// elsewhere: macOS would ask about every certificate, good or not.
+final bool hearsOfCertificates = !kIsWeb && io.Platform.isAndroid;
+
+bool _hasWebKitGtk() {
+  try {
+    DynamicLibrary.open('libwebkit2gtk-4.1.so.0');
+    return true;
+  } on ArgumentError {
+    return false;
+  }
+}
 
 /// Hidden WebViews that run extension scripts inside a site, for sites that
 /// only answer a real browser (strict Cloudflare rules, tokens their own
@@ -70,7 +100,9 @@ class HeadlessPages {
   Future<Object?> run(String extensionId, String url, String script) {
     if (!webViewAvailable) {
       return Future.error(
-        ServerException('This source needs a WebView, which Linux lacks'),
+        ServerException(
+          'This source needs a WebView: install WebKitGTK (webkit2gtk 4.1)',
+        ),
       );
     }
     Future<Object?> next(_) => _run(extensionId, Uri.parse(url), script);
@@ -146,6 +178,25 @@ class HeadlessPages {
         ),
         onWebViewCreated: (c) => page.controller = c,
         onCreateWindow: (_, _) async => false,
+        onReceivedServerTrustAuthRequest: !hearsOfCertificates
+            ? null
+            : (_, challenge) {
+                if (challenge.protectionSpace.sslError == null) return null;
+                // The site itself, not something it embeds, answered with it.
+                if (challenge.protectionSpace.host == page.host &&
+                    !(page.loaded?.isCompleted ?? true)) {
+                  page.loaded!.completeError(
+                    ServerException(
+                      certificateRefused(
+                        challenge.protectionSpace.sslError?.code,
+                      ),
+                    ),
+                  );
+                }
+                return ServerTrustAuthResponse(
+                  action: ServerTrustAuthResponseAction.CANCEL,
+                );
+              },
         shouldOverrideUrlLoading: (_, action) async {
           final to = action.request.url?.host ?? '';
           final allowed =
@@ -240,7 +291,7 @@ class HeadlessPages {
       b.endsWith('.$a') ||
       a == 'challenges.cloudflare.com';
 
-  static const _hiddenWebViews = MethodChannel('bacakomik/hidden_webviews');
+  static const _hiddenWebViews = MethodChannel('yoru/hidden_webviews');
 
   /// Lets [page] render at alpha 0, or hides it again (see MainActivity).
   static Future<void> _show(_Page page, bool render) async {

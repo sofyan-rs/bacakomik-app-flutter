@@ -1,21 +1,23 @@
-import 'package:bacakomik_app/app/root_tabs.dart';
-import 'package:bacakomik_app/app/splash_screen.dart';
-import 'package:bacakomik_app/core/theme/dotline_theme.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/features/backup/presentation/bloc/backup_cubit.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
-import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
-import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
-import 'package:bacakomik_app/features/explore/presentation/bloc/explore_bloc.dart';
-import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
-import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart';
-import 'package:bacakomik_app/features/update/presentation/bloc/update_cubit.dart';
+import 'package:yoru/core/network/dns_setting.dart';
+import 'package:yoru/app/app_shortcuts.dart';
+import 'package:yoru/app/root_tabs.dart';
+import 'package:yoru/app/splash_screen.dart';
+import 'package:yoru/core/theme/dotline_theme.dart';
+import 'package:yoru/core/constants/variables.dart';
+import 'package:yoru/core/di/injection.dart';
+import 'package:yoru/features/backup/presentation/bloc/backup_cubit.dart';
+import 'package:yoru/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:yoru/features/category/presentation/bloc/category_cubit.dart';
+import 'package:yoru/features/download/presentation/bloc/download_cubit.dart';
+import 'package:yoru/features/explore/presentation/bloc/explore_bloc.dart';
+import 'package:yoru/features/explore/presentation/bloc/filter_cubit.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/features/home/presentation/bloc/home_bloc.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/sync/presentation/bloc/sync_cubit.dart';
+import 'package:yoru/features/update/presentation/bloc/update_cubit.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,15 +25,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// App-wide blocs: the bottom-navigation tabs and the user's library.
 /// Screen-specific blocs are provided by their own routes. [RootTabs] sits
 /// above the navigator so pushed routes can switch tabs.
-class BacaKomikApp extends StatefulWidget {
-  const BacaKomikApp({super.key});
+class YoruApp extends StatefulWidget {
+  const YoruApp({super.key});
 
   @override
-  State<BacaKomikApp> createState() => _BacaKomikAppState();
+  State<YoruApp> createState() => _YoruAppState();
 }
 
-class _BacaKomikAppState extends State<BacaKomikApp> {
+class _YoruAppState extends State<YoruApp> {
   final _tabs = RootTabs();
+  final _navigator = GlobalKey<NavigatorState>();
 
   @override
   void dispose() {
@@ -81,6 +84,11 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
               context.read<HistoryCubit>().load();
             },
           ),
+          BlocListener<SettingsCubit, AppSettings>(
+            listenWhen: (previous, current) =>
+                previous.dnsOverHttps != current.dnsOverHttps,
+            listener: (_, settings) => applyDnsOverHttps(settings.dnsOverHttps),
+          ),
           // Home and Explore follow the picked source; its filter groups
           // are its own.
           BlocListener<SourcesCubit, SourcesState>(
@@ -102,6 +110,12 @@ class _BacaKomikAppState extends State<BacaKomikApp> {
               return MaterialApp(
                 debugShowCheckedModeBanner: false,
                 title: AppVariables.appName,
+                navigatorKey: _navigator,
+                builder: (context, child) => AppShortcuts(
+                  navigator: _navigator,
+                  tabs: _tabs,
+                  child: child!,
+                ),
                 scrollBehavior: const _DragScrollBehavior(),
                 theme: DotlineThemes.light,
                 darkTheme: DotlineThemes.dark,

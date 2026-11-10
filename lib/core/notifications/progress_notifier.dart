@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'package:bacakomik_app/core/constants/texts.dart';
+import 'package:yoru/core/constants/texts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:injectable/injectable.dart';
@@ -49,7 +49,7 @@ void progressActionInBackground(NotificationResponse response) {
 @LazySingleton(as: ProgressNotifier)
 class LocalProgressNotifier implements ProgressNotifier {
   static const cancelAction = 'cancel';
-  static const portName = 'bacakomik_progress_actions';
+  static const portName = 'yoru_progress_actions';
 
   final _plugin = FlutterLocalNotificationsPlugin();
   Future<bool>? _ready;

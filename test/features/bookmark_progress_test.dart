@@ -1,7 +1,7 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ComicDetails _details(String slug, int chapters) => ComicDetails(

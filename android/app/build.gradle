@@ -10,7 +10,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "org.kurodev.bacakomik"
+    namespace "org.kurodev.yoru"
     compileSdk 37
     ndkVersion flutter.ndkVersion
 
@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "org.kurodev.bacakomik"
+        applicationId "org.kurodev.yoru"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk flutter.minSdkVersion
@@ -31,6 +31,7 @@ android {
         versionCode flutter.versionCode
         versionName flutter.versionName
         multiDexEnabled true
+        manifestPlaceholders = [appLabel: "Yoru"]
         ndk {
             debugSymbolLevel 'FULL'
         }
@@ -47,6 +48,17 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+        }
+        // Debug and profile builds install next to the released app, so
+        // trying one on a phone never replaces it (a different signature
+        // would make Flutter uninstall it, data and all).
+        debug {
+            applicationIdSuffix ".dev"
+            manifestPlaceholders = [appLabel: "Yoru Dev"]
+        }
+        profile {
+            applicationIdSuffix ".dev"
+            manifestPlaceholders = [appLabel: "Yoru Dev"]
         }
     }
 }

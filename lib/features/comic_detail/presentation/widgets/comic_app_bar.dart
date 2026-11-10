@@ -1,25 +1,24 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/core/utils/utils.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/duplicate_sheet.dart';
-import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
-import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
-import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
-import 'package:bacakomik_app/features/history/domain/entities/resume_chapter.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/utils.dart';
+import 'package:yoru/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/duplicate_sheet.dart';
+import 'package:yoru/features/download/domain/entities/download_library.dart';
+import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
+import 'package:yoru/features/download/presentation/bloc/download_cubit.dart';
+import 'package:yoru/features/history/domain/entities/resume_chapter.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
-import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
-import 'package:bacakomik_app/features/category/presentation/widgets/set_categories_sheet.dart';
+import 'package:yoru/features/category/presentation/bloc/category_cubit.dart';
+import 'package:yoru/features/category/presentation/widgets/set_categories_sheet.dart';
 
 /// Detail bottom bar: bookmark toggle + continue/start reading. While
 /// chapters are selected it switches to download / mark read / unread /
@@ -138,10 +137,26 @@ class ComicAppBar extends StatelessWidget {
           onTap: unselectAllChapter,
         ),
         const SizedBox(width: DotSpace.s3),
+        // The count over its label, each on one line: between five buttons
+        // a phone leaves too little room for "12 SELECTED" on one.
         Expanded(
-          child: Text(
-            '${selectedChapters.length} ${AppText.selected}'.toUpperCase(),
-            style: DotlineText.label.copyWith(color: c.ink),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${selectedChapters.length}',
+                style: DotlineText.headline.copyWith(color: c.ink),
+                maxLines: 1,
+              ),
+              Text(
+                AppText.selected.toUpperCase(),
+                style: DotlineText.label.copyWith(color: c.inkFaint),
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.fade,
+              ),
+            ],
           ),
         ),
         RoundIconButton(
@@ -181,17 +196,9 @@ class ComicAppBar extends StatelessWidget {
           background: c.ink,
           foreground: c.onInk,
           onTap: () {
-            final now = DateTime.now();
-            context.read<HistoryCubit>().addHistoryList([
-              for (final chapter in selectedChapters)
-                ReadHistory(
-                  comicSlug: comicSlug,
-                  chapterNumber: chapter.chapterNumber,
-                  comicDetails: comicDetails,
-                  readDate: now,
-                  slug: chapter.slug,
-                ),
-            ]);
+            context.read<HistoryCubit>().markRead(comicSlug, comicDetails, {
+              for (final chapter in selectedChapters) chapter.slug,
+            });
             unselectAllChapter();
           },
         ),

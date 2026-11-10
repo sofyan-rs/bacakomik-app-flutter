@@ -1,8 +1,8 @@
-import 'package:bacakomik_app/core/domain/entities/comic.dart';
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/utils/alt_titles.dart';
-import 'package:bacakomik_app/core/utils/api_format.dart';
+import 'package:yoru/core/domain/entities/comic.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/utils/alt_titles.dart';
+import 'package:yoru/core/utils/api_format.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'series_response.freezed.dart';

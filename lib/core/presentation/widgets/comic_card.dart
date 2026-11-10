@@ -1,8 +1,8 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:flutter/material.dart';
 
 /// Grid cell for Explore and search: 2:3 cover with type label, two-line
@@ -39,19 +39,25 @@ class ComicCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final heroTag = CoverHeroTag(context, cover);
     final c = Dotline.of(context);
     return Pressable(
       semanticLabel: title,
+      hoverScale: DotMotion.hoverScale,
       onTap: () => ComicDetailsScreen.open(
         context,
         slug: slug,
         title: title,
         cover: cover,
+        heroTag: heroTag,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ComicCover(imageUrl: cover, typeLabel: type),
+          CoverHero(
+            tag: heroTag,
+            child: ComicCover(imageUrl: cover, typeLabel: type),
+          ),
           const SizedBox(height: DotSpace.s2),
           Text(
             title,

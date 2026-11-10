@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/chapter_date.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/chapter_date.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

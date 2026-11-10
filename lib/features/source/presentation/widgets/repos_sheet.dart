@@ -1,9 +1,9 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/extensions_cubit.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/source/presentation/bloc/extensions_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -104,7 +104,7 @@ class _ReposSheetState extends State<ReposSheet> {
           autocorrect: false,
           style: DotlineText.body.copyWith(color: c.ink),
           decoration: InputDecoration(
-            hintText: 'https://…/index.json · index.min.json',
+            hintText: 'https://…/index.json · index.min.json · index.pb',
             errorText: _error,
           ),
           onSubmitted: (_) => _add(),

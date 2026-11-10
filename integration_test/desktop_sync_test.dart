@@ -1,9 +1,11 @@
-import 'package:bacakomik_app/app/root_screen.dart';
-import 'package:bacakomik_app/features/sync/presentation/bloc/sync_cubit.dart';
-import 'package:bacakomik_app/main.dart' as app;
+import 'package:yoru/app/root_screen.dart';
+import 'package:yoru/features/sync/presentation/bloc/sync_cubit.dart';
+import 'package:yoru/main.dart' as app;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+
+import 'data_isolation.dart';
 
 /// Signs in to Google in the browser and syncs once. Needs a person to
 /// finish the browser sign-in, and the desktop client:
@@ -13,6 +15,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('signs in and syncs', (tester) async {
+    await expectIsolatedData();
     app.main();
     await _until(tester, () => find.byType(RootScreen).evaluate().isNotEmpty);
     final sync = tester.element(find.byType(RootScreen)).read<SyncCubit>();

@@ -4,7 +4,7 @@
 -keep class mihon.** { *; }
 -keep class tachiyomi.** { *; }
 -keep class androidx.compose.runtime.Stable { *; }
--keep class org.kurodev.bacakomik.mihon.** { *; }
+-keep class org.kurodev.yoru.mihon.** { *; }
 -keep class okhttp3.** { *; }
 -keep class okio.** { *; }
 -keep class org.jsoup.** { *; }

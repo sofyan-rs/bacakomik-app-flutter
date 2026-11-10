@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/category/domain/entities/category.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/category/domain/entities/category.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class CategoryRepository {

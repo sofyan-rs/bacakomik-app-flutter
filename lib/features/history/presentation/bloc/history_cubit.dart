@@ -1,10 +1,10 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
-import 'package:bacakomik_app/features/history/domain/entities/resume_chapter.dart';
-import 'package:bacakomik_app/features/history/domain/usecases/history_usecases.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
+import 'package:yoru/features/history/domain/entities/resume_chapter.dart';
+import 'package:yoru/features/history/domain/usecases/history_usecases.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
@@ -65,6 +65,8 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     bool quiet = false,
   }) {
     if (pageCount <= 0) return Future.value();
+    // The reader's end card is one past the last page; it reads as the last.
+    page = page.clamp(0, pageCount - 1);
     final finished =
         (canFinish && page >= pageCount - 1) ||
         (index.chapter(slug)?.isFinished ?? false);
@@ -173,6 +175,31 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
               comicDetails: details,
               comicSlug: comicSlug,
             ),
+    ]);
+  }
+
+  /// Marks the chapters of [comicSlug] in [slugs] read. Like [markAllRead],
+  /// the highest numbered one gets the newest read date, so it shows as the
+  /// latest whatever order they were selected in.
+  Future<void> markRead(
+    String comicSlug,
+    ComicDetails details,
+    Set<String> slugs,
+  ) {
+    final now = _clock.now();
+    final chapters = [
+      for (final chapter in chaptersNewestFirst(details.chapters))
+        if (slugs.contains(chapter.slug)) chapter,
+    ];
+    return addHistoryList([
+      for (final (i, chapter) in chapters.indexed)
+        ReadHistory(
+          slug: chapter.slug,
+          chapterNumber: chapter.number,
+          readDate: now.subtract(Duration(milliseconds: i)),
+          comicDetails: details,
+          comicSlug: comicSlug,
+        ),
     ]);
   }
 

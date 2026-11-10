@@ -1,42 +1,43 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/app/root_tabs.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/core/utils/deep_links.dart';
-import 'package:bacakomik_app/core/utils/utils.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
-import 'package:bacakomik_app/features/bookmark/domain/usecases/merge_sources.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/bloc/comic_details_bloc.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/merged_sources_sheet.dart';
-import 'package:bacakomik_app/features/migration/presentation/widgets/source_choice_sheet.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_app_bar.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_chapters.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_cover.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_info.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
-import 'package:bacakomik_app/features/explore/presentation/bloc/filter_cubit.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/migration/domain/usecases/import_library.dart';
-import 'package:bacakomik_app/features/migration/presentation/pages/source_migration_screen.dart';
-import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
+import 'package:yoru/app/root_tabs.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/di/injection.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/deep_links.dart';
+import 'package:yoru/core/utils/utils.dart';
+import 'package:yoru/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/features/bookmark/domain/usecases/merge_sources.dart';
+import 'package:yoru/features/comic_detail/presentation/bloc/comic_details_bloc.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/merged_sources_sheet.dart';
+import 'package:yoru/features/migration/presentation/widgets/source_choice_sheet.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/comic_app_bar.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/comic_chapters.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/comic_cover.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/comic_info.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/comic_title.dart';
+import 'package:yoru/features/explore/presentation/bloc/filter_cubit.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/features/migration/domain/usecases/import_library.dart';
+import 'package:yoru/features/migration/presentation/pages/source_migration_screen.dart';
+import 'package:yoru/features/reader/presentation/pages/read_chapter_screen.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/source/presentation/pages/web_view_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/missing_source.dart';
-import 'package:bacakomik_app/core/source/extension_manager.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/mihon_source.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
+import 'package:yoru/features/source/presentation/widgets/missing_source.dart';
+import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/mihon_source.dart';
+import 'package:yoru/features/source/presentation/widgets/source_error.dart';
 
 class ComicDetailsScreen extends StatelessWidget {
   const ComicDetailsScreen({
@@ -44,22 +45,31 @@ class ComicDetailsScreen extends StatelessWidget {
     required this.title,
     required this.slug,
     this.cover,
+    this.heroTag,
   });
 
   final String title;
   final String slug;
   final String? cover;
 
+  /// The tapped card's cover flies into this screen's ([CoverHero]).
+  final CoverHeroTag? heroTag;
+
   static Future<void> open(
     BuildContext context, {
     required String slug,
     required String title,
     String? cover,
+    CoverHeroTag? heroTag,
   }) {
     return Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            ComicDetailsScreen(slug: slug, title: title, cover: cover),
+        builder: (_) => ComicDetailsScreen(
+          slug: slug,
+          title: title,
+          cover: cover,
+          heroTag: heroTag,
+        ),
       ),
     );
   }
@@ -68,7 +78,12 @@ class ComicDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<ComicDetailsBloc>(),
-      child: _ComicDetailsView(title: title, slug: slug, cover: cover),
+      child: _ComicDetailsView(
+        title: title,
+        slug: slug,
+        cover: cover,
+        heroTag: heroTag,
+      ),
     );
   }
 }
@@ -78,11 +93,15 @@ class _ComicDetailsView extends StatefulWidget {
     required this.title,
     required this.slug,
     this.cover,
+    this.heroTag,
   });
 
   final String title;
   final String slug;
   final String? cover;
+
+  /// The tapped card's cover flies into this screen's ([CoverHero]).
+  final CoverHeroTag? heroTag;
 
   @override
   State<_ComicDetailsView> createState() => _ComicDetailsViewState();
@@ -393,10 +412,31 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     _slowNote = null;
   }
 
+  /// Chapters read here that the list did not have, each fetched for once.
+  final _unlisted = <String>{};
+
+  /// The reader goes on to chapters the source added after this page
+  /// loaded (a bookmark's stored list, or one loaded a while ago): reading
+  /// one fetches the comic again, so the list has it on the way back.
+  void _onHistory(BuildContext context, List<ReadHistory> history) {
+    final state = context.read<ComicDetailsBloc>().state;
+    if (state is! ComicDetailsLoaded || state.chaptersLoading) return;
+    final read = history.latestOf(widget.slug)?.slug;
+    if (read == null || _unlisted.contains(read)) return;
+    if (state.comicDetails.chapters.any((c) => c.slug == read)) return;
+    _unlisted.add(read);
+    _load();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ComicDetailsBloc, ComicDetailsState>(
-      listener: _onChaptersLoading,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ComicDetailsBloc, ComicDetailsState>(
+          listener: _onChaptersLoading,
+        ),
+        BlocListener<HistoryCubit, List<ReadHistory>>(listener: _onHistory),
+      ],
       child: _content(),
     );
   }
@@ -415,48 +455,51 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
             .firstOrNull;
         // Bookmarking or downloading waits for the chapter list.
         final ready = state is ComicDetailsLoaded && !state.chaptersLoading;
+        final split =
+            !_sourceMissing &&
+            MediaQuery.sizeOf(context).width >= DotSize.splitMinWidth;
+        final bar = details == null || !ready
+            ? null
+            : ComicAppBar(
+                comicSlug: widget.slug,
+                comicDetails: details,
+                selectedChapters: _selected.values.toList(),
+                selectAllChapter: _setSelected,
+                unselectAllChapter: () => _setSelected(const []),
+                onRead: (slug) => _read(details, slug),
+              );
         return PopScope(
           canPop: _selected.isEmpty,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _setSelected(const []);
           },
           child: Scaffold(
-            bottomNavigationBar: details == null || !ready
-                ? null
-                : ComicAppBar(
-                    comicSlug: widget.slug,
-                    comicDetails: details,
-                    selectedChapters: _selected.values.toList(),
-                    selectAllChapter: _setSelected,
-                    unselectAllChapter: () => _setSelected(const []),
-                    onRead: (slug) => _read(details, slug),
-                  ),
+            // Split: under the chapters instead, see _split.
+            bottomNavigationBar: split ? null : bar,
             body: SafeArea(
               bottom: false,
-              child: switch (state) {
-                ComicDetailsLoaded()
-                    when !_sourceMissing &&
-                        MediaQuery.sizeOf(context).width >=
-                            DotSize.splitMinWidth =>
-                  _split(state, _topBar(bookmark, details)),
-                _ => _refreshable(
-                  CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(child: _topBar(bookmark, details)),
-                      SliverToBoxAdapter(
-                        child: DetailCover(
-                          cover: details?.coverImg ?? widget.cover,
-                        ),
+              // Split from the first frame, not once loaded, so the cover
+              // flies straight to its place on the left.
+              child: split
+                  ? _split(state, _topBar(bookmark, details), bar)
+                  : _refreshable(
+                      CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          SliverToBoxAdapter(child: _topBar(bookmark, details)),
+                          SliverToBoxAdapter(
+                            child: DetailCover(
+                              heroTag: widget.heroTag,
+                              cover: details?.coverImg ?? widget.cover,
+                            ),
+                          ),
+                          ..._body(state),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: DotSpace.s6),
+                          ),
+                        ],
                       ),
-                      ..._body(state),
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: DotSpace.s6),
-                      ),
-                    ],
-                  ),
-                ),
-              },
+                    ),
             ),
           ),
         );
@@ -472,8 +515,11 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   );
 
   /// Wide screens: details on the left, chapters on the right, each half
-  /// scrolling on its own under the top bar.
-  Widget _split(ComicDetailsLoaded state, Widget topBar) {
+  /// scrolling on its own under the top bar. While loading, the left half
+  /// shows the title and loader and the right half stays empty. [bar], the
+  /// read and selection actions, sits under the chapters.
+  Widget _split(ComicDetailsState state, Widget topBar, Widget? bar) {
+    final loaded = state is ComicDetailsLoaded ? state : null;
     const end = SliverToBoxAdapter(child: SizedBox(height: DotSpace.s6));
     return Column(
       children: [
@@ -488,24 +534,38 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       SliverToBoxAdapter(
-                        child: DetailCover(cover: state.comicDetails.coverImg),
+                        child: DetailCover(
+                          cover: loaded?.comicDetails.coverImg ?? widget.cover,
+                          heroTag: widget.heroTag,
+                        ),
                       ),
-                      _info(state.comicDetails, state.chaptersLoading),
+                      if (loaded != null)
+                        _info(loaded.comicDetails, loaded.chaptersLoading)
+                      else
+                        ..._body(state),
                       end,
                     ],
                   ),
                 ),
               ),
               Expanded(
-                child: CustomScrollView(
-                  primary: false,
-                  slivers: [
-                    _chapters(
-                      state.comicDetails,
-                      state.chaptersLoading,
-                      top: 0,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: CustomScrollView(
+                        primary: false,
+                        slivers: [
+                          if (loaded != null)
+                            _chapters(
+                              loaded.comicDetails,
+                              loaded.chaptersLoading,
+                              top: 0,
+                            ),
+                          end,
+                        ],
+                      ),
                     ),
-                    end,
+                    ?bar,
                   ],
                 ),
               ),
@@ -516,39 +576,41 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
     );
   }
 
+  /// The comic's actions in one ⋮ menu; hidden until the source is
+  /// installed.
   Widget _topBar(Bookmark? bookmark, ComicDetails? details) => DotTopBar(
-    // Hidden until the source is installed.
     actions: [
-      if (!_sourceMissing) ...[
-        if (bookmark != null)
-          RoundIconButton(
-            icon: LucideIcons300.gitMerge,
-            semanticLabel: AppText.mergedSources,
-            iconSize: DotSize.iconSmall,
-            onTap: () => _editSources(bookmark, details?.title ?? widget.title),
-          ),
-        // Migrating would drop the other merged sources.
-        if (bookmark != null && !bookmark.isMerged)
-          RoundIconButton(
-            icon: LucideIcons300.arrowRightLeft,
-            semanticLabel: AppText.migrateSource,
-            iconSize: DotSize.iconSmall,
-            onTap: () =>
-                SourceMigrationScreen.open(context, keys: {widget.slug}),
-          ),
-        RoundIconButton(
-          icon: LucideIcons300.globe,
-          semanticLabel: AppText.openWebView,
-          iconSize: DotSize.iconSmall,
-          onTap: () => _openWebView(bookmark),
+      if (!_sourceMissing)
+        DotMenuButton(
+          semanticLabel: AppText.more,
+          items: [
+            if (bookmark != null)
+              DotMenuItem(
+                label: AppText.mergedSources,
+                icon: LucideIcons300.gitMerge,
+                onTap: () =>
+                    _editSources(bookmark, details?.title ?? widget.title),
+              ),
+            // Migrating would drop the other merged sources.
+            if (bookmark != null && !bookmark.isMerged)
+              DotMenuItem(
+                label: AppText.migrateSource,
+                icon: LucideIcons300.arrowRightLeft,
+                onTap: () =>
+                    SourceMigrationScreen.open(context, keys: {widget.slug}),
+              ),
+            DotMenuItem(
+              label: AppText.openWebView,
+              icon: LucideIcons300.globe,
+              onTap: () => _openWebView(bookmark),
+            ),
+            DotMenuItem(
+              label: AppText.share,
+              icon: LucideIcons300.share2,
+              onTap: () => _share(details?.title ?? widget.title),
+            ),
+          ],
         ),
-        RoundIconButton(
-          icon: LucideIcons300.share2,
-          semanticLabel: AppText.share,
-          iconSize: DotSize.iconSmall,
-          onTap: () => _share(details?.title ?? widget.title),
-        ),
-      ],
     ],
   );
 

@@ -4,10 +4,10 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "bacakomik")
+set(BINARY_NAME "yoru")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "org.kurodev.bacakomik")
+set(APPLICATION_ID "org.kurodev.yoru")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -73,15 +73,6 @@ set_target_properties(${BINARY_NAME}
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
-
-# flutter_js 0.8.7 exports flutter_qjs_bundled_libraries instead of the expected
-# flutter_js_bundled_libraries, leaving QuickJS out of the application bundle.
-# Add its prebuilt bridge to the main bundle's installation so both RPM and
-# AppImage contain the JavaScript engine.
-get_target_property(FLUTTER_JS_SOURCE_DIR flutter_js_plugin SOURCE_DIR)
-list(APPEND PLUGIN_BUNDLED_LIBRARIES
-  "${FLUTTER_JS_SOURCE_DIR}/shared/libquickjs_c_bridge_plugin.so"
-)
 
 
 # === Installation ===

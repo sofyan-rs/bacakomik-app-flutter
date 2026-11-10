@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'comic_details_model.g.dart';

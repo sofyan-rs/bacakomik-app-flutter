@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/source/extension_manager.dart';
+import 'package:yoru/core/source/extension_manager.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:hive_ce/hive.dart';

@@ -1,17 +1,36 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/pressable.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/presentation/widgets/dotline/pressable.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Shows a Dotline bottom sheet: `surface` panel, 28 top corners, dot handle,
 /// content padded 16 above the system navigation inset (32 + inset was too
 /// far from the bottom edge).
+///
+/// On wide screens the same content opens as a centred dialog instead, so it
+/// isn't pinned to the bottom of a desktop window.
 Future<T?> showDotSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool showHandle = true,
 }) {
+  if (MediaQuery.sizeOf(context).width >= DotSize.splitMinWidth) {
+    return showDialog<T>(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(DotSpace.s6),
+        clipBehavior: Clip.antiAlias,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: DotSize.dialogMaxWidth),
+          child: Padding(
+            padding: const EdgeInsets.all(DotSpace.s5),
+            child: builder(context),
+          ),
+        ),
+      ),
+    );
+  }
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,

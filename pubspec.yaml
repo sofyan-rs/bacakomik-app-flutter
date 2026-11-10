@@ -1,8 +1,8 @@
-name: bacakomik_app
-description: "Manga application project."
+name: yoru
+description: "Yoru, a manga, manhwa and manhua reader."
 publish_to: "none"
 
-version: 2.11.1+29
+version: 2.18.0+40
 
 environment:
   sdk: ^3.13.0
@@ -67,11 +67,15 @@ dev_dependencies:
   json_serializable: ^6.14.1
   mocktail: ^1.0.5
 
-# Linux has no in-app web view: the real implementation needs WPE WebKit,
-# which most distributions do not ship (see third_party/).
+# Linux: flutter_inappwebview on WebKitGTK instead of the upstream WPE WebKit
+# one, which most distributions do not ship (see third_party/).
 dependency_overrides:
+  # macOS: messages from extension scripts reached the wrong engine and
+  # crashed once it was disposed (third_party/flutter_js/BACAKOMIK_PATCH.md).
+  flutter_js:
+    path: third_party/flutter_js
   flutter_inappwebview_linux:
-    path: third_party/flutter_inappwebview_linux_stub
+    path: third_party/flutter_inappwebview_linux
 
 flutter_gen:
   output: lib/core/assets/

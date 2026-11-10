@@ -1,15 +1,15 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_progress.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/history/presentation/widgets/history_groups.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
+import 'package:yoru/features/history/domain/entities/read_progress.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/features/history/presentation/widgets/history_groups.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -42,6 +42,7 @@ class HistoryComicCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final details = item.comicDetails;
+    final heroTag = CoverHeroTag(context, details.coverImg);
     final latest = item.latestHistory;
     final progress = ReadProgress.of(details, latest.chapterNumber);
 
@@ -76,10 +77,13 @@ class HistoryComicCard extends StatelessWidget {
           leading: SizedBox(
             width: 44,
             height: 60,
-            child: ComicCover(
-              imageUrl: details.coverImg,
-              radius: DotRadius.s,
-              aspectRatio: null,
+            child: CoverHero(
+              tag: heroTag,
+              child: ComicCover(
+                imageUrl: details.coverImg,
+                radius: DotRadius.s,
+                aspectRatio: null,
+              ),
             ),
           ),
           title: details.title,
@@ -117,6 +121,7 @@ class HistoryComicCard extends StatelessWidget {
             slug: item.comicSlug,
             title: details.title,
             cover: details.coverImg,
+            heroTag: heroTag,
           ),
         ),
       ),

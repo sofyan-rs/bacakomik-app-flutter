@@ -1,18 +1,18 @@
 import 'dart:convert';
 
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/backup/data/datasources/backup_file_data_source.dart';
-import 'package:bacakomik_app/features/backup/data/repositories/backup_repository_impl.dart';
-import 'package:bacakomik_app/features/backup/domain/entities/library_backup.dart';
-import 'package:bacakomik_app/features/backup/domain/repositories/backup_repository.dart';
-import 'package:bacakomik_app/features/backup/domain/usecases/backup_library.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
-import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
-import 'package:bacakomik_app/features/category/domain/repositories/category_repository.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_history.dart';
-import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/backup/data/datasources/backup_file_data_source.dart';
+import 'package:yoru/features/backup/data/repositories/backup_repository_impl.dart';
+import 'package:yoru/features/backup/domain/entities/library_backup.dart';
+import 'package:yoru/features/backup/domain/repositories/backup_repository.dart';
+import 'package:yoru/features/backup/domain/usecases/backup_library.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:yoru/features/category/domain/repositories/category_repository.dart';
+import 'package:yoru/features/history/domain/entities/read_history.dart';
+import 'package:yoru/features/history/domain/repositories/history_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
@@ -111,7 +111,7 @@ void main() {
     test('file name keeps the old pattern', () {
       expect(
         BackupRepositoryImpl.fileName(DateTime(2026, 3, 4, 5, 6, 7)),
-        'bacakomik-backup-2026-3-4-567.json',
+        'yoru-backup-2026-3-4-567.json',
       );
     });
   });
@@ -133,7 +133,7 @@ void main() {
       expect(await repo.exportBackup(backup), right(true));
       verify(
         () => files.writeFile(
-          '/backups/bacakomik-backup-2026-3-4-567.json',
+          '/backups/yoru-backup-2026-3-4-567.json',
           BackupRepositoryImpl.encode(backup),
         ),
       ).called(1);

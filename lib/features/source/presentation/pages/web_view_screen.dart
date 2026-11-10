@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io' as io;
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/source/extension_bridge.dart';
-import 'package:bacakomik_app/core/source/extension_manager.dart';
-import 'package:bacakomik_app/core/source/headless_pages.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/utils/utils.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/di/injection.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/source/extension_bridge.dart';
+import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/source/headless_pages.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -25,7 +25,8 @@ class WebViewScreen extends StatefulWidget {
   final String sourceId;
   final String url;
 
-  /// Where there is no WebView (Linux), opens [url] in the browser.
+  /// Where there is no WebView (Linux without WebKitGTK), opens [url] in
+  /// the browser.
   static Future<void> open(
     BuildContext context, {
     required String sourceId,
@@ -69,6 +70,15 @@ class _WebViewScreenState extends State<WebViewScreen> {
   /// Why the page did not load (e.g. a blocked TLS handshake); shown over
   /// the WebView with a retry button.
   String? _error;
+
+  /// While the menu is open. On Linux the page lies over the app (Flutter
+  /// cannot draw over it), so it hides while the menu or [_error] shows.
+  var _menuOpen = false;
+
+  /// The host of the page loading, which a refused certificate is for when
+  /// the page did not get past it (see [hearsOfCertificates]). From the
+  /// start: Android may report the load only once it is past it.
+  late String? _loadingHost = _url.host;
 
   @override
   void dispose() {
@@ -129,6 +139,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
                 onBack: () => Navigator.of(context).pop(),
                 actions: [
                   DotMenuButton(
+                    onOpen: () => setState(() => _menuOpen = true),
+                    onClose: () => setState(() => _menuOpen = false),
                     items: [
                       DotMenuItem(
                         label: AppText.refresh,
@@ -173,38 +185,68 @@ class _WebViewScreenState extends State<WebViewScreen> {
               Expanded(
                 child: Stack(
                   children: [
-                    InAppWebView(
-                      initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-                      initialSettings: InAppWebViewSettings(
-                        userAgent: ExtensionBridge.userAgent,
-                        javaScriptEnabled: true,
-                        domStorageEnabled: true,
-                        // chrome://inspect in debug builds.
-                        isInspectable: kDebugMode,
+                    Visibility(
+                      visible:
+                          !io.Platform.isLinux ||
+                          (!_menuOpen && _error == null),
+                      maintainState: true,
+                      child: InAppWebView(
+                        initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+                        initialSettings: InAppWebViewSettings(
+                          userAgent: ExtensionBridge.userAgent,
+                          javaScriptEnabled: true,
+                          domStorageEnabled: true,
+                          // chrome://inspect in debug builds.
+                          isInspectable: kDebugMode,
+                        ),
+                        onWebViewCreated: (controller) =>
+                            _controller = controller,
+                        onProgressChanged: (_, progress) =>
+                            setState(() => _progress = progress / 100),
+                        onTitleChanged: (_, title) =>
+                            setState(() => _title = title),
+                        onUpdateVisitedHistory: (controller, url, _) async {
+                          final canGoBack = await controller.canGoBack();
+                          if (!mounted) return;
+                          setState(() {
+                            if (url != null) _url = url.uriValue;
+                            _canGoBack = canGoBack;
+                          });
+                        },
+                        onLoadStart: (_, url) => setState(() {
+                          _error = null;
+                          _loadingHost = url?.host;
+                        }),
+                        onReceivedServerTrustAuthRequest: !hearsOfCertificates
+                            ? null
+                            : (_, challenge) {
+                                if (challenge.protectionSpace.sslError ==
+                                    null) {
+                                  return null;
+                                }
+                                final space = challenge.protectionSpace;
+                                if (space.host == _loadingHost) {
+                                  setState(
+                                    () => _error = certificateRefused(
+                                      space.sslError?.code,
+                                    ),
+                                  );
+                                }
+                                return ServerTrustAuthResponse(
+                                  action: ServerTrustAuthResponseAction.CANCEL,
+                                );
+                              },
+                        onReceivedError: (_, request, error) {
+                          if (request.isForMainFrame ?? true) {
+                            setState(() => _error = error.description);
+                          }
+                        },
+                        onLoadStop: (_, url) {
+                          if (url != null) {
+                            unawaited(_saveCookies(url.uriValue));
+                          }
+                        },
                       ),
-                      onWebViewCreated: (controller) =>
-                          _controller = controller,
-                      onProgressChanged: (_, progress) =>
-                          setState(() => _progress = progress / 100),
-                      onTitleChanged: (_, title) =>
-                          setState(() => _title = title),
-                      onUpdateVisitedHistory: (controller, url, _) async {
-                        final canGoBack = await controller.canGoBack();
-                        if (!mounted) return;
-                        setState(() {
-                          if (url != null) _url = url.uriValue;
-                          _canGoBack = canGoBack;
-                        });
-                      },
-                      onLoadStart: (_, _) => setState(() => _error = null),
-                      onReceivedError: (_, request, error) {
-                        if (request.isForMainFrame ?? true) {
-                          setState(() => _error = error.description);
-                        }
-                      },
-                      onLoadStop: (_, url) {
-                        if (url != null) unawaited(_saveCookies(url.uriValue));
-                      },
                     ),
                     if (_error case final error?)
                       ColoredBox(

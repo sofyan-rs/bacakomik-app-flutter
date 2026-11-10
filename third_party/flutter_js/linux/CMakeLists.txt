@@ -1,0 +1,35 @@
+cmake_minimum_required(VERSION 3.10)
+
+
+set(PROJECT_NAME "flutter_js")
+project(${PROJECT_NAME} LANGUAGES CXX C)
+
+set(PLUGIN_NAME "${PROJECT_NAME}_plugin")
+
+set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -DANDROID_STL=c++_static -DDEBUGGER_SERVER_PORT=${DEBUGGER_SERVER_PORT}")
+
+add_library(${PLUGIN_NAME} SHARED
+  "flutter_js_plugin.cc"
+)
+
+apply_standard_settings(${PLUGIN_NAME})
+target_compile_features(${PLUGIN_NAME} PUBLIC cxx_std_17)
+set_target_properties(${PLUGIN_NAME} PROPERTIES
+  CXX_VISIBILITY_PRESET hidden)
+target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
+target_include_directories(${PLUGIN_NAME} INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
+target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
+
+# List of absolute paths to libraries that should be bundled with the plugin.
+# The app's CMakeLists installs `<plugin>_bundled_libraries` into bundle/lib.
+# BacaKomik patch: upstream named this `flutter_qjs_bundled_libraries` and
+# installed the .so into its own prefix, so the bundle shipped without it.
+set(flutter_js_bundled_libraries
+  "${CMAKE_CURRENT_SOURCE_DIR}/shared/libquickjs_c_bridge_plugin.so"
+  PARENT_SCOPE
+)

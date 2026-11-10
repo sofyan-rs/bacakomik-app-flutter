@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:bacakomik_app/core/storage/box_recovery.dart';
-import 'package:bacakomik_app/core/storage/json_box.dart';
+import 'package:yoru/core/storage/box_recovery.dart';
+import 'package:yoru/core/storage/json_box.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 // ignore: implementation_imports
@@ -38,7 +38,7 @@ void main() {
   late Directory dir;
 
   setUp(() async {
-    dir = await Directory.systemTemp.createTemp('bacakomik_recovery_');
+    dir = await Directory.systemTemp.createTemp('yoru_recovery_');
     Hive.init(dir.path);
     hiveDirectory = dir.path;
   });

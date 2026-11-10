@@ -1,6 +1,6 @@
 # Contribution guide
 
-Recipes for working on BacaKomik. Read [ARCHITECTURE.md](ARCHITECTURE.md) once first.
+Recipes for working on Yoru. Read [ARCHITECTURE.md](ARCHITECTURE.md) once first.
 
 § numbers refer to this file; "ARCHITECTURE §n" to the other one.
 
@@ -10,9 +10,9 @@ Recipes for working on BacaKomik. Read [ARCHITECTURE.md](ARCHITECTURE.md) once f
 
 1. Install **Flutter** stable with **Dart 3.13+**, the Android SDK (platform 37) and **JDK 17**. Run `flutter doctor` until it is clean.
 2. Use a device or emulator on Android 7.0+ (API 24); test on a recent one (API 34+) too. Mihon extensions need Android 9+ (API 28). Cloudflare sources and Cronet need Google Play services.
-3. For extension work: [Bun](https://bun.sh) and access to the private `bacakomik-ext-source` repo. To write your own extension without that access, use the public extension source, [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source), served at `https://sofyan-rs.github.io/bacakomik-ext-public-source/index.json`.
+3. For extension work: [Bun](https://bun.sh) and access to the private `yoru-ext-source` repo. To write your own extension without that access, use the public extension source, [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source), served at `https://sofyan-rs.github.io/yoru-ext-public-source/index.json`.
 
-There is no server to configure. Content comes from the bundled extensions and the default repo `https://bacakomik-ext.kurodev.org/index.json`.
+There is no server to configure. Content comes from the bundled extensions and the default repo `https://yoru-ext.kurodev.org/index.json`.
 
 ---
 
@@ -45,7 +45,7 @@ Example: `migration` has `ImportLibrary` (domain), `PendingReadRepositoryImpl` (
 4. Test that old JSON without the field parses, then do the upgrade test (Recipe G).
 
 ### Recipe C: Add a source method or host function
-- **Source method:** change the contract in `bacakomik-ext-source` (`types/bridge.d.ts`), then call it from `SeriesRemoteDataSource` with a DTO (`toEntity()`), passing comic keys. Test with `FakeSourceBackend`.
+- **Source method:** change the contract in `yoru-ext-source` (`types/bridge.d.ts`), then call it from `SeriesRemoteDataSource` with a DTO (`toEntity()`), passing comic keys. Test with `FakeSourceBackend`.
 - **Host function:** handle it in `ExtensionBridge.handle` and add it to the `ExtensionRuntime` prelude. **If old apps can't run scripts that use it, bump `supportedExtensionApi`.**
 
 ### Recipe D: Try an unpublished extension in the app
@@ -60,7 +60,7 @@ Example: `migration` has `ImportLibrary` (domain), `PendingReadRepositoryImpl` (
 
 ### Recipe E: Ship newer bundled extensions
 ```bash
-# in bacakomik-ext-source
+# in yoru-ext-source
 bun run build
 bun scripts/bundle.ts ../bacakomik-app-flutter/assets/extensions bacakomik voratoon
 ```
@@ -71,9 +71,9 @@ bun scripts/bundle.ts ../bacakomik-app-flutter/assets/extensions bacakomik vorat
 2. Optionally write `.github/release-notes/v1.6.0.md` (otherwise notes come from commits).
 3. Commit, then `git tag v1.6.0 && git push origin v1.6.0`.
 
-`.github/workflows/release.yml` checks the tag against the pubspec, runs analyze and tests, and publishes signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs as `BacaKomik-<version>-<abi>.apk` with a "Which APK?" table. **Don't rename the assets or that heading**: installed apps find updates through them.
+`.github/workflows/release.yml` checks the tag against the pubspec, runs analyze and tests, and publishes signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs as `Yoru-<version>-<abi>.apk` with a "Which APK?" table. **Keep the asset suffixes (`-<abi>.apk`, `-windows-setup.exe`, `-macos.zip`, `-linux-x86_64.AppImage`) and that heading**: installed apps find updates through them. The prefix can change (it was `BacaKomik-` before 2.17.0).
 
-Desktop builds are published in the same release, including Linux AppImage and Fedora RPM (`BacaKomik-<version>-linux-x86_64.rpm`). A manual workflow run builds them as workflow artifacts without publishing a release.
+Desktop builds are published in the same release, including Linux AppImage and Fedora RPM (`Yoru-<version>-linux-x86_64.rpm`). A manual workflow run builds them as workflow artifacts without publishing a release.
 
 To build the RPM locally on x86_64 Linux, install the Flutter Linux build dependencies and `rpm-build` (Fedora) or `rpm` (Ubuntu), then run:
 
@@ -82,7 +82,7 @@ flutter build linux --release
 bash linux/packaging/build-rpm.sh   # version defaults to pubspec.yaml
 ```
 
-The RPM is written to `dist/`. Before packaging, the script checks that the bundled QuickJS library loads and exports the functions used by source extensions; CI runs the same check before creating the AppImage. It installs the Flutter bundle under `/opt/bacakomik`, a `/usr/bin/bacakomik` launcher, and the desktop entry and icon. Install or update it with `sudo dnf install ./dist/BacaKomik-<version>-linux-x86_64.rpm`. RPM installs use downloaded RPMs for updates; the in-app Linux installer supports AppImage only.
+The RPM is written to `dist/`. Before packaging, the script checks that the bundled QuickJS library loads and exports the functions used by source extensions; CI runs the same check before creating the AppImage. It installs the Flutter bundle under `/opt/yoru`, a `/usr/bin/yoru` launcher, and the desktop entry and icon. Install or update it with `sudo dnf install ./dist/Yoru-<version>-linux-x86_64.rpm`. RPM installs use downloaded RPMs for updates; the in-app Linux installer supports AppImage only.
 
 Secrets (Settings → Secrets → Actions): `KEYSTORE_BASE64` (`base64 -w0 upload-keystore.jks`), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Local signing reads `android/key.properties` (git-ignored: `storeFile`, `storePassword`, `keyAlias`, `keyPassword`). **Back up the keystore and password**; without them no update can ship. By hand: `flutter build apk --release --split-per-abi` (per ABI), `flutter build apk --release` (universal), `flutter build appbundle --release`.
 
@@ -107,13 +107,13 @@ Mihon extensions run in Kotlin, in `android/mihon` (ARCHITECTURE §8.9).
 1. **Kotlin tests** (no device): `cd android && ./gradlew :mihon:testDebugUnitTest` (chapter numbers, synopsis parsing, filters). Results in `build/mihon/test-results/`. Dart side: `flutter test test/core/mihon_test.dart`.
 2. **Always try a release build** (Recipe G): R8 runs only there, and a class it strips that an extension or native code needs only fails on the phone (an abort in `logcat -b crash`). Add keep rules to `android/mihon/consumer-rules.pro`.
 3. **On the phone:** add a Mihon repo (e.g. Keiyoushi's `index.min.json`), install two or three extensions (one HTML site, one API site, one behind Cloudflare), then Home, Explore search and filters, comic page, reader, download, settings, uninstall. For the Mihon import, a small `.tachibk` pushed to `/sdcard/Download` works; don't import test data into a library you keep.
-4. **Vendored code** (`eu/`, `mihon/`, `tachiyomi/`) comes from SCANCORE's `host/api` and keeps Mihon's package names, as extensions link against them. The host in `org/kurodev/bacakomik/mihon/host/` started as SCANCORE's `host/` (package `com.mediumdev.scancore.host`) and is now the app's own; porting a SCANCORE fix means diffing by hand (changes are marked `BACAKOMIK`). library versions in `android/mihon/build.gradle` follow Mihon's, and a new extension lib version goes into both `AndroidLoader.libs` and `supportedMihonLibs`.
+4. **Vendored code** (`eu/`, `mihon/`, `tachiyomi/`) comes from SCANCORE's `host/api` and keeps Mihon's package names, as extensions link against them. The host in `org/kurodev/yoru/mihon/host/` started as SCANCORE's `host/` (package `com.mediumdev.scancore.host`) and is now the app's own; porting a SCANCORE fix means diffing by hand (changes are marked `BACAKOMIK`). library versions in `android/mihon/build.gradle` follow Mihon's, and a new extension lib version goes into both `AndroidLoader.libs` and `supportedMihonLibs`.
 
 ---
 
 ## 3. Project map
 
-Folders are explained in ARCHITECTURE §3. Shared test fakes are in `test/helpers/`, sample data in `test/fixtures/`. Extensions live in the private `bacakomik-ext-source` repo; a public extension source with its own set of extensions is [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source).
+Folders are explained in ARCHITECTURE §3. Shared test fakes are in `test/helpers/`, sample data in `test/fixtures/`. Extensions live in the private `yoru-ext-source` repo; a public extension source with its own set of extensions is [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source).
 
 Reading order: run the app; ARCHITECTURE §3–§4; `features/home/` end to end (entity → repository → use case → `HomeBloc` → `HomeScreen`); ARCHITECTURE §8 with `core/source/`; `comic_list_state.dart` and `latest`; `features/bookmark/` and `core/storage/` with ARCHITECTURE §7.
 
@@ -123,7 +123,7 @@ Reading order: run the app; ARCHITECTURE §3–§4; `features/home/` end to end 
 
 **Code**
 - `flutter analyze` clean (`flutter_lints`). `dart format` new files; in old files format only what you change (ARCHITECTURE §12).
-- `package:bacakomik_app/...` imports. Comment *why*; `///` on public and non-obvious things.
+- `package:yoru/...` imports. Comment *why*; `///` on public and non-obvious things.
 - No `!` on values that can be null, no empty `catch`: return a `Failure` or `debugPrint`.
 - Strings in `AppText`, colours from `Dotline.of(context)`.
 
@@ -199,4 +199,4 @@ PR checklist (also in `.github/pull_request_template.md`):
 
 ## 9. Scope guard
 
-BacaKomik is a reader: **browse comics from installed sources, read chapters, keep a library on the device** (optionally synced via the user's Drive). New sites are extensions. Accounts, a server-side library or site code in the app start as a discussion issue, not a PR. Changes to stored data, backup or sync need a migration plan first.
+Yoru is a reader: **browse comics from installed sources, read chapters, keep a library on the device** (optionally synced via the user's Drive). New sites are extensions. Accounts, a server-side library or site code in the app start as a discussion issue, not a PR. Changes to stored data, backup or sync need a migration plan first.

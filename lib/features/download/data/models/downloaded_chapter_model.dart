@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
-import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
+import 'package:yoru/core/data/models/comic_details_model.dart';
+import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'downloaded_chapter_model.g.dart';

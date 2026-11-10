@@ -1,0 +1,25 @@
+name: flutter_inappwebview_linux
+description: >-
+  flutter_inappwebview's Linux implementation on WebKitGTK (webkit2gtk-4.1),
+  in place of the upstream one, which links WPE WebKit that most
+  distributions do not ship. Covers what the app uses: headless pages, an
+  in-app page laid over the Flutter view, and cookies.
+version: 0.1.0-beta.1
+publish_to: none
+
+environment:
+  sdk: ^3.8.0
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_inappwebview_platform_interface: 1.4.0-beta.3
+
+flutter:
+  plugin:
+    implements: flutter_inappwebview
+    platforms:
+      linux:
+        pluginClass: InappwebviewLinuxPlugin
+        dartPluginClass: LinuxInAppWebViewPlatform

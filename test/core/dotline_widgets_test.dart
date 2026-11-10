@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_theme.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -119,6 +119,113 @@ void main() {
     expect(find.text('SYSTEM'), findsOneWidget);
     await tester.tap(find.text('DARK'));
     expect(changed, 'dark');
+  });
+
+  testWidgets('DotButton while loading shows dots and ignores taps', (
+    tester,
+  ) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      _wrap(DotButton(label: 'Open', onTap: () => taps++, loading: true)),
+    );
+    expect(find.text('Open'), findsNothing);
+    expect(find.byType(DotLoader), findsOneWidget);
+    await tester.tap(find.byType(DotButton));
+    expect(taps, 0);
+  });
+
+  testWidgets('FloatingNavBar selects the tab a drag ends on', (tester) async {
+    final selected = <int>[];
+    await tester.pumpWidget(
+      _wrap(
+        FloatingNavBar(
+          selectedIndex: 0,
+          onSelected: selected.add,
+          items: const [
+            FloatingNavItem(icon: LucideIcons300.house, label: 'Home'),
+            FloatingNavItem(icon: LucideIcons300.compass, label: 'Explore'),
+            FloatingNavItem(icon: LucideIcons300.history, label: 'History'),
+          ],
+        ),
+      ),
+    );
+
+    final house = tester.getCenter(find.byIcon(LucideIcons300.house));
+    final history = tester.getCenter(find.byIcon(LucideIcons300.history));
+    final gesture = await tester.startGesture(house);
+    for (var i = 1; i <= 10; i++) {
+      await gesture.moveTo(Offset.lerp(house, history, i / 10)!);
+      await tester.pump();
+    }
+    // Nothing is selected until the finger lifts.
+    expect(selected, isEmpty);
+    await gesture.up();
+    await tester.pump();
+    expect(selected, [2]);
+  });
+
+  testWidgets('SegmentedControl selects the segment a drag ends on', (
+    tester,
+  ) async {
+    final changed = <String>[];
+    await tester.pumpWidget(
+      _wrap(
+        SegmentedControl<String>(
+          selected: 'system',
+          onChanged: changed.add,
+          segments: const [
+            Segment(value: 'system', label: 'System'),
+            Segment(value: 'light', label: 'Light'),
+            Segment(value: 'dark', label: 'Dark'),
+          ],
+        ),
+      ),
+    );
+
+    await tester.dragFrom(
+      tester.getCenter(find.text('SYSTEM')),
+      tester.getCenter(find.text('DARK')) -
+          tester.getCenter(find.text('SYSTEM')),
+    );
+    await tester.pump();
+    expect(changed, ['dark']);
+
+    // A drag that ends back where it started changes nothing.
+    changed.clear();
+    final start = tester.getCenter(find.text('SYSTEM'));
+    final gesture = await tester.startGesture(start);
+    await gesture.moveBy(const Offset(200, 0));
+    await tester.pump();
+    await gesture.moveTo(start);
+    await gesture.up();
+    await tester.pump();
+    expect(changed, isEmpty);
+  });
+
+  testWidgets('ScrollableTabs that fit select the tab a drag ends on', (
+    tester,
+  ) async {
+    final changed = <String>[];
+    await tester.pumpWidget(
+      _wrap(
+        ScrollableTabs<String>(
+          selected: 'a',
+          onChanged: changed.add,
+          segments: const [
+            Segment(value: 'a', label: 'All'),
+            Segment(value: 'b', label: 'Reading'),
+            Segment(value: 'c', label: 'Done'),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final from = tester.getCenter(find.text('ALL'));
+    final to = tester.getCenter(find.text('DONE'));
+    await tester.dragFrom(from, to - from);
+    await tester.pump();
+    expect(changed, ['c']);
   });
 
   testWidgets('DotSwitch toggles and ignores taps when disabled', (

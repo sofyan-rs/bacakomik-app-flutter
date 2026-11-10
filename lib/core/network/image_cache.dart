@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/network/image_host_support.dart';
-import 'package:bacakomik_app/core/source/extension_bridge.dart';
-import 'package:bacakomik_app/core/source/headless_pages.dart';
-import 'package:bacakomik_app/core/source/mihon_host.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/network/image_host_support.dart';
+import 'package:yoru/core/source/extension_bridge.dart';
+import 'package:yoru/core/source/headless_pages.dart';
+import 'package:yoru/core/source/mihon_host.dart';
 import 'package:cronet_http/cronet_http.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
@@ -114,10 +114,28 @@ class _BrowserLikeFileService extends FileService {
     if (isMihonImage(url)) return _getMihon(uri);
     if (_inPage(uri.host)) return _getInPage(uri, headers);
     final response = await _direct(uri, headers);
+    if (_isPage(uri, response)) {
+      await response.content.drain<void>();
+      return _getDirect(uri, headers);
+    }
     if (!_isBlocked(uri, response)) return response;
     await response.content.drain<void>();
     return _getInPage(uri, headers);
   }
+
+  /// Hosts that answer a browser's User-Agent with a web page instead of
+  /// the image: MangaDex's uploads.mangadex.org redirects it to a bot
+  /// check, yet serves any other User-Agent. They get [_plainUserAgent].
+  final _plainAgentHosts = <String>{};
+
+  static const _plainUserAgent = 'Yoru';
+
+  /// Whether [response] is a web page where an image was asked for, from a
+  /// host that has not had [_plainUserAgent] yet; remembers the host.
+  bool _isPage(Uri url, FileServiceResponse response) =>
+      response.statusCode == 200 &&
+      const {'.html', '.htm'}.contains(response.fileExtension) &&
+      _plainAgentHosts.add(url.host);
 
   /// A Mihon source's image, through its own client in Kotlin.
   Future<FileServiceResponse> _getMihon(Uri url) async {
@@ -166,6 +184,7 @@ class _BrowserLikeFileService extends FileService {
       url.toString(),
       headers: {
         ..._imageHeaders,
+        if (_plainAgentHosts.contains(url.host)) 'User-Agent': _plainUserAgent,
         if (cookie.isNotEmpty) 'Cookie': cookie,
         ...?headers,
       },

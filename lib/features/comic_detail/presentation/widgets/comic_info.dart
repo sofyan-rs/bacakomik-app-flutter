@@ -1,11 +1,11 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/core/utils/alt_titles.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/comic_title.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/alt_titles.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/comic_title.dart';
 import 'package:flutter/material.dart';
 
 /// Meta line, title, author, source, three stat tiles, synopsis and genres.
@@ -65,17 +65,17 @@ class _ComicInfoState extends State<ComicInfo> {
     final alt = ComicInfo.altTitles(d.title, d.alternativeTitle);
     final hasRating = !const {'', '-', '0', '0.0'}.contains(d.rating.trim());
     final status = d.status.trim();
-    // Each shows only when known. The rating, a minor detail, is a tile of
-    // its own nowhere: it follows the source line.
+    // Each shows only when known: a source without scores gets two tiles.
+    // The status, a word rather than a number, follows the source line.
     final tiles = [
       (widget.chaptersLoading ? '…' : '${d.chapters.length}', AppText.chapter),
       if (year != '-') (year, AppText.released),
-      if (status.isNotEmpty && status != '-') (d.status, AppText.status),
+      if (hasRating) (d.rating.trim(), AppText.score),
     ];
     final meta = d.type == '-' ? '' : d.type;
     final sourceLine = [
       if (widget.source case final source?) '${AppText.sourceFrom} $source',
-      if (hasRating) '★ ${d.rating}',
+      if (status.isNotEmpty && status != '-') status,
     ].join(' · ');
 
     return Column(

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/error/failures.dart';
+import 'package:yoru/core/error/failures.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Runs a local storage operation and maps any error to [CacheFailure].

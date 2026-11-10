@@ -1,17 +1,18 @@
 # Link hosting
 
-`worker/` is a Cloudflare Worker for `bacakomik.kurodev.org`, the host of
-shared series links (`https://bacakomik.kurodev.org/series/<slug>`).
+`worker/` is a Cloudflare Worker for `yoru.kurodev.org`, the host of
+shared series links (`https://yoru.kurodev.org/series/<slug>`). It also
+serves `bacakomik.kurodev.org`, the host from before the rename to Yoru.
 
 - `/.well-known/assetlinks.json` lets Android verify the App Link, so the
-  link opens BacaKomik directly instead of the browser. It lists the
+  link opens Yoru directly instead of the browser. It lists the
   SHA-256 fingerprint of the release (upload) signing key in
   `src/index.js`. Update it if the key changes:
   `keytool -list -v -keystore <keystore.jks> -alias upload`.
 - `/series/<slug>` is the fallback page, shown when the app is not
   installed or the link is opened in a browser. It fetches the series from
   the API for the Open Graph preview (title, cover, synopsis) that chat
-  apps show, and offers "Open in the app" and "Download APK". Pages are
+  apps show, and offers "Open in the app" and "Download the app". Pages are
   cached at the edge for an hour.
 - `/` is the app's home page: what the app does, the APK download and a
   privacy link. It is the homepage URL of the Google OAuth consent screen.
@@ -31,12 +32,12 @@ npm run deploy
 ```
 
 `kurodev.org` must be a zone on the same Cloudflare account; deploy
-creates the `bacakomik` DNS record (custom domain in `wrangler.toml`).
+creates the `yoru` and `bacakomik` DNS records (custom domains in `wrangler.toml`).
 
 Android verifies the link when the app is installed. After the first
 deploy, re-verify an installed app:
 
 ```sh
-adb shell pm verify-app-links --re-verify org.kurodev.bacakomik
-adb shell pm get-app-links org.kurodev.bacakomik   # bacakomik.kurodev.org: verified
+adb shell pm verify-app-links --re-verify org.kurodev.yoru
+adb shell pm get-app-links org.kurodev.yoru   # yoru.kurodev.org and bacakomik.kurodev.org: verified
 ```

@@ -11,8 +11,8 @@
 
        <!-- Cleartext: some Mihon extensions' sites are plain http (Mihon allows it too). -->
        <application
-        android:label="BacaKomik"
-        android:name=".BacaKomikApplication"
+        android:label="${appLabel}"
+        android:name=".YoruApplication"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
@@ -42,6 +42,8 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https"/>
+                <data android:host="yoru.kurodev.org"/>
+                <!-- Links shared before the rename to Yoru. -->
                 <data android:host="bacakomik.kurodev.org"/>
                 <data android:pathPrefix="/series/"/>
             </intent-filter>

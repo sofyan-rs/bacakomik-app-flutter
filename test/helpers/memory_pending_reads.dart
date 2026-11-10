@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/pending_read.dart';
-import 'package:bacakomik_app/features/migration/domain/repositories/pending_read_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/migration/domain/entities/pending_read.dart';
+import 'package:yoru/features/migration/domain/repositories/pending_read_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// [PendingReadRepository] over a map.

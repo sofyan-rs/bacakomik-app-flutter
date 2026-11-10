@@ -1,13 +1,13 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
-import 'package:bacakomik_app/core/storage/library_journal.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/history/data/datasources/history_local_data_source.dart';
-import 'package:bacakomik_app/features/history/data/repositories/history_repository_impl.dart';
-import 'package:bacakomik_app/features/history/domain/usecases/history_usecases.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/reader/presentation/pages/read_chapter_screen.dart';
-import 'package:bacakomik_app/features/reader/presentation/reader_wakelock.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
+import 'package:yoru/core/storage/library_journal.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/history/data/datasources/history_local_data_source.dart';
+import 'package:yoru/features/history/data/repositories/history_repository_impl.dart';
+import 'package:yoru/features/history/domain/usecases/history_usecases.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/features/reader/presentation/pages/read_chapter_screen.dart';
+import 'package:yoru/features/reader/presentation/reader_wakelock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 
@@ -137,6 +137,14 @@ void main() {
       expect(cubit.index.isFinished('a/1'), isTrue);
     });
 
+    test('the end card is saved as the last page', () async {
+      // Opening a chapter at its end card (index 13 of 13 pages) showed
+      // "14 / 13" in the chapter list.
+      await save(13, 13, canFinish: false);
+      expect(cubit.index.chapter('a/1')?.page, 12);
+      expect(cubit.index.isFinished('a/1'), isFalse);
+    });
+
     test('markAllRead dates the highest number latest in any order', () async {
       final oldestFirst = sampleComicDetails.copyWith(
         chapters: const [
@@ -149,6 +157,28 @@ void main() {
 
       expect(cubit.getLatestHistoryBySlug('b')!.slug, 'b/10');
       expect(cubit.state.map((h) => h.slug), ['b/10', 'b/2', 'b/1']);
+    });
+
+    test('markRead dates the highest selected number latest', () async {
+      final details = sampleComicDetails.copyWith(
+        chapters: const [
+          Chapter(number: '21.5', slug: 'b/21.5', date: '-'),
+          Chapter(number: '21', slug: 'b/21', date: '-'),
+          Chapter(number: '20', slug: 'b/20', date: '-'),
+          Chapter(number: '19', slug: 'b/19', date: '-'),
+          Chapter(number: '18', slug: 'b/18', date: '-'),
+        ],
+      );
+      // Selected bottom-up: the order must not matter.
+      await cubit.markRead('b', details, {'b/19', 'b/20', 'b/21', 'b/21.5'});
+
+      expect(cubit.getLatestHistoryBySlug('b')!.slug, 'b/21.5');
+      expect(cubit.state.map((h) => h.slug), [
+        'b/21.5',
+        'b/21',
+        'b/20',
+        'b/19',
+      ]);
     });
   });
 }

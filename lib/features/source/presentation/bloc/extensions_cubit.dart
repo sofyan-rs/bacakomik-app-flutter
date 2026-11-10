@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/source/extension_manager.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/source/extension_meta.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 

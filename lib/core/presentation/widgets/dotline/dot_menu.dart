@@ -1,7 +1,7 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/round_icon_button.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/presentation/widgets/dotline/round_icon_button.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
@@ -19,32 +19,48 @@ class DotMenuItem {
   final bool destructive;
 }
 
-/// Round ⋮ button that opens a 248-wide `surface` menu with hairlines between
-/// rows. The trigger turns `surfaceRaised` while open.
+/// Round ⋮ button that opens a [width]-wide `surface` menu with hairlines
+/// between rows, its right edge under the button's (the buttons sit at the
+/// top right, so the menu keeps the screen's margin). The trigger turns
+/// `surfaceRaised` while open.
 class DotMenuButton extends StatelessWidget {
   const DotMenuButton({
     super.key,
     required this.items,
     this.semanticLabel = 'Menu',
     this.iconSize = DotSize.icon,
+    this.onOpen,
+    this.onClose,
   });
 
   final List<DotMenuItem> items;
   final String semanticLabel;
   final double iconSize;
 
+  /// Called when the menu opens and closes, e.g. to hide what would cover
+  /// it (a Linux web view, which Flutter cannot draw over).
+  final VoidCallback? onOpen;
+  final VoidCallback? onClose;
+
+  static const width = 224.0;
+
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     return MenuAnchor(
-      alignmentOffset: const Offset(0, DotSpace.s2),
+      onOpen: onOpen,
+      onClose: onClose,
+      alignmentOffset: const Offset(
+        -(width - DotSize.touchTarget),
+        DotSpace.s2,
+      ),
       style: MenuStyle(
         backgroundColor: WidgetStatePropertyAll(c.surface),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         elevation: const WidgetStatePropertyAll(0),
         shadowColor: const WidgetStatePropertyAll(Colors.transparent),
         padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-        fixedSize: const WidgetStatePropertyAll(Size.fromWidth(248)),
+        fixedSize: const WidgetStatePropertyAll(Size.fromWidth(width)),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DotRadius.m),
@@ -90,9 +106,11 @@ class _DotMenuRow extends StatelessWidget {
     return MenuItemButton(
       onPressed: item.onTap,
       style: ButtonStyle(
-        minimumSize: const WidgetStatePropertyAll(Size(248, 52)),
+        minimumSize: const WidgetStatePropertyAll(
+          Size(DotMenuButton.width, 52),
+        ),
         padding: const WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: DotSpace.s5),
+          EdgeInsets.symmetric(horizontal: DotSpace.s4),
         ),
         overlayColor: WidgetStatePropertyAll(c.surfaceRaised),
         splashFactory: NoSplash.splashFactory,

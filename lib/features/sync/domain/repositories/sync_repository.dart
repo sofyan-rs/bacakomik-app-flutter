@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/sync/domain/entities/sync_snapshot.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/sync/domain/entities/sync_snapshot.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Google account, the library on this device and its copy in Google Drive.

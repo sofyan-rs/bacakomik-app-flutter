@@ -1,10 +1,10 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/features/bookmark/data/models/bookmark_model.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/bookmark.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_progress.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/widgets/bookmark_sort.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/widgets/chapter_date.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/features/bookmark/data/models/bookmark_model.dart';
+import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
+import 'package:yoru/features/bookmark/presentation/widgets/bookmark_progress.dart';
+import 'package:yoru/features/bookmark/presentation/widgets/bookmark_sort.dart';
+import 'package:yoru/features/comic_detail/presentation/widgets/chapter_date.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../fixtures/library_fixtures.dart';

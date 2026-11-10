@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/bookmark/domain/usecases/refresh_bookmark.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_refresh_queue.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/bookmark/domain/usecases/refresh_bookmark.dart';
+import 'package:yoru/features/bookmark/presentation/bloc/bookmark_refresh_queue.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

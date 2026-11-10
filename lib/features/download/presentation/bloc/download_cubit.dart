@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
-import 'package:bacakomik_app/features/download/domain/usecases/download_usecases.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/download/domain/entities/download_library.dart';
+import 'package:yoru/features/download/domain/usecases/download_usecases.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';

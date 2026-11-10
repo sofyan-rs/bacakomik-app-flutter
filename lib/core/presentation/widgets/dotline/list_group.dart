@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
@@ -95,6 +95,7 @@ class ListRow extends StatefulWidget {
     this.trailing,
     this.onTap,
     this.destructive = false,
+    this.muted = false,
     this.showChevron,
   });
 
@@ -118,6 +119,9 @@ class ListRow extends StatefulWidget {
   /// Icon and title in `accentText`.
   final bool destructive;
 
+  /// Title in `inkFaint`, e.g. a chapter already read.
+  final bool muted;
+
   /// Defaults to true when the row is tappable and has no value/trailing.
   final bool? showChevron;
 
@@ -127,11 +131,16 @@ class ListRow extends StatefulWidget {
 
 class _ListRowState extends State<ListRow> {
   var _pressed = false;
+  var _hovered = false;
 
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
-    final titleColor = widget.destructive ? c.accentText : c.ink;
+    final titleColor = widget.destructive
+        ? c.accentText
+        : widget.muted
+        ? c.inkFaint
+        : c.ink;
     final chevron =
         widget.showChevron ??
         (widget.onTap != null &&
@@ -140,76 +149,87 @@ class _ListRowState extends State<ListRow> {
 
     return Semantics(
       button: widget.onTap != null,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
-        onTapDown: widget.onTap == null
+      child: MouseRegion(
+        cursor: widget.onTap == null
+            ? MouseCursor.defer
+            : SystemMouseCursors.click,
+        onEnter: widget.onTap == null
             ? null
-            : (_) => setState(() => _pressed = true),
-        onTapUp: widget.onTap == null
-            ? null
-            : (_) => setState(() => _pressed = false),
-        onTapCancel: widget.onTap == null
-            ? null
-            : () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: DotMotion.press,
-          color: _pressed ? c.surfaceRaised : Colors.transparent,
-          constraints: const BoxConstraints(minHeight: DotSize.rowMin),
-          padding: const EdgeInsets.symmetric(
-            horizontal: DotSpace.s4,
-            vertical: DotSpace.s3,
-          ),
-          child: Row(
-            children: [
-              if (widget.leading != null) ...[
-                widget.leading!,
-                const SizedBox(width: DotSpace.s4),
-              ] else if (widget.icon != null) ...[
-                Icon(widget.icon, size: DotSize.icon, color: titleColor),
-                const SizedBox(width: DotSpace.s4),
-              ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: DotlineText.headline.copyWith(color: titleColor),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (widget.subtitleWidget != null) ...[
-                      const SizedBox(height: DotSpace.s1),
-                      widget.subtitleWidget!,
-                    ] else if (widget.subtitle != null)
+            : (_) => setState(() => _hovered = true),
+        onExit: (_) {
+          if (_hovered) setState(() => _hovered = false);
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          onTapDown: widget.onTap == null
+              ? null
+              : (_) => setState(() => _pressed = true),
+          onTapUp: widget.onTap == null
+              ? null
+              : (_) => setState(() => _pressed = false),
+          onTapCancel: widget.onTap == null
+              ? null
+              : () => setState(() => _pressed = false),
+          child: AnimatedContainer(
+            duration: DotMotion.press,
+            color: _pressed || _hovered ? c.surfaceRaised : Colors.transparent,
+            constraints: const BoxConstraints(minHeight: DotSize.rowMin),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DotSpace.s4,
+              vertical: DotSpace.s3,
+            ),
+            child: Row(
+              children: [
+                if (widget.leading != null) ...[
+                  widget.leading!,
+                  const SizedBox(width: DotSpace.s4),
+                ] else if (widget.icon != null) ...[
+                  Icon(widget.icon, size: DotSize.icon, color: titleColor),
+                  const SizedBox(width: DotSpace.s4),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Text(
-                        widget.subtitle!,
-                        style: DotlineText.bodyS.copyWith(color: c.inkMuted),
+                        widget.title,
+                        style: DotlineText.headline.copyWith(color: titleColor),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                  ],
+                      if (widget.subtitleWidget != null) ...[
+                        const SizedBox(height: DotSpace.s1),
+                        widget.subtitleWidget!,
+                      ] else if (widget.subtitle != null)
+                        Text(
+                          widget.subtitle!,
+                          style: DotlineText.bodyS.copyWith(color: c.inkMuted),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              if (widget.trailing != null) ...[
-                const SizedBox(width: DotSpace.s3),
-                widget.trailing!,
-              ] else if (widget.value != null) ...[
-                const SizedBox(width: DotSpace.s3),
-                Text(
-                  widget.value!,
-                  style: DotlineText.data.copyWith(color: c.inkFaint),
-                ),
+                if (widget.trailing != null) ...[
+                  const SizedBox(width: DotSpace.s3),
+                  widget.trailing!,
+                ] else if (widget.value != null) ...[
+                  const SizedBox(width: DotSpace.s3),
+                  Text(
+                    widget.value!,
+                    style: DotlineText.data.copyWith(color: c.inkFaint),
+                  ),
+                ],
+                if (chevron) ...[
+                  const SizedBox(width: DotSpace.s3),
+                  Icon(
+                    LucideIcons300.chevronRight,
+                    size: DotSize.iconSmall,
+                    color: c.inkFaint,
+                  ),
+                ],
               ],
-              if (chevron) ...[
-                const SizedBox(width: DotSpace.s3),
-                Icon(
-                  LucideIcons300.chevronRight,
-                  size: DotSize.iconSmall,
-                  color: c.inkFaint,
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),

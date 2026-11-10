@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/core/network/network_info.dart';
+import 'package:yoru/core/network/network_info.dart';
 
 class FakeNetworkInfo implements NetworkInfo {
   FakeNetworkInfo({this.connected = true});

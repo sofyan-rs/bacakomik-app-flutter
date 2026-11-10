@@ -1,33 +1,36 @@
 import 'dart:async';
+import 'dart:math' as math;
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/di/injection.dart';
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/reader/domain/entities/chapter_content.dart';
-import 'package:bacakomik_app/features/reader/domain/usecases/get_chapter_content.dart';
-import 'package:bacakomik_app/features/reader/presentation/bloc/reader_bloc.dart';
-import 'package:bacakomik_app/features/reader/presentation/reader_wakelock.dart';
-import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_end.dart';
-import 'package:bacakomik_app/features/reader/presentation/widgets/chapter_image.dart';
-import 'package:bacakomik_app/features/reader/presentation/widgets/reader_settings_sheet.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
-import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/pages/web_view_screen.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/di/injection.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/features/reader/domain/entities/chapter_content.dart';
+import 'package:yoru/features/reader/domain/usecases/get_chapter_content.dart';
+import 'package:yoru/features/reader/presentation/bloc/reader_bloc.dart';
+import 'package:yoru/features/reader/presentation/page_spreads.dart';
+import 'package:yoru/features/reader/presentation/reader_wakelock.dart';
+import 'package:yoru/features/reader/presentation/widgets/chapter_end.dart';
+import 'package:yoru/features/reader/presentation/widgets/chapter_image.dart';
+import 'package:yoru/features/reader/presentation/widgets/reader_settings_sheet.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:yoru/features/source/presentation/pages/web_view_screen.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:bacakomik_app/features/bookmark/domain/entities/merged_chapters.dart';
+import 'package:yoru/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/network/image_cache.dart';
+import 'package:yoru/features/source/presentation/widgets/source_error.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/network/image_cache.dart';
 
 /// The page number the reader shows (1-based) for 0-based [page] of a
 /// chapter with [pageCount] pages; the end item shows the last page. 0 for a
@@ -155,6 +158,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   var _scrollOffset = ScrollOffsetController();
   final _itemPositions = ItemPositionsListener.create();
   PageController? _pageController;
+
+  /// Whether [_pageController] counts spreads ([PageSpreads]) or pages. A
+  /// change of mode (the setting, or the window resized) makes a new one.
+  var _controllerSpreads = false;
   final _zoom = TransformationController();
   TapDownDetails? _doubleTap;
   var _zoomed = false;
@@ -170,6 +177,18 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   Size? _viewport;
   BuildContext? _listContext;
   var _adjustingZoom = false;
+
+  /// After a pan the viewer flings on by itself, moving each frame to an
+  /// absolute offset from where the fling started; [_panVertical] holds it
+  /// at [_pinY], so the list must scroll by the step from the last frame
+  /// ([_flingY]), not by the whole way flung so far each frame.
+  double? _flingY;
+
+  /// The viewer zooms on every turn of a mouse wheel, but in the reader the
+  /// wheel scrolls and Ctrl (⌘) + wheel zooms (see [_onPointerSignal]). A
+  /// wheel turn reaches the viewer as an interaction without pointers; the
+  /// viewer's matrix from before it is put back at its end.
+  Matrix4? _beforeWheel;
 
   /// Fingers on the reader. With two or more, the page list stops scrolling
   /// so its drag recognizer leaves the gesture arena and the pinch wins.
@@ -313,6 +332,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   }
 
   void _onZoomChanged() {
+    if (_beforeWheel != null) return;
     final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
     if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
     if (!_adjustingZoom &&
@@ -343,7 +363,9 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         (scale - pinScale).abs() < 0.001 &&
         !_zoomAnimation.isAnimating;
     if (panned) {
-      _scrollList(-(y - pinY) / scale);
+      final step = zoomedPanStep(y: y, pinY: pinY, flingY: _flingY);
+      _scrollList(step.down / scale);
+      _flingY = step.flingY;
       y = pinY;
     } else {
       y = y.clamp(-(scale - 1) * size.height, 0.0);
@@ -371,6 +393,75 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       position.maxScrollExtent,
     );
     if (to != position.pixels) position.jumpTo(to);
+  }
+
+  /// Ctrl (⌘ on macOS) + mouse wheel zooms around the pointer. Zoomed, the
+  /// wheel moves the page instead, as a drag does; unzoomed, the pages
+  /// scroll by themselves.
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || event.kind != PointerDeviceKind.mouse) {
+      return;
+    }
+    final keys = HardwareKeyboard.instance;
+    final zoom = keys.isControlPressed || keys.isMetaPressed;
+    if (!zoom && !_zoomed) return;
+    GestureBinding.instance.pointerSignalResolver.register(event, (e) {
+      final scroll = e as PointerScrollEvent;
+      zoom ? _wheelZoom(scroll) : _wheelPan(scroll);
+    });
+  }
+
+  void _wheelZoom(PointerScrollEvent event) {
+    final dy = event.scrollDelta.dy;
+    if (dy == 0) return;
+    _zoomAnimation.stop();
+    final m = _zoom.value;
+    final scale = m.getMaxScaleOnAxis();
+    final next = (scale * math.exp(-dy / kDefaultMouseScrollToScaleFactor))
+        .clamp(1.0, 4.0);
+    if (next == scale) return;
+    final p = event.localPosition;
+    final change = next / scale;
+    _setZoom(
+      Matrix4.identity()
+        ..translateByDouble(p.dx, p.dy, 0, 1)
+        ..scaleByDouble(change, change, 1, 1)
+        ..translateByDouble(-p.dx, -p.dy, 0, 1)
+        ..multiply(m),
+    );
+  }
+
+  /// Zoomed: the wheel moves the page down (sideways with Shift). In the
+  /// vertical reader the list scrolls instead, as in [_panVertical].
+  void _wheelPan(PointerScrollEvent event) {
+    var d = event.scrollDelta;
+    if (HardwareKeyboard.instance.isShiftPressed) d = Offset(d.dy, d.dx);
+    final m = _zoom.value;
+    if (_settings.state.readingDirection == ReadingDirection.vertical) {
+      _scrollList(d.dy / m.getMaxScaleOnAxis());
+      d = Offset(d.dx, 0);
+    }
+    if (d == Offset.zero) return;
+    final t = m.getTranslation();
+    _setZoom(m.clone()..setTranslationRaw(t.x - d.dx, t.y - d.dy, t.z));
+  }
+
+  /// Sets the viewer to [m], keeping the zoomed page over the whole screen.
+  void _setZoom(Matrix4 m) {
+    final size = _viewport;
+    if (size == null) return;
+    final scale = m.getMaxScaleOnAxis();
+    if (scale <= 1.001) {
+      _zoom.value = Matrix4.identity();
+      return;
+    }
+    final t = m.getTranslation();
+    _zoom.value = m
+      ..setTranslationRaw(
+        t.x.clamp(-(scale - 1) * size.width, 0.0),
+        t.y.clamp(-(scale - 1) * size.height, 0.0),
+        t.z,
+      );
   }
 
   void _onPointerDown(PointerDownEvent _) {
@@ -597,7 +688,8 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     });
   }
 
-  /// The first page whose bottom is below the top third of the screen.
+  /// The first page whose bottom is below the top third of the screen, or
+  /// the last page once it is all on screen ([pageOnScreen]).
   /// With infinite scroll, an end of the list on screen fetches the chapter
   /// beyond it.
   void _onItemPositions() {
@@ -622,7 +714,17 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     if (visible.isEmpty) return;
     final index = visible.reduce((a, b) => a.index < b.index ? a : b).index;
     final (segment, page) = switch (_items[index]) {
-      _PageItem(:final segment, :final page) => (segment, page),
+      _PageItem(:final segment, :final page) => (
+        segment,
+        pageOnScreen(
+          page: page,
+          pageCount: segment.images.length,
+          lastPageBottom: _bottomOf(
+            positions,
+            _indexOf(segment, segment.images.length - 1),
+          ),
+        ),
+      ),
       _BreakItem(:final segment) ||
       _TailItem(:final segment) => (segment, segment.images.length),
       _HeadItem() => (_current!, _page.value),
@@ -635,6 +737,10 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       _scheduleSave();
     }
   }
+
+  /// Where the item at [index] ends on screen, if it is on screen.
+  static double? _bottomOf(List<ItemPosition> positions, int index) =>
+      positions.where((p) => p.index == index).firstOrNull?.itemTrailingEdge;
 
   /// Reading went on into another chapter of the list: the one left is
   /// saved where it was left, then this one as opened.
@@ -777,7 +883,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
       }
     } else {
       _pageController?.animateToPage(
-        target,
+        _controllerSpreads ? PageSpreads(pageCount).spreadOf(target) : target,
         duration: DotMotion.slide,
         curve: DotMotion.slideCurve,
       );
@@ -787,6 +893,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
   void _showChapterList(String currentSlug) {
     final chapters = widget.comicDetails.chapters;
     final current = chapters.indexWhere((c) => c.slug == currentSlug);
+    final history = _history.index;
     showDotSheet<void>(
       context: context,
       builder: (sheetContext) {
@@ -813,19 +920,50 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                       itemBuilder: (_, index) {
                         final chapter = chapters[index];
                         final isCurrent = index == current;
+                        final read = history.chapter(chapter.slug);
+                        final finished = read?.isFinished ?? false;
                         return ListRow(
                           title: AppText.chapterName(
                             chapter.number,
                             chapter.title,
                           ),
-                          value: chapter.date,
+                          // As in the comic's chapter list: a finished
+                          // chapter is faint with a check, a started one
+                          // shows its page.
+                          muted: finished && !isCurrent,
                           trailing: isCurrent
                               ? Icon(
                                   LucideIcons300.bookOpen,
                                   size: DotSize.iconSmall,
                                   color: c.ink,
                                 )
-                              : null,
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (finished) ...[
+                                      Icon(
+                                        LucideIcons300.check,
+                                        size: 18,
+                                        color: c.inkFaint,
+                                      ),
+                                      const SizedBox(width: DotSpace.s3),
+                                    ] else if (read?.page case final page?) ...[
+                                      Text(
+                                        '${page + 1} / ${read?.pageCount}',
+                                        style: DotlineText.data.copyWith(
+                                          color: c.ink,
+                                        ),
+                                      ),
+                                      const SizedBox(width: DotSpace.s3),
+                                    ],
+                                    Text(
+                                      chapter.date,
+                                      style: DotlineText.data.copyWith(
+                                        color: c.inkFaint,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                           onTap: () {
                             Navigator.of(sheetContext).pop();
                             if (!isCurrent) _openChapter(chapter.slug);
@@ -963,9 +1101,14 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         curve: DotMotion.slideCurve,
       );
     } else {
+      final pages = current.images.length;
+      final back = fraction < 0;
       _goToPage(
-        _page.value + fraction.sign.toInt(),
-        current.images.length,
+        // Back from a spread goes to the one before, not its first page.
+        back && _controllerSpreads
+            ? PageSpreads(pages).pageBefore(_page.value)
+            : _page.value + (back ? -1 : 1),
+        pages,
         settings.readingDirection,
       );
     }
@@ -977,6 +1120,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
         onPointerDown: _onPointerDown,
         onPointerUp: _onPointerUp,
         onPointerCancel: _onPointerUp,
+        onPointerSignal: _onPointerSignal,
         child: GestureDetector(
           onTap: () => _setControls(!_controlsVisible),
           onDoubleTapDown: (d) => _doubleTap = d,
@@ -995,6 +1139,24 @@ class _ReadChapterViewState extends State<_ReadChapterView>
                 // unbounded because [_panVertical] keeps it in place and
                 // scrolls the list instead.
                 panEnabled: _zoomed,
+                onInteractionStart: (details) {
+                  _flingY = null;
+                  if (details.pointerCount == 0) {
+                    _beforeWheel = _zoom.value.clone();
+                  }
+                },
+                // A pan may fling on: see [_flingY]. Set after every gesture
+                // (the finger lifted is no longer counted in [details], and
+                // without a fling it changes nothing); the next one clears it.
+                onInteractionEnd: (_) {
+                  final before = _beforeWheel;
+                  if (before != null) {
+                    _zoom.value = before;
+                    _beforeWheel = null;
+                    return;
+                  }
+                  _flingY = vertical && _zoomed ? _pinY : null;
+                },
                 boundaryMargin: vertical
                     ? const EdgeInsets.all(double.infinity)
                     : EdgeInsets.zero,
@@ -1149,6 +1311,7 @@ class _ReadChapterViewState extends State<_ReadChapterView>
               load: page < segment.loadLimit,
               fit: settings.pageFit,
               fitHeight: height,
+              maxWidth: _pageWidth(settings),
             ),
           ),
         ),
@@ -1187,30 +1350,82 @@ class _ReadChapterViewState extends State<_ReadChapterView>
           _listContext = n.context ?? _listContext;
           return false;
         },
-        child: list,
+        child: _zoomKeysTurnWheel(list),
       ),
     );
   }
 
+  /// Two pages side by side: on a wide, landscape viewport, in the sideways
+  /// directions, when the setting is on.
+  bool _useSpreads(AppSettings settings) {
+    final viewport = _viewport;
+    return settings.twoPages &&
+        settings.readingDirection != ReadingDirection.vertical &&
+        viewport != null &&
+        viewport.width >= DotSize.splitMinWidth &&
+        viewport.width > viewport.height;
+  }
+
   Widget _horizontalPages(ChapterContent chapter, AppSettings settings) {
     final pages = chapter.images;
+    final spreads = PageSpreads(pages.length);
+    final useSpreads = _useSpreads(settings);
+    if (useSpreads != _controllerSpreads) {
+      // Still attached to the page view being replaced: dispose after it.
+      final old = _pageController;
+      _pageController = null;
+      _controllerSpreads = useSpreads;
+      if (old != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
+      }
+    }
+    final page = _page.value.clamp(0, pages.length);
     final controller = _pageController ??= PageController(
-      initialPage: _page.value.clamp(0, pages.length),
+      initialPage: useSpreads ? spreads.spreadOf(page) : page,
     );
+    final rtl = settings.readingDirection == ReadingDirection.rightToLeft;
+    // Two pages always fit the screen whole, whatever the page size.
+    final fit = useSpreads ? PageFit.height : settings.pageFit;
+    final fitHeight = fit == PageFit.height
+        ? MediaQuery.sizeOf(context).height
+        : null;
+
+    Widget image(int index, {Alignment alignment = Alignment.center}) =>
+        ChapterImg(
+          key: ValueKey(pages[index]),
+          chapterImage: pages[index],
+          isFile: chapter.isOffline,
+          page: index + 1,
+          headers: chapter.imageHeaders,
+          load: index < (_current?.loadLimit ?? 0),
+          fit: fit,
+          fitHeight: fitHeight,
+          maxWidth: _pageWidth(settings),
+          alignment: alignment,
+        );
+
+    final viewCount = useSpreads ? spreads.count : pages.length;
     return PageView.builder(
+      key: ValueKey(useSpreads),
       controller: controller,
-      reverse: settings.readingDirection == ReadingDirection.rightToLeft,
-      itemCount: pages.length + 1,
+      reverse: rtl,
+      itemCount: viewCount + 1,
       physics: _zoomed || _pinching
           ? const NeverScrollableScrollPhysics()
           : null,
-      onPageChanged: (page) {
+      onPageChanged: (index) {
+        // A spread counts as read up to its last page.
+        final page = !useSpreads
+            ? index
+            : index >= spreads.count
+            ? pages.length
+            : spreads.last(index);
         _page.value = page;
         _onPageReached(page);
         _scheduleSave();
       },
       itemBuilder: (context, index) {
-        if (index == pages.length) {
+        if (index == viewCount) {
           // Centred on its page, still scrollable on a short screen.
           return LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
@@ -1221,39 +1436,89 @@ class _ReadChapterViewState extends State<_ReadChapterView>
             ),
           );
         }
-        return Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: settings.pageGap ? DotSpace.s1 : 0,
-          ),
-          child: Center(
-            child: _limitWidth(
-              settings,
-              ChapterImg(
-                key: ValueKey(pages[index]),
-                chapterImage: pages[index],
-                isFile: chapter.isOffline,
-                page: index + 1,
-                headers: chapter.imageHeaders,
-                load: index < (_current?.loadLimit ?? 0),
-                fit: settings.pageFit,
-                fitHeight: settings.pageFit == PageFit.height
-                    ? MediaQuery.sizeOf(context).height
+        final shown = useSpreads ? spreads.pages(index) : [index];
+        if (shown.length == 1) {
+          final single = Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: settings.pageGap ? DotSpace.s1 : 0,
+            ),
+            child: useSpreads
+                ? image(shown.first)
+                : _limitWidth(settings, image(shown.first)),
+          );
+          if (fit == PageFit.height) return Center(child: single);
+          // Fitted to width, a page can be taller than the screen (a wide
+          // window): it scrolls down, centred when shorter.
+          return LayoutBuilder(
+            builder: (context, constraints) => _zoomKeysTurnWheel(
+              SingleChildScrollView(
+                physics: _zoomed || _pinching
+                    ? const NeverScrollableScrollPhysics()
                     : null,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Center(child: single),
+                ),
               ),
             ),
-          ),
+          );
+        }
+        // Right to left, the earlier page is on the right. Each half leans
+        // on the spine; the page gap, if on, is the space between them.
+        final ordered = rtl ? shown.reversed.toList() : shown;
+        return Row(
+          children: [
+            for (var i = 0; i < ordered.length; i++) ...[
+              if (i > 0 && settings.pageGap) const SizedBox(width: DotSpace.s2),
+              Expanded(
+                child: image(
+                  ordered[i],
+                  alignment: i == 0
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                ),
+              ),
+            ],
+          ],
         );
       },
     );
   }
 
-  /// A page fitted to width, centred and no wider than
-  /// [DotSize.readerMaxWidth].
+  /// Ctrl (⌘) + wheel zooms (see [_onPointerSignal]). With these keys held
+  /// the scroll views in [child] take the wheel as sideways, so a vertical
+  /// one doesn't scroll as well.
+  Widget _zoomKeysTurnWheel(Widget child) {
+    final behavior = ScrollConfiguration.of(context);
+    return ScrollConfiguration(
+      behavior: behavior.copyWith(
+        pointerAxisModifiers: {
+          ...behavior.pointerAxisModifiers,
+          LogicalKeyboardKey.controlLeft,
+          LogicalKeyboardKey.controlRight,
+          LogicalKeyboardKey.metaLeft,
+          LogicalKeyboardKey.metaRight,
+        },
+      ),
+      child: child,
+    );
+  }
+
+  /// The reader width setting in pixels; Full is the window's width.
+  double _pageWidth(AppSettings settings) => switch (settings.readerWidth) {
+    ReaderWidth.narrow => DotSize.readerNarrowWidth,
+    ReaderWidth.medium => DotSize.readerMaxWidth,
+    ReaderWidth.wide => DotSize.readerWideWidth,
+    ReaderWidth.full => MediaQuery.sizeOf(context).width,
+  };
+
+  /// A page fitted to width, centred and no wider than the reader width
+  /// setting.
   Widget _limitWidth(AppSettings settings, Widget page) =>
       settings.pageFit == PageFit.width
       ? Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: DotSize.readerMaxWidth),
+            constraints: BoxConstraints(maxWidth: _pageWidth(settings)),
             child: page,
           ),
         )
@@ -1464,3 +1729,38 @@ class _ReadChapterViewState extends State<_ReadChapterView>
     );
   }
 }
+
+/// The page counted as read in the vertical reader: [page] (the first one
+/// whose bottom is below the top third of the screen), or the chapter's last
+/// page once its bottom is on screen ([lastPageBottom] at most 1, the
+/// viewport's height). Short last pages, credits strips, can all fit below
+/// that third, where none of them would count, and the chapter would never
+/// finish.
+@visibleForTesting
+int pageOnScreen({
+  required int page,
+  required int pageCount,
+  double? lastPageBottom,
+}) {
+  final last = pageCount - 1;
+  if (page >= last || lastPageBottom == null || lastPageBottom > 1) {
+    return page;
+  }
+  return last;
+}
+
+/// One move of the zoomed vertical reader's viewer, which is held at [pinY]
+/// while the page list scrolls instead: how far the list goes down (in
+/// screen pixels, before dividing by the zoom) and the next [flingY].
+///
+/// A pan moves the viewer by its own step from [pinY]. The fling after it
+/// moves the viewer to an absolute offset from the fling's start each
+/// frame; with [flingY] (the last frame's offset) only the step since then
+/// scrolls the list. Without it, every frame scrolled the whole way flung
+/// so far, and a small flick went pages away.
+@visibleForTesting
+({double down, double? flingY}) zoomedPanStep({
+  required double y,
+  required double pinY,
+  double? flingY,
+}) => (down: -(y - (flingY ?? pinY)), flingY: flingY == null ? null : y);

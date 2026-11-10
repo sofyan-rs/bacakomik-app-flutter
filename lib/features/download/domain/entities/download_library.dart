@@ -1,5 +1,5 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'download_library.freezed.dart';

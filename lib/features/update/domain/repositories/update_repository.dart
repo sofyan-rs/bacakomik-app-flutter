@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
-import 'package:bacakomik_app/features/update/domain/entities/update_progress.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/update/domain/entities/app_release.dart';
+import 'package:yoru/features/update/domain/entities/update_progress.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class UpdateRepository {

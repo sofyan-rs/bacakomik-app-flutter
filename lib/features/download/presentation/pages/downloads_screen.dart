@@ -1,14 +1,14 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/core/utils/utils.dart';
-import 'package:bacakomik_app/features/download/domain/entities/download_library.dart';
-import 'package:bacakomik_app/features/download/domain/entities/downloaded_chapter.dart';
-import 'package:bacakomik_app/features/download/presentation/bloc/download_cubit.dart';
-import 'package:bacakomik_app/features/download/presentation/widgets/confirm_delete_sheet.dart';
-import 'package:bacakomik_app/features/download/presentation/widgets/download_comic_group.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/utils.dart';
+import 'package:yoru/features/download/domain/entities/download_library.dart';
+import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
+import 'package:yoru/features/download/presentation/bloc/download_cubit.dart';
+import 'package:yoru/features/download/presentation/widgets/confirm_delete_sheet.dart';
+import 'package:yoru/features/download/presentation/widgets/download_comic_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -62,35 +62,39 @@ class DownloadsScreen extends StatelessWidget {
               child: SlidableAutoCloseBehavior(
                 child: CustomScrollView(
                   slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DotSpace.s4,
-                        DotSpace.s3,
-                        DotSpace.s4,
-                        DotSpace.s5,
-                      ),
-                      sliver: SliverToBoxAdapter(child: _stats(library)),
-                    ),
-                    if (library.chapters.isEmpty)
-                      const SliverToBoxAdapter(
-                        child: EmptyState(
-                          icon: LucideIcons300.download,
-                          title: AppText.downloadsEmpty,
-                          message: AppText.downloadsEmptyHint,
+                    SliverCenteredContent(
+                      slivers: [
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            DotSpace.s4,
+                            DotSpace.s3,
+                            DotSpace.s4,
+                            DotSpace.s5,
+                          ),
+                          sliver: SliverToBoxAdapter(child: _stats(library)),
                         ),
-                      ),
-                    if (pending.isNotEmpty)
-                      ..._queue(context, library, pending),
-                    for (final (comic, chapters) in groups) ...[
-                      DownloadComicGroup(
-                        key: ValueKey(comic.slug),
-                        comic: comic,
-                        chapters: chapters,
-                      ),
-                      const SliverPadding(
-                        padding: EdgeInsets.only(bottom: DotSpace.s3),
-                      ),
-                    ],
+                        if (library.chapters.isEmpty)
+                          const SliverToBoxAdapter(
+                            child: EmptyState(
+                              icon: LucideIcons300.download,
+                              title: AppText.downloadsEmpty,
+                              message: AppText.downloadsEmptyHint,
+                            ),
+                          ),
+                        if (pending.isNotEmpty)
+                          ..._queue(context, library, pending),
+                        for (final (comic, chapters) in groups) ...[
+                          DownloadComicGroup(
+                            key: ValueKey(comic.slug),
+                            comic: comic,
+                            chapters: chapters,
+                          ),
+                          const SliverPadding(
+                            padding: EdgeInsets.only(bottom: DotSpace.s3),
+                          ),
+                        ],
+                      ],
+                    ),
                     SliverPadding(
                       padding: EdgeInsets.only(
                         bottom: bottomInset + DotSpace.s4,

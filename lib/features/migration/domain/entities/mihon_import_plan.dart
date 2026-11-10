@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/library_import.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/mihon_backup.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/features/migration/domain/entities/library_import.dart';
+import 'package:yoru/features/migration/domain/entities/mihon_backup.dart';
 import 'package:crypto/crypto.dart';
 
 /// The library comics of one Mihon source.

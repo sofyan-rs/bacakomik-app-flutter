@@ -1,4 +1,4 @@
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'settings_model.g.dart';
@@ -10,6 +10,8 @@ class SettingsModel {
     this.themeMode = AppThemeMode.system,
     this.readingDirection = ReadingDirection.vertical,
     this.pageFit = PageFit.width,
+    this.readerWidth = ReaderWidth.medium,
+    this.twoPages = false,
     this.keepScreenOn = true,
     this.pageGap = false,
     this.progressBar = true,
@@ -20,12 +22,15 @@ class SettingsModel {
     this.bookmarkGrouping = BookmarkGrouping.status,
     this.bookmarkSort = BookmarkSort.updated,
     this.bookmarkSortDirection = SortDirection.descending,
+    this.dnsOverHttps = '',
   });
 
   factory SettingsModel.fromEntity(AppSettings e) => SettingsModel(
     themeMode: e.themeMode,
     readingDirection: e.readingDirection,
     pageFit: e.pageFit,
+    readerWidth: e.readerWidth,
+    twoPages: e.twoPages,
     keepScreenOn: e.keepScreenOn,
     pageGap: e.pageGap,
     progressBar: e.progressBar,
@@ -36,6 +41,7 @@ class SettingsModel {
     bookmarkGrouping: e.bookmarkGrouping,
     bookmarkSort: e.bookmarkSort,
     bookmarkSortDirection: e.bookmarkSortDirection,
+    dnsOverHttps: e.dnsOverHttps,
   );
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) =>
@@ -49,6 +55,11 @@ class SettingsModel {
 
   @JsonKey(unknownEnumValue: PageFit.width)
   final PageFit pageFit;
+
+  @JsonKey(unknownEnumValue: ReaderWidth.medium)
+  final ReaderWidth readerWidth;
+
+  final bool twoPages;
 
   final bool keepScreenOn;
   final bool pageGap;
@@ -67,12 +78,16 @@ class SettingsModel {
   @JsonKey(unknownEnumValue: SortDirection.descending)
   final SortDirection bookmarkSortDirection;
 
+  final String dnsOverHttps;
+
   Map<String, dynamic> toJson() => _$SettingsModelToJson(this);
 
   AppSettings toEntity() => AppSettings(
     themeMode: themeMode,
     readingDirection: readingDirection,
     pageFit: pageFit,
+    readerWidth: readerWidth,
+    twoPages: twoPages,
     keepScreenOn: keepScreenOn,
     pageGap: pageGap,
     progressBar: progressBar,
@@ -83,5 +98,6 @@ class SettingsModel {
     bookmarkGrouping: bookmarkGrouping,
     bookmarkSort: bookmarkSort,
     bookmarkSortDirection: bookmarkSortDirection,
+    dnsOverHttps: dnsOverHttps,
   );
 }

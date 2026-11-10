@@ -1,11 +1,11 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
-import 'package:bacakomik_app/features/history/presentation/widgets/history_comic_card.dart';
-import 'package:bacakomik_app/features/history/presentation/widgets/history_groups.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/features/history/presentation/widgets/history_comic_card.dart';
+import 'package:yoru/features/history/presentation/widgets/history_groups.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -64,60 +64,66 @@ class HistoryScreen extends StatelessWidget {
         child: Column(
           children: [
             // Outside the scroll view so the title stays put.
-            ScreenHeader(
-              title: AppText.historyTab,
-              subtitle: latest.isEmpty
-                  ? null
-                  : '${AppText.count(latest.length, AppText.comic, AppText.comics)} · '
-                        '${AppText.swipeToDelete}',
-              actions: [
-                if (latest.isNotEmpty)
-                  RoundIconButton(
-                    icon: LucideIcons300.trash2,
-                    semanticLabel: AppText.clearHistory,
-                    iconSize: DotSize.iconSmall,
-                    onTap: () => _confirmClearAll(context),
-                  ),
-              ],
+            CenteredContent(
+              child: ScreenHeader(
+                title: AppText.historyTab,
+                subtitle: latest.isEmpty
+                    ? null
+                    : '${AppText.count(latest.length, AppText.comic, AppText.comics)} · '
+                          '${AppText.swipeToDelete}',
+                actions: [
+                  if (latest.isNotEmpty)
+                    RoundIconButton(
+                      icon: LucideIcons300.trash2,
+                      semanticLabel: AppText.clearHistory,
+                      iconSize: DotSize.iconSmall,
+                      onTap: () => _confirmClearAll(context),
+                    ),
+                ],
+              ),
             ),
             Expanded(
               child: SlidableAutoCloseBehavior(
                 child: CustomScrollView(
                   slivers: [
-                    if (latest.isEmpty)
-                      const SliverToBoxAdapter(
-                        child: EmptyState(
-                          icon: LucideIcons300.history,
-                          title: AppText.historyEmpty,
-                          message: AppText.historyEmptyHint,
-                        ),
-                      ),
-                    for (final day in days) ...[
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(
-                          DotSpace.s4,
-                          0,
-                          DotSpace.s4,
-                          DotSpace.s3,
-                        ),
-                        sliver: SliverToBoxAdapter(
-                          child: Text(
-                            day.label.toUpperCase(),
-                            style: DotlineText.label.copyWith(
-                              color: c.inkFaint,
+                    SliverCenteredContent(
+                      slivers: [
+                        if (latest.isEmpty)
+                          const SliverToBoxAdapter(
+                            child: EmptyState(
+                              icon: LucideIcons300.history,
+                              title: AppText.historyEmpty,
+                              message: AppText.historyEmptyHint,
                             ),
                           ),
-                        ),
-                      ),
-                      SliverListGroup(
-                        itemCount: day.items.length,
-                        itemBuilder: (context, index) =>
-                            HistoryComicCard(item: day.items[index]),
-                      ),
-                      const SliverPadding(
-                        padding: EdgeInsets.only(bottom: DotSpace.s5),
-                      ),
-                    ],
+                        for (final day in days) ...[
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DotSpace.s4,
+                              0,
+                              DotSpace.s4,
+                              DotSpace.s3,
+                            ),
+                            sliver: SliverToBoxAdapter(
+                              child: Text(
+                                day.label.toUpperCase(),
+                                style: DotlineText.label.copyWith(
+                                  color: c.inkFaint,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SliverListGroup(
+                            itemCount: day.items.length,
+                            itemBuilder: (context, index) =>
+                                HistoryComicCard(item: day.items[index]),
+                          ),
+                          const SliverPadding(
+                            padding: EdgeInsets.only(bottom: DotSpace.s5),
+                          ),
+                        ],
+                      ],
+                    ),
                     SliverPadding(
                       padding: EdgeInsets.only(bottom: bottomInset),
                     ),

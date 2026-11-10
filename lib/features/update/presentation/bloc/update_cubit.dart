@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/update/domain/entities/app_release.dart';
-import 'package:bacakomik_app/features/update/domain/entities/update_progress.dart';
-import 'package:bacakomik_app/features/update/domain/usecases/update_usecases.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/update/domain/entities/app_release.dart';
+import 'package:yoru/features/update/domain/entities/update_progress.dart';
+import 'package:yoru/features/update/domain/usecases/update_usecases.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';

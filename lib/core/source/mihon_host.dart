@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/extension_bridge.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/extension_bridge.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -27,13 +27,13 @@ abstract interface class MihonHost {
   Future<String?> httpUrl(String url);
 }
 
-/// [MihonHost] over the `bacakomik/mihon` channel (`MihonChannel.kt`).
+/// [MihonHost] over the `yoru/mihon` channel (`MihonChannel.kt`).
 class ChannelMihonHost implements MihonHost {
   ChannelMihonHost._();
 
   static final instance = ChannelMihonHost._();
 
-  static const _channel = MethodChannel('bacakomik/mihon');
+  static const _channel = MethodChannel('yoru/mihon');
 
   Future<bool>? _available;
   Future<void>? _started;

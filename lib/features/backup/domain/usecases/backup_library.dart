@@ -1,10 +1,10 @@
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/features/backup/domain/entities/library_backup.dart';
-import 'package:bacakomik_app/features/backup/domain/repositories/backup_repository.dart';
-import 'package:bacakomik_app/features/bookmark/domain/repositories/bookmark_repository.dart';
-import 'package:bacakomik_app/features/category/domain/repositories/category_repository.dart';
-import 'package:bacakomik_app/features/history/domain/repositories/history_repository.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/backup/domain/entities/library_backup.dart';
+import 'package:yoru/features/backup/domain/repositories/backup_repository.dart';
+import 'package:yoru/features/bookmark/domain/repositories/bookmark_repository.dart';
+import 'package:yoru/features/category/domain/repositories/category_repository.dart';
+import 'package:yoru/features/history/domain/repositories/history_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

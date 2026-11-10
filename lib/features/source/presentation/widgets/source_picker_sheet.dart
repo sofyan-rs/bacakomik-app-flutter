@@ -1,12 +1,15 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/pages/extensions_screen.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/extension_icon.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/source/presentation/pages/extensions_screen.dart';
+import 'package:yoru/features/source/presentation/widgets/extension_icon.dart';
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -80,10 +83,29 @@ class SourcePickerSheet extends StatefulWidget {
 class _SourcePickerSheetState extends State<SourcePickerSheet> {
   late String? _picked = context.read<SourcesCubit>().state.activeId;
 
-  void _open() {
+  /// Waiting for the picked source to load before closing.
+  var _opening = false;
+
+  /// Picks the source and closes once it has loaded (its engine and
+  /// filters), so the screens behind switch the moment the sheet goes.
+  /// A slow connection shows a loader on the button meanwhile.
+  Future<void> _open() async {
     final id = _picked;
-    if (id != null) context.read<SourcesCubit>().select(id);
-    Navigator.of(context).pop();
+    if (id == null) return;
+    final cubit = context.read<SourcesCubit>();
+    if (cubit.state.activeId != id) {
+      setState(() => _opening = true);
+      final loaded = cubit.stream.firstWhere((s) => s.activeId == id);
+      await cubit.select(id);
+      try {
+        await loaded.timeout(const Duration(seconds: 30));
+      } on TimeoutException {
+        // Close anyway; the screens show their own loading state.
+      } on StateError {
+        // The cubit closed.
+      }
+    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   void _manage({bool available = false}) {
@@ -140,7 +162,9 @@ class _SourcePickerSheetState extends State<SourcePickerSheet> {
                 _SourceCard(
                   source: source,
                   selected: source.id == _picked,
-                  onTap: () => setState(() => _picked = source.id),
+                  onTap: () {
+                    if (!_opening) setState(() => _picked = source.id);
+                  },
                 ),
                 const SizedBox(height: DotSpace.s2),
               ],
@@ -159,6 +183,7 @@ class _SourcePickerSheetState extends State<SourcePickerSheet> {
               ? AppText.openSource
               : '${AppText.openSource} ${picked.name}',
           onTap: picked == null ? null : _open,
+          loading: _opening,
         ),
       ],
     );

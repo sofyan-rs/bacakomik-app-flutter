@@ -1,9 +1,10 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/pressable.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/presentation/widgets/dotline/pressable.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// 48px round action button on `surface`, used in screen headers and bars.
+/// Under a mouse, [semanticLabel] shows as a tooltip.
 class RoundIconButton extends StatelessWidget {
   const RoundIconButton({
     super.key,
@@ -31,23 +32,29 @@ class RoundIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
-    return Pressable(
-      onTap: onTap,
-      semanticLabel: semanticLabel,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: outlined ? Colors.transparent : background ?? c.surface,
-          border: outlined
-              ? Border.all(color: c.lineStrong, width: DotSize.stroke)
-              : null,
-        ),
-        child: Icon(
-          icon,
-          size: iconSize,
-          color: onTap == null ? c.inkFaint : foreground ?? c.ink,
+    // Hover only: a long press on touch keeps doing nothing.
+    return Tooltip(
+      message: semanticLabel,
+      triggerMode: TooltipTriggerMode.manual,
+      excludeFromSemantics: true,
+      child: Pressable(
+        onTap: onTap,
+        semanticLabel: semanticLabel,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: outlined ? Colors.transparent : background ?? c.surface,
+            border: outlined
+                ? Border.all(color: c.lineStrong, width: DotSize.stroke)
+                : null,
+          ),
+          child: Icon(
+            icon,
+            size: iconSize,
+            color: onTap == null ? c.inkFaint : foreground ?? c.ink,
+          ),
         ),
       ),
     );

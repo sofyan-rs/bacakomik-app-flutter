@@ -1,7 +1,8 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/pressable.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dot_loader.dart';
+import 'package:yoru/core/presentation/widgets/dotline/pressable.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 enum DotButtonVariant { primary, outline, destructive }
@@ -20,6 +21,7 @@ class DotButton extends StatelessWidget {
     this.leading,
     this.trailing,
     this.expand = true,
+    this.loading = false,
   });
 
   const DotButton.outline({
@@ -30,6 +32,7 @@ class DotButton extends StatelessWidget {
     this.leading,
     this.trailing,
     this.expand = true,
+    this.loading = false,
   }) : variant = DotButtonVariant.outline;
 
   const DotButton.destructive({
@@ -40,6 +43,7 @@ class DotButton extends StatelessWidget {
     this.leading,
     this.trailing,
     this.expand = true,
+    this.loading = false,
   }) : variant = DotButtonVariant.destructive;
 
   final String label;
@@ -51,6 +55,10 @@ class DotButton extends StatelessWidget {
 
   /// Fill the available width.
   final bool expand;
+
+  /// Shows a [DotLoader] in place of the label and ignores taps, keeping
+  /// the enabled look.
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +84,7 @@ class DotButton extends StatelessWidget {
             .copyWith(color: foreground);
 
     return Pressable(
-      onTap: onTap,
+      onTap: loading ? null : onTap,
       child: Container(
         height: size == DotButtonSize.large ? 56 : 48,
         width: expand ? double.infinity : null,
@@ -86,28 +94,34 @@ class DotButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(DotRadius.pill),
           border: Border.all(color: border, width: DotSize.stroke),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (leading != null) ...[
-              Icon(leading, size: DotSize.iconSmall, color: foreground),
-              const SizedBox(width: DotSpace.s2),
-            ],
-            Flexible(
-              child: Text(
-                label,
-                style: style,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+        alignment: loading ? Alignment.center : null,
+        child: loading
+            ? Semantics(
+                label: label,
+                child: DotLoader(color: foreground),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (leading != null) ...[
+                    Icon(leading, size: DotSize.iconSmall, color: foreground),
+                    const SizedBox(width: DotSpace.s2),
+                  ],
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: style,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(width: DotSpace.s2),
+                    Icon(trailing, size: DotSize.iconSmall, color: foreground),
+                  ],
+                ],
               ),
-            ),
-            if (trailing != null) ...[
-              const SizedBox(width: DotSpace.s2),
-              Icon(trailing, size: DotSize.iconSmall, color: foreground),
-            ],
-          ],
-        ),
       ),
     );
   }

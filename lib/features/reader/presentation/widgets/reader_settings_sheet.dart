@@ -1,17 +1,19 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
-import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
-/// "Reader settings": direction, page size, keep awake, page gap,
-/// progress bar, infinite scroll, auto-scroll speed. Saved
-/// right away through [SettingsCubit].
+/// "Reader settings": direction, page size, keep awake, page gap and
+/// progress bar; in the vertical reader also infinite scroll and the
+/// auto-scroll speed, and on wide screens page width and (sideways) two
+/// pages. Only what applies to the reader as set is shown. Saved right away
+/// through [SettingsCubit].
 class ReaderSettingsSheet extends StatelessWidget {
   const ReaderSettingsSheet({super.key});
 
@@ -20,6 +22,14 @@ class ReaderSettingsSheet extends StatelessWidget {
     final c = Dotline.of(context);
     final settings = context.watch<SettingsCubit>().state;
     final cubit = context.read<SettingsCubit>();
+    final size = MediaQuery.sizeOf(context);
+    final vertical = settings.readingDirection == ReadingDirection.vertical;
+    // Only wide screens have room for a choice of widths or two pages.
+    final wide = size.width >= DotSize.splitMinWidth;
+    // As the reader decides: two pages show on a landscape window, each
+    // pair fitted to the screen whole, so page size and width don't apply.
+    final spreads =
+        wide && !vertical && settings.twoPages && size.width > size.height;
 
     Widget label(String text) => Padding(
       padding: const EdgeInsets.only(top: DotSpace.s5, bottom: DotSpace.s3),
@@ -58,16 +68,32 @@ class ReaderSettingsSheet extends StatelessWidget {
             ),
           ],
         ),
-        label(AppText.pageSize),
-        SegmentedControl<PageFit>(
-          background: c.bg,
-          selected: settings.pageFit,
-          onChanged: (f) => cubit.update((s) => s.copyWith(pageFit: f)),
-          segments: const [
-            Segment(value: PageFit.width, label: AppText.fitWidth),
-            Segment(value: PageFit.height, label: AppText.fitHeight),
-          ],
-        ),
+        if (!spreads) ...[
+          label(AppText.pageSize),
+          SegmentedControl<PageFit>(
+            background: c.bg,
+            selected: settings.pageFit,
+            onChanged: (f) => cubit.update((s) => s.copyWith(pageFit: f)),
+            segments: const [
+              Segment(value: PageFit.width, label: AppText.fitWidth),
+              Segment(value: PageFit.height, label: AppText.fitHeight),
+            ],
+          ),
+        ],
+        if (wide && !spreads && settings.pageFit == PageFit.width) ...[
+          label(AppText.pageWidth),
+          SegmentedControl<ReaderWidth>(
+            background: c.bg,
+            selected: settings.readerWidth,
+            onChanged: (w) => cubit.update((s) => s.copyWith(readerWidth: w)),
+            segments: const [
+              Segment(value: ReaderWidth.narrow, label: AppText.widthNarrow),
+              Segment(value: ReaderWidth.medium, label: AppText.widthMedium),
+              Segment(value: ReaderWidth.wide, label: AppText.widthWide),
+              Segment(value: ReaderWidth.full, label: AppText.widthFull),
+            ],
+          ),
+        ],
         const SizedBox(height: DotSpace.s5),
         ListGroup(
           background: c.bg,
@@ -85,6 +111,19 @@ class ReaderSettingsSheet extends StatelessWidget {
                 (s) => s.copyWith(keepScreenOn: !s.keepScreenOn),
               ),
             ),
+            if (wide && !vertical)
+              ListRow(
+                title: AppText.twoPages,
+                subtitle: AppText.twoPagesHint,
+                trailing: DotSwitch(
+                  value: settings.twoPages,
+                  semanticLabel: AppText.twoPages,
+                  onChanged: (v) =>
+                      cubit.update((s) => s.copyWith(twoPages: v)),
+                ),
+                onTap: () =>
+                    cubit.update((s) => s.copyWith(twoPages: !s.twoPages)),
+              ),
             ListRow(
               title: AppText.pageGap,
               subtitle: AppText.pageGapHint,
@@ -107,28 +146,30 @@ class ReaderSettingsSheet extends StatelessWidget {
               onTap: () =>
                   cubit.update((s) => s.copyWith(progressBar: !s.progressBar)),
             ),
-            ListRow(
-              title: AppText.infiniteScroll,
-              subtitle: AppText.infiniteScrollHint,
-              trailing: DotSwitch(
-                value: settings.infiniteScroll,
-                semanticLabel: AppText.infiniteScroll,
-                onChanged: (v) =>
-                    cubit.update((s) => s.copyWith(infiniteScroll: v)),
+            if (vertical) ...[
+              ListRow(
+                title: AppText.infiniteScroll,
+                subtitle: AppText.infiniteScrollHint,
+                trailing: DotSwitch(
+                  value: settings.infiniteScroll,
+                  semanticLabel: AppText.infiniteScroll,
+                  onChanged: (v) =>
+                      cubit.update((s) => s.copyWith(infiniteScroll: v)),
+                ),
+                onTap: () => cubit.update(
+                  (s) => s.copyWith(infiniteScroll: !s.infiniteScroll),
+                ),
               ),
-              onTap: () => cubit.update(
-                (s) => s.copyWith(infiniteScroll: !s.infiniteScroll),
+              ListRow(
+                title: AppText.autoScrollSpeed,
+                subtitle: AppText.autoScrollHint,
+                trailing: _SpeedStepper(
+                  value: settings.autoScrollSpeed,
+                  onChanged: (v) =>
+                      cubit.update((s) => s.copyWith(autoScrollSpeed: v)),
+                ),
               ),
-            ),
-            ListRow(
-              title: AppText.autoScrollSpeed,
-              subtitle: AppText.autoScrollHint,
-              trailing: _SpeedStepper(
-                value: settings.autoScrollSpeed,
-                onChanged: (v) =>
-                    cubit.update((s) => s.copyWith(autoScrollSpeed: v)),
-              ),
-            ),
+            ],
           ],
         ),
       ],

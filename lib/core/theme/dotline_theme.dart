@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Material theme built from Dotline tokens. Flat surfaces, no ripple, no
@@ -72,6 +72,18 @@ ThemeData dotlineTheme(DotlineColors c, Brightness brightness) {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DotRadius.l),
       ),
+    ),
+    tooltipTheme: TooltipThemeData(
+      decoration: BoxDecoration(
+        color: c.ink,
+        borderRadius: BorderRadius.circular(DotRadius.s),
+      ),
+      textStyle: DotlineText.bodyS.copyWith(color: c.onInk),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DotSpace.s3,
+        vertical: DotSpace.s2,
+      ),
+      waitDuration: const Duration(milliseconds: 500),
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: c.ink,

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Yoru
+Comment=Read manga, manhwa and manhua
+Exec=yoru
+Icon=yoru
+Categories=Graphics;Viewer;
+Terminal=false
+StartupWMClass=org.kurodev.yoru

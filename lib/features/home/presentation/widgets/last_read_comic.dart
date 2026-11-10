@@ -1,13 +1,13 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/bookmark/presentation/bloc/bookmark_cubit.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:bacakomik_app/features/history/domain/entities/read_progress.dart';
-import 'package:bacakomik_app/features/history/domain/entities/resume_chapter.dart';
-import 'package:bacakomik_app/features/history/presentation/bloc/history_cubit.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/bookmark/presentation/bloc/bookmark_cubit.dart';
+import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:yoru/features/history/domain/entities/read_progress.dart';
+import 'package:yoru/features/history/domain/entities/resume_chapter.dart';
+import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -37,6 +37,7 @@ class LastReadComic extends StatelessWidget {
         ? bookmarked
         : latest.comicDetails;
     final progress = ReadProgress.of(details, latest.chapterNumber);
+    final heroTag = CoverHeroTag(context, details.coverImg);
     final resume = ResumeChapter.of(latest, details.chapters);
 
     return Column(
@@ -52,18 +53,17 @@ class LastReadComic extends StatelessWidget {
               slug: latest.comicSlug,
               title: details.title,
               cover: details.coverImg,
+              heroTag: heroTag,
             ),
-            child: Container(
-              padding: const EdgeInsets.all(DotSpace.s4),
-              decoration: BoxDecoration(
-                color: c.surface,
-                borderRadius: BorderRadius.circular(DotRadius.l),
-              ),
+            child: _HoverPanel(
               child: Row(
                 children: [
                   SizedBox(
                     width: 84,
-                    child: ComicCover(imageUrl: details.coverImg),
+                    child: CoverHero(
+                      tag: heroTag,
+                      child: ComicCover(imageUrl: details.coverImg),
+                    ),
                   ),
                   const SizedBox(width: DotSpace.s4),
                   Expanded(
@@ -135,6 +135,39 @@ class LastReadComic extends StatelessWidget {
         // Part of this section: no gap above New Series without history.
         const SizedBox(height: DotSpace.s5),
       ],
+    );
+  }
+}
+
+/// The card's `surface` panel, `surfaceRaised` under a mouse. Too wide to
+/// grow like the covers do.
+class _HoverPanel extends StatefulWidget {
+  const _HoverPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_HoverPanel> createState() => _HoverPanelState();
+}
+
+class _HoverPanelState extends State<_HoverPanel> {
+  var _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Dotline.of(context);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: DotMotion.press,
+        padding: const EdgeInsets.all(DotSpace.s4),
+        decoration: BoxDecoration(
+          color: _hovered ? c.surfaceRaised : c.surface,
+          borderRadius: BorderRadius.circular(DotRadius.l),
+        ),
+        child: widget.child,
+      ),
     );
   }
 }

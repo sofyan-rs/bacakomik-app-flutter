@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/extension_bridge.dart';
-import 'package:bacakomik_app/core/source/extension_manager.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/extension_runtime.dart';
-import 'package:bacakomik_app/core/storage/hive_boxes.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/extension_bridge.dart';
+import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/extension_runtime.dart';
+import 'package:yoru/core/storage/hive_boxes.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -69,7 +69,7 @@ void main() {
 
   setUp(() async {
     tearDownHive = await setUpTempHive();
-    support = await Directory.systemTemp.createTemp('bacakomik_support_');
+    support = await Directory.systemTemp.createTemp('yoru_support_');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('plugins.flutter.io/path_provider'),

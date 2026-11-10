@@ -1,6 +1,6 @@
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/comic_detail/presentation/pages/comic_details_screen.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
 import 'package:flutter/material.dart';
 
 /// Latest-chapter row inside a [ListGroup]. Shared by the home section and
@@ -25,14 +25,18 @@ class LatestChapterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final heroTag = CoverHeroTag(context, cover);
     return ListRow(
       leading: SizedBox(
         width: 44,
         height: 60,
-        child: ComicCover(
-          imageUrl: cover,
-          radius: DotRadius.s,
-          aspectRatio: null,
+        child: CoverHero(
+          tag: heroTag,
+          child: ComicCover(
+            imageUrl: cover,
+            radius: DotRadius.s,
+            aspectRatio: null,
+          ),
         ),
       ),
       title: title,
@@ -47,6 +51,7 @@ class LatestChapterCard extends StatelessWidget {
         slug: slug,
         title: title,
         cover: cover,
+        heroTag: heroTag,
       ),
     );
   }

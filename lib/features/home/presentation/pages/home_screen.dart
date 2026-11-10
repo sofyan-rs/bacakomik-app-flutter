@@ -1,24 +1,24 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:bacakomik_app/app/root_tabs.dart';
-import 'package:bacakomik_app/core/assets/assets.gen.dart';
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/constants/variables.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/home/presentation/bloc/home_bloc.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/comic_slider.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/last_read_comic.dart';
-import 'package:bacakomik_app/features/home/presentation/widgets/latest_chapter.dart';
-import 'package:bacakomik_app/features/settings/presentation/bloc/settings_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_picker_sheet.dart';
+import 'package:yoru/app/root_tabs.dart';
+import 'package:yoru/core/assets/assets.gen.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/constants/variables.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/home/presentation/bloc/home_bloc.dart';
+import 'package:yoru/features/home/presentation/widgets/comic_slider.dart';
+import 'package:yoru/features/home/presentation/widgets/last_read_comic.dart';
+import 'package:yoru/features/home/presentation/widgets/latest_chapter.dart';
+import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
+import 'package:yoru/features/source/presentation/widgets/source_picker_sheet.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
-import 'package:bacakomik_app/features/source/presentation/widgets/source_error.dart';
+import 'package:yoru/features/source/presentation/widgets/source_error.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -99,14 +99,22 @@ class _HomeScreenState extends State<HomeScreen> {
               onRefresh: () async => _refreshData(state),
               builder: (context, child, controller) =>
                   _kururin(state, child, controller),
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.only(bottom: bottomInset),
-                children: [
-                  _header(state),
-                  const LastReadComic(),
-                  ..._content(state),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) => ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.only(bottom: bottomInset + DotSpace.s5),
+                  children: [
+                    _column(_header(state)),
+                    _column(const LastReadComic()),
+                    ..._content(
+                      state,
+                      contentInset(
+                        constraints.maxWidth,
+                        DotSize.feedMaxWidth,
+                      ).left,
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -141,23 +149,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<Widget> _content(HomeState state) => switch (state) {
+  /// Keeps [child] in the home column on wide screens.
+  Widget _column(Widget child) =>
+      CenteredContent(maxWidth: DotSize.feedMaxWidth, child: child);
+
+  /// [inset] is the space beside the home column, for the slider that
+  /// scrolls past it.
+  List<Widget> _content(HomeState state, double inset) => switch (state) {
     HomeLoaded() => [
       // Hidden when the source has nothing for it (see showFeatured).
       if (state.home.newSeries.isNotEmpty) ...[
-        ComicSlider(state: state),
+        ComicSlider(state: state, inset: inset),
         const SizedBox(height: DotSpace.s5),
       ],
-      LatestChapter(state: state),
+      _column(LatestChapter(state: state)),
     ],
     HomeNoInternet() => [
-      EmptyState.offline(onAction: () => _refreshData(state)),
+      _column(EmptyState.offline(onAction: () => _refreshData(state))),
     ],
     HomeError(:final message) => [
-      SourceError(
-        message: message,
-        sourceId: context.read<SourcesCubit>().state.activeId,
-        onRetry: () => _refreshData(state),
+      _column(
+        SourceError(
+          message: message,
+          sourceId: context.read<SourcesCubit>().state.activeId,
+          onRetry: () => _refreshData(state),
+        ),
       ),
     ],
     HomeInitial() || HomeLoading() => [

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:bacakomik_app/core/network/image_host_support.dart';
+import 'package:yoru/core/network/image_host_support.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

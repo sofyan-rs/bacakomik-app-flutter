@@ -1,18 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/data/models/comic_details_model.dart';
-import 'package:bacakomik_app/core/data/models/series_response.dart';
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/mihon_host.dart';
-import 'package:bacakomik_app/core/source/mihon_repo.dart';
-import 'package:bacakomik_app/core/source/mihon_source.dart';
-import 'package:bacakomik_app/core/source/mihon_store.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/mihon_backup.dart';
-import 'package:bacakomik_app/features/migration/domain/entities/mihon_import_plan.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/data/models/comic_details_model.dart';
+import 'package:yoru/core/data/models/series_response.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/mihon_host.dart';
+import 'package:yoru/core/source/mihon_repo.dart';
+import 'package:yoru/core/source/mihon_source.dart';
+import 'package:yoru/core/source/mihon_store.dart';
+import 'package:yoru/features/migration/domain/entities/mihon_backup.dart';
+import 'package:yoru/features/migration/domain/entities/mihon_import_plan.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -82,6 +82,10 @@ void main() {
       expect(
         MihonRepo.normalize('https://repo.test/a'),
         'https://repo.test/a/index.min.json',
+      );
+      expect(
+        MihonRepo.normalize('https://repo.test/raw/repo/index.pb'),
+        'https://repo.test/raw/repo/index.min.json',
       );
       expect(MihonRepo.normalize('https://repo.test/other.json'), isNull);
       expect(MihonRepo.normalize('repo.test'), isNull);

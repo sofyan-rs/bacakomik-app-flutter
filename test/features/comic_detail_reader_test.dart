@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:bacakomik_app/core/data/datasources/series_remote_data_source.dart';
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/features/comic_detail/data/repositories/comic_detail_repository_impl.dart';
-import 'package:bacakomik_app/features/reader/data/repositories/reader_repository_impl.dart';
+import 'package:yoru/core/data/datasources/series_remote_data_source.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/features/comic_detail/data/repositories/comic_detail_repository_impl.dart';
+import 'package:yoru/features/reader/data/repositories/reader_repository_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../fixtures/api_fixtures.dart';

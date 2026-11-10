@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:bacakomik_app/core/error/exceptions.dart';
-import 'package:bacakomik_app/core/source/extension_meta.dart';
-import 'package:bacakomik_app/core/source/mihon_host.dart';
+import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/mihon_host.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -53,7 +53,7 @@ class MihonInstaller {
       }
       if (info['supported'] != true) {
         throw ServerException(
-          'This extension uses lib ${info['lib']}, which BacaKomik does not run yet',
+          'This extension uses lib ${info['lib']}, which Yoru does not run yet',
         );
       }
       final installed = await _host.handle('install', {

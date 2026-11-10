@@ -10,7 +10,7 @@ if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo "Expected a release version such as 2.11.0, got: $VERSION" >&2
   exit 1
 fi
-if [[ ! -x "$BUNDLE/bacakomik" ]]; then
+if [[ ! -x "$BUNDLE/yoru" ]]; then
   echo "Missing Linux release bundle. Run flutter build linux --release first." >&2
   exit 1
 fi
@@ -24,16 +24,16 @@ dart "$ROOT/linux/packaging/check_bundle.dart" "$BUNDLE"
 mkdir -p "$RPM_DIR"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS} "$ROOT/dist"
 STAGING=$(mktemp -d "$RPM_DIR/source.XXXXXX")
 trap 'rm -rf "$STAGING"' EXIT
-SOURCE="$STAGING/bacakomik-$VERSION"
+SOURCE="$STAGING/yoru-$VERSION"
 mkdir -p "$SOURCE"
 cp -a "$BUNDLE" "$SOURCE/bundle"
-cp "$ROOT/linux/packaging/bacakomik.desktop" "$ROOT/linux/packaging/bacakomik.png" \
+cp "$ROOT/linux/packaging/yoru.desktop" "$ROOT/linux/packaging/yoru.png" \
   "$ROOT/LICENSE" "$SOURCE/"
-tar -czf "$RPM_DIR/SOURCES/bacakomik-$VERSION.tar.gz" -C "$STAGING" "bacakomik-$VERSION"
+tar -czf "$RPM_DIR/SOURCES/yoru-$VERSION.tar.gz" -C "$STAGING" "yoru-$VERSION"
 
 rpmbuild -bb \
   --define "_topdir $RPM_DIR" \
   --define "app_version $VERSION" \
-  "$ROOT/linux/packaging/bacakomik.spec"
-cp "$RPM_DIR/RPMS/x86_64/bacakomik-$VERSION-1.x86_64.rpm" \
-  "$ROOT/dist/BacaKomik-$VERSION-linux-x86_64.rpm"
+  "$ROOT/linux/packaging/yoru.spec"
+cp "$RPM_DIR/RPMS/x86_64/yoru-$VERSION-1.x86_64.rpm" \
+  "$ROOT/dist/Yoru-$VERSION-linux-x86_64.rpm"

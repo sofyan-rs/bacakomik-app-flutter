@@ -1,11 +1,11 @@
-import 'package:bacakomik_app/core/domain/entities/comic_details.dart';
-import 'package:bacakomik_app/core/error/failures.dart';
-import 'package:bacakomik_app/core/source/comic_key.dart';
-import 'package:bacakomik_app/core/usecase/usecase.dart';
-import 'package:bacakomik_app/core/utils/clock.dart';
-import 'package:bacakomik_app/features/sync/domain/entities/sync_snapshot.dart';
-import 'package:bacakomik_app/features/sync/domain/repositories/sync_repository.dart';
-import 'package:bacakomik_app/features/sync/domain/usecases/sync_usecases.dart';
+import 'package:yoru/core/domain/entities/comic_details.dart';
+import 'package:yoru/core/error/failures.dart';
+import 'package:yoru/core/source/comic_key.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/features/sync/domain/entities/sync_snapshot.dart';
+import 'package:yoru/features/sync/domain/repositories/sync_repository.dart';
+import 'package:yoru/features/sync/domain/usecases/sync_usecases.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 

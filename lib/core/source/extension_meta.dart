@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
-import 'package:bacakomik_app/core/utils/version.dart';
+import 'package:yoru/core/utils/version.dart';
 
 /// Extension lib versions the Mihon host runs (`AndroidLoader.libs`).
 const supportedMihonLibs = {'1.4', '1.5', '1.6'};
@@ -10,6 +10,25 @@ const supportedMihonLibs = {'1.4', '1.5', '1.6'};
 /// Bridge and contract version this app implements. Extensions built for a
 /// newer one are listed but cannot be installed.
 const supportedExtensionApi = 1;
+
+/// Repo URLs that moved with the rename to Yoru (2.17.0), old to new. The
+/// public extension repo is served by GitHub Pages, which does not redirect
+/// after a rename, so its old URL only gets 404. The default repo still
+/// answers on its old host, for apps from before the rename.
+const _movedRepos = {
+  'https://bacakomik-ext.kurodev.org/': 'https://yoru-ext.kurodev.org/',
+  'https://sofyan-rs.github.io/bacakomik-ext-public-source/':
+      'https://sofyan-rs.github.io/yoru-ext-public-source/',
+};
+
+/// [url] at its current place when its repo moved, else [url] as is.
+String? movedRepoUrl(String? url) {
+  if (url == null) return null;
+  for (final MapEntry(key: from, value: to) in _movedRepos.entries) {
+    if (url.startsWith(from)) return '$to${url.substring(from.length)}';
+  }
+  return url;
+}
 
 /// One entry of a repo's `index.json`, also stored for installed extensions.
 class ExtensionMeta {
@@ -47,7 +66,7 @@ class ExtensionMeta {
     file: json['file'] as String,
     sha256: json['sha256'] as String,
     nsfw: json['nsfw'] as bool? ?? false,
-    repoUrl: repoUrl ?? json['repoUrl'] as String?,
+    repoUrl: movedRepoUrl(repoUrl ?? json['repoUrl'] as String?),
     languages: (json['languages'] as List?)?.cast<String>() ?? const [],
     urlPatterns:
         (json['urlPatterns'] as List?)?.whereType<String>().toList() ??

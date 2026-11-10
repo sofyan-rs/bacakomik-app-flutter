@@ -1,10 +1,10 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/features/category/domain/entities/category.dart';
-import 'package:bacakomik_app/features/category/presentation/bloc/category_cubit.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/features/category/domain/entities/category.dart';
+import 'package:yoru/features/category/presentation/bloc/category_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
@@ -31,47 +31,56 @@ class CategoriesScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const DotTopBar(title: AppText.categories),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DotSpace.s4,
-                0,
-                DotSpace.s4,
-                DotSpace.s4,
-              ),
-              child: Text(
-                AppText.categoriesDescription,
-                style: DotlineText.bodyS.copyWith(color: c.inkFaint),
-              ),
-            ),
             Expanded(
-              child: categories.isEmpty
-                  ? const EmptyState(
-                      icon: LucideIcons300.folder,
-                      title: AppText.noCategories,
-                    )
-                  : ReorderableListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DotSpace.s4,
+              child: CenteredContent(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DotSpace.s4,
+                        0,
+                        DotSpace.s4,
+                        DotSpace.s4,
                       ),
-                      buildDefaultDragHandles: false,
-                      itemCount: categories.length,
-                      onReorderItem: cubit.move,
-                      itemBuilder: (context, index) => _CategoryRow(
-                        key: ValueKey(categories[index].id),
-                        index: index,
-                        category: categories[index],
+                      child: Text(
+                        AppText.categoriesDescription,
+                        style: DotlineText.bodyS.copyWith(color: c.inkFaint),
                       ),
                     ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(DotSpace.s4),
-              child: DotButton(
-                label: AppText.addCategory,
-                leading: LucideIcons300.plus,
-                onTap: () async {
-                  final name = await showCategoryNameSheet(context);
-                  if (name != null) await cubit.create(name);
-                },
+                    Expanded(
+                      child: categories.isEmpty
+                          ? const EmptyState(
+                              icon: LucideIcons300.folder,
+                              title: AppText.noCategories,
+                            )
+                          : ReorderableListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: DotSpace.s4,
+                              ),
+                              buildDefaultDragHandles: false,
+                              itemCount: categories.length,
+                              onReorderItem: cubit.move,
+                              itemBuilder: (context, index) => _CategoryRow(
+                                key: ValueKey(categories[index].id),
+                                index: index,
+                                category: categories[index],
+                              ),
+                            ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(DotSpace.s4),
+                      child: DotButton(
+                        label: AppText.addCategory,
+                        leading: LucideIcons300.plus,
+                        onTap: () async {
+                          final name = await showCategoryNameSheet(context);
+                          if (name != null) await cubit.create(name);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

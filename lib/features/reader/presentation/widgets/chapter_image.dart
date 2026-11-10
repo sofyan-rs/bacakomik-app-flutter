@@ -1,19 +1,20 @@
-import 'package:bacakomik_app/core/constants/texts.dart';
-import 'package:bacakomik_app/core/presentation/widgets/dotline/dotline.dart';
-import 'package:bacakomik_app/core/theme/dotline_colors.dart';
-import 'package:bacakomik_app/core/theme/dotline_text.dart';
-import 'package:bacakomik_app/core/theme/dotline_tokens.dart';
-import 'package:bacakomik_app/core/utils/utils.dart';
-import 'package:bacakomik_app/features/settings/domain/entities/app_settings.dart';
+import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
+import 'package:yoru/core/theme/dotline_colors.dart';
+import 'package:yoru/core/theme/dotline_text.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/utils.dart';
+import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 
 import 'dart:io';
 import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
-import 'package:bacakomik_app/core/network/image_cache.dart';
+import 'package:yoru/core/network/image_cache.dart';
 
 /// One chapter page. Long press (or right click) to save it.
 ///
@@ -29,6 +30,8 @@ class ChapterImg extends StatefulWidget {
     this.load = true,
     this.fit = PageFit.width,
     this.fitHeight,
+    this.maxWidth = DotSize.readerMaxWidth,
+    this.alignment = Alignment.center,
     this.headers = const {},
     @visibleForTesting this.cacheManager,
   });
@@ -54,6 +57,14 @@ class ChapterImg extends StatefulWidget {
 
   /// Height used with [PageFit.height] in the vertical reader.
   final double? fitHeight;
+
+  /// Widest the page is shown fitted to width (the reader width setting),
+  /// so it decodes sharp enough for it.
+  final double maxWidth;
+
+  /// Where the image sits in a box wider than it, e.g. against the spine
+  /// in a two-page spread.
+  final Alignment alignment;
 
   @override
   State<ChapterImg> createState() => _ChapterImgState();
@@ -153,15 +164,28 @@ class _ChapterImgState extends State<ChapterImg> {
       ),
     );
 
-    if (!widget.load) return placeholder();
+    // Fitted to width, a page shown once keeps its height for good: its
+    // image can leave the memory cache, and while it decodes again a 480
+    // placeholder would make everything below (or above, scrolling up) jump.
+    final byWidth = widget.fit == PageFit.width;
+    Widget sized(Widget child) => LayoutBuilder(
+      builder: (_, constraints) {
+        final aspect = byWidth ? _pageAspects[widget.chapterImage] : null;
+        return SizedBox(
+          height: aspect == null || !constraints.hasBoundedWidth
+              ? null
+              : constraints.maxWidth * aspect,
+          child: child,
+        );
+      },
+    );
+
+    if (!widget.load) return sized(placeholder());
 
     // Decode at screen size instead of the source size; webtoon pages can be
     // thousands of pixels tall and take tens of MB each at full resolution.
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final pageWidth = min(
-      MediaQuery.sizeOf(context).width,
-      DotSize.readerMaxWidth,
-    );
+    final pageWidth = min(MediaQuery.sizeOf(context).width, widget.maxWidth);
     final cacheWidth = widget.fit == PageFit.width
         ? (pageWidth * dpr).round()
         : null;
@@ -218,6 +242,10 @@ class _ChapterImgState extends State<ChapterImg> {
       ),
     );
 
+    void measured(Size size) {
+      if (byWidth) rememberPageAspect(widget.chapterImage, size);
+    }
+
     final Widget image = widget.isFile
         ? Image.file(
             File(widget.chapterImage),
@@ -226,8 +254,10 @@ class _ChapterImgState extends State<ChapterImg> {
             cacheWidth: cacheWidth,
             cacheHeight: cacheHeight,
             fit: boxFit,
-            frameBuilder: (_, child, frame, sync) =>
-                frame == null && !sync ? placeholder() : child,
+            alignment: widget.alignment,
+            frameBuilder: (_, child, frame, sync) => frame == null && !sync
+                ? placeholder()
+                : _ReportSize(onSize: measured, child: child),
             errorBuilder: (_, _, _) => error(),
           )
         : CachedNetworkImage(
@@ -241,6 +271,17 @@ class _ChapterImgState extends State<ChapterImg> {
             memCacheWidth: cacheWidth,
             memCacheHeight: cacheHeight,
             fit: boxFit,
+            alignment: widget.alignment,
+            imageBuilder: (_, provider) => _ReportSize(
+              onSize: measured,
+              child: Image(
+                image: provider,
+                width: double.infinity,
+                height: widget.fitHeight,
+                fit: boxFit,
+                alignment: widget.alignment,
+              ),
+            ),
             fadeInDuration: DotMotion.press,
             progressIndicatorBuilder: (_, _, p) =>
                 placeholder(progress: p.progress ?? -1),
@@ -250,7 +291,56 @@ class _ChapterImgState extends State<ChapterImg> {
     return GestureDetector(
       onLongPress: () => _showSaveSheet(context),
       onSecondaryTap: () => _showSaveSheet(context),
-      child: image,
+      child: sized(image),
     );
+  }
+}
+
+/// Height over width of pages seen this session, by URL or file path, so a
+/// page keeps its height while its image decodes again (see
+/// [ChapterImg]). The oldest go first past [_maxPageAspects].
+final _pageAspects = <String, double>{};
+const _maxPageAspects = 4000;
+
+@visibleForTesting
+double? pageAspectOf(String image) => _pageAspects[image];
+
+/// Records the shape of [image] from the [size] it was laid out at.
+@visibleForTesting
+void rememberPageAspect(String image, Size size) {
+  if (size.width <= 0 || size.height <= 0) return;
+  _pageAspects.remove(image);
+  _pageAspects[image] = size.height / size.width;
+  if (_pageAspects.length > _maxPageAspects) {
+    _pageAspects.remove(_pageAspects.keys.first);
+  }
+}
+
+/// Reports the size [child] was laid out at.
+class _ReportSize extends SingleChildRenderObjectWidget {
+  const _ReportSize({required this.onSize, required super.child});
+
+  final ValueChanged<Size> onSize;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderReportSize(onSize);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderReportSize renderObject,
+  ) => renderObject.onSize = onSize;
+}
+
+class _RenderReportSize extends RenderProxyBox {
+  _RenderReportSize(this.onSize);
+
+  ValueChanged<Size> onSize;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    onSize(size);
   }
 }

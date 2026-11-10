@@ -20,7 +20,7 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 
 - The app has **no content of its own**. Each site is a **source**, backed by a small JavaScript **extension** downloaded from a repo (§8.2) and run in an embedded JS engine on the phone (§8.3), or, on Android 9+, by a **Mihon extension** APK run in Kotlin (§8.9).
 - Screens talk to blocs, blocs call use cases, use cases call repositories. Only repositories know about sources, HTTP and storage (§3).
-- The library (bookmarks, categories, history, downloads, settings) lives **on the phone** in Hive (§7). It can be exported to a backup file (§7.4) or synced through one private file in the user's own Google Drive (§7.6). There is no BacaKomik account or server.
+- The library (bookmarks, categories, history, downloads, settings) lives **on the phone** in Hive (§7). It can be exported to a backup file (§7.4) or synced through one private file in the user's own Google Drive (§7.6). There is no Yoru account or server.
 
 ---
 
@@ -57,10 +57,10 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 | Downloads | `background_downloader` | Outside the Dart isolate (§7.5) |
 | Notifications | `flutter_local_notifications` | Bookmark refresh progress with Cancel (§6.1); needs `ActionBroadcastReceiver` in the manifest |
 | Sync / backup | `google_sign_in` + Drive REST; `file_picker` | §7.6, §7.4 |
-| Links, share, gallery | `app_links`, `share_plus`, `gal` | Links `https://bacakomik.kurodev.org/series/<slug>` open the app (`DeepLinks`, host in `hosting/worker`) |
+| Links, share, gallery | `app_links`, `share_plus`, `gal` | Links `https://yoru.kurodev.org/series/<slug>` (and the old host `bacakomik.kurodev.org`) open the app (`DeepLinks`, host in `hosting/worker`) |
 | Tests | `flutter_test`, `bloc_test`, `mocktail` | CONTRIBUTION §5 |
 
-Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the generators. App id `org.kurodev.bacakomik`; `minSdk` 24, `targetSdk` 36 (from Flutter), `compileSdk 37`, Java 17.
+Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the generators. App id `org.kurodev.yoru` (`org.kurodev.bacakomik` before 2.17.0); `minSdk` 24, `targetSdk` 36 (from Flutter), `compileSdk 37`, Java 17.
 
 ---
 
@@ -69,15 +69,15 @@ Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the gen
 | Path | What it is | Do you edit it? |
 |---|---|---|
 | `lib/main.dart` | `Hive.init` → DI → bundled extensions → `runApp` | Rarely |
-| `lib/app/` | `BacaKomikApp` (app-wide providers, listeners, theme), splash, `RootScreen` (5 tabs, update check), `RootTabs` | When wiring several features together |
+| `lib/app/` | `YoruApp` (app-wide providers, listeners, theme), splash, `RootScreen` (5 tabs, update check), `RootTabs` | When wiring several features together |
 | `lib/core/` | Shared code: `constants/` (`AppText`), `theme/`, `di/`, `error/`, `network/`, `notifications/`, `source/` (§8), `storage/` (§7), `usecase/`, shared `domain/`, `data/`, `presentation/` widgets, `utils/` | When something is shared |
 | `lib/features/<name>/` | One folder per feature (table below) | Yes, most work |
 | `*.freezed.dart`, `*.g.dart`, `injection.config.dart`, `core/assets/*.gen.dart` | Generated (§10) | No |
 | `assets/extensions/` | Bundled extensions (§8.2) | Only via `bundle.ts` (CONTRIBUTION §2) |
-| `android/…/MainActivity.kt` | `bacakomik/hidden_webviews` channel (§8.5); registers `MihonChannel` (`bacakomik/mihon`); asks for the display's fastest mode at its resolution (`preferredDisplayModeId`), as some phones keep apps at 60 Hz otherwise | Rarely |
+| `android/…/MainActivity.kt` | `yoru/hidden_webviews` channel (§8.5); registers `MihonChannel` (`yoru/mihon`); asks for the display's fastest mode at its resolution (`preferredDisplayModeId`), as some phones keep apps at 60 Hz otherwise | Rarely |
 | `android/mihon/` | Runs Mihon extension APKs (§8.9) | When Mihon's API or a host call changes |
 | `android/app/src/main/AndroidManifest.xml` | Permissions, deep links, notification action receiver | Rarely |
-| `hosting/` | Cloudflare Worker for `bacakomik.kurodev.org` | Rarely |
+| `hosting/` | Cloudflare Worker for `yoru.kurodev.org` (and the old `bacakomik.kurodev.org`) | Rarely |
 | `test/` | Mirrors `lib/` | Yes |
 
 Features: `home`, `latest` ("See all"), `explore`, `comic_detail`, `reader`, `bookmark`, `category`, `history`, `settings` (More tab), `backup`, `sync`, `download`, `migration`, `source` (Extensions, source picker, WebView screen), `update`.
@@ -114,8 +114,8 @@ grep -rn "^import" lib/core/domain lib/features/*/domain | grep -E "package:flut
 | I'm writing… | Put it in |
 |---|---|
 | A rule about comics, bookmarks, history | That feature's `domain/`, with a test |
-| Support for a new site | An extension in `bacakomik-ext-source`, not here |
-| A new source method | The contract in `bacakomik-ext-source`, then `SeriesRemoteDataSource` + a DTO in `core/data/models/` |
+| Support for a new site | An extension in `yoru-ext-source`, not here |
+| A new source method | The contract in `yoru-ext-source`, then `SeriesRemoteDataSource` + a DTO in `core/data/models/` |
 | A new host function | `ExtensionBridge.handle` + the prelude in `ExtensionRuntime` (bump `supportedExtensionApi` if old apps can't run it) |
 | Data stored on the device | A feature `*_local_data_source.dart` over a `JsonBox` (§7) |
 | A widget used by several features | `core/presentation/widgets/` |
@@ -164,7 +164,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 **Dotline** is a monochrome, dark-first design system: pure black (light: `#F2F2F2`), flat surfaces, hairlines, pills, dots.
 
 - **Red is a signal, not a colour.** `accent` at most once or twice per screen (NEW dot, `+N` badge, delete). Selected chips and switches use `ink`.
-- **Doto only for screen titles** and the app name, never under 24 px. Numbers use `DotlineText.stat` / `statS`; labels use uppercase Geist Mono.
+- **Doto only for screen titles** and the app name, never under 22 px. Numbers use `DotlineText.stat` / `statS`; labels use uppercase Geist Mono.
 - **No gradients or glass**, except the bottom fade behind the nav. Depth is `bg` → `surface` → `surfaceRaised`; `shadowFloat` only for menus and the reader's chapter pill.
 - **Comic types are labels, not colours** (same black pill for all).
 - **Motion:** 140 ms presses (scale 0.97, no ripple), ~320 ms sliding indicators; respect `MediaQuery.disableAnimationsOf`.
@@ -294,7 +294,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and history by `readDate` (newest first, equal dates by slug), categories by `order`. `HistoryIndex` uses a list already in that order as is. Bookmarks re-sorts by the chosen `BookmarkSort` (`sortBookmarks`, stable). Saving an existing key replaces it.
 
 ### 7.4 Backup files
-`bacakomik-backup-<y>-<m>-<d>-<h><min><s>.json`, in a folder the user picks:
+`yoru-backup-<y>-<m>-<d>-<h><min><s>.json` (`bacakomik-backup-…` before 2.17.1; restore reads either), in a folder the user picks:
 
 ```jsonc
 { "version": 2, "bookmarks": [ … ], "history": [ … ], "historyComics": [ … ],
@@ -340,12 +340,12 @@ A source is one site; a multi-language extension is one source per enabled langu
 | Comic | `sourceId:slug` (bare slug for `bacakomik`) | `mysource:some-title`, `solo-leveling` |
 | Chapter | `<comicKey>/<number>` | `mysource:some-title/14` |
 
-`SourceRegistry` (`ExtensionManager`) gives `activeSource` and `backend(sourceId)`. `SeriesRemoteDataSource` is the only caller of source methods: `browse`, `series`, `chapters`, `chapter` (plus optional `filters()`, `home`, `webUrl`; contract in `bacakomik-ext-source/types/bridge.d.ts`). DTOs convert with `ApiFormat` (`9.25` → `"9.3"`, missing format → `"-"`, dates → "3 h ago") and turn source slugs into comic keys. The active source defaults to `bacakomik`, else the first installed; with none, Home and Explore show `noSourceMessage` and lead to Extensions.
+`SourceRegistry` (`ExtensionManager`) gives `activeSource` and `backend(sourceId)`. `SeriesRemoteDataSource` is the only caller of source methods: `browse`, `series`, `chapters`, `chapter` (plus optional `filters()`, `home`, `webUrl`; contract in `yoru-ext-source/types/bridge.d.ts`). DTOs convert with `ApiFormat` (`9.25` → `"9.3"`, missing format → `"-"`, dates → "3 h ago") and turn source slugs into comic keys. The active source defaults to `bacakomik`, else the first installed; with none, Home and Explore show `noSourceMessage` and lead to Extensions.
 
 ### 8.2 Extensions and repos
 `ExtensionManager` owns installed extensions, repos and runtimes.
 
-- **Repos:** `index.json` URLs (and Mihon repos' `index.min.json`, §8.9), stored in `source_settings` → `repos`; default `https://bacakomik-ext.kurodev.org/index.json` (the built `dist/` of `bacakomik-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
+- **Repos:** `index.json` URLs (and Mihon repos' `index.min.json`, §8.9), stored in `source_settings` → `repos`; default `https://yoru-ext.kurodev.org/index.json` (the built `dist/` of `yoru-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
 - **`ExtensionMeta`:** `id` (`[a-z0-9_-]`, file name and key prefix), `name`, `lang`, semver `version`, `apiVersion` (app supports `supportedExtensionApi = 1`; higher is listed but not installable), `baseUrl`, `file`, `sha256`, `nsfw`, `languages`, and optional **`urlPatterns`**: regexes whose one capture group is the slug in a series URL path (`slugFromUrl`), used by the Mihon import (§6.4).
 - **Install:** download, check `sha256`, load once in a throwaway runtime (failing scripts aren't installed), save the script and meta. Updating = installing the newer version. `catalog()` fetches repos in parallel (a failing repo shows as an error) and sets `updateCount`.
 - **Uninstall** removes the script, meta, language setting, and each source's cookies, storage and hidden page.
@@ -380,14 +380,15 @@ The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-ba
 
 - **A failed run closes the page**, so the next run starts fresh with the cookies the user got in the visible WebView. A kept page showing "Just a moment" is reloaded.
 - Popups are refused; main-frame navigation to other hosts is cancelled (subdomains and `challenges.cloudflare.com` allowed).
-- **Rendering:** hidden WebViews don't render, so lazy pages load nothing. Extension pages are rendered only while a script runs, and any page while it shows a "Just a moment" check: Dart calls `render` / `hide` with the WebView's id on `bacakomik/hidden_webviews`; `MainActivity.kt` moves it into an `Untouchable` frame at alpha 0 and makes it visible, so Chromium renders it while the user can't see or touch it. Image-host pages never render.
+- **Rendering:** hidden WebViews don't render, so lazy pages load nothing. Extension pages are rendered only while a script runs, and any page while it shows a "Just a moment" check: Dart calls `render` / `hide` with the WebView's id on `yoru/hidden_webviews`; `MainActivity.kt` moves it into an `Untouchable` frame at alpha 0 and makes it visible, so Chromium renders it while the user can't see or touch it. Image-host pages never render.
 
 **WebView screen** shows the site with the extension's User-Agent. `SourceError` opens it on a challenge URL, the comic page on `webUrl`, and the reader the chapter page (`webUrl(slug, number)`; a source that ignores the number gives the comic page). It copies cookies (e.g. `cf_clearance`) after every load; the failed screen retries when it closes; it can clear the source's cookies.
 
 ### 8.6 Images
 Two caches share one downloader. `coverImageCache` (key `bacakomikCovers`, 5000 files, 365 days) serves every cover, cover saving and download covers; Clear cache keeps it. `comicImageCache` (`DefaultCacheManager`'s key, 500 files, 14 days) serves pages, prefetch and blocked-host pages; Clear cache empties it.
 - `CoverCacheMigration` (started from `main`, once, flag `coverCacheMigrated` in the `settings` box) copies covers of bookmarks, history and downloads from `comicImageCache` with `putFile` (same extension, eTag and expiry).
-- Android downloads go through Cronet (`dart:io` if unavailable) with Chrome's `<img>` headers; the reader adds `imageHeaders`. WebView cookies are sent only to hosts that once answered 403/503 (`ImageHostCookies`, read at most every 10 minutes); `warmUpWebView` (from `main`) starts Chromium while idle.
+- Android downloads go through Cronet (`dart:io` if unavailable) with Chrome's `<img>` headers; the reader adds `imageHeaders`. WebView cookies are sent only to hosts that once answered 403/503 (`ImageHostCookies`, read at most every 10 minutes); `warmUpWebView` (from `main`) starts Chromium while idle. A host that answers Chrome's User-Agent with a web page instead of the image (MangaDex's uploads, a bot check) is asked again, and from then on, with the User-Agent `BacaKomik`. A cover that fails to show is removed from the cache, so the next showing downloads it again.
+- Covers given as paths on the site (`/images/…`, Comix) are resolved against the source's `baseUrl` when a JS source returns them (`absoluteCover`); `main` fixes ones stored before, once (`relativeCoversFixed` in `settings`).
 - A host still answering 403/503 is fetched inside a hidden page on `<origin>/robots.txt` (site root if that is turned away) with `fetch` and credentials, for 30 minutes; bodies of 64 KB or more are base64-decoded on another isolate. `imageHostBlocks` runs the same check for the download queue (§7.5).
 - `mihon://` images (Mihon sources, §8.9) are fetched through the extension in Kotlin (`ChannelMihonHost.image`); an empty result is an error, not a cached file.
 
@@ -397,6 +398,11 @@ Two caches share one downloader. `coverImageCache` (key `bacakomikCovers`, 5000 
 ### 8.8 Other HTTP
 `filesDio` (no base URL, 15 s connect, 2 min receive) fetches repos and scripts, calls Drive (§7.6), and backs `ApiClient` for GitHub releases.
 
+**DNS over HTTPS** (More → DNS over HTTPS; `AppSettings.dnsOverHttps`: `''` off, a preset id from `dohPresets`, or a custom `https://…/dns-query` URL), for networks whose DNS blocks sites. `applyDnsOverHttps` (from `main` before the first request, then on change) sets:
+- `Doh` (`core/network/doh.dart`) for every dart:io `HttpClient`: `DohHttpOverrides` is `HttpOverrides.global`, set first thing in `main`; its `connectionFactory` resolves the host over RFC 8484 GET (`?dns=`, HTTP/1.1, as dart:io has no HTTP/2), connects to the address and does TLS for the hostname. Presets are reached by IP (`bootstrap`). When the server fails, the system DNS is used. On desktop this covers extensions, images and downloads; on Android, `filesDio`.
+- `HostDns` (Kotlin) for Mihon extensions' OkHttp (`okhttp-dnsoverhttps`), kept in preferences for starts without Dart.
+- Not covered: Cronet on Android (JS extensions, images: it takes no resolver), `background_downloader`, and WebViews. The sheet points Android users to the system's Private DNS for those. Quad9 is not a preset: its endpoint only speaks HTTP/2.
+
 ### 8.9 Mihon extensions
 Android 9+ also runs **Mihon (Tachiyomi) extension APKs** as a second backend: a user adds a Mihon repo (e.g. Keiyoushi), installs an extension, and its sources work like any other (Home, Explore, comic page, reader, bookmarks, refresh, history, downloads, sync, migration). JS extensions keep working; on iOS and Android 8 and older, Mihon repos are skipped and can't be added. Aniyomi (anime), LNReader (novels) and desktop are not supported.
 
@@ -404,7 +410,7 @@ An extension APK is compiled code written against Mihon's source API (`eu.kanade
 
 ```
 ExtensionManager ─► MihonSource (LoadedSource) ─┐
-image caches (mihon:// URLs) ───────────────────┼─ channel bacakomik/mihon ─► MihonChannel (app) ─► MihonHost (android/mihon)
+image caches (mihon:// URLs) ───────────────────┼─ channel yoru/mihon ─► MihonChannel (app) ─► MihonHost (android/mihon)
 MihonInstaller ─────────────────────────────────┘     ├─ Contract, Filters, Description, ChapterRecognition, Images, Slugs, SourceIndex
                                                       └─ ExtensionHost + AndroidLoader (vendored from SCANCORE)
 ```
@@ -445,8 +451,8 @@ Details and chapters are separate `getMangaUpdate` calls, details first, one at 
 | Path | What |
 |---|---|
 | `eu/`, `mihon/`, `tachiyomi/`, `androidx/compose/runtime/Stable.kt` | Mihon's source API and network helpers (Apache 2.0), vendored from SCANCORE's `host/api`. Original package names: extensions link against them |
-| `org/kurodev/bacakomik/mihon/host/` | The extension host, from SCANCORE's (MIT, `LICENSE-SCANCORE`; was `com.mediumdev.scancore.host`), trimmed to what the app calls: `ExtensionHost` (calls, `getMangaUpdate` merging, memos, warm-up; loaded extensions cached per APK path), `Codec`, `MemoStore`, `Rpc`, `android/AndroidLoader`, `AndroidSettings`, `WebViewBrowserCheck` (hidden Cloudflare solver, `WebViewCookieJar`). Changes from SCANCORE are marked `BACAKOMIK` |
-| `org/kurodev/bacakomik/mihon/` | `MihonHost` (entry), `Contract`, `Filters`, `Description`, `ChapterRecognition`, `Images`, `Slugs`, `SourceIndex` |
+| `org/kurodev/yoru/mihon/host/` | The extension host, from SCANCORE's (MIT, `LICENSE-SCANCORE`; was `com.mediumdev.scancore.host`), trimmed to what the app calls: `ExtensionHost` (calls, `getMangaUpdate` merging, memos, warm-up; loaded extensions cached per APK path), `Codec`, `MemoStore`, `Rpc`, `android/AndroidLoader`, `AndroidSettings`, `WebViewBrowserCheck` (hidden Cloudflare solver, `WebViewCookieJar`). Changes from SCANCORE are marked `BACAKOMIK` |
+| `org/kurodev/yoru/mihon/` | `MihonHost` (entry), `Contract`, `Filters`, `Description`, `ChapterRecognition`, `Images`, `Slugs`, `SourceIndex` |
 
 `MihonHost.start` runs once per process (Dart calls it before the first call): the app's User-Agent (so WebView clearances work), `WebViewCookieJar`, the hidden browser check, Injekt singletons. Calls: `inspect` (path, signer; loads code only once the signer matches), `install`, `uninstall` (also drops the sources' `source_<id>` preferences), `call`, `preferences` / `setPreference` (a change unloads the extension), `userAgent`. `SourceIndex` (SharedPreferences `bacakomik_mihon_index`) maps source ids to their APK and signer, so a call naming only a source (a cover at start) finds its extension; extensions load on first use. `MihonChannel.kt` runs calls on `Dispatchers.IO`. `MihonHost.supported` is false below Android 9.
 
@@ -455,7 +461,7 @@ Details and chapters are separate `getMangaUpdate` calls, details first, one at 
 - **APK files:** `<app support>/extensions/<id>-<versionCode>-<time>.apk`, read-only (Android 14 refuses writable code). Every install gets a new file; the old one is deleted after the new one installs.
 - **Updates:** a higher `versionCode`, same badge and button as JS. Lib versions: `supportedMihonLibs` (`1.4`–`1.6`) must match `AndroidLoader.libs`.
 - **Images** need the source's own client (headers, cookies, interceptors that unscramble pages): `mihon://<sourceId>/cover/<b64url>` and `mihon://<sourceId>/page/<b64url of page JSON>` (`Images.kt`), fetched by the image caches' `FileService` through the channel (§8.6). The same on every device, so stored covers survive sync.
-- **Downloads:** `mihon://` pages go to the background downloader as `http://127.0.0.1:<port>/<token>/image?u=…` (`MihonProxy.kt`, a local server started with the process from `BacaKomikApplication`, which starts the host by itself with the last User-Agent when Dart isn't running). The port is kept across runs; the token keeps other apps out. Without the server they are saved through `comicImageCache` while the app runs (§7.5).
+- **Downloads:** `mihon://` pages go to the background downloader as `http://127.0.0.1:<port>/<token>/image?u=…` (`MihonProxy.kt`, a local server started with the process from `YoruApplication`, which starts the host by itself with the last User-Agent when Dart isn't running). The port is kept across runs; the token keeps other apps out. Without the server they are saved through `comicImageCache` while the app runs (§7.5).
 - **Settings:** `ConfigurableSource` screens are read with androidx.preference (`AndroidSettings`) and shown in a Dotline sheet (`mihon_settings_sheet.dart`); values stay in the extension's `source_<id>` SharedPreferences, not in backup or sync. The button shows only for extensions with a configurable source.
 - **Cloudflare:** `CloudflareInterceptor` solves automatic checks in a hidden WebView; one that needs the user becomes "Verify in WebView". Extensions and the app's WebViews share Android's `CookieManager`.
 
