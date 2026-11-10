@@ -83,6 +83,10 @@ void main() {
         MihonRepo.normalize('https://repo.test/a'),
         'https://repo.test/a/index.min.json',
       );
+      expect(
+        MihonRepo.normalize('https://repo.test/raw/repo/index.pb'),
+        'https://repo.test/raw/repo/index.min.json',
+      );
       expect(MihonRepo.normalize('https://repo.test/other.json'), isNull);
       expect(MihonRepo.normalize('repo.test'), isNull);
       expect(MihonRepo.isRepoUrl('https://repo.test/index.min.json'), isTrue);

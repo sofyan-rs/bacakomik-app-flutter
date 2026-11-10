@@ -104,7 +104,7 @@ class _ReposSheetState extends State<ReposSheet> {
           autocorrect: false,
           style: DotlineText.body.copyWith(color: c.ink),
           decoration: InputDecoration(
-            hintText: 'https://…/index.json · index.min.json',
+            hintText: 'https://…/index.json · index.min.json · index.pb',
             errorText: _error,
           ),
           onSubmitted: (_) => _add(),

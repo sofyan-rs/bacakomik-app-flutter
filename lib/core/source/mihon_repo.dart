@@ -22,7 +22,11 @@ abstract final class MihonRepo {
     if (uri == null || !uri.hasScheme) return null;
     final path = uri.path;
     if (path.endsWith(indexFile)) return uri.toString();
-    if (path.endsWith('repo.json')) return uri.resolve(indexFile).toString();
+    // repo.json, or the protobuf store (`index.pb`) that repo.json names
+    // as `index_v2`: both sit next to the index.
+    if (path.endsWith('repo.json') || path.endsWith('.pb')) {
+      return uri.resolve(indexFile).toString();
+    }
     if (path.endsWith('.json')) return null;
     final base = path.endsWith('/') ? uri : uri.replace(path: '$path/');
     return base.resolve(indexFile).toString();
