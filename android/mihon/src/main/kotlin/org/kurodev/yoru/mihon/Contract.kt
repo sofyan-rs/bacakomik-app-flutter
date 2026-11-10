@@ -32,7 +32,7 @@ import kotlin.math.abs
 
 /**
  * A Mihon source speaking the app's extension contract (the JS one in
- * bacakomik-ext `types/bridge.d.ts`): `browse`, `series`, `chapters`,
+ * yoru-ext-source `types/bridge.d.ts`): `browse`, `series`, `chapters`,
  * `chapter`, `webUrl`, `features`. [ExtensionHost] gives Mihon's models as
  * JSON (Codec); this turns them into the contract's shapes.
  *

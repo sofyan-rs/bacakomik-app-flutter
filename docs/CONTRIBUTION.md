@@ -10,7 +10,7 @@ Recipes for working on Yoru. Read [ARCHITECTURE.md](ARCHITECTURE.md) once first.
 
 1. Install **Flutter** stable with **Dart 3.13+**, the Android SDK (platform 37) and **JDK 17**. Run `flutter doctor` until it is clean.
 2. Use a device or emulator on Android 7.0+ (API 24); test on a recent one (API 34+) too. Mihon extensions need Android 9+ (API 28). Cloudflare sources and Cronet need Google Play services.
-3. For extension work: [Bun](https://bun.sh) and access to the private `bacakomik-ext-source` repo. To write your own extension without that access, use the public extension source, [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source), served at `https://sofyan-rs.github.io/bacakomik-ext-public-source/index.json`.
+3. For extension work: [Bun](https://bun.sh) and access to the private `yoru-ext-source` repo. To write your own extension without that access, use the public extension source, [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source), served at `https://sofyan-rs.github.io/yoru-ext-public-source/index.json`.
 
 There is no server to configure. Content comes from the bundled extensions and the default repo `https://bacakomik-ext.kurodev.org/index.json`.
 
@@ -45,7 +45,7 @@ Example: `migration` has `ImportLibrary` (domain), `PendingReadRepositoryImpl` (
 4. Test that old JSON without the field parses, then do the upgrade test (Recipe G).
 
 ### Recipe C: Add a source method or host function
-- **Source method:** change the contract in `bacakomik-ext-source` (`types/bridge.d.ts`), then call it from `SeriesRemoteDataSource` with a DTO (`toEntity()`), passing comic keys. Test with `FakeSourceBackend`.
+- **Source method:** change the contract in `yoru-ext-source` (`types/bridge.d.ts`), then call it from `SeriesRemoteDataSource` with a DTO (`toEntity()`), passing comic keys. Test with `FakeSourceBackend`.
 - **Host function:** handle it in `ExtensionBridge.handle` and add it to the `ExtensionRuntime` prelude. **If old apps can't run scripts that use it, bump `supportedExtensionApi`.**
 
 ### Recipe D: Try an unpublished extension in the app
@@ -60,7 +60,7 @@ Example: `migration` has `ImportLibrary` (domain), `PendingReadRepositoryImpl` (
 
 ### Recipe E: Ship newer bundled extensions
 ```bash
-# in bacakomik-ext-source
+# in yoru-ext-source
 bun run build
 bun scripts/bundle.ts ../bacakomik-app-flutter/assets/extensions bacakomik voratoon
 ```
@@ -102,7 +102,7 @@ Mihon extensions run in Kotlin, in `android/mihon` (ARCHITECTURE §8.9).
 
 ## 3. Project map
 
-Folders are explained in ARCHITECTURE §3. Shared test fakes are in `test/helpers/`, sample data in `test/fixtures/`. Extensions live in the private `bacakomik-ext-source` repo; a public extension source with its own set of extensions is [sofyan-rs/bacakomik-ext-public-source](https://github.com/sofyan-rs/bacakomik-ext-public-source).
+Folders are explained in ARCHITECTURE §3. Shared test fakes are in `test/helpers/`, sample data in `test/fixtures/`. Extensions live in the private `yoru-ext-source` repo; a public extension source with its own set of extensions is [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source).
 
 Reading order: run the app; ARCHITECTURE §3–§4; `features/home/` end to end (entity → repository → use case → `HomeBloc` → `HomeScreen`); ARCHITECTURE §8 with `core/source/`; `comic_list_state.dart` and `latest`; `features/bookmark/` and `core/storage/` with ARCHITECTURE §7.
 

@@ -237,7 +237,11 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
   List<String> get repos {
     final raw = _settings.get(_reposKey);
     if (raw == null) return const [defaultRepo];
-    return (jsonDecode(raw) as List).cast<String>();
+    // A set: a repo saved under its old and new URL is listed once.
+    return {
+      for (final url in (jsonDecode(raw) as List).cast<String>())
+        movedRepoUrl(url)!,
+    }.toList();
   }
 
   /// Installs or upgrades the bundled extensions. Called once on start.

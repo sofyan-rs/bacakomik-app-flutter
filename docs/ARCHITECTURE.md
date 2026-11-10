@@ -114,8 +114,8 @@ grep -rn "^import" lib/core/domain lib/features/*/domain | grep -E "package:flut
 | I'm writing… | Put it in |
 |---|---|
 | A rule about comics, bookmarks, history | That feature's `domain/`, with a test |
-| Support for a new site | An extension in `bacakomik-ext-source`, not here |
-| A new source method | The contract in `bacakomik-ext-source`, then `SeriesRemoteDataSource` + a DTO in `core/data/models/` |
+| Support for a new site | An extension in `yoru-ext-source`, not here |
+| A new source method | The contract in `yoru-ext-source`, then `SeriesRemoteDataSource` + a DTO in `core/data/models/` |
 | A new host function | `ExtensionBridge.handle` + the prelude in `ExtensionRuntime` (bump `supportedExtensionApi` if old apps can't run it) |
 | Data stored on the device | A feature `*_local_data_source.dart` over a `JsonBox` (§7) |
 | A widget used by several features | `core/presentation/widgets/` |
@@ -340,12 +340,12 @@ A source is one site; a multi-language extension is one source per enabled langu
 | Comic | `sourceId:slug` (bare slug for `bacakomik`) | `mysource:some-title`, `solo-leveling` |
 | Chapter | `<comicKey>/<number>` | `mysource:some-title/14` |
 
-`SourceRegistry` (`ExtensionManager`) gives `activeSource` and `backend(sourceId)`. `SeriesRemoteDataSource` is the only caller of source methods: `browse`, `series`, `chapters`, `chapter` (plus optional `filters()`, `home`, `webUrl`; contract in `bacakomik-ext-source/types/bridge.d.ts`). DTOs convert with `ApiFormat` (`9.25` → `"9.3"`, missing format → `"-"`, dates → "3 h ago") and turn source slugs into comic keys. The active source defaults to `bacakomik`, else the first installed; with none, Home and Explore show `noSourceMessage` and lead to Extensions.
+`SourceRegistry` (`ExtensionManager`) gives `activeSource` and `backend(sourceId)`. `SeriesRemoteDataSource` is the only caller of source methods: `browse`, `series`, `chapters`, `chapter` (plus optional `filters()`, `home`, `webUrl`; contract in `yoru-ext-source/types/bridge.d.ts`). DTOs convert with `ApiFormat` (`9.25` → `"9.3"`, missing format → `"-"`, dates → "3 h ago") and turn source slugs into comic keys. The active source defaults to `bacakomik`, else the first installed; with none, Home and Explore show `noSourceMessage` and lead to Extensions.
 
 ### 8.2 Extensions and repos
 `ExtensionManager` owns installed extensions, repos and runtimes.
 
-- **Repos:** `index.json` URLs (and Mihon repos' `index.min.json`, §8.9), stored in `source_settings` → `repos`; default `https://bacakomik-ext.kurodev.org/index.json` (the built `dist/` of `bacakomik-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
+- **Repos:** `index.json` URLs (and Mihon repos' `index.min.json`, §8.9), stored in `source_settings` → `repos`; default `https://bacakomik-ext.kurodev.org/index.json` (the built `dist/` of `yoru-ext-source`, on a Cloudflare Worker). `addRepo` rejects non-index URLs.
 - **`ExtensionMeta`:** `id` (`[a-z0-9_-]`, file name and key prefix), `name`, `lang`, semver `version`, `apiVersion` (app supports `supportedExtensionApi = 1`; higher is listed but not installable), `baseUrl`, `file`, `sha256`, `nsfw`, `languages`, and optional **`urlPatterns`**: regexes whose one capture group is the slug in a series URL path (`slugFromUrl`), used by the Mihon import (§6.4).
 - **Install:** download, check `sha256`, load once in a throwaway runtime (failing scripts aren't installed), save the script and meta. Updating = installing the newer version. `catalog()` fetches repos in parallel (a failing repo shows as an error) and sets `updateCount`.
 - **Uninstall** removes the script, meta, language setting, and each source's cookies, storage and hidden page.
