@@ -215,11 +215,11 @@ jobs:
           APPDIR=build/AppDir
           mkdir -p "$APPDIR/usr/bin" dist
           cp -r build/linux/x64/release/bundle/. "$APPDIR/usr/bin/"
-          cp linux/packaging/bacakomik.desktop linux/packaging/bacakomik.png "$APPDIR/"
+          cp linux/packaging/yoru.desktop linux/packaging/yoru.png "$APPDIR/"
           cat > "$APPDIR/AppRun" <<'SH'
           #!/bin/sh
           HERE="$(dirname "$(readlink -f "$0")")"
-          exec "$HERE/usr/bin/bacakomik" "$@"
+          exec "$HERE/usr/bin/yoru" "$@"
           SH
           chmod +x "$APPDIR/AppRun"
           wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage

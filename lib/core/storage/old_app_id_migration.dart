@@ -9,44 +9,60 @@ const oldAppId = 'org.kurodev.bacakomik';
 /// The app's id since 2.17.0.
 const appId = 'org.kurodev.yoru';
 
-/// On macOS and Linux the app data folder is named after the app id, so the
-/// rename left the library in `…/org.kurodev.bacakomik`. On the first start
-/// with the new id, that folder is moved to the new place, before Hive opens
-/// anything. Debug builds (`org.kurodev.yoru.debug`) move their own folder.
+/// Windows names the data folder `%APPDATA%\<CompanyName>\<ProductName>`
+/// from Runner.rc; ProductName was BacaKomik until 2.17.2.
+const oldWindowsProductName = 'BacaKomik';
+const windowsProductName = 'Yoru';
+
+/// Moves the library left under the app's old name to the new data folder,
+/// on the first start after the rename, before Hive opens anything:
+/// - macOS and Linux name the folder after the app id, so
+///   `…/org.kurodev.bacakomik` moves to `…/org.kurodev.yoru` (debug builds,
+///   `org.kurodev.yoru.debug`, move their own folder);
+/// - Windows moves `%APPDATA%\kurodev\BacaKomik` to `%APPDATA%\kurodev\Yoru`.
 ///
-/// Windows names the folder after `ProductName` in Runner.rc, which did not
-/// change. Android and iOS keep each app's data apart, so there the library
-/// comes over through a backup file or Drive sync.
+/// Android and iOS keep each app's data apart, so there the library comes
+/// over through a backup file or Drive sync.
 Future<void> moveDataFromOldAppId() async {
-  if (!Platform.isMacOS && !Platform.isLinux) return;
+  if (!Platform.isMacOS && !Platform.isLinux && !Platform.isWindows) return;
   try {
     final current = await getApplicationSupportDirectory();
-    final old = oldDataFolder(current.path);
+    final old = oldDataFolder(current.path, windows: Platform.isWindows);
     if (old == null) return;
-    final oldDir = Directory(old);
-    if (!oldDir.existsSync()) return;
-    // path_provider creates the new folder; anything in it means the app
-    // already ran with the new id, and that data wins.
-    if (current.existsSync()) {
-      if (current.listSync().isNotEmpty) return;
-      current.deleteSync();
-    }
-    oldDir.renameSync(current.path);
+    moveDataFolder(Directory(old), current);
   } catch (e) {
-    debugPrint('Data folder not moved from $oldAppId: $e');
+    debugPrint('Data folder not moved from the old app name: $e');
   }
 }
 
-/// The folder [current] had under the old id, or null when [current] is not
-/// named after the new id.
+/// Moves [old] to [current] when [old] exists and [current] holds nothing.
+/// path_provider creates [current]; anything in it means the app already
+/// ran under the new name, and that data wins.
 @visibleForTesting
-String? oldDataFolder(String current) {
+void moveDataFolder(Directory old, Directory current) {
+  if (!old.existsSync()) return;
+  if (current.existsSync()) {
+    if (current.listSync().isNotEmpty) return;
+    current.deleteSync();
+  }
+  old.renameSync(current.path);
+}
+
+/// The folder [current] had under the app's old name, or null when
+/// [current] is not named after the new one. [windows] picks the Windows
+/// naming (product name) over the app id one.
+@visibleForTesting
+String? oldDataFolder(String current, {bool windows = false}) {
   final sep = Platform.pathSeparator;
   final trimmed = current.endsWith(sep)
       ? current.substring(0, current.length - 1)
       : current;
   final cut = trimmed.lastIndexOf(sep);
+  final parent = trimmed.substring(0, cut + 1);
   final name = trimmed.substring(cut + 1);
+  if (windows) {
+    return name == windowsProductName ? '$parent$oldWindowsProductName' : null;
+  }
   if (name != appId && !name.startsWith('$appId.')) return null;
-  return '${trimmed.substring(0, cut + 1)}$oldAppId${name.substring(appId.length)}';
+  return '$parent$oldAppId${name.substring(appId.length)}';
 }

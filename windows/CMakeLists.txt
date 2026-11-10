@@ -4,7 +4,7 @@ project(yoru LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "bacakomik")
+set(BINARY_NAME "yoru")
 
 # flutter_inappwebview_windows still includes <experimental/coroutine>,
 # which Visual Studio 2026 turns into an error unless silenced.

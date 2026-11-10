@@ -159,16 +159,19 @@ class DesktopAppInstaller implements AppInstaller {
     if (Platform.isMacOS) {
       // …/Yoru.app/Contents/MacOS/Yoru
       final app = File(Platform.resolvedExecutable).parent.parent.parent.path;
+      // The new bundle keeps its own name next to the old one's place, so
+      // an install from before the rename (BacaKomik.app) becomes Yoru.app.
       script = r'''
 while kill -0 "$PID" 2>/dev/null; do sleep 0.3; done
 dir=$(mktemp -d)
 ditto -x -k "$FILE" "$dir" || exit 1
 new=$(find "$dir" -maxdepth 1 -name '*.app' | head -n 1)
 [ -n "$new" ] || exit 1
-rm -rf "$APP" && mv "$new" "$APP"
-xattr -dr com.apple.quarantine "$APP" 2>/dev/null
+dest="$(dirname "$APP")/$(basename "$new")"
+rm -rf "$APP" "$dest" && mv "$new" "$dest"
+xattr -dr com.apple.quarantine "$dest" 2>/dev/null
 rm -rf "$dir" "$FILE"
-open "$APP"
+open "$dest"
 ''';
       env = {'APP': app};
     } else if (Platform.isLinux) {
