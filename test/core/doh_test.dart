@@ -118,9 +118,32 @@ void main() {
       );
       final custom = DohServer.fromSetting('https://dns.example/dns-query');
       expect(custom?.name, 'dns.example');
+      expect(custom?.shortName, 'dns.example');
+      expect(DohServer.fromSetting('google')?.shortName, 'Google');
       expect(custom?.bootstrap, isEmpty);
       expect(DohServer.fromSetting('http://dns.example/q'), isNull);
-      expect(DohServer.fromSetting('nonsense'), isNull);
+      expect(DohServer.fromSetting('https://'), isNull);
+    });
+
+    test('https:// and /dns-query are optional when typed', () {
+      expect(
+        DohServer.normalizeCustomUrl(' dns.example.com '),
+        'https://dns.example.com/dns-query',
+      );
+      expect(
+        DohServer.normalizeCustomUrl('dns.example.com/resolve'),
+        'https://dns.example.com/resolve',
+      );
+      expect(
+        DohServer.normalizeCustomUrl('https://1.1.1.1/'),
+        'https://1.1.1.1/dns-query',
+      );
+      expect(
+        DohServer.normalizeCustomUrl('https://dns.example:8443/q'),
+        'https://dns.example:8443/q',
+      );
+      expect(DohServer.normalizeCustomUrl('http://dns.example'), isNull);
+      expect(DohServer.normalizeCustomUrl(''), isNull);
     });
 
     test('every preset has an https URL and bootstrap addresses', () {

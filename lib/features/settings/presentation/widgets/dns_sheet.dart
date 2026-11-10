@@ -14,7 +14,7 @@ import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
 /// The DNS over HTTPS setting as shown in More: "Off", a preset's name, or
 /// a custom server's host.
 String dnsSettingLabel(String setting) =>
-    DohServer.fromSetting(setting)?.name ?? AppText.dnsOff;
+    DohServer.fromSetting(setting)?.shortName ?? AppText.dnsOff;
 
 /// Picks the DNS over HTTPS server: off, a preset, or a custom URL.
 Future<void> showDnsSheet(BuildContext context) =>
@@ -55,11 +55,12 @@ class _DnsSheetState extends State<_DnsSheet> {
   }
 
   void _useCustom() {
-    final url = _url.text.trim();
-    if (!DohServer.isValidCustomUrl(url)) {
+    final url = DohServer.normalizeCustomUrl(_url.text);
+    if (url == null) {
       setState(() => _error = AppText.dnsCustomInvalid);
       return;
     }
+    _url.text = url;
     _pick(url);
   }
 

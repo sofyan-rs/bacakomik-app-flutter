@@ -18,6 +18,9 @@ class DohServer {
   final String id;
   final String name;
 
+  /// [name] without the address in brackets, for the row in More.
+  String get shortName => name.split(' (').first;
+
   /// The `…/dns-query` endpoint.
   final String url;
 
@@ -34,15 +37,28 @@ class DohServer {
     for (final preset in dohPresets) {
       if (preset.id == value) return preset;
     }
-    if (!isValidCustomUrl(value)) return null;
-    return DohServer(id: value, name: Uri.parse(value).host, url: value);
+    final url = normalizeCustomUrl(value);
+    if (url == null) return null;
+    return DohServer(id: url, name: Uri.parse(url).host, url: url);
   }
 
-  /// Whether [url] can be a custom server: an `https://` URL with a host.
-  static bool isValidCustomUrl(String url) {
-    final uri = Uri.tryParse(url.trim());
-    return uri != null && uri.isScheme('https') && uri.host.isNotEmpty;
+  /// A typed server address as a DoH URL: `https://` is added when no
+  /// scheme is given, and `/dns-query` when no path is. Null when it has no
+  /// host or another scheme (DoH is HTTPS only), e.g. `http://…`.
+  static String? normalizeCustomUrl(String input) {
+    var value = input.trim();
+    if (value.isEmpty) return null;
+    if (!value.contains('://')) value = 'https://$value';
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.isScheme('https') || uri.host.isEmpty) {
+      return null;
+    }
+    final path = uri.path.isEmpty || uri.path == '/' ? '/dns-query' : uri.path;
+    return uri.replace(path: path).toString();
   }
+
+  /// Whether [url] can be a custom server ([normalizeCustomUrl] takes it).
+  static bool isValidCustomUrl(String url) => normalizeCustomUrl(url) != null;
 }
 
 /// The servers offered in settings. All answer DoH over HTTP/1.1, which

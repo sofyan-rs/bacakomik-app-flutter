@@ -449,8 +449,9 @@ class AppText {
   static const String dnsOff = 'Off';
   static const String dnsOffDescription = 'Use the network’s DNS';
   static const String dnsCustom = 'Custom';
-  static const String dnsCustomHint = 'https://…/dns-query';
-  static const String dnsCustomInvalid = 'Enter an https:// address';
+  static const String dnsCustomHint = 'dns.example.com or https://…/dns-query';
+  static const String dnsCustomInvalid =
+      'Enter a server address (https only, not http)';
   static const String dnsUseCustom = 'Use this server';
   static const String dnsCoverageAndroid =
       'On Android this covers Mihon extensions. JS extensions, images and '
