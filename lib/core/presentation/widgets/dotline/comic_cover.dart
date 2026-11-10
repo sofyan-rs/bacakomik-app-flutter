@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' show PointMode;
 
@@ -75,19 +76,7 @@ class ComicCover extends StatelessWidget {
               // thumbnails are 44 wide while covers are often 600+.
               builder: (context, constraints) {
                 final width = _decodeWidth(context, constraints.maxWidth);
-                return CachedNetworkImage(
-                  key: coverKey(imageUrl),
-                  cacheManager: coverImageCache,
-                  imageUrl: imageUrl,
-                  fit: BoxFit.cover,
-                  memCacheWidth: width,
-                  fadeInDuration: DotMotion.press,
-                  placeholder: (_, _) => const DotGridPlaceholder(),
-                  errorWidget: (_, url, _) {
-                    forgetFailedCover(url, width);
-                    return const DotGridPlaceholder();
-                  },
-                );
+                return _CoverImage(url: imageUrl, decodeWidth: width);
               },
             ),
           // "-" is what a source without a format maps to.
@@ -105,6 +94,85 @@ class ComicCover extends StatelessWidget {
     return ratio == null
         ? cover
         : AspectRatio(aspectRatio: ratio, child: cover);
+  }
+}
+
+/// A cover image that asks again, a few times, after it fails.
+///
+/// A failed cover is forgotten ([forgetFailedCover]), but nothing rebuilds
+/// it: a library that arrives all at once (the first sync on an empty
+/// device) starts hundreds of downloads, some fail (timeouts, a Cloudflare
+/// block before the WebView has the host's cookies), and they stayed
+/// placeholders until the app restarted.
+class _CoverImage extends StatefulWidget {
+  const _CoverImage({required this.url, required this.decodeWidth});
+
+  final String url;
+  final int? decodeWidth;
+
+  /// Wait before each retry; no more retries after the last.
+  static const retryDelays = [
+    Duration(seconds: 2),
+    Duration(seconds: 8),
+    Duration(seconds: 30),
+  ];
+
+  @override
+  State<_CoverImage> createState() => _CoverImageState();
+}
+
+class _CoverImageState extends State<_CoverImage> {
+  int _retries = 0;
+  Timer? _retry;
+
+  @override
+  void didUpdateWidget(_CoverImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _retry?.cancel();
+      _retry = null;
+      _retries = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _retry?.cancel();
+    super.dispose();
+  }
+
+  /// Called from the error builder, which can run more than once for one
+  /// failure: schedules one retry at a time.
+  void _scheduleRetry() {
+    if (_retry != null || _retries >= _CoverImage.retryDelays.length) return;
+    _retry = Timer(_CoverImage.retryDelays[_retries], () {
+      if (!mounted) return;
+      // [coverKey] changed when the cover was forgotten: the rebuild makes
+      // a new image that downloads it again.
+      setState(() {
+        _retries++;
+        _retry = null;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CachedNetworkImage(
+      key: coverKey(widget.url),
+      cacheManager: coverImageCache,
+      imageUrl: widget.url,
+      fit: BoxFit.cover,
+      memCacheWidth: widget.decodeWidth,
+      fadeInDuration: DotMotion.press,
+      placeholder: (_, _) => const DotGridPlaceholder(),
+      errorWidget: (_, url, _) {
+        // Once per failure: the builder runs again on rebuilds.
+        if (_retry == null) forgetFailedCover(url, widget.decodeWidth);
+        _scheduleRetry();
+        return const DotGridPlaceholder();
+      },
+    );
   }
 }
 

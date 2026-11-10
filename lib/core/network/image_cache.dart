@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -175,20 +176,37 @@ class _BrowserLikeFileService extends FileService {
     return _getDirect(url, headers);
   }
 
+  /// Longest wait for a direct request's response headers, and between two
+  /// chunks of its body.
+  static const _directTimeout = Duration(seconds: 30);
+
+  /// One request, no WebView.
+  ///
+  /// The cache manager runs [concurrentFetches] downloads at a time and
+  /// queues the rest, and neither it nor Cronet gives up on a stalled
+  /// connection. Without [_directTimeout] a few stalled requests held every
+  /// slot, and every image not cached yet stayed a placeholder (no error,
+  /// so no retry) until the app restarted. A request that times out fails
+  /// like any other, and frees its slot. Mihon images and in-page fetches
+  /// have timeouts of their own (OkHttp's, [HeadlessPages]').
   Future<FileServiceResponse> _getDirect(
     Uri url,
     Map<String, String>? headers,
   ) async {
     final cookie = await _cookies.header(url);
-    return _inner.get(
-      url.toString(),
-      headers: {
-        ..._imageHeaders,
-        if (_plainAgentHosts.contains(url.host)) 'User-Agent': _plainUserAgent,
-        if (cookie.isNotEmpty) 'Cookie': cookie,
-        ...?headers,
-      },
-    );
+    final response = await _inner
+        .get(
+          url.toString(),
+          headers: {
+            ..._imageHeaders,
+            if (_plainAgentHosts.contains(url.host))
+              'User-Agent': _plainUserAgent,
+            if (cookie.isNotEmpty) 'Cookie': cookie,
+            ...?headers,
+          },
+        )
+        .timeout(_directTimeout);
+    return _IdleTimeoutResponse(response, _directTimeout);
   }
 
   /// Whether [response] is a block the WebView can get past; remembers
@@ -309,6 +327,39 @@ class _ImagePages extends HeadlessPages {
 
   /// Hidden WebViews exist on Android only here.
   bool get available => !kIsWeb && Platform.isAndroid;
+}
+
+/// [_response] whose body fails with a [TimeoutException] when no chunk
+/// comes for [_idle].
+class _IdleTimeoutResponse implements FileServiceResponse {
+  _IdleTimeoutResponse(this._response, this._idle);
+
+  final FileServiceResponse _response;
+  final Duration _idle;
+
+  @override
+  Stream<List<int>> get content => _response.content.timeout(
+    _idle,
+    onTimeout: (sink) {
+      sink.addError(TimeoutException('No image data for $_idle', _idle));
+      sink.close();
+    },
+  );
+
+  @override
+  int? get contentLength => _response.contentLength;
+
+  @override
+  int get statusCode => _response.statusCode;
+
+  @override
+  DateTime get validTill => _response.validTill;
+
+  @override
+  String? get eTag => _response.eTag;
+
+  @override
+  String get fileExtension => _response.fileExtension;
 }
 
 /// An image downloaded in a WebView.
