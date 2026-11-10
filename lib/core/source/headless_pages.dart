@@ -291,7 +291,7 @@ class HeadlessPages {
       b.endsWith('.$a') ||
       a == 'challenges.cloudflare.com';
 
-  static const _hiddenWebViews = MethodChannel('bacakomik/hidden_webviews');
+  static const _hiddenWebViews = MethodChannel('yoru/hidden_webviews');
 
   /// Lets [page] render at alpha 0, or hides it again (see MainActivity).
   static Future<void> _show(_Page page, bool render) async {

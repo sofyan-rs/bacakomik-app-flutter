@@ -56,7 +56,7 @@ Future saveImg({
     // The gallery names the file by its extension, and cached files have
     // none it can use.
     final (data, extension) = await galleryImage(bytes);
-    final name = 'bacakomik_${DateTime.now().millisecondsSinceEpoch}$extension';
+    final name = 'yoru_${DateTime.now().millisecondsSinceEpoch}$extension';
     // Desktops have no gallery: the user picks where the file goes.
     if (!Platform.isAndroid && !Platform.isIOS) {
       final saved = await FilePicker.saveFile(fileName: name, bytes: data);

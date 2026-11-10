@@ -36,7 +36,7 @@ Future<void> main() async {
   final extensions = getIt<ExtensionManager>();
   await extensions.installBundled();
   await _fixRelativeCovers(extensions);
-  runApp(const BacaKomikApp());
+  runApp(const YoruApp());
   // In the background: finds extension updates for the badge in More.
   unawaited(extensions.catalog());
   unawaited(_moveCoversToCoverCache());

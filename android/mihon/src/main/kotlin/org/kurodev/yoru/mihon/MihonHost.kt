@@ -36,7 +36,7 @@ import java.io.File
 
 /**
  * Runs Mihon extensions inside the app. The app's Dart side calls [handle]
- * (through the `bacakomik/mihon` channel) and [image] for `mihon://` images.
+ * (through the `yoru/mihon` channel) and [image] for `mihon://` images.
  *
  * Calls (args and results are JSON):
  *

@@ -128,7 +128,7 @@ class _BrowserLikeFileService extends FileService {
   /// check, yet serves any other User-Agent. They get [_plainUserAgent].
   final _plainAgentHosts = <String>{};
 
-  static const _plainUserAgent = 'BacaKomik';
+  static const _plainUserAgent = 'Yoru';
 
   /// Whether [response] is a web page where an image was asked for, from a
   /// host that has not had [_plainUserAgent] yet; remembers the host.

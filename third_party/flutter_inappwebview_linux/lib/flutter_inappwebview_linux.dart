@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview_platform_interface/flutter_inappwebview_platform_interface.dart';
 
-const _rawChannel = MethodChannel('bacakomik/inappwebview_linux');
+const _rawChannel = MethodChannel('yoru/inappwebview_linux');
 
 /// The plugin's channel, listening for its events from the first use on:
 /// the binding does not exist yet when the plugin registers.

@@ -111,7 +111,7 @@ void main() {
     test('file name keeps the old pattern', () {
       expect(
         BackupRepositoryImpl.fileName(DateTime(2026, 3, 4, 5, 6, 7)),
-        'bacakomik-backup-2026-3-4-567.json',
+        'yoru-backup-2026-3-4-567.json',
       );
     });
   });
@@ -133,7 +133,7 @@ void main() {
       expect(await repo.exportBackup(backup), right(true));
       verify(
         () => files.writeFile(
-          '/backups/bacakomik-backup-2026-3-4-567.json',
+          '/backups/yoru-backup-2026-3-4-567.json',
           BackupRepositoryImpl.encode(backup),
         ),
       ).called(1);

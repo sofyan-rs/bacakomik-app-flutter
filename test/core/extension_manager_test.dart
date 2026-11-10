@@ -69,7 +69,7 @@ void main() {
 
   setUp(() async {
     tearDownHive = await setUpTempHive();
-    support = await Directory.systemTemp.createTemp('bacakomik_support_');
+    support = await Directory.systemTemp.createTemp('yoru_support_');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('plugins.flutter.io/path_provider'),

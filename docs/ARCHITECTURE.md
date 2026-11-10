@@ -69,12 +69,12 @@ Versions are in `pubspec.yaml`; read §10.1 before touching `freezed` or the gen
 | Path | What it is | Do you edit it? |
 |---|---|---|
 | `lib/main.dart` | `Hive.init` → DI → bundled extensions → `runApp` | Rarely |
-| `lib/app/` | `BacaKomikApp` (app-wide providers, listeners, theme), splash, `RootScreen` (5 tabs, update check), `RootTabs` | When wiring several features together |
+| `lib/app/` | `YoruApp` (app-wide providers, listeners, theme), splash, `RootScreen` (5 tabs, update check), `RootTabs` | When wiring several features together |
 | `lib/core/` | Shared code: `constants/` (`AppText`), `theme/`, `di/`, `error/`, `network/`, `notifications/`, `source/` (§8), `storage/` (§7), `usecase/`, shared `domain/`, `data/`, `presentation/` widgets, `utils/` | When something is shared |
 | `lib/features/<name>/` | One folder per feature (table below) | Yes, most work |
 | `*.freezed.dart`, `*.g.dart`, `injection.config.dart`, `core/assets/*.gen.dart` | Generated (§10) | No |
 | `assets/extensions/` | Bundled extensions (§8.2) | Only via `bundle.ts` (CONTRIBUTION §2) |
-| `android/…/MainActivity.kt` | `bacakomik/hidden_webviews` channel (§8.5); registers `MihonChannel` (`bacakomik/mihon`); asks for the display's fastest mode at its resolution (`preferredDisplayModeId`), as some phones keep apps at 60 Hz otherwise | Rarely |
+| `android/…/MainActivity.kt` | `yoru/hidden_webviews` channel (§8.5); registers `MihonChannel` (`yoru/mihon`); asks for the display's fastest mode at its resolution (`preferredDisplayModeId`), as some phones keep apps at 60 Hz otherwise | Rarely |
 | `android/mihon/` | Runs Mihon extension APKs (§8.9) | When Mihon's API or a host call changes |
 | `android/app/src/main/AndroidManifest.xml` | Permissions, deep links, notification action receiver | Rarely |
 | `hosting/` | Cloudflare Worker for `yoru.kurodev.org` (and the old `bacakomik.kurodev.org`) | Rarely |
@@ -294,7 +294,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and history by `readDate` (newest first, equal dates by slug), categories by `order`. `HistoryIndex` uses a list already in that order as is. Bookmarks re-sorts by the chosen `BookmarkSort` (`sortBookmarks`, stable). Saving an existing key replaces it.
 
 ### 7.4 Backup files
-`bacakomik-backup-<y>-<m>-<d>-<h><min><s>.json`, in a folder the user picks:
+`yoru-backup-<y>-<m>-<d>-<h><min><s>.json` (`bacakomik-backup-…` before 2.17.1; restore reads either), in a folder the user picks:
 
 ```jsonc
 { "version": 2, "bookmarks": [ … ], "history": [ … ], "historyComics": [ … ],
@@ -380,7 +380,7 @@ The `bacakomik` extension wraps the project's own bacakomik-api (`https://api-ba
 
 - **A failed run closes the page**, so the next run starts fresh with the cookies the user got in the visible WebView. A kept page showing "Just a moment" is reloaded.
 - Popups are refused; main-frame navigation to other hosts is cancelled (subdomains and `challenges.cloudflare.com` allowed).
-- **Rendering:** hidden WebViews don't render, so lazy pages load nothing. Extension pages are rendered only while a script runs, and any page while it shows a "Just a moment" check: Dart calls `render` / `hide` with the WebView's id on `bacakomik/hidden_webviews`; `MainActivity.kt` moves it into an `Untouchable` frame at alpha 0 and makes it visible, so Chromium renders it while the user can't see or touch it. Image-host pages never render.
+- **Rendering:** hidden WebViews don't render, so lazy pages load nothing. Extension pages are rendered only while a script runs, and any page while it shows a "Just a moment" check: Dart calls `render` / `hide` with the WebView's id on `yoru/hidden_webviews`; `MainActivity.kt` moves it into an `Untouchable` frame at alpha 0 and makes it visible, so Chromium renders it while the user can't see or touch it. Image-host pages never render.
 
 **WebView screen** shows the site with the extension's User-Agent. `SourceError` opens it on a challenge URL, the comic page on `webUrl`, and the reader the chapter page (`webUrl(slug, number)`; a source that ignores the number gives the comic page). It copies cookies (e.g. `cf_clearance`) after every load; the failed screen retries when it closes; it can clear the source's cookies.
 
@@ -405,7 +405,7 @@ An extension APK is compiled code written against Mihon's source API (`eu.kanade
 
 ```
 ExtensionManager ─► MihonSource (LoadedSource) ─┐
-image caches (mihon:// URLs) ───────────────────┼─ channel bacakomik/mihon ─► MihonChannel (app) ─► MihonHost (android/mihon)
+image caches (mihon:// URLs) ───────────────────┼─ channel yoru/mihon ─► MihonChannel (app) ─► MihonHost (android/mihon)
 MihonInstaller ─────────────────────────────────┘     ├─ Contract, Filters, Description, ChapterRecognition, Images, Slugs, SourceIndex
                                                       └─ ExtensionHost + AndroidLoader (vendored from SCANCORE)
 ```
@@ -456,7 +456,7 @@ Details and chapters are separate `getMangaUpdate` calls, details first, one at 
 - **APK files:** `<app support>/extensions/<id>-<versionCode>-<time>.apk`, read-only (Android 14 refuses writable code). Every install gets a new file; the old one is deleted after the new one installs.
 - **Updates:** a higher `versionCode`, same badge and button as JS. Lib versions: `supportedMihonLibs` (`1.4`–`1.6`) must match `AndroidLoader.libs`.
 - **Images** need the source's own client (headers, cookies, interceptors that unscramble pages): `mihon://<sourceId>/cover/<b64url>` and `mihon://<sourceId>/page/<b64url of page JSON>` (`Images.kt`), fetched by the image caches' `FileService` through the channel (§8.6). The same on every device, so stored covers survive sync.
-- **Downloads:** `mihon://` pages go to the background downloader as `http://127.0.0.1:<port>/<token>/image?u=…` (`MihonProxy.kt`, a local server started with the process from `BacaKomikApplication`, which starts the host by itself with the last User-Agent when Dart isn't running). The port is kept across runs; the token keeps other apps out. Without the server they are saved through `comicImageCache` while the app runs (§7.5).
+- **Downloads:** `mihon://` pages go to the background downloader as `http://127.0.0.1:<port>/<token>/image?u=…` (`MihonProxy.kt`, a local server started with the process from `YoruApplication`, which starts the host by itself with the last User-Agent when Dart isn't running). The port is kept across runs; the token keeps other apps out. Without the server they are saved through `comicImageCache` while the app runs (§7.5).
 - **Settings:** `ConfigurableSource` screens are read with androidx.preference (`AndroidSettings`) and shown in a Dotline sheet (`mihon_settings_sheet.dart`); values stay in the extension's `source_<id>` SharedPreferences, not in backup or sync. The button shows only for extensions with a configurable source.
 - **Cloudflare:** `CloudflareInterceptor` solves automatic checks in a hidden WebView; one that needs the user becomes "Verify in WebView". Extensions and the app's WebViews share Android's `CookieManager`.
 

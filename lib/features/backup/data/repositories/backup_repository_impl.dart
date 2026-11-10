@@ -48,7 +48,7 @@ class BackupRepositoryImpl implements BackupRepository {
   }
 
   static String fileName(DateTime now) =>
-      'bacakomik-backup-${now.year}-${now.month}-${now.day}-'
+      'yoru-backup-${now.year}-${now.month}-${now.day}-'
       '${now.hour}${now.minute}${now.second}.json';
 
   /// Current backup file format. Files with another version are rejected.

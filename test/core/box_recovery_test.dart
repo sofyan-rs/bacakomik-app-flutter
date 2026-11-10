@@ -38,7 +38,7 @@ void main() {
   late Directory dir;
 
   setUp(() async {
-    dir = await Directory.systemTemp.createTemp('bacakomik_recovery_');
+    dir = await Directory.systemTemp.createTemp('yoru_recovery_');
     Hive.init(dir.path);
     hiveDirectory = dir.path;
   });

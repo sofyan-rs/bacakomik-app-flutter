@@ -49,7 +49,7 @@ void progressActionInBackground(NotificationResponse response) {
 @LazySingleton(as: ProgressNotifier)
 class LocalProgressNotifier implements ProgressNotifier {
   static const cancelAction = 'cancel';
-  static const portName = 'bacakomik_progress_actions';
+  static const portName = 'yoru_progress_actions';
 
   final _plugin = FlutterLocalNotificationsPlugin();
   Future<bool>? _ready;

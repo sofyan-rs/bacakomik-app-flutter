@@ -27,13 +27,13 @@ abstract interface class MihonHost {
   Future<String?> httpUrl(String url);
 }
 
-/// [MihonHost] over the `bacakomik/mihon` channel (`MihonChannel.kt`).
+/// [MihonHost] over the `yoru/mihon` channel (`MihonChannel.kt`).
 class ChannelMihonHost implements MihonHost {
   ChannelMihonHost._();
 
   static final instance = ChannelMihonHost._();
 
-  static const _channel = MethodChannel('bacakomik/mihon');
+  static const _channel = MethodChannel('yoru/mihon');
 
   Future<bool>? _available;
   Future<void>? _started;

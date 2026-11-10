@@ -76,7 +76,7 @@ void main() {
 
   setUp(() async {
     tearDownHive = await setUpTempHive();
-    dir = await _fs.systemTempDirectory.createTemp('bacakomik_covers_');
+    dir = await _fs.systemTempDirectory.createTemp('yoru_covers_');
     await _fs.directory('${dir.path}/pages').create();
     await _fs.directory('${dir.path}/covers').create();
     flags = await Hive.openBox<String>('settings');

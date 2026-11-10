@@ -4,7 +4,7 @@ import android.app.Application
 import org.kurodev.yoru.mihon.MihonHost
 import org.kurodev.yoru.mihon.MihonProxy
 
-class BacaKomikApplication : Application() {
+class YoruApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         // Background downloads of Mihon pages may run with no activity and

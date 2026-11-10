@@ -24,14 +24,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// App-wide blocs: the bottom-navigation tabs and the user's library.
 /// Screen-specific blocs are provided by their own routes. [RootTabs] sits
 /// above the navigator so pushed routes can switch tabs.
-class BacaKomikApp extends StatefulWidget {
-  const BacaKomikApp({super.key});
+class YoruApp extends StatefulWidget {
+  const YoruApp({super.key});
 
   @override
-  State<BacaKomikApp> createState() => _BacaKomikAppState();
+  State<YoruApp> createState() => _YoruAppState();
 }
 
-class _BacaKomikAppState extends State<BacaKomikApp> {
+class _YoruAppState extends State<YoruApp> {
   final _tabs = RootTabs();
   final _navigator = GlobalKey<NavigatorState>();
 

@@ -684,7 +684,7 @@ void inappwebview_linux_plugin_register_with_registrar(
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   plugin->channel = fl_method_channel_new(
       fl_plugin_registrar_get_messenger(registrar),
-      "bacakomik/inappwebview_linux", FL_METHOD_CODEC(codec));
+      "yoru/inappwebview_linux", FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(plugin->channel, HandleCall,
                                             nullptr, nullptr);
 }

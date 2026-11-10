@@ -32,7 +32,7 @@ npm run deploy
 ```
 
 `kurodev.org` must be a zone on the same Cloudflare account; deploy
-creates the `bacakomik` DNS record (custom domain in `wrangler.toml`).
+creates the `yoru` and `bacakomik` DNS records (custom domains in `wrangler.toml`).
 
 Android verifies the link when the app is installed. After the first
 deploy, re-verify an installed app:

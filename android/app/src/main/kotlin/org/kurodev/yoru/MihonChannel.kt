@@ -16,7 +16,7 @@ import org.kurodev.yoru.mihon.MihonHost
 import org.kurodev.yoru.mihon.MihonProxy
 
 /**
- * `bacakomik/mihon`: Dart's way to [MihonHost].
+ * `yoru/mihon`: Dart's way to [MihonHost].
  *
  * - `supported` → bool.
  * - `start` {userAgent, appVersion}.
@@ -34,7 +34,7 @@ class MihonChannel(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        MethodChannel(messenger, "bacakomik/mihon").setMethodCallHandler { call, result ->
+        MethodChannel(messenger, "yoru/mihon").setMethodCallHandler { call, result ->
             if (call.method == "supported") return@setMethodCallHandler result.success(MihonHost.supported)
             if (call.method == "proxyBase") {
                 return@setMethodCallHandler result.success(if (MihonHost.supported) runCatching { MihonProxy.start(context) }.getOrNull() else null)
