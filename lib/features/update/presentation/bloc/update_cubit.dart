@@ -76,7 +76,10 @@ class UpdateCubit extends Cubit<UpdateState> {
           release,
           percent,
         ),
-        UpdateInstalling() => UpdateState.installing(release),
+        UpdateInstalling() => () {
+          debugPrint('UpdateCubit: installing update ${release.version}');
+          return UpdateState.installing(release);
+        }(),
         UpdateInstallFailed(:final message) => () {
           debugPrint('UpdateCubit: $message');
           return UpdateState.installFailed(release);

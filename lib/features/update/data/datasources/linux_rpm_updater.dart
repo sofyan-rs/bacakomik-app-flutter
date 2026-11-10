@@ -38,7 +38,7 @@ class LinuxRpmUpdater {
         '%{NAME}',
       ]);
       final name = '${result.stdout}'.trim();
-      return result.exitCode == 0 && (name == 'yoru' || name == 'bacakomik');
+      return result.exitCode == 0 && name == 'yoru';
     } on ProcessException {
       // RPM is not available on every Linux distribution.
       return false;
@@ -70,7 +70,6 @@ class LinuxRpmUpdater {
 
   static Future<void> _restartApp() async {
     // Run as the desktop user after the package transaction, never as root.
-    // The new launcher also handles upgrading the old bacakomik RPM.
     await Process.start(
       '/bin/sh',
       [

@@ -2,6 +2,10 @@
 %global debug_package %{nil}
 %global __os_install_post %{nil}
 
+# Bundled libraries are private to Yoru; keep system library requirements.
+%global __provides_exclude_from ^/opt/yoru/.*$
+%global __requires_exclude ^lib(flutter_linux_gtk|app|quickjs_c_bridge_plugin).*\.so.*$
+
 Name:           yoru
 Version:        %{app_version}
 Release:        1
@@ -11,17 +15,16 @@ URL:            https://github.com/sofyan-rs/yoru-comic-app
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      x86_64
 
-# Replace RPMs published before the app was renamed to Yoru.
-Provides:       bacakomik = %{version}-%{release}
-Obsoletes:      bacakomik < %{version}-%{release}
-
 # ELF dependencies are detected automatically. GStreamer's playback plugins
 # are loaded at runtime and must be required explicitly.
 Requires:       gtk3
 Requires:       gstreamer1-plugins-base
 Requires:       /usr/bin/rpm
-Requires:       /usr/bin/dnf
-Requires:       /usr/bin/pkexec
+
+# WebKitGTK is loaded at runtime; DNF and polkit are only needed for updates.
+Recommends:     webkit2gtk4.1
+Recommends:     /usr/bin/dnf
+Recommends:     /usr/bin/pkexec
 
 %description
 Browse, read and download manga, manhwa and manhua from extension sources,

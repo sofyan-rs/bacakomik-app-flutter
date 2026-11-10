@@ -11,25 +11,23 @@ import 'package:yoru/features/update/domain/entities/update_progress.dart';
 
 void main() {
   group('RPM installation detection', () {
-    test('recognizes current and pre-rename RPM ownership', () async {
-      for (final name in ['yoru', 'bacakomik']) {
-        final queries = <List<String>>[];
-        final rpm = LinuxRpmUpdater(
-          isLinux: true,
-          environment: {},
-          executable: '/opt/$name/$name',
-          run: (command, args) async {
-            expect(command, '/usr/bin/rpm');
-            queries.add(args);
-            return ProcessResult(1, 0, name, '');
-          },
-        );
-        expect(await rpm.isInstalled(), isTrue);
-        expect(await rpm.isInstalled(), isTrue);
-        expect(queries, [
-          ['--query', '--file', '/opt/$name/$name', '--queryformat', '%{NAME}'],
-        ]);
-      }
+    test('recognizes Yoru RPM ownership and caches the query', () async {
+      final queries = <List<String>>[];
+      final rpm = LinuxRpmUpdater(
+        isLinux: true,
+        environment: {},
+        executable: '/opt/yoru/yoru',
+        run: (command, args) async {
+          expect(command, '/usr/bin/rpm');
+          queries.add(args);
+          return ProcessResult(1, 0, 'yoru', '');
+        },
+      );
+      expect(await rpm.isInstalled(), isTrue);
+      expect(await rpm.isInstalled(), isTrue);
+      expect(queries, [
+        ['--query', '--file', '/opt/yoru/yoru', '--queryformat', '%{NAME}'],
+      ]);
     });
 
     test('AppImage and other platforms never probe or select an RPM', () async {
@@ -92,6 +90,7 @@ void main() {
     late List<(String, List<String>)> commands;
     late int installExitCode;
     late int responseCode;
+    late int requests;
     late bool restarted;
     late bool missingPkexec;
     final bytes = utf8.encode('test release package');
@@ -100,7 +99,9 @@ void main() {
       temp = await Directory.systemTemp.createTemp('yoru rpm test;');
       server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       responseCode = HttpStatus.ok;
+      requests = 0;
       server.listen((request) async {
+        requests++;
         request.response.statusCode = responseCode;
         request.response.contentLength = bytes.length;
         request.response.add(bytes);
@@ -212,6 +213,20 @@ void main() {
         expect(restarted, isTrue);
       },
     );
+
+    test('missing digest refuses the RPM before download or administrator approval', () async {
+      final progress = await installer
+          .install(asset().copyWith(sha256: null))
+          .toList();
+      expect(
+        (progress.single as UpdateInstallFailed).message,
+        'CHECKSUM_MISSING',
+      );
+      expect(requests, 0);
+      expect(commands.map((entry) => entry.$1), ['/usr/bin/rpm']);
+      expect(restarted, isFalse);
+      expect(await temp.list().toList(), isEmpty);
+    });
 
     test('checksum mismatch never invokes the privileged installer', () async {
       final progress = await installer.install(asset(checksum: 'bad')).toList();

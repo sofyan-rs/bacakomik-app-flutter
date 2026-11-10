@@ -112,6 +112,11 @@ class DesktopAppInstaller implements AppInstaller {
       yield const UpdateInstallFailed('Not running from an AppImage or RPM');
       return;
     }
+    // RPMs are installed as root, so a release digest is required before download.
+    if (isRpm && asset.sha256 == null) {
+      yield const UpdateInstallFailed('CHECKSUM_MISSING');
+      return;
+    }
 
     Directory? dir;
     try {
