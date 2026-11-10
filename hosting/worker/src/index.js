@@ -252,11 +252,12 @@ const STYLE = `
       text-decoration: none; font-family: var(--dot); font-weight: 900;
       font-size: 24px; line-height: 1; letter-spacing: -0.01em; }
     nav { display: flex; gap: 4px; }
-    nav a { display: inline-flex; align-items: center; height: 40px;
+    nav a { display: inline-flex; align-items: center; gap: 6px; height: 40px;
       padding: 0 12px; border-radius: 999px; text-decoration: none;
       color: var(--muted); transition: color 0.15s; }
     nav a:hover { color: var(--ink); }
 
+    .icon { width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; }
     .btn { display: inline-flex; align-items: center; justify-content: center;
       gap: 8px; height: 48px; padding: 0 24px; border-radius: 999px;
       font-weight: 500; text-decoration: none;
@@ -312,13 +313,24 @@ function head(title, extra = '') {
   ${extra}`;
 }
 
+// Lucide icons (https://lucide.dev, ISC license), inline so the page needs
+// no extra request. They take the colour and size of their text.
+const ICONS = {
+  'arrow-down': '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
+  'arrow-up-right': '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+};
+
+function icon(name) {
+  return `<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+}
+
 function topBar() {
   return `<header class="top">
     <div class="wrap">
       <a class="brand" href="/" aria-label="${APP_NAME} home"><span class="status"></span>${APP_NAME}</a>
       <nav class="label" aria-label="Main">
         <a href="/privacy-policy">Privacy</a>
-        <a href="${GITHUB}">GitHub ↗</a>
+        <a href="${GITHUB}">GitHub ${icon('arrow-up-right')}</a>
       </nav>
     </div>
   </header>`;
@@ -342,7 +354,7 @@ function siteFooter() {
     <div class="bottom">
       <div class="wrap label faint">
         <span>© ${new Date().getFullYear()} Kurodev</span>
-        <a href="${KURODEV}">kurodev.org ↗</a>
+        <a href="${KURODEV}">kurodev.org ${icon('arrow-up-right')}</a>
       </div>
     </div>
   </footer>`;
@@ -648,8 +660,8 @@ export function homePage(origin) {
           <p class="lead">Read manga, manhwa and manhua from several sources.
           <span>Made by Kurodev.</span></p>
           <div class="actions">
-            <a class="btn primary label" href="${DOWNLOAD}">Download the app ↓</a>
-            <a class="btn secondary label" href="${GITHUB}">GitHub ↗</a>
+            <a class="btn primary label" href="${DOWNLOAD}">Download the app ${icon('arrow-down')}</a>
+            <a class="btn secondary label" href="${GITHUB}">GitHub ${icon('arrow-up-right')}</a>
           </div>
           <div class="platforms label" aria-label="Platforms">
             <span class="chip">Android</span><span class="chip">Windows</span>
