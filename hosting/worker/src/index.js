@@ -193,6 +193,161 @@ function intentLink(url) {
   );
 }
 
+const GITHUB = 'https://github.com/sofyan-rs/bacakomik-app-flutter';
+const KURODEV = 'https://kurodev.org';
+const SCREENSHOT = (name) =>
+  `https://raw.githubusercontent.com/sofyan-rs/bacakomik-app-flutter/main/screenshot/${name}.png`;
+
+// Dotline, the design system of kurodev.org: monochrome, dark first, one red
+// signal colour, Doto dot-matrix display type, Geist Mono labels, pills and
+// hairlines. Light theme follows the system setting.
+const STYLE = `
+    :root { --bg: #000; --surface: #111; --raised: #1c1c1c;
+      --line: rgb(255 255 255 / 0.12); --line-strong: #4a4a4a; --ink: #fff;
+      --muted: #a6a6a6; --faint: #808080; --on-ink: #000; --accent: #e5211c;
+      --accent-text: #ff5a52; --positive: #4ad991; color-scheme: dark;
+      --dot: "Doto", ui-monospace, monospace;
+      --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+      --mono: "Geist Mono", ui-monospace, monospace; }
+    @media (prefers-color-scheme: light) {
+      :root { --bg: #f2f2f2; --surface: #fff; --raised: #e8e8e8;
+        --line: rgb(0 0 0 / 0.1); --line-strong: #bdbdbd; --ink: #000;
+        --muted: #4d4d4d; --faint: #6b6b6b; --on-ink: #fff; --accent: #d70015;
+        --accent-text: #d70015; --positive: #0b6b3c; color-scheme: light; }
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); color: var(--ink); font-family: var(--sans);
+      -webkit-font-smoothing: antialiased; }
+    body { margin: 0; font-size: 15px; line-height: 22px; }
+    ::selection { background: var(--ink); color: var(--on-ink); }
+    :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    a { color: inherit; }
+    img { display: block; max-width: 100%; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    @media (min-width: 640px) { .wrap { padding: 0 24px; } }
+    .label { font-family: var(--mono); font-size: 11px; line-height: 14px;
+      letter-spacing: 0.12em; text-transform: uppercase; }
+    .data { font-family: var(--mono); font-size: 13px; line-height: 18px; }
+    .muted { color: var(--muted); }
+    .faint { color: var(--faint); }
+    .status { display: inline-block; width: 6px; height: 6px;
+      border-radius: 50%; background: var(--accent); flex: none; }
+    .status.ok { background: var(--positive); }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.35; } }
+    .dot-grid { position: absolute; inset: 0; pointer-events: none;
+      opacity: 0.6;
+      background-image: radial-gradient(var(--line-strong) 1px, transparent 1.5px);
+      background-size: 8px 8px;
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 70% 40%, #000, transparent);
+      mask-image: radial-gradient(ellipse 70% 60% at 70% 40%, #000, transparent); }
+
+    header.top { position: sticky; top: 0; z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+    header.top .wrap { display: flex; align-items: center;
+      justify-content: space-between; height: 64px; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 8px;
+      text-decoration: none; font-family: var(--dot); font-weight: 900;
+      font-size: 24px; line-height: 1; letter-spacing: -0.01em; }
+    nav { display: flex; gap: 4px; }
+    nav a { display: inline-flex; align-items: center; height: 40px;
+      padding: 0 12px; border-radius: 999px; text-decoration: none;
+      color: var(--muted); transition: color 0.15s; }
+    nav a:hover { color: var(--ink); }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; height: 48px; padding: 0 24px; border-radius: 999px;
+      font-weight: 500; text-decoration: none;
+      transition: opacity 0.15s, background-color 0.15s; }
+    .btn:active { transform: scale(0.98); }
+    .btn.primary { background: var(--ink); color: var(--on-ink); }
+    .btn.primary:hover { opacity: 0.85; }
+    .btn.secondary { border: 1px solid var(--line-strong); color: var(--ink); }
+    .btn.secondary:hover { background: var(--raised); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .section-label { display: flex; align-items: center; gap: 12px;
+      color: var(--faint); margin: 0; }
+    .section-label b { font-weight: 400; color: var(--accent-text); }
+    .section-label::after { content: ""; flex: 1; height: 1px;
+      background: var(--line); }
+    .dot-title { font-family: var(--dot); font-weight: 700; font-size: 32px;
+      line-height: 36px; text-transform: uppercase; margin: 24px 0 0; }
+
+    footer.site { margin-top: 96px; border-top: 1px solid var(--line); }
+    footer.site .main { display: grid; gap: 24px; padding: 48px 16px; }
+    footer.site .name { font-family: var(--dot); font-weight: 700;
+      font-size: 32px; line-height: 36px; margin: 0; }
+    footer.site p { margin: 0; font-size: 13px; line-height: 18px; }
+    footer.site .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+    footer.site .links a { text-decoration: none; color: var(--muted); }
+    footer.site .links a:hover { color: var(--ink); }
+    footer.site .bottom { border-top: 1px solid var(--line); }
+    footer.site .bottom .wrap { display: flex; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; padding-top: 20px; padding-bottom: 20px; }
+    footer.site .bottom a { text-decoration: none; }
+    footer.site .bottom a:hover { color: var(--ink); }
+    @media (min-width: 640px) {
+      footer.site .main { grid-template-columns: 1fr auto; align-items: end;
+        padding: 48px 24px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important;
+        transition: none !important; }
+    }`;
+
+// The <head> every page shares: fonts, the Dotline styles, and `extra`
+// (meta tags and page styles).
+function head(title, extra = '') {
+  return `<meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escape(title)}</title>
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@700;900&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  ${extra}`;
+}
+
+function topBar() {
+  return `<header class="top">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="${APP_NAME} home"><span class="status"></span>${APP_NAME}</a>
+      <nav class="label" aria-label="Main">
+        <a href="/privacy-policy">Privacy</a>
+        <a href="${GITHUB}">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>`;
+}
+
+function siteFooter() {
+  return `<footer class="site">
+    <div class="wrap main">
+      <div>
+        <p class="name">${APP_NAME}</p>
+        <p class="muted" style="margin-top:12px">Free comic reader, without ads. Made by
+        <a href="${KURODEV}">Kurodev</a>.</p>
+      </div>
+      <div class="links label">
+        <a href="${DOWNLOAD}">Download</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="${GITHUB}">GitHub</a>
+        <a href="${ISSUES}">Contact</a>
+      </div>
+    </div>
+    <div class="bottom">
+      <div class="wrap label faint">
+        <span>© ${new Date().getFullYear()} Kurodev</span>
+        <a href="${KURODEV}">kurodev.org ↗</a>
+      </div>
+    </div>
+  </footer>`;
+}
+
 export function page({ url, title, description, image, meta, missing = false }) {
   const heading = missing ? 'Series not found' : (title ?? APP_NAME);
   const docTitle = title ? `${title} — ${APP_NAME}` : APP_NAME;
@@ -215,40 +370,44 @@ export function page({ url, title, description, image, meta, missing = false }) 
   return `<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escape(docTitle)}</title>
-  <meta name="description" content="${escape(desc)}">
+  ${head(
+    docTitle,
+    `<meta name="description" content="${escape(desc)}">
   ${og}
   <meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}">
-  <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-      background: #000; color: #fff; font-family: system-ui, sans-serif;
-      text-align: center; }
-    main { padding: 24px; max-width: 360px; }
-    img { width: 200px; aspect-ratio: 2 / 3; object-fit: cover;
-      border-radius: 16px; }
-    .brand { font-size: 13px; letter-spacing: 0.2em; color: #9a9a9a;
-      margin: 0 0 24px; }
-    .meta { font-size: 12px; letter-spacing: 0.15em; color: #9a9a9a;
-      text-transform: uppercase; margin-top: 16px; }
-    h1 { font-size: 26px; font-weight: 500; margin: 12px 0; }
-    p { color: #9a9a9a; line-height: 1.5; margin: 0 0 24px; }
-    a { display: block; padding: 16px; border-radius: 999px;
-      text-decoration: none; font-weight: 600; margin-bottom: 12px; }
-    .primary { background: #fff; color: #000; }
-    .secondary { border: 1px solid #444; color: #fff; }
-  </style>
+  <style>${STYLE}
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    main { position: relative; flex: 1; display: grid; place-items: center;
+      overflow: hidden; }
+    .card { position: relative; width: 100%; max-width: 380px;
+      padding: 40px 16px 48px; text-align: center; }
+    .cover { width: 200px; aspect-ratio: 2 / 3; object-fit: cover;
+      margin: 0 auto 24px; border-radius: 20px; border: 1px solid var(--line);
+      background: var(--surface); }
+    .meta { display: inline-flex; align-items: center; gap: 8px;
+      color: var(--muted); }
+    h1 { font-size: 26px; line-height: 32px; font-weight: 500;
+      letter-spacing: -0.01em; margin: 12px 0; }
+    .desc { color: var(--muted); margin: 0 0 32px; }
+    .btn { display: flex; width: 100%; margin-top: 12px; }
+    .missing { font-family: var(--dot); font-weight: 900; font-size: 72px;
+      line-height: 1; color: var(--faint); margin: 0 0 8px; }
+  </style>`,
+  )}
 </head>
 <body>
+  ${topBar()}
   <main>
-    <p class="brand">YORU</p>
-    ${image ? `<img src="${escape(image)}" alt="">` : ''}
-    ${meta ? `<div class="meta">${escape(meta)}</div>` : ''}
-    <h1>${escape(heading)}</h1>
-    <p>${escape(desc)}</p>
-    ${missing ? '' : `<a class="primary" href="${escape(intentLink(url))}">Open in the app</a>`}
-    <a class="secondary" href="${DOWNLOAD}">Download the app</a>
+    <div class="dot-grid" aria-hidden="true"></div>
+    <div class="card">
+      ${missing ? '<p class="missing" aria-hidden="true">404</p>' : ''}
+      ${image ? `<img class="cover" src="${escape(image)}" alt="">` : ''}
+      ${meta ? `<div class="meta label"><span class="status ok"></span>${escape(meta)}</div>` : ''}
+      <h1>${escape(heading)}</h1>
+      <p class="desc">${escape(desc)}</p>
+      ${missing ? '' : `<a class="btn primary label" href="${escape(intentLink(url))}">Open in the app</a>`}
+      <a class="btn secondary label" href="${DOWNLOAD}">Download the app</a>
+    </div>
   </main>
 </body>
 </html>`;
@@ -258,28 +417,34 @@ export function privacyPage() {
   return `<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Privacy Policy — ${APP_NAME}</title>
-  <meta name="description" content="What data ${APP_NAME} stores and where it is sent.">
-  <style>
-    body { margin: 0; background: #000; color: #fff;
-      font-family: system-ui, sans-serif; line-height: 1.6; }
-    main { padding: 32px 24px 48px; max-width: 640px; margin: 0 auto; }
-    .brand { font-size: 13px; letter-spacing: 0.2em; color: #9a9a9a; }
-    h1 { font-size: 28px; font-weight: 500; margin: 8px 0 4px; }
-    h2 { font-size: 18px; font-weight: 600; margin: 32px 0 8px; }
-    p, li { color: #cfcfcf; }
-    .updated { color: #9a9a9a; font-size: 14px; margin-top: 0; }
-    a { color: #fff; }
-    code { background: #1a1a1a; padding: 1px 6px; border-radius: 6px; }
-  </style>
+  ${head(
+    `Privacy Policy — ${APP_NAME}`,
+    `<meta name="description" content="What data ${APP_NAME} stores and where it is sent.">
+  <style>${STYLE}
+    main.wrap { padding-top: 48px; }
+    article { max-width: 680px; }
+    h1 { font-family: var(--dot); font-weight: 900; font-size: 40px;
+      line-height: 44px; text-transform: uppercase; margin: 24px 0 8px; }
+    h2 { font-size: 17px; line-height: 24px; font-weight: 500;
+      margin: 40px 0 8px; padding-top: 24px; border-top: 1px solid var(--line); }
+    p, li { color: var(--muted); line-height: 24px; }
+    li { margin-bottom: 8px; }
+    ul { padding-left: 20px; }
+    a { text-underline-offset: 3px; }
+    article a { color: var(--ink); }
+    code { font-family: var(--mono); font-size: 13px; color: var(--ink);
+      background: var(--raised); padding: 2px 6px; border-radius: 6px; }
+    @media (min-width: 640px) { h1 { font-size: 48px; line-height: 52px; } }
+  </style>`,
+  )}
 </head>
 <body>
-  <main>
-    <p class="brand">YORU</p>
+  ${topBar()}
+  <main class="wrap">
+    <article>
+    <p class="section-label label"><b>§</b> Legal</p>
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated ${PRIVACY_UPDATED}</p>
+    <p class="data faint">Last updated ${PRIVACY_UPDATED}</p>
 
     <p>${APP_NAME} is an app for reading comics on Android and desktop, made by Kurodev.
     This page explains what data the app uses and where that data is
@@ -342,80 +507,151 @@ export function privacyPage() {
     <h2>Contact</h2>
     <p>Questions about privacy can be sent through
     <a href="${ISSUES}">GitHub Issues</a>.</p>
+    </article>
   </main>
+  ${siteFooter()}
 </body>
 </html>`;
 }
 
+// Home page features: a title and one line each.
+const FEATURES = [
+  ['Several sources', 'BacaKomik and VoraToon come bundled. More install as extensions, so new sites need no app update.'],
+  ['Browse and search', 'Latest and popular comics, title search, and filters by the source’s own genres, type and status.'],
+  ['A reader that remembers', 'Vertical strip or page by page, zoom and auto-scroll. Resumes at the page you stopped at.'],
+  ['Bookmarks and history', 'Your own categories, new chapter badges, and a reading history that keeps the last page.'],
+  ['Offline reading', 'Download chapters and read them without a connection.'],
+  ['Bring your library', 'Move it to another source, or import a Mihon / Tachiyomi backup or a Comix.to export.'],
+  ['Google Drive sync', 'Optional. Bookmarks and history go to a hidden app folder in your own Drive; the app cannot see your other files.'],
+  ['Backup and restore', 'Save your whole library to a file and bring it back later.'],
+];
+
+const SCREENS = [
+  ['home', 'Home: continue reading, new series, latest updates'],
+  ['detail', 'Comic details with source, stats and synopsis'],
+  ['reader', 'Reader with chapter bar and page meter'],
+];
+
 export function homePage(origin) {
   const desc =
     'An app for reading manga, manhwa and manhua from several sources, on Android, Windows, macOS and Linux.';
+  const features = FEATURES.map(
+    ([title, text], i) => `<li>
+          <span class="data faint">${String(i + 1).padStart(2, '0')}</span>
+          <div><h3>${escape(title)}</h3><p>${escape(text)}</p></div>
+        </li>`,
+  ).join('\n        ');
+  const screens = SCREENS.map(
+    ([name, alt]) =>
+      `<img src="${SCREENSHOT(name)}" alt="${escape(alt)}" width="540" height="1200" loading="lazy">`,
+  ).join('\n        ');
+
   return `<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${APP_NAME} — Read comics on Android and desktop</title>
-  <meta name="description" content="${escape(desc)}">
+  ${head(
+    `${APP_NAME} — Read comics on Android and desktop`,
+    `<meta name="description" content="${escape(desc)}">
   <meta property="og:site_name" content="${APP_NAME}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${escape(`${origin}/`)}">
   <meta property="og:title" content="${APP_NAME}">
   <meta property="og:description" content="${escape(desc)}">
-  <style>
-    body { margin: 0; background: #000; color: #fff;
-      font-family: system-ui, sans-serif; line-height: 1.6; }
-    main { padding: 48px 24px; max-width: 560px; margin: 0 auto; }
-    .brand { font-size: 13px; letter-spacing: 0.2em; color: #9a9a9a; }
-    h1 { font-size: 32px; font-weight: 500; margin: 8px 0 12px; }
-    h2 { font-size: 18px; font-weight: 600; margin: 32px 0 8px; }
-    p, li { color: #cfcfcf; }
-    ul { padding-left: 20px; }
-    .button { display: block; padding: 16px; border-radius: 999px;
-      text-align: center; text-decoration: none; font-weight: 600;
-      background: #fff; color: #000; margin: 24px 0 12px; }
-    footer { margin-top: 40px; font-size: 14px; color: #9a9a9a; }
-    footer a { color: #fff; margin-right: 16px; }
-  </style>
+  <style>${STYLE}
+    .hero { position: relative; overflow: hidden;
+      border-bottom: 1px solid var(--line); }
+    .hero .wrap { position: relative; display: grid; gap: 48px;
+      padding-top: 64px; padding-bottom: 56px; }
+    .hero .kicker { display: flex; align-items: center; gap: 8px;
+      color: var(--muted); margin: 0; }
+    h1 { font-family: var(--dot); font-weight: 900;
+      font-size: clamp(72px, 16vw, 136px); line-height: 1;
+      letter-spacing: -0.02em; margin: 24px 0 0; }
+    .lead { font-size: 20px; line-height: 28px; letter-spacing: -0.01em;
+      color: var(--muted); max-width: 30ch; margin: 24px 0 32px; }
+    .lead span { color: var(--ink); }
+    .platforms { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .chip { display: inline-flex; align-items: center; height: 28px;
+      padding: 0 12px; border-radius: 999px; color: var(--muted);
+      border: 1px solid var(--line-strong); }
+    .screens { display: flex; gap: 12px; overflow-x: auto;
+      scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px; }
+    .screens img { width: 180px; height: auto; flex: none;
+      scroll-snap-align: start; border-radius: 20px;
+      border: 1px solid var(--line); background: var(--surface); }
+    @media (min-width: 900px) {
+      .hero .wrap { grid-template-columns: 1fr auto; align-items: center;
+        padding-top: 96px; padding-bottom: 80px; }
+      .screens { margin: 0; padding: 0; overflow: visible; }
+      .screens img { width: 170px; }
+      .screens img:nth-child(2) { transform: translateY(-24px); }
+    }
+    section.block { padding-top: 64px; }
+    .features { list-style: none; margin: 32px 0 0; padding: 0;
+      display: grid; gap: 1px; background: var(--line);
+      border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+    .features li { display: flex; gap: 16px; padding: 20px;
+      background: var(--surface); }
+    .features li > span { padding-top: 3px; }
+    .features h3 { font-size: 17px; line-height: 24px; font-weight: 500;
+      margin: 0 0 4px; }
+    .features p { margin: 0; font-size: 13px; line-height: 20px;
+      color: var(--muted); }
+    @media (min-width: 640px) {
+      .features { grid-template-columns: 1fr 1fr; }
+    }
+    .privacy { display: grid; gap: 24px; margin-top: 32px; padding: 24px;
+      border: 1px dashed var(--line-strong); border-radius: 20px; }
+    .privacy p { margin: 0; color: var(--muted); max-width: 60ch; }
+    .privacy a { color: var(--ink); text-underline-offset: 3px; }
+  </style>`,
+  )}
 </head>
 <body>
+  ${topBar()}
   <main>
-    <p class="brand">YORU</p>
-    <h1>${APP_NAME}</h1>
-    <p>${escape(desc)} Free, without ads, made by Kurodev.</p>
-    <a class="button" href="${DOWNLOAD}">Download the app</a>
+    <section class="hero">
+      <div class="dot-grid" aria-hidden="true"></div>
+      <div class="wrap">
+        <div>
+          <p class="kicker label"><span class="status pulse"></span>Free · No ads · No trackers</p>
+          <h1>${APP_NAME}</h1>
+          <p class="lead">Read manga, manhwa and manhua from several sources.
+          <span>Made by Kurodev.</span></p>
+          <div class="actions">
+            <a class="btn primary label" href="${DOWNLOAD}">Download the app ↓</a>
+            <a class="btn secondary label" href="${GITHUB}">GitHub ↗</a>
+          </div>
+          <div class="platforms label" aria-label="Platforms">
+            <span class="chip">Android</span><span class="chip">Windows</span>
+            <span class="chip">macOS</span><span class="chip">Linux</span>
+          </div>
+        </div>
+        <div class="screens">
+        ${screens}
+        </div>
+      </div>
+    </section>
 
-    <h2>Features</h2>
-    <ul>
-      <li>Several sources: BacaKomik and VoraToon come bundled, and more
-      install as extensions, so new sites can be added without an app
-      update.</li>
-      <li>Browse the latest and popular comics, search by title and filter by
-      the source's own genres, type and status.</li>
-      <li>A reader with a vertical strip or page by page, zoom, auto-scroll,
-      and resume at the page you stopped at.</li>
-      <li>Bookmarks with your own categories and new chapter badges, and a
-      reading history that keeps the last page.</li>
-      <li>Download chapters to read offline.</li>
-      <li>Move your library to another source, or import it from a Mihon /
-      Tachiyomi backup or a Comix.to export.</li>
-      <li>Sync bookmarks, categories and reading history across devices
-      through Google Drive (optional). Data is kept in a hidden app folder in
-      your own Drive; the app cannot see your other Drive files.</li>
-      <li>Back up and restore your library to a file.</li>
-    </ul>
+    <section class="block wrap" id="features">
+      <p class="section-label label"><b>01</b> Index</p>
+      <h2 class="dot-title">Features</h2>
+      <ul class="features">
+        ${features}
+      </ul>
+    </section>
 
-    <h2>Privacy</h2>
-    <p>Bookmarks, history and downloads stay on your device. When sync is
-    on, data is only sent between your device and Google Drive. Read more in
-    the <a href="/privacy-policy">Privacy Policy</a>.</p>
-
-    <footer>
-      <a href="/privacy-policy">Privacy Policy</a>
-      <a href="https://github.com/sofyan-rs/bacakomik-app-flutter">GitHub</a>
-      <a href="${ISSUES}">Contact</a>
-    </footer>
+    <section class="block wrap" id="privacy">
+      <p class="section-label label"><b>02</b> Data</p>
+      <h2 class="dot-title">Privacy</h2>
+      <div class="privacy">
+        <p>Bookmarks, history and downloads stay on your device. When sync is
+        on, data is only sent between your device and Google Drive. Read more in
+        the <a href="/privacy-policy">Privacy Policy</a>.</p>
+      </div>
+    </section>
   </main>
+  ${siteFooter()}
 </body>
 </html>`;
 }
