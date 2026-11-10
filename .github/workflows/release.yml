@@ -292,8 +292,9 @@ jobs:
           the in-app WebView needs WebKitGTK 4.1 (\`sudo apt install libwebkit2gtk-4.1-0\` on
           Debian and Ubuntu, \`webkit2gtk4.1\` on Fedora), which most desktops already have.
 
-          Update the Fedora RPM by downloading the new RPM and installing it with the same
-          \`sudo dnf install\` command. In-app Linux updates are available only for the AppImage.
+          Fedora RPM installs can update from inside the app: approve the system's
+          administrator prompt, and the app restarts after installation. You can also
+          download the new RPM and install it with the same \`sudo dnf install\` command.
           MD
 
       - name: Publish release

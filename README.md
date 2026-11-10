@@ -15,7 +15,7 @@ Get it from the [Releases](https://github.com/sofyan-rs/yoru-comic-app/releases)
 
 The app checks for new releases and updates itself (on Linux when run from the AppImage). More on the [website](https://yoru.kurodev.org).
 
-For Fedora RPM installs, download and install the new RPM with the same `sudo dnf install` command to update.
+Fedora RPM installs can update from inside the app: approve the system's administrator prompt, then the app restarts after installation. You can also download and install the new RPM with the same `sudo dnf install` command.
 
 ## Screenshots
 

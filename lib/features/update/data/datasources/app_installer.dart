@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:yoru/core/di/register_module.dart';
+import 'package:yoru/features/update/data/datasources/linux_rpm_updater.dart';
 import 'package:yoru/features/update/domain/entities/app_release.dart';
 import 'package:yoru/features/update/domain/entities/update_progress.dart';
 import 'package:crypto/crypto.dart';
@@ -78,11 +79,19 @@ class OtaAppInstaller implements AppInstaller {
 ///
 /// macOS takes `…-macos.zip` (the `.app`, replaced where it runs from),
 /// Windows `…-windows-setup.exe` (run silently; it relaunches the app),
-/// Linux `…-linux-x86_64.AppImage` (replaces the AppImage that runs).
+/// Linux takes `…-linux-x86_64.rpm` for RPM installs (DNF via polkit),
+/// or `…-linux-x86_64.AppImage` (replaces the AppImage that runs).
 class DesktopAppInstaller implements AppInstaller {
-  DesktopAppInstaller(this._dio);
+  DesktopAppInstaller(
+    this._dio, {
+    LinuxRpmUpdater? rpm,
+    Future<Directory> Function()? temporaryDirectory,
+  }) : _rpm = rpm ?? LinuxRpmUpdater(),
+       _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory;
 
   final Dio _dio;
+  final LinuxRpmUpdater _rpm;
+  final Future<Directory> Function() _temporaryDirectory;
 
   @override
   Future<String> installedVersion() => _installedVersion();
@@ -91,21 +100,51 @@ class DesktopAppInstaller implements AppInstaller {
   Future<List<String>> assetSuffixes() async => [
     if (Platform.isMacOS) 'macos.zip',
     if (Platform.isWindows) 'windows-setup.exe',
-    if (Platform.isLinux) 'linux-x86_64.AppImage',
+    if (Platform.isLinux)
+      await _rpm.isInstalled() ? 'linux-x86_64.rpm' : 'linux-x86_64.AppImage',
   ];
 
   @override
   Stream<UpdateProgress> install(ReleaseAsset asset) async* {
-    // Linux replaces the AppImage it runs from; a build run any other way
-    // cannot update itself.
+    final isRpm = Platform.isLinux && await _rpm.isInstalled();
     final appImage = Platform.environment['APPIMAGE'];
-    if (Platform.isLinux && appImage == null) {
-      yield const UpdateInstallFailed('Not running from an AppImage');
+    if (Platform.isLinux && !isRpm && (appImage == null || appImage.isEmpty)) {
+      yield const UpdateInstallFailed('Not running from an AppImage or RPM');
       return;
     }
 
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}${Platform.pathSeparator}${asset.name}');
+    Directory? dir;
+    try {
+      dir = await (await _temporaryDirectory()).createTemp('yoru-update-');
+      // Use a private directory and a fixed RPM name for the privileged installer.
+      final file = File(
+        '${dir.path}${Platform.pathSeparator}${isRpm ? 'update.rpm' : asset.name}',
+      );
+      await for (final progress in _downloadAndInstall(
+        asset,
+        file,
+        dir,
+        appImage,
+        isRpm,
+      )) {
+        yield progress;
+      }
+    } on ProcessException catch (e) {
+      yield UpdateInstallFailed('INSTALLATION_ERROR: ${e.message}');
+    } on FileSystemException catch (e) {
+      yield UpdateInstallFailed('FILE_ERROR: ${e.message}');
+    } finally {
+      if (dir != null && await dir.exists()) await dir.delete(recursive: true);
+    }
+  }
+
+  Stream<UpdateProgress> _downloadAndInstall(
+    ReleaseAsset asset,
+    File file,
+    Directory dir,
+    String? appImage,
+    bool isRpm,
+  ) async* {
     final progress = StreamController<int>();
     final download = _dio
         .download(
@@ -115,15 +154,16 @@ class DesktopAppInstaller implements AppInstaller {
             if (total > 0) progress.add(received * 100 ~/ total);
           },
         )
+        // Handle the download error immediately, even before progress is read.
+        .then<Object?>((_) => null, onError: (Object error) => error)
         .whenComplete(progress.close);
     yield const UpdateDownloading(0);
     await for (final percent in progress.stream) {
       yield UpdateDownloading(percent);
     }
-    try {
-      await download;
-    } on DioException catch (e) {
-      yield UpdateInstallFailed('DOWNLOAD_ERROR: ${e.message}');
+    final downloadError = await download;
+    if (downloadError != null) {
+      yield UpdateInstallFailed('DOWNLOAD_ERROR: $downloadError');
       return;
     }
 
@@ -135,12 +175,14 @@ class DesktopAppInstaller implements AppInstaller {
       }
     }
 
-    try {
-      await _replace(file, appImage);
-    } on ProcessException catch (e) {
-      yield UpdateInstallFailed('INSTALLATION_ERROR: ${e.message}');
+    if (isRpm) {
+      yield const UpdateInstalling();
+      await _rpm.install(file);
+      await dir.delete(recursive: true);
+      await _rpm.restart();
       return;
     }
+    await _replace(file, appImage);
     yield const UpdateInstallFailed('INSTALLATION_ERROR: unsupported OS');
   }
 

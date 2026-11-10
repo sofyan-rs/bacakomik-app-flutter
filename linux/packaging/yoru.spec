@@ -19,6 +19,9 @@ Obsoletes:      bacakomik < %{version}-%{release}
 # are loaded at runtime and must be required explicitly.
 Requires:       gtk3
 Requires:       gstreamer1-plugins-base
+Requires:       /usr/bin/rpm
+Requires:       /usr/bin/dnf
+Requires:       /usr/bin/pkexec
 
 %description
 Browse, read and download manga, manhwa and manhua from extension sources,

@@ -82,7 +82,11 @@ flutter build linux --release
 bash linux/packaging/build-rpm.sh   # version defaults to pubspec.yaml
 ```
 
-The RPM is written to `dist/`. Before packaging, the script checks that the bundled QuickJS library loads and exports the functions used by source extensions; CI runs the same check before creating the AppImage. It installs the Flutter bundle under `/opt/yoru`, a `/usr/bin/yoru` launcher, and the desktop entry and icon. Install or update it with `sudo dnf install ./dist/Yoru-<version>-linux-x86_64.rpm`. RPM installs use downloaded RPMs for updates; the in-app Linux installer supports AppImage only.
+The RPM is written to `dist/`. Before packaging, the script checks that the bundled QuickJS library loads and exports the functions used by source extensions; CI runs the same check before creating the AppImage. It installs the Flutter bundle under `/opt/yoru`, a `/usr/bin/yoru` launcher, and the desktop entry and icon. Install or update it with `sudo dnf install ./dist/Yoru-<version>-linux-x86_64.rpm`.
+
+RPM installs also support in-app updates: the app downloads the RPM, verifies its SHA-256 when GitHub supplies a digest, and runs DNF through polkit's administrator prompt. It restarts as the desktop user only after DNF succeeds; cancelling approval or a failed transaction leaves the app open. The RPM requires DNF and pkexec, plus a running desktop authentication agent. Existing RPMs without this feature need one manual update first.
+
+RPM update checks use the same upstream releases (`sofyan-rs/yoru-comic-app`) as the other platforms. Publish a newer version with a `-linux-x86_64.rpm` release asset for RPM clients to find it. There is no fallback to AppImage when a release lacks the RPM.
 
 Secrets (Settings → Secrets → Actions): `KEYSTORE_BASE64` (`base64 -w0 upload-keystore.jks`), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Local signing reads `android/key.properties` (git-ignored: `storeFile`, `storePassword`, `keyAlias`, `keyPassword`). **Back up the keystore and password**; without them no update can ship. By hand: `flutter build apk --release --split-per-abi` (per ABI), `flutter build apk --release` (universal), `flutter build appbundle --release`.
 
