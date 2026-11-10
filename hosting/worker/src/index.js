@@ -14,6 +14,8 @@
 // - /privacy-policy is the privacy policy, linked from the Google sign-in consent
 //   screen used by Drive sync.
 
+import { appleTouch, favicon32, favicon64 } from './icons.js';
+
 const PACKAGE = 'org.kurodev.yoru';
 // The app's id before it was renamed to Yoru (2.17.0). Installs that were
 // not moved over yet still open links.
@@ -51,6 +53,8 @@ export default {
     }
     const url = new URL(request.url);
     if (url.pathname === '/.well-known/assetlinks.json') return assetLinks();
+    const iconFile = ICON_FILES[url.pathname];
+    if (iconFile) return png(iconFile);
 
     // Some apps percent-encode the `:` of `<source>:<slug>`.
     const match = decodeURIComponent(url.pathname).match(
@@ -70,6 +74,25 @@ export default {
     return html(page({ url: url.href, missing: true }), 404);
   },
 };
+
+// Favicon paths. /favicon.ico is asked for by browsers that ignore the
+// <link> tags; it is served as PNG, which they all read.
+const ICON_FILES = {
+  '/favicon.ico': favicon32,
+  '/favicon-32.png': favicon32,
+  '/favicon-64.png': favicon64,
+  '/apple-touch-icon.png': appleTouch,
+};
+
+function png(base64) {
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  return new Response(bytes, {
+    headers: {
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=604800',
+    },
+  });
+}
 
 function assetLinks() {
   const body = [PACKAGE, OLD_PACKAGE].map((packageName) => ({
@@ -305,6 +328,9 @@ function head(title, extra = '') {
   return `<meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escape(title)}</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f2">
   <link rel="preconnect" href="https://fonts.googleapis.com">

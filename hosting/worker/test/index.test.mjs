@@ -105,6 +105,18 @@ test('home page describes the app and links the privacy policy', async () => {
   assert.match(body, /<h1>Yoru<\/h1>/);
   assert.match(body, /href="\/privacy-policy"/);
   assert.match(body, /Google\s+Drive/);
+  assert.match(body, /<link rel="icon" type="image\/png" sizes="32x32" href="\/favicon-32.png">/);
+});
+
+test('favicons are the app icon as PNG', async () => {
+  for (const path of ['/favicon.ico', '/favicon-32.png', '/favicon-64.png', '/apple-touch-icon.png']) {
+    const res = await get(path);
+    assert.equal(res.status, 200, path);
+    assert.equal(res.headers.get('Content-Type'), 'image/png', path);
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    // PNG signature.
+    assert.deepEqual([...bytes.slice(0, 4)], [0x89, 0x50, 0x4e, 0x47], path);
+  }
 });
 
 test('other paths', async () => {
