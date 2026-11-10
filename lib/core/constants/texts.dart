@@ -220,7 +220,9 @@ class AppText {
   static const String updateLater = 'Later';
   static const String updateRetry = 'Try again';
   static const String updateDownloading = 'Downloading';
-  static const String updateInstalling = 'Opening installer';
+  static const String updateInstalling = 'Installing update';
+  static const String updateApprovalHint =
+      'If asked, approve the installation in the system prompt.';
   static const String updateFailed = 'Update failed. Try again later.';
   static const String upToDate = "You're on the latest version";
   static const String checkUpdateFailed = "Couldn't check for updates";

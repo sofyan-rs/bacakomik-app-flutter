@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:yoru/core/error/failures.dart';
 import 'package:yoru/core/usecase/usecase.dart';
 import 'package:yoru/features/update/data/models/github_release_model.dart';
@@ -6,11 +8,16 @@ import 'package:yoru/core/utils/version.dart';
 import 'package:yoru/features/update/domain/entities/update_progress.dart';
 import 'package:yoru/features/update/domain/repositories/update_repository.dart';
 import 'package:yoru/features/update/domain/usecases/update_usecases.dart';
+import 'package:yoru/features/update/presentation/bloc/update_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockUpdateRepository extends Mock implements UpdateRepository {}
+
+class MockCheckForUpdate extends Mock implements CheckForUpdate {}
+
+class MockInstallUpdate extends Mock implements InstallUpdate {}
 
 ReleaseAsset apk(String suffix) => ReleaseAsset(
   name: 'Yoru-1.1.0-$suffix.apk',
@@ -141,6 +148,84 @@ void main() {
           .thenAnswer((_) async => '1.1.0');
       expect(await check(const NoParams()), right<Failure, AppRelease?>(null));
     });
+  });
+
+  group('UpdateCubit installation', () {
+    late MockCheckForUpdate check;
+    late MockInstallUpdate install;
+    late UpdateCubit cubit;
+
+    setUp(() {
+      check = MockCheckForUpdate();
+      install = MockInstallUpdate();
+      when(() => check(const NoParams()))
+          .thenAnswer((_) async => right(release));
+      cubit = UpdateCubit(check, install);
+    });
+
+    tearDown(() => cubit.close());
+
+    test(
+      'blocks duplicate installs and checks while awaiting approval',
+      () async {
+        final progress = StreamController<UpdateProgress>();
+        when(() => install(release)).thenAnswer((_) => progress.stream);
+        await cubit.check();
+        cubit.install();
+        final installing = cubit.stream.firstWhere(
+          (state) => state is UpdateInstallingState,
+        );
+        progress.add(const UpdateInstalling());
+        await installing;
+
+        cubit.install();
+        await cubit.check();
+        expect(cubit.state, UpdateState.installing(release));
+        verify(() => check(const NoParams())).called(1);
+        verify(() => install(release)).called(1);
+
+        final failure = cubit.stream.firstWhere(
+          (state) => state is UpdateInstallFailedState,
+        );
+        progress.add(
+          const UpdateInstallFailed('Administrator approval was cancelled'),
+        );
+        await failure;
+        await progress.close();
+        expect(cubit.state, UpdateState.installFailed(release));
+
+        when(() => install(release))
+            .thenAnswer((_) => Stream.value(const UpdateInstalling()));
+        final retry = cubit.stream.firstWhere(
+          (state) => state is UpdateAvailable,
+        );
+        cubit.install();
+        await retry;
+        verify(() => install(release)).called(1);
+      },
+    );
+
+    test(
+      'Android handoff restores the update button after its stream ends',
+      () async {
+        when(() => install(release))
+            .thenAnswer((_) => Stream.value(const UpdateInstalling()));
+        await cubit.check();
+        final states = <UpdateState>[];
+        final subscription = cubit.stream.listen(states.add);
+        final available = cubit.stream.firstWhere(
+          (state) => state is UpdateAvailable,
+        );
+        cubit.install();
+        await available;
+        expect(states, [
+          UpdateState.downloading(release, 0),
+          UpdateState.installing(release),
+          UpdateState.available(release),
+        ]);
+        await subscription.cancel();
+      },
+    );
   });
 
   test('InstallUpdate fails when no asset fits the device', () async {

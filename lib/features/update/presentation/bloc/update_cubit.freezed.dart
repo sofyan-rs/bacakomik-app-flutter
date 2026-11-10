@@ -62,7 +62,7 @@ extension UpdateStatePatterns on UpdateState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( UpdateIdle value)?  idle,TResult Function( UpdateChecking value)?  checking,TResult Function( UpdateUpToDate value)?  upToDate,TResult Function( UpdateCheckFailed value)?  checkFailed,TResult Function( UpdateAvailable value)?  available,TResult Function( UpdateDownloadingState value)?  downloading,TResult Function( UpdateInstallFailedState value)?  installFailed,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( UpdateIdle value)?  idle,TResult Function( UpdateChecking value)?  checking,TResult Function( UpdateUpToDate value)?  upToDate,TResult Function( UpdateCheckFailed value)?  checkFailed,TResult Function( UpdateAvailable value)?  available,TResult Function( UpdateDownloadingState value)?  downloading,TResult Function( UpdateInstallingState value)?  installing,TResult Function( UpdateInstallFailedState value)?  installFailed,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case UpdateIdle() when idle != null:
@@ -71,7 +71,8 @@ return checking(_that);case UpdateUpToDate() when upToDate != null:
 return upToDate(_that);case UpdateCheckFailed() when checkFailed != null:
 return checkFailed(_that);case UpdateAvailable() when available != null:
 return available(_that);case UpdateDownloadingState() when downloading != null:
-return downloading(_that);case UpdateInstallFailedState() when installFailed != null:
+return downloading(_that);case UpdateInstallingState() when installing != null:
+return installing(_that);case UpdateInstallFailedState() when installFailed != null:
 return installFailed(_that);case _:
   return orElse();
 
@@ -90,7 +91,7 @@ return installFailed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( UpdateIdle value)  idle,required TResult Function( UpdateChecking value)  checking,required TResult Function( UpdateUpToDate value)  upToDate,required TResult Function( UpdateCheckFailed value)  checkFailed,required TResult Function( UpdateAvailable value)  available,required TResult Function( UpdateDownloadingState value)  downloading,required TResult Function( UpdateInstallFailedState value)  installFailed,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( UpdateIdle value)  idle,required TResult Function( UpdateChecking value)  checking,required TResult Function( UpdateUpToDate value)  upToDate,required TResult Function( UpdateCheckFailed value)  checkFailed,required TResult Function( UpdateAvailable value)  available,required TResult Function( UpdateDownloadingState value)  downloading,required TResult Function( UpdateInstallingState value)  installing,required TResult Function( UpdateInstallFailedState value)  installFailed,}){
 final _that = this;
 switch (_that) {
 case UpdateIdle():
@@ -99,7 +100,8 @@ return checking(_that);case UpdateUpToDate():
 return upToDate(_that);case UpdateCheckFailed():
 return checkFailed(_that);case UpdateAvailable():
 return available(_that);case UpdateDownloadingState():
-return downloading(_that);case UpdateInstallFailedState():
+return downloading(_that);case UpdateInstallingState():
+return installing(_that);case UpdateInstallFailedState():
 return installFailed(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -114,7 +116,7 @@ return installFailed(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( UpdateIdle value)?  idle,TResult? Function( UpdateChecking value)?  checking,TResult? Function( UpdateUpToDate value)?  upToDate,TResult? Function( UpdateCheckFailed value)?  checkFailed,TResult? Function( UpdateAvailable value)?  available,TResult? Function( UpdateDownloadingState value)?  downloading,TResult? Function( UpdateInstallFailedState value)?  installFailed,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( UpdateIdle value)?  idle,TResult? Function( UpdateChecking value)?  checking,TResult? Function( UpdateUpToDate value)?  upToDate,TResult? Function( UpdateCheckFailed value)?  checkFailed,TResult? Function( UpdateAvailable value)?  available,TResult? Function( UpdateDownloadingState value)?  downloading,TResult? Function( UpdateInstallingState value)?  installing,TResult? Function( UpdateInstallFailedState value)?  installFailed,}){
 final _that = this;
 switch (_that) {
 case UpdateIdle() when idle != null:
@@ -123,7 +125,8 @@ return checking(_that);case UpdateUpToDate() when upToDate != null:
 return upToDate(_that);case UpdateCheckFailed() when checkFailed != null:
 return checkFailed(_that);case UpdateAvailable() when available != null:
 return available(_that);case UpdateDownloadingState() when downloading != null:
-return downloading(_that);case UpdateInstallFailedState() when installFailed != null:
+return downloading(_that);case UpdateInstallingState() when installing != null:
+return installing(_that);case UpdateInstallFailedState() when installFailed != null:
 return installFailed(_that);case _:
   return null;
 
@@ -141,7 +144,7 @@ return installFailed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function()?  checking,TResult Function()?  upToDate,TResult Function()?  checkFailed,TResult Function( AppRelease release)?  available,TResult Function( AppRelease release,  int percent)?  downloading,TResult Function( AppRelease release)?  installFailed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function()?  checking,TResult Function()?  upToDate,TResult Function()?  checkFailed,TResult Function( AppRelease release)?  available,TResult Function( AppRelease release,  int percent)?  downloading,TResult Function( AppRelease release)?  installing,TResult Function( AppRelease release)?  installFailed,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case UpdateIdle() when idle != null:
 return idle();case UpdateChecking() when checking != null:
@@ -149,7 +152,8 @@ return checking();case UpdateUpToDate() when upToDate != null:
 return upToDate();case UpdateCheckFailed() when checkFailed != null:
 return checkFailed();case UpdateAvailable() when available != null:
 return available(_that.release);case UpdateDownloadingState() when downloading != null:
-return downloading(_that.release,_that.percent);case UpdateInstallFailedState() when installFailed != null:
+return downloading(_that.release,_that.percent);case UpdateInstallingState() when installing != null:
+return installing(_that.release);case UpdateInstallFailedState() when installFailed != null:
 return installFailed(_that.release);case _:
   return orElse();
 
@@ -168,7 +172,7 @@ return installFailed(_that.release);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function()  checking,required TResult Function()  upToDate,required TResult Function()  checkFailed,required TResult Function( AppRelease release)  available,required TResult Function( AppRelease release,  int percent)  downloading,required TResult Function( AppRelease release)  installFailed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function()  checking,required TResult Function()  upToDate,required TResult Function()  checkFailed,required TResult Function( AppRelease release)  available,required TResult Function( AppRelease release,  int percent)  downloading,required TResult Function( AppRelease release)  installing,required TResult Function( AppRelease release)  installFailed,}) {final _that = this;
 switch (_that) {
 case UpdateIdle():
 return idle();case UpdateChecking():
@@ -176,7 +180,8 @@ return checking();case UpdateUpToDate():
 return upToDate();case UpdateCheckFailed():
 return checkFailed();case UpdateAvailable():
 return available(_that.release);case UpdateDownloadingState():
-return downloading(_that.release,_that.percent);case UpdateInstallFailedState():
+return downloading(_that.release,_that.percent);case UpdateInstallingState():
+return installing(_that.release);case UpdateInstallFailedState():
 return installFailed(_that.release);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -191,7 +196,7 @@ return installFailed(_that.release);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function()?  checking,TResult? Function()?  upToDate,TResult? Function()?  checkFailed,TResult? Function( AppRelease release)?  available,TResult? Function( AppRelease release,  int percent)?  downloading,TResult? Function( AppRelease release)?  installFailed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function()?  checking,TResult? Function()?  upToDate,TResult? Function()?  checkFailed,TResult? Function( AppRelease release)?  available,TResult? Function( AppRelease release,  int percent)?  downloading,TResult? Function( AppRelease release)?  installing,TResult? Function( AppRelease release)?  installFailed,}) {final _that = this;
 switch (_that) {
 case UpdateIdle() when idle != null:
 return idle();case UpdateChecking() when checking != null:
@@ -199,7 +204,8 @@ return checking();case UpdateUpToDate() when upToDate != null:
 return upToDate();case UpdateCheckFailed() when checkFailed != null:
 return checkFailed();case UpdateAvailable() when available != null:
 return available(_that.release);case UpdateDownloadingState() when downloading != null:
-return downloading(_that.release,_that.percent);case UpdateInstallFailedState() when installFailed != null:
+return downloading(_that.release,_that.percent);case UpdateInstallingState() when installing != null:
+return installing(_that.release);case UpdateInstallFailedState() when installFailed != null:
 return installFailed(_that.release);case _:
   return null;
 
@@ -513,6 +519,89 @@ class _$UpdateDownloadingStateCopyWithImpl<$Res>
 null == release ? _self.release : release // ignore: cast_nullable_to_non_nullable
 as AppRelease,null == percent ? _self.percent : percent // ignore: cast_nullable_to_non_nullable
 as int,
+  ));
+}
+
+/// Create a copy of UpdateState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AppReleaseCopyWith<$Res> get release {
+  
+  return $AppReleaseCopyWith<$Res>(_self.release, (value) {
+    return _then(_self.copyWith(release: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class UpdateInstallingState with DiagnosticableTreeMixin implements UpdateState {
+  const UpdateInstallingState(this.release);
+  
+
+ final  AppRelease release;
+
+/// Create a copy of UpdateState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UpdateInstallingStateCopyWith<UpdateInstallingState> get copyWith => _$UpdateInstallingStateCopyWithImpl<UpdateInstallingState>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+    ..add(DiagnosticsProperty('type', 'UpdateState.installing'))
+    ..add(DiagnosticsProperty('release', release));
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is UpdateInstallingState&&(identical(other.release, release) || other.release == release));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,release);
+}
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+    return 'UpdateState.installing(release: $release)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UpdateInstallingStateCopyWith<$Res> implements $UpdateStateCopyWith<$Res> {
+  factory $UpdateInstallingStateCopyWith(UpdateInstallingState value, $Res Function(UpdateInstallingState) _then) = _$UpdateInstallingStateCopyWithImpl;
+@useResult
+$Res call({
+ AppRelease release
+});
+
+
+$AppReleaseCopyWith<$Res> get release;
+
+}
+/// @nodoc
+class _$UpdateInstallingStateCopyWithImpl<$Res>
+    implements $UpdateInstallingStateCopyWith<$Res> {
+  _$UpdateInstallingStateCopyWithImpl(this._self, this._then);
+
+  final UpdateInstallingState _self;
+  final $Res Function(UpdateInstallingState) _then;
+
+/// Create a copy of UpdateState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? release = null,}) {
+  return _then(UpdateInstallingState(
+null == release ? _self.release : release // ignore: cast_nullable_to_non_nullable
+as AppRelease,
   ));
 }
 

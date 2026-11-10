@@ -38,6 +38,14 @@ class UpdateSheet extends StatelessWidget {
         ],
         const SizedBox(height: DotSpace.s5),
         ...switch (state) {
+          UpdateInstallingState() => [
+            Text(AppText.updateInstalling, style: DotlineText.body),
+            const SizedBox(height: DotSpace.s3),
+            Text(
+              AppText.updateApprovalHint,
+              style: DotlineText.body.copyWith(color: c.inkFaint),
+            ),
+          ],
           UpdateDownloadingState(:final percent) => [
             Row(
               children: [

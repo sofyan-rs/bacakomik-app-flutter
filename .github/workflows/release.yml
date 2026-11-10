@@ -193,7 +193,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
-            libstdc++-12-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+            libstdc++-12-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev rpm
 
       - uses: subosito/flutter-action@v2
         with:
@@ -209,6 +209,9 @@ jobs:
           flutter build linux --release \
             --dart-define=GOOGLE_DESKTOP_CLIENT_ID="$GOOGLE_DESKTOP_CLIENT_ID" \
             --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET="$GOOGLE_DESKTOP_CLIENT_SECRET"
+
+      - name: Check Linux bundle
+        run: dart linux/packaging/check_bundle.dart
 
       - name: Build AppImage
         run: |
@@ -226,6 +229,9 @@ jobs:
           chmod +x appimagetool-x86_64.AppImage
           ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run "$APPDIR" \
             "dist/Yoru-$VERSION-linux-x86_64.AppImage"
+
+      - name: Build RPM (Fedora)
+        run: bash linux/packaging/build-rpm.sh "$VERSION"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -278,12 +284,17 @@ jobs:
           | \`Yoru-$VERSION-windows-setup.exe\` | Windows 10 and 11 (64-bit) |
           | \`Yoru-$VERSION-macos.dmg\` | macOS 12 or newer, Intel and Apple silicon |
           | \`Yoru-$VERSION-linux-x86_64.AppImage\` | Linux (64-bit) |
+          | \`Yoru-$VERSION-linux-x86_64.rpm\` | Fedora (64-bit), install with \`sudo dnf install ./Yoru-$VERSION-linux-x86_64.rpm\` |
 
           The desktop apps are not signed yet. On macOS, open the app the first time with
           right click → Open (or run \`xattr -cr /Applications/Yoru.app\`). On Windows,
           SmartScreen may ask: More info → Run anyway. On Linux, make the AppImage executable;
           the in-app WebView needs WebKitGTK 4.1 (\`sudo apt install libwebkit2gtk-4.1-0\` on
           Debian and Ubuntu, \`webkit2gtk4.1\` on Fedora), which most desktops already have.
+
+          Fedora RPM installs can update from inside the app: approve the system's
+          administrator prompt, and the app restarts after installation. You can also
+          download the new RPM and install it with the same \`sudo dnf install\` command.
           MD
 
       - name: Publish release

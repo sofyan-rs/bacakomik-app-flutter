@@ -73,6 +73,21 @@ bun scripts/bundle.ts ../bacakomik-app-flutter/assets/extensions bacakomik vorat
 
 `.github/workflows/release.yml` checks the tag against the pubspec, runs analyze and tests, and publishes signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs as `Yoru-<version>-<abi>.apk` with a "Which APK?" table. **Keep the asset suffixes (`-<abi>.apk`, `-windows-setup.exe`, `-macos.zip`, `-linux-x86_64.AppImage`) and that heading**: installed apps find updates through them. The prefix can change (it was `BacaKomik-` before 2.17.0).
 
+Desktop builds are published in the same release, including Linux AppImage and Fedora RPM (`Yoru-<version>-linux-x86_64.rpm`). A manual workflow run builds them as workflow artifacts without publishing a release.
+
+To build the RPM locally on x86_64 Linux, install the Flutter Linux build dependencies and `rpm-build` (Fedora) or `rpm` (Ubuntu), then run:
+
+```bash
+flutter build linux --release
+bash linux/packaging/build-rpm.sh   # version defaults to pubspec.yaml
+```
+
+The RPM is written to `dist/`. Before packaging, the script checks that the bundled QuickJS library loads and exports the functions used by source extensions; CI runs the same check before creating the AppImage. It installs the Flutter bundle under `/opt/yoru`, a `/usr/bin/yoru` launcher, and the desktop entry and icon. Install or update it with `sudo dnf install ./dist/Yoru-<version>-linux-x86_64.rpm`.
+
+RPM installs also support in-app updates: the app requires a SHA-256 digest from the release asset, downloads and verifies the RPM, and runs DNF through polkit's administrator prompt. A missing digest refuses the update before download or administrator approval. It restarts as the desktop user only after DNF succeeds; cancelling approval or a failed transaction leaves the app open. In-app updates need DNF, pkexec, and a running desktop authentication agent; DNF and pkexec are recommended dependencies so the RPM can still be installed without them. WebKitGTK 4.1 is also recommended for the in-app WebView. Bundled libraries stay private to Yoru in the RPM dependency metadata.
+
+RPM update checks use the same upstream releases (`sofyan-rs/yoru-comic-app`) as the other platforms. Publish a newer version with a `-linux-x86_64.rpm` release asset for RPM clients to find it. There is no fallback to AppImage when a release lacks the RPM.
+
 Secrets (Settings → Secrets → Actions): `KEYSTORE_BASE64` (`base64 -w0 upload-keystore.jks`), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Local signing reads `android/key.properties` (git-ignored: `storeFile`, `storePassword`, `keyAlias`, `keyPassword`). **Back up the keystore and password**; without them no update can ship. By hand: `flutter build apk --release --split-per-abi` (per ABI), `flutter build apk --release` (universal), `flutter build appbundle --release`.
 
 ### Recipe G: Test on a phone with real data

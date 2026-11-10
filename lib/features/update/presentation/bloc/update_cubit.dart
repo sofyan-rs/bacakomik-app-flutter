@@ -20,6 +20,8 @@ sealed class UpdateState with _$UpdateState {
   const factory UpdateState.available(AppRelease release) = UpdateAvailable;
   const factory UpdateState.downloading(AppRelease release, int percent) =
       UpdateDownloadingState;
+  const factory UpdateState.installing(AppRelease release) =
+      UpdateInstallingState;
   const factory UpdateState.installFailed(AppRelease release) =
       UpdateInstallFailedState;
 }
@@ -36,7 +38,11 @@ class UpdateCubit extends Cubit<UpdateState> {
   /// [quiet] (the check on app start) ends in idle instead of reporting
   /// "up to date" or a failure.
   Future<void> check({bool quiet = false}) async {
-    if (state is UpdateChecking || state is UpdateDownloadingState) return;
+    if (state is UpdateChecking ||
+        state is UpdateDownloadingState ||
+        state is UpdateInstallingState) {
+      return;
+    }
     emit(const UpdateState.checking());
     final result = await _checkForUpdate(const NoParams());
     emit(
@@ -70,16 +76,19 @@ class UpdateCubit extends Cubit<UpdateState> {
           release,
           percent,
         ),
-        // Android's installer takes over; back to the button in case the
-        // user cancels it.
-        UpdateInstalling() => UpdateState.available(release),
+        UpdateInstalling() => () {
+          debugPrint('UpdateCubit: installing update ${release.version}');
+          return UpdateState.installing(release);
+        }(),
         UpdateInstallFailed(:final message) => () {
           debugPrint('UpdateCubit: $message');
           return UpdateState.installFailed(release);
         }(),
       }),
       onDone: () {
-        if (state is UpdateDownloadingState) {
+        // Android hands off to its installer and closes the progress stream.
+        // Restore the button in case the user cancels the system installer.
+        if (state is UpdateDownloadingState || state is UpdateInstallingState) {
           emit(UpdateState.available(release));
         }
       },
