@@ -33,7 +33,7 @@ const ISSUES =
   'https://github.com/sofyan-rs/yoru-comic-app/issues/new';
 
 // Shown on the privacy page. Bump when the policy text changes.
-const PRIVACY_UPDATED = '25 October 2026';
+const PRIVACY_UPDATED = '10 November 2026';
 
 // Display names of the extension sources the app ships; others show their id.
 const SOURCE_NAMES = { voratoon: 'VoraToon' };
@@ -463,8 +463,8 @@ export function privacyPage() {
     <article>
 
     <p>${APP_NAME} is an app for reading comics on Android and desktop, made by Kurodev.
-    This page explains what data the app uses and where that data is
-    sent.</p>
+    It was called BacaKomik before. This page explains what data the app
+    uses and where that data is sent.</p>
 
     <h2 id="data-on-your-device">Data on your device</h2>
     <p>Bookmarks, categories, reading history (the last chapter and page),
@@ -473,7 +473,7 @@ export function privacyPage() {
 
     <h2 id="comic-content-and-sources">Comic content and sources</h2>
     <p>Comic lists, details and chapter pages come from the source you pick.
-    The bundled BacaKomik source reads from our server
+    The bundled source for the site bacakomik.my reads from our server
     <code>api-bacakomik.kurodev.org</code>. Other sources are extensions:
     small scripts the app installs from an extension repo (by default
     <code>bacakomik-ext.kurodev.org</code>, or a repo you add) and that
