@@ -21,7 +21,6 @@ BuildArch:      x86_64
 # are loaded at runtime and must be required explicitly.
 Requires:       gtk3
 Requires:       gstreamer1-plugins-base
-Requires:       /usr/bin/rpm
 
 # WebKitGTK is loaded at runtime; DNF and polkit are only needed for updates.
 Recommends:     webkit2gtk4.1
