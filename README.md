@@ -6,7 +6,7 @@ A reader for manga, manhwa and manhua from several sources. Each source is a sma
 
 ## Download
 
-Get it from the [Releases](https://github.com/sofyan-rs/bacakomik-app-flutter/releases) page:
+Get it from the [Releases](https://github.com/sofyan-rs/yoru-comic-app/releases) page:
 
 - **Android:** the APK; `arm64-v8a` fits almost every phone. Android 7.0 or newer.
 - **Windows:** `windows-setup.exe` (Windows 10 and 11, 64-bit).
@@ -117,4 +117,4 @@ Yoru is free software under the [GNU General Public License v3.0](LICENSE): you 
 
 Extensions are a separate project under the Apache License 2.0 ([public source](https://github.com/sofyan-rs/bacakomik-ext-public-source)). Third-party assets keep their own licenses: the Geist, Geist Mono and Doto fonts (SIL Open Font License 1.1), Lucide icons (ISC). The splash artwork and the "kuru kururin" animation and sound belong to their respective owners and are not covered by this license. Comics shown in the app and the screenshots belong to their publishers.
 
-Found a bug or have an idea? [Open an issue](https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new).
+Found a bug or have an idea? [Open an issue](https://github.com/sofyan-rs/yoru-comic-app/issues/new).

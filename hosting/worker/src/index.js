@@ -27,10 +27,10 @@ const FINGERPRINTS = [
 
 const API = 'https://api-bacakomik.kurodev.org';
 const DOWNLOAD =
-  'https://github.com/sofyan-rs/bacakomik-app-flutter/releases/latest';
+  'https://github.com/sofyan-rs/yoru-comic-app/releases/latest';
 const APP_NAME = 'Yoru';
 const ISSUES =
-  'https://github.com/sofyan-rs/bacakomik-app-flutter/issues/new';
+  'https://github.com/sofyan-rs/yoru-comic-app/issues/new';
 
 // Shown on the privacy page. Bump when the policy text changes.
 const PRIVACY_UPDATED = '25 October 2026';
@@ -193,10 +193,10 @@ function intentLink(url) {
   );
 }
 
-const GITHUB = 'https://github.com/sofyan-rs/bacakomik-app-flutter';
+const GITHUB = 'https://github.com/sofyan-rs/yoru-comic-app';
 const KURODEV = 'https://kurodev.org';
 const SCREENSHOT = (name) =>
-  `https://raw.githubusercontent.com/sofyan-rs/bacakomik-app-flutter/main/screenshot/${name}.png`;
+  `https://raw.githubusercontent.com/sofyan-rs/yoru-comic-app/main/screenshot/${name}.png`;
 
 // Dotline, the design system of kurodev.org: monochrome, dark first, one red
 // signal colour, Doto dot-matrix display type, Geist Mono labels, pills and

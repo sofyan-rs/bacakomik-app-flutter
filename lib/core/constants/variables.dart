@@ -35,7 +35,7 @@ class AppVariables {
     'GOOGLE_DESKTOP_CLIENT_SECRET',
   );
 
-  static const String githubRepo = 'sofyan-rs/bacakomik-app-flutter';
+  static const String githubRepo = 'sofyan-rs/yoru-comic-app';
   static const String reportLink = 'https://github.com/$githubRepo/issues/new';
   static const String latestReleaseApi =
       'https://api.github.com/repos/$githubRepo/releases/latest';
