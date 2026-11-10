@@ -422,7 +422,22 @@ export function privacyPage() {
     `<meta name="description" content="What data ${APP_NAME} stores and where it is sent.">
   <style>${STYLE}
     main.wrap { padding-top: 48px; }
+    html { scroll-behavior: smooth; }
+    .layout { display: grid; gap: 64px; margin-top: 24px; }
     article { max-width: 680px; }
+    article > p:first-child { margin-top: 0; }
+    aside { display: none; }
+    .toc { position: sticky; top: 104px; display: grid; gap: 0;
+      padding-left: 20px; border-left: 1px solid var(--line); }
+    .toc p { margin: 0 0 8px; }
+    .toc a { color: var(--muted); text-decoration: none; padding: 6px 0;
+      font-size: 13px; line-height: 18px; }
+    .toc a:hover { color: var(--ink); }
+    h2[id] { scroll-margin-top: 88px; }
+    @media (min-width: 900px) {
+      .layout { grid-template-columns: minmax(0, 680px) 1fr; }
+      aside { display: block; }
+    }
     h1 { font-family: var(--dot); font-weight: 900; font-size: 40px;
       line-height: 44px; text-transform: uppercase; margin: 24px 0 8px; }
     h2 { font-size: 17px; line-height: 24px; font-weight: 500;
@@ -441,21 +456,22 @@ export function privacyPage() {
 <body>
   ${topBar()}
   <main class="wrap">
-    <article>
     <p class="section-label label"><b>§</b> Legal</p>
     <h1>Privacy Policy</h1>
     <p class="data faint">Last updated ${PRIVACY_UPDATED}</p>
+    <div class="layout">
+    <article>
 
     <p>${APP_NAME} is an app for reading comics on Android and desktop, made by Kurodev.
     This page explains what data the app uses and where that data is
     sent.</p>
 
-    <h2>Data on your device</h2>
+    <h2 id="data-on-your-device">Data on your device</h2>
     <p>Bookmarks, categories, reading history (the last chapter and page),
     settings, installed extensions and downloaded chapters are kept in the
     app's storage on your device. This data is not sent to our servers.</p>
 
-    <h2>Comic content and sources</h2>
+    <h2 id="comic-content-and-sources">Comic content and sources</h2>
     <p>Comic lists, details and chapter pages come from the source you pick.
     The bundled BacaKomik source reads from our server
     <code>api-bacakomik.kurodev.org</code>. Other sources are extensions:
@@ -470,7 +486,7 @@ export function privacyPage() {
     WebView and keeps the cookies that site sets, so the next requests to that
     site pass. You can clear these cookies from the WebView menu.</p>
 
-    <h2>Google Drive sync (optional)</h2>
+    <h2 id="google-drive-sync-optional">Google Drive sync (optional)</h2>
     <p>If you turn on sync, the app asks you to sign in with Google with
     <code>drive.appdata</code> access. This access only opens a hidden app
     data folder in your Google Drive, not your other Drive files.</p>
@@ -492,22 +508,35 @@ export function privacyPage() {
     API Services User Data Policy</a>, including the Limited Use
     requirements.</p>
 
-    <h2>Backups and imports</h2>
+    <h2 id="backups-and-imports">Backups and imports</h2>
     <p>Backup files, Mihon / Tachiyomi backups and Comix.to exports are read
     and written on your device only. A file leaves your device only if you
     share or move it yourself.</p>
 
-    <h2>App updates</h2>
+    <h2 id="app-updates">App updates</h2>
     <p>The app checks for new versions and downloads them from GitHub. These
     requests do not carry personal data.</p>
 
-    <h2>Ads and tracking</h2>
+    <h2 id="ads-and-tracking">Ads and tracking</h2>
     <p>${APP_NAME} has no ads, analytics or third-party trackers.</p>
 
-    <h2>Contact</h2>
+    <h2 id="contact">Contact</h2>
     <p>Questions about privacy can be sent through
     <a href="${ISSUES}">GitHub Issues</a>.</p>
     </article>
+      <aside>
+        <nav class="toc" aria-label="On this page">
+          <p class="label faint">On this page</p>
+          <a href="#data-on-your-device">Data on your device</a>
+          <a href="#comic-content-and-sources">Comic content and sources</a>
+          <a href="#google-drive-sync-optional">Google Drive sync</a>
+          <a href="#backups-and-imports">Backups and imports</a>
+          <a href="#app-updates">App updates</a>
+          <a href="#ads-and-tracking">Ads and tracking</a>
+          <a href="#contact">Contact</a>
+        </nav>
+      </aside>
+    </div>
   </main>
   ${siteFooter()}
 </body>
