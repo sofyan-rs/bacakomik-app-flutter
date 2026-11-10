@@ -449,6 +449,7 @@ class AppText {
   static const String dnsOff = 'Off';
   static const String dnsOffDescription = 'Use the network’s DNS';
   static const String dnsCustom = 'Custom';
+  static const String dnsCustomDescription = 'Your own DoH server';
   static const String dnsCustomHint = 'dns.example.com or https://…/dns-query';
   static const String dnsCustomInvalid =
       'Enter a server address (https only, not http)';

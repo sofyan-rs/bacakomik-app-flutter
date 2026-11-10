@@ -31,6 +31,10 @@ class _DnsSheetState extends State<_DnsSheet> {
   late final TextEditingController _url;
   String? _error;
 
+  /// The Custom row is picked: its address field shows. Saved only once
+  /// the address is used, so picking it alone keeps the current server.
+  late bool _custom;
+
   bool _isPreset(String setting) =>
       setting.isEmpty || dohPresets.any((p) => p.id == setting);
 
@@ -38,7 +42,8 @@ class _DnsSheetState extends State<_DnsSheet> {
   void initState() {
     super.initState();
     final setting = context.read<SettingsCubit>().state.dnsOverHttps;
-    _url = TextEditingController(text: _isPreset(setting) ? '' : setting);
+    _custom = !_isPreset(setting);
+    _url = TextEditingController(text: _custom ? setting : '');
   }
 
   @override
@@ -68,8 +73,8 @@ class _DnsSheetState extends State<_DnsSheet> {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final current = context.select((SettingsCubit s) => s.state.dnsOverHttps);
-    Widget check(bool on) =>
-        on ? Icon(LucideIcons300.check, color: c.ink) : const SizedBox();
+    Widget? check(bool on) =>
+        on ? Icon(LucideIcons300.check, color: c.ink) : null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -93,7 +98,8 @@ class _DnsSheetState extends State<_DnsSheet> {
                       icon: LucideIcons300.globe,
                       title: AppText.dnsOff,
                       subtitle: AppText.dnsOffDescription,
-                      trailing: check(current.isEmpty),
+                      showChevron: false,
+                      trailing: check(!_custom && current.isEmpty),
                       onTap: () => _pick(''),
                     ),
                     for (final preset in dohPresets)
@@ -101,45 +107,46 @@ class _DnsSheetState extends State<_DnsSheet> {
                         icon: LucideIcons300.server,
                         title: preset.name,
                         subtitle: Uri.parse(preset.url).host,
-                        trailing: check(current == preset.id),
+                        showChevron: false,
+                        trailing: check(!_custom && current == preset.id),
                         onTap: () => _pick(preset.id),
                       ),
-                  ],
-                ),
-                const SizedBox(height: DotSpace.s4),
-                Row(
-                  children: [
-                    Icon(LucideIcons300.pencil, size: 16, color: c.inkMuted),
-                    const SizedBox(width: DotSpace.s2),
-                    Text(
-                      AppText.dnsCustom,
-                      style: DotlineText.bodyS.copyWith(color: c.inkMuted),
+                    ListRow(
+                      icon: LucideIcons300.pencil,
+                      title: AppText.dnsCustom,
+                      subtitle: !_isPreset(current)
+                          ? Uri.parse(current).host
+                          : AppText.dnsCustomDescription,
+                      showChevron: false,
+                      trailing: check(_custom),
+                      onTap: () => setState(() => _custom = true),
                     ),
-                    const Spacer(),
-                    if (current.isNotEmpty && !_isPreset(current)) check(true),
                   ],
                 ),
-                const SizedBox(height: DotSpace.s2),
-                TextField(
-                  controller: _url,
-                  keyboardType: TextInputType.url,
-                  autocorrect: false,
-                  style: DotlineText.body.copyWith(color: c.ink),
-                  decoration: InputDecoration(
-                    hintText: AppText.dnsCustomHint,
-                    errorText: _error,
+                if (_custom) ...[
+                  const SizedBox(height: DotSpace.s4),
+                  TextField(
+                    controller: _url,
+                    autofocus: _url.text.isEmpty,
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
+                    style: DotlineText.body.copyWith(color: c.ink),
+                    decoration: InputDecoration(
+                      hintText: AppText.dnsCustomHint,
+                      errorText: _error,
+                    ),
+                    onChanged: (_) {
+                      if (_error != null) setState(() => _error = null);
+                    },
+                    onSubmitted: (_) => _useCustom(),
                   ),
-                  onChanged: (_) {
-                    if (_error != null) setState(() => _error = null);
-                  },
-                  onSubmitted: (_) => _useCustom(),
-                ),
-                const SizedBox(height: DotSpace.s3),
-                DotButton.outline(
-                  label: AppText.dnsUseCustom,
-                  leading: LucideIcons300.check,
-                  onTap: _useCustom,
-                ),
+                  const SizedBox(height: DotSpace.s3),
+                  DotButton(
+                    label: AppText.dnsUseCustom,
+                    leading: LucideIcons300.check,
+                    onTap: _useCustom,
+                  ),
+                ],
                 const SizedBox(height: DotSpace.s4),
                 Text(
                   Platform.isAndroid
