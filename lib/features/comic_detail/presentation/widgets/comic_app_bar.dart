@@ -12,7 +12,6 @@ import 'package:yoru/features/comic_detail/presentation/widgets/duplicate_sheet.
 import 'package:yoru/features/download/domain/entities/download_library.dart';
 import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:yoru/features/download/presentation/bloc/download_cubit.dart';
-import 'package:yoru/features/history/domain/entities/read_history.dart';
 import 'package:yoru/features/history/domain/entities/resume_chapter.dart';
 import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
 import 'package:flutter/material.dart';
@@ -197,17 +196,9 @@ class ComicAppBar extends StatelessWidget {
           background: c.ink,
           foreground: c.onInk,
           onTap: () {
-            final now = DateTime.now();
-            context.read<HistoryCubit>().addHistoryList([
-              for (final chapter in selectedChapters)
-                ReadHistory(
-                  comicSlug: comicSlug,
-                  chapterNumber: chapter.chapterNumber,
-                  comicDetails: comicDetails,
-                  readDate: now,
-                  slug: chapter.slug,
-                ),
-            ]);
+            context.read<HistoryCubit>().markRead(comicSlug, comicDetails, {
+              for (final chapter in selectedChapters) chapter.slug,
+            });
             unselectAllChapter();
           },
         ),

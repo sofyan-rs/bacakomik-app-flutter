@@ -158,5 +158,27 @@ void main() {
       expect(cubit.getLatestHistoryBySlug('b')!.slug, 'b/10');
       expect(cubit.state.map((h) => h.slug), ['b/10', 'b/2', 'b/1']);
     });
+
+    test('markRead dates the highest selected number latest', () async {
+      final details = sampleComicDetails.copyWith(
+        chapters: const [
+          Chapter(number: '21.5', slug: 'b/21.5', date: '-'),
+          Chapter(number: '21', slug: 'b/21', date: '-'),
+          Chapter(number: '20', slug: 'b/20', date: '-'),
+          Chapter(number: '19', slug: 'b/19', date: '-'),
+          Chapter(number: '18', slug: 'b/18', date: '-'),
+        ],
+      );
+      // Selected bottom-up: the order must not matter.
+      await cubit.markRead('b', details, {'b/19', 'b/20', 'b/21', 'b/21.5'});
+
+      expect(cubit.getLatestHistoryBySlug('b')!.slug, 'b/21.5');
+      expect(cubit.state.map((h) => h.slug), [
+        'b/21.5',
+        'b/21',
+        'b/20',
+        'b/19',
+      ]);
+    });
   });
 }

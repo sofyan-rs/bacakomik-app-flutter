@@ -178,6 +178,31 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
     ]);
   }
 
+  /// Marks the chapters of [comicSlug] in [slugs] read. Like [markAllRead],
+  /// the highest numbered one gets the newest read date, so it shows as the
+  /// latest whatever order they were selected in.
+  Future<void> markRead(
+    String comicSlug,
+    ComicDetails details,
+    Set<String> slugs,
+  ) {
+    final now = _clock.now();
+    final chapters = [
+      for (final chapter in chaptersNewestFirst(details.chapters))
+        if (slugs.contains(chapter.slug)) chapter,
+    ];
+    return addHistoryList([
+      for (final (i, chapter) in chapters.indexed)
+        ReadHistory(
+          slug: chapter.slug,
+          chapterNumber: chapter.number,
+          readDate: now.subtract(Duration(milliseconds: i)),
+          comicDetails: details,
+          comicSlug: comicSlug,
+        ),
+    ]);
+  }
+
   Future<void> removeHistory(String slug) => removeHistoryList([slug]);
 
   Future<void> removeHistoryList(List<String> slugs) {
