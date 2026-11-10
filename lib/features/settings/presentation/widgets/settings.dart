@@ -12,6 +12,7 @@ import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yoru/features/settings/presentation/widgets/app_info.dart';
 import 'package:yoru/features/settings/presentation/widgets/clear_cache_sheet.dart';
+import 'package:yoru/features/settings/presentation/widgets/dns_sheet.dart';
 import 'package:yoru/features/sync/presentation/widgets/sync_section.dart';
 import 'package:yoru/features/update/presentation/bloc/update_cubit.dart';
 import 'package:yoru/features/migration/presentation/pages/import_screen.dart';
@@ -96,6 +97,9 @@ class _SettingsState extends State<Settings> {
     );
     void setIncognito(bool on) =>
         context.read<SettingsCubit>().update((s) => s.copyWith(incognito: on));
+    final dnsSetting = context.select<SettingsCubit, String>(
+      (s) => s.state.dnsOverHttps,
+    );
     final kururinSound = context.select<SettingsCubit, bool>(
       (s) => s.state.kururinSound,
     );
@@ -147,6 +151,14 @@ class _SettingsState extends State<Settings> {
                 subtitle: AppText.migrateSourceDescription,
                 showChevron: true,
                 onTap: () => SourceMigrationScreen.open(context),
+              ),
+              ListRow(
+                icon: LucideIcons300.globeLock,
+                title: AppText.dnsOverHttps,
+                subtitle: AppText.dnsOverHttpsDescription,
+                value: dnsSettingLabel(dnsSetting),
+                showChevron: true,
+                onTap: () => showDnsSheet(context),
               ),
             ],
           ),

@@ -25,7 +25,9 @@ mixin _$AppSettings {
  bool get infiniteScroll;/// Auto-scroll speed level, [autoScrollMin] to [autoScrollMax].
  int get autoScrollSpeed;/// Incognito mode: the reader records no history.
  bool get incognito;/// Herta's "kuru kuru" sound while Home refreshes.
- bool get kururinSound; BookmarkGrouping get bookmarkGrouping; BookmarkSort get bookmarkSort; SortDirection get bookmarkSortDirection;
+ bool get kururinSound; BookmarkGrouping get bookmarkGrouping; BookmarkSort get bookmarkSort; SortDirection get bookmarkSortDirection;/// DNS over HTTPS: '' (off, the system DNS), a preset id from
+/// `dohPresets`, or a custom `https://…/dns-query` URL.
+ String get dnsOverHttps;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -37,20 +39,20 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 @override
 bool operator ==(Object other) {
   final _this = this as AppSettings;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.readingDirection, _this.readingDirection) || other.readingDirection == _this.readingDirection)&&(identical(other.pageFit, _this.pageFit) || other.pageFit == _this.pageFit)&&(identical(other.readerWidth, _this.readerWidth) || other.readerWidth == _this.readerWidth)&&(identical(other.twoPages, _this.twoPages) || other.twoPages == _this.twoPages)&&(identical(other.keepScreenOn, _this.keepScreenOn) || other.keepScreenOn == _this.keepScreenOn)&&(identical(other.pageGap, _this.pageGap) || other.pageGap == _this.pageGap)&&(identical(other.progressBar, _this.progressBar) || other.progressBar == _this.progressBar)&&(identical(other.infiniteScroll, _this.infiniteScroll) || other.infiniteScroll == _this.infiniteScroll)&&(identical(other.autoScrollSpeed, _this.autoScrollSpeed) || other.autoScrollSpeed == _this.autoScrollSpeed)&&(identical(other.incognito, _this.incognito) || other.incognito == _this.incognito)&&(identical(other.kururinSound, _this.kururinSound) || other.kururinSound == _this.kururinSound)&&(identical(other.bookmarkGrouping, _this.bookmarkGrouping) || other.bookmarkGrouping == _this.bookmarkGrouping)&&(identical(other.bookmarkSort, _this.bookmarkSort) || other.bookmarkSort == _this.bookmarkSort)&&(identical(other.bookmarkSortDirection, _this.bookmarkSortDirection) || other.bookmarkSortDirection == _this.bookmarkSortDirection));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.readingDirection, _this.readingDirection) || other.readingDirection == _this.readingDirection)&&(identical(other.pageFit, _this.pageFit) || other.pageFit == _this.pageFit)&&(identical(other.readerWidth, _this.readerWidth) || other.readerWidth == _this.readerWidth)&&(identical(other.twoPages, _this.twoPages) || other.twoPages == _this.twoPages)&&(identical(other.keepScreenOn, _this.keepScreenOn) || other.keepScreenOn == _this.keepScreenOn)&&(identical(other.pageGap, _this.pageGap) || other.pageGap == _this.pageGap)&&(identical(other.progressBar, _this.progressBar) || other.progressBar == _this.progressBar)&&(identical(other.infiniteScroll, _this.infiniteScroll) || other.infiniteScroll == _this.infiniteScroll)&&(identical(other.autoScrollSpeed, _this.autoScrollSpeed) || other.autoScrollSpeed == _this.autoScrollSpeed)&&(identical(other.incognito, _this.incognito) || other.incognito == _this.incognito)&&(identical(other.kururinSound, _this.kururinSound) || other.kururinSound == _this.kururinSound)&&(identical(other.bookmarkGrouping, _this.bookmarkGrouping) || other.bookmarkGrouping == _this.bookmarkGrouping)&&(identical(other.bookmarkSort, _this.bookmarkSort) || other.bookmarkSort == _this.bookmarkSort)&&(identical(other.bookmarkSortDirection, _this.bookmarkSortDirection) || other.bookmarkSortDirection == _this.bookmarkSortDirection)&&(identical(other.dnsOverHttps, _this.dnsOverHttps) || other.dnsOverHttps == _this.dnsOverHttps));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppSettings;
-  return Object.hash(runtimeType,_this.themeMode,_this.readingDirection,_this.pageFit,_this.readerWidth,_this.twoPages,_this.keepScreenOn,_this.pageGap,_this.progressBar,_this.infiniteScroll,_this.autoScrollSpeed,_this.incognito,_this.kururinSound,_this.bookmarkGrouping,_this.bookmarkSort,_this.bookmarkSortDirection);
+  return Object.hash(runtimeType,_this.themeMode,_this.readingDirection,_this.pageFit,_this.readerWidth,_this.twoPages,_this.keepScreenOn,_this.pageGap,_this.progressBar,_this.infiniteScroll,_this.autoScrollSpeed,_this.incognito,_this.kururinSound,_this.bookmarkGrouping,_this.bookmarkSort,_this.bookmarkSortDirection,_this.dnsOverHttps);
 }
 
 @override
 String toString() {
   final _this = this as AppSettings;
-  return 'AppSettings(themeMode: ${_this.themeMode}, readingDirection: ${_this.readingDirection}, pageFit: ${_this.pageFit}, readerWidth: ${_this.readerWidth}, twoPages: ${_this.twoPages}, keepScreenOn: ${_this.keepScreenOn}, pageGap: ${_this.pageGap}, progressBar: ${_this.progressBar}, infiniteScroll: ${_this.infiniteScroll}, autoScrollSpeed: ${_this.autoScrollSpeed}, incognito: ${_this.incognito}, kururinSound: ${_this.kururinSound}, bookmarkGrouping: ${_this.bookmarkGrouping}, bookmarkSort: ${_this.bookmarkSort}, bookmarkSortDirection: ${_this.bookmarkSortDirection})';
+  return 'AppSettings(themeMode: ${_this.themeMode}, readingDirection: ${_this.readingDirection}, pageFit: ${_this.pageFit}, readerWidth: ${_this.readerWidth}, twoPages: ${_this.twoPages}, keepScreenOn: ${_this.keepScreenOn}, pageGap: ${_this.pageGap}, progressBar: ${_this.progressBar}, infiniteScroll: ${_this.infiniteScroll}, autoScrollSpeed: ${_this.autoScrollSpeed}, incognito: ${_this.incognito}, kururinSound: ${_this.kururinSound}, bookmarkGrouping: ${_this.bookmarkGrouping}, bookmarkSort: ${_this.bookmarkSort}, bookmarkSortDirection: ${_this.bookmarkSortDirection}, dnsOverHttps: ${_this.dnsOverHttps})';
 }
 
 
@@ -61,7 +63,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, ReaderWidth readerWidth, bool twoPages, bool keepScreenOn, bool pageGap, bool progressBar, bool infiniteScroll, int autoScrollSpeed, bool incognito, bool kururinSound, BookmarkGrouping bookmarkGrouping, BookmarkSort bookmarkSort, SortDirection bookmarkSortDirection
+ AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, ReaderWidth readerWidth, bool twoPages, bool keepScreenOn, bool pageGap, bool progressBar, bool infiniteScroll, int autoScrollSpeed, bool incognito, bool kururinSound, BookmarkGrouping bookmarkGrouping, BookmarkSort bookmarkSort, SortDirection bookmarkSortDirection, String dnsOverHttps
 });
 
 
@@ -78,7 +80,7 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? readerWidth = null,Object? twoPages = null,Object? keepScreenOn = null,Object? pageGap = null,Object? progressBar = null,Object? infiniteScroll = null,Object? autoScrollSpeed = null,Object? incognito = null,Object? kururinSound = null,Object? bookmarkGrouping = null,Object? bookmarkSort = null,Object? bookmarkSortDirection = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? readerWidth = null,Object? twoPages = null,Object? keepScreenOn = null,Object? pageGap = null,Object? progressBar = null,Object? infiniteScroll = null,Object? autoScrollSpeed = null,Object? incognito = null,Object? kururinSound = null,Object? bookmarkGrouping = null,Object? bookmarkSort = null,Object? bookmarkSortDirection = null,Object? dnsOverHttps = null,}) {
   return _then(AppSettings(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as AppThemeMode,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
@@ -95,7 +97,8 @@ as bool,kururinSound: null == kururinSound ? _self.kururinSound : kururinSound /
 as bool,bookmarkGrouping: null == bookmarkGrouping ? _self.bookmarkGrouping : bookmarkGrouping // ignore: cast_nullable_to_non_nullable
 as BookmarkGrouping,bookmarkSort: null == bookmarkSort ? _self.bookmarkSort : bookmarkSort // ignore: cast_nullable_to_non_nullable
 as BookmarkSort,bookmarkSortDirection: null == bookmarkSortDirection ? _self.bookmarkSortDirection : bookmarkSortDirection // ignore: cast_nullable_to_non_nullable
-as SortDirection,
+as SortDirection,dnsOverHttps: null == dnsOverHttps ? _self.dnsOverHttps : dnsOverHttps // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -180,10 +183,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  ReaderWidth readerWidth,  bool twoPages,  bool keepScreenOn,  bool pageGap,  bool progressBar,  bool infiniteScroll,  int autoScrollSpeed,  bool incognito,  bool kururinSound,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  ReaderWidth readerWidth,  bool twoPages,  bool keepScreenOn,  bool pageGap,  bool progressBar,  bool infiniteScroll,  int autoScrollSpeed,  bool incognito,  bool kururinSound,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection,  String dnsOverHttps)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.readerWidth,_that.twoPages,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.infiniteScroll,_that.autoScrollSpeed,_that.incognito,_that.kururinSound,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.readerWidth,_that.twoPages,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.infiniteScroll,_that.autoScrollSpeed,_that.incognito,_that.kururinSound,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection,_that.dnsOverHttps);case _:
   return orElse();
 
 }
@@ -201,10 +204,10 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.reade
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  ReaderWidth readerWidth,  bool twoPages,  bool keepScreenOn,  bool pageGap,  bool progressBar,  bool infiniteScroll,  int autoScrollSpeed,  bool incognito,  bool kururinSound,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  ReaderWidth readerWidth,  bool twoPages,  bool keepScreenOn,  bool pageGap,  bool progressBar,  bool infiniteScroll,  int autoScrollSpeed,  bool incognito,  bool kururinSound,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection,  String dnsOverHttps)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.readerWidth,_that.twoPages,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.infiniteScroll,_that.autoScrollSpeed,_that.incognito,_that.kururinSound,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.readerWidth,_that.twoPages,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.infiniteScroll,_that.autoScrollSpeed,_that.incognito,_that.kururinSound,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection,_that.dnsOverHttps);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -221,10 +224,10 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.reade
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  ReaderWidth readerWidth,  bool twoPages,  bool keepScreenOn,  bool pageGap,  bool progressBar,  bool infiniteScroll,  int autoScrollSpeed,  bool incognito,  bool kururinSound,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  ReadingDirection readingDirection,  PageFit pageFit,  ReaderWidth readerWidth,  bool twoPages,  bool keepScreenOn,  bool pageGap,  bool progressBar,  bool infiniteScroll,  int autoScrollSpeed,  bool incognito,  bool kururinSound,  BookmarkGrouping bookmarkGrouping,  BookmarkSort bookmarkSort,  SortDirection bookmarkSortDirection,  String dnsOverHttps)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.readerWidth,_that.twoPages,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.infiniteScroll,_that.autoScrollSpeed,_that.incognito,_that.kururinSound,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection);case _:
+return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.readerWidth,_that.twoPages,_that.keepScreenOn,_that.pageGap,_that.progressBar,_that.infiniteScroll,_that.autoScrollSpeed,_that.incognito,_that.kururinSound,_that.bookmarkGrouping,_that.bookmarkSort,_that.bookmarkSortDirection,_that.dnsOverHttps);case _:
   return null;
 
 }
@@ -236,7 +239,7 @@ return $default(_that.themeMode,_that.readingDirection,_that.pageFit,_that.reade
 
 
 class _AppSettings implements AppSettings {
-  const _AppSettings({this.themeMode = AppThemeMode.system, this.readingDirection = ReadingDirection.vertical, this.pageFit = PageFit.width, this.readerWidth = ReaderWidth.medium, this.twoPages = false, this.keepScreenOn = true, this.pageGap = false, this.progressBar = true, this.infiniteScroll = false, this.autoScrollSpeed = 3, this.incognito = false, this.kururinSound = true, this.bookmarkGrouping = BookmarkGrouping.status, this.bookmarkSort = BookmarkSort.updated, this.bookmarkSortDirection = SortDirection.descending});
+  const _AppSettings({this.themeMode = AppThemeMode.system, this.readingDirection = ReadingDirection.vertical, this.pageFit = PageFit.width, this.readerWidth = ReaderWidth.medium, this.twoPages = false, this.keepScreenOn = true, this.pageGap = false, this.progressBar = true, this.infiniteScroll = false, this.autoScrollSpeed = 3, this.incognito = false, this.kururinSound = true, this.bookmarkGrouping = BookmarkGrouping.status, this.bookmarkSort = BookmarkSort.updated, this.bookmarkSortDirection = SortDirection.descending, this.dnsOverHttps = ''});
   
 
 @override@JsonKey() final  AppThemeMode themeMode;
@@ -264,6 +267,9 @@ class _AppSettings implements AppSettings {
 @override@JsonKey() final  BookmarkGrouping bookmarkGrouping;
 @override@JsonKey() final  BookmarkSort bookmarkSort;
 @override@JsonKey() final  SortDirection bookmarkSortDirection;
+/// DNS over HTTPS: '' (off, the system DNS), a preset id from
+/// `dohPresets`, or a custom `https://…/dns-query` URL.
+@override@JsonKey() final  String dnsOverHttps;
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -275,18 +281,18 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.readingDirection, readingDirection) || other.readingDirection == readingDirection)&&(identical(other.pageFit, pageFit) || other.pageFit == pageFit)&&(identical(other.readerWidth, readerWidth) || other.readerWidth == readerWidth)&&(identical(other.twoPages, twoPages) || other.twoPages == twoPages)&&(identical(other.keepScreenOn, keepScreenOn) || other.keepScreenOn == keepScreenOn)&&(identical(other.pageGap, pageGap) || other.pageGap == pageGap)&&(identical(other.progressBar, progressBar) || other.progressBar == progressBar)&&(identical(other.infiniteScroll, infiniteScroll) || other.infiniteScroll == infiniteScroll)&&(identical(other.autoScrollSpeed, autoScrollSpeed) || other.autoScrollSpeed == autoScrollSpeed)&&(identical(other.incognito, incognito) || other.incognito == incognito)&&(identical(other.kururinSound, kururinSound) || other.kururinSound == kururinSound)&&(identical(other.bookmarkGrouping, bookmarkGrouping) || other.bookmarkGrouping == bookmarkGrouping)&&(identical(other.bookmarkSort, bookmarkSort) || other.bookmarkSort == bookmarkSort)&&(identical(other.bookmarkSortDirection, bookmarkSortDirection) || other.bookmarkSortDirection == bookmarkSortDirection));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.readingDirection, readingDirection) || other.readingDirection == readingDirection)&&(identical(other.pageFit, pageFit) || other.pageFit == pageFit)&&(identical(other.readerWidth, readerWidth) || other.readerWidth == readerWidth)&&(identical(other.twoPages, twoPages) || other.twoPages == twoPages)&&(identical(other.keepScreenOn, keepScreenOn) || other.keepScreenOn == keepScreenOn)&&(identical(other.pageGap, pageGap) || other.pageGap == pageGap)&&(identical(other.progressBar, progressBar) || other.progressBar == progressBar)&&(identical(other.infiniteScroll, infiniteScroll) || other.infiniteScroll == infiniteScroll)&&(identical(other.autoScrollSpeed, autoScrollSpeed) || other.autoScrollSpeed == autoScrollSpeed)&&(identical(other.incognito, incognito) || other.incognito == incognito)&&(identical(other.kururinSound, kururinSound) || other.kururinSound == kururinSound)&&(identical(other.bookmarkGrouping, bookmarkGrouping) || other.bookmarkGrouping == bookmarkGrouping)&&(identical(other.bookmarkSort, bookmarkSort) || other.bookmarkSort == bookmarkSort)&&(identical(other.bookmarkSortDirection, bookmarkSortDirection) || other.bookmarkSortDirection == bookmarkSortDirection)&&(identical(other.dnsOverHttps, dnsOverHttps) || other.dnsOverHttps == dnsOverHttps));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,themeMode,readingDirection,pageFit,readerWidth,twoPages,keepScreenOn,pageGap,progressBar,infiniteScroll,autoScrollSpeed,incognito,kururinSound,bookmarkGrouping,bookmarkSort,bookmarkSortDirection);
+    return Object.hash(runtimeType,themeMode,readingDirection,pageFit,readerWidth,twoPages,keepScreenOn,pageGap,progressBar,infiniteScroll,autoScrollSpeed,incognito,kururinSound,bookmarkGrouping,bookmarkSort,bookmarkSortDirection,dnsOverHttps);
 }
 
 @override
 String toString() {
-    return 'AppSettings(themeMode: $themeMode, readingDirection: $readingDirection, pageFit: $pageFit, readerWidth: $readerWidth, twoPages: $twoPages, keepScreenOn: $keepScreenOn, pageGap: $pageGap, progressBar: $progressBar, infiniteScroll: $infiniteScroll, autoScrollSpeed: $autoScrollSpeed, incognito: $incognito, kururinSound: $kururinSound, bookmarkGrouping: $bookmarkGrouping, bookmarkSort: $bookmarkSort, bookmarkSortDirection: $bookmarkSortDirection)';
+    return 'AppSettings(themeMode: $themeMode, readingDirection: $readingDirection, pageFit: $pageFit, readerWidth: $readerWidth, twoPages: $twoPages, keepScreenOn: $keepScreenOn, pageGap: $pageGap, progressBar: $progressBar, infiniteScroll: $infiniteScroll, autoScrollSpeed: $autoScrollSpeed, incognito: $incognito, kururinSound: $kururinSound, bookmarkGrouping: $bookmarkGrouping, bookmarkSort: $bookmarkSort, bookmarkSortDirection: $bookmarkSortDirection, dnsOverHttps: $dnsOverHttps)';
 }
 
 
@@ -297,7 +303,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, ReaderWidth readerWidth, bool twoPages, bool keepScreenOn, bool pageGap, bool progressBar, bool infiniteScroll, int autoScrollSpeed, bool incognito, bool kururinSound, BookmarkGrouping bookmarkGrouping, BookmarkSort bookmarkSort, SortDirection bookmarkSortDirection
+ AppThemeMode themeMode, ReadingDirection readingDirection, PageFit pageFit, ReaderWidth readerWidth, bool twoPages, bool keepScreenOn, bool pageGap, bool progressBar, bool infiniteScroll, int autoScrollSpeed, bool incognito, bool kururinSound, BookmarkGrouping bookmarkGrouping, BookmarkSort bookmarkSort, SortDirection bookmarkSortDirection, String dnsOverHttps
 });
 
 
@@ -314,7 +320,7 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? readerWidth = null,Object? twoPages = null,Object? keepScreenOn = null,Object? pageGap = null,Object? progressBar = null,Object? infiniteScroll = null,Object? autoScrollSpeed = null,Object? incognito = null,Object? kururinSound = null,Object? bookmarkGrouping = null,Object? bookmarkSort = null,Object? bookmarkSortDirection = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? readingDirection = null,Object? pageFit = null,Object? readerWidth = null,Object? twoPages = null,Object? keepScreenOn = null,Object? pageGap = null,Object? progressBar = null,Object? infiniteScroll = null,Object? autoScrollSpeed = null,Object? incognito = null,Object? kururinSound = null,Object? bookmarkGrouping = null,Object? bookmarkSort = null,Object? bookmarkSortDirection = null,Object? dnsOverHttps = null,}) {
   return _then(_AppSettings(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as AppThemeMode,readingDirection: null == readingDirection ? _self.readingDirection : readingDirection // ignore: cast_nullable_to_non_nullable
@@ -331,7 +337,8 @@ as bool,kururinSound: null == kururinSound ? _self.kururinSound : kururinSound /
 as bool,bookmarkGrouping: null == bookmarkGrouping ? _self.bookmarkGrouping : bookmarkGrouping // ignore: cast_nullable_to_non_nullable
 as BookmarkGrouping,bookmarkSort: null == bookmarkSort ? _self.bookmarkSort : bookmarkSort // ignore: cast_nullable_to_non_nullable
 as BookmarkSort,bookmarkSortDirection: null == bookmarkSortDirection ? _self.bookmarkSortDirection : bookmarkSortDirection // ignore: cast_nullable_to_non_nullable
-as SortDirection,
+as SortDirection,dnsOverHttps: null == dnsOverHttps ? _self.dnsOverHttps : dnsOverHttps // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

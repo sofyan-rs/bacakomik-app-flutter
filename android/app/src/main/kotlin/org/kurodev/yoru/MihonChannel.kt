@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import org.kurodev.yoru.mihon.HostDns
 import org.kurodev.yoru.mihon.MihonHost
 import org.kurodev.yoru.mihon.MihonProxy
 
@@ -36,6 +37,10 @@ class MihonChannel(
     init {
         MethodChannel(messenger, "yoru/mihon").setMethodCallHandler { call, result ->
             if (call.method == "supported") return@setMethodCallHandler result.success(MihonHost.supported)
+            if (call.method == "setDns") {
+                HostDns.set(context, call.argument<String>("url"), call.argument<List<String>>("bootstrap") ?: emptyList())
+                return@setMethodCallHandler result.success(null)
+            }
             if (call.method == "proxyBase") {
                 return@setMethodCallHandler result.success(if (MihonHost.supported) runCatching { MihonProxy.start(context) }.getOrNull() else null)
             }

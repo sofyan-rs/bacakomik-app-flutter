@@ -1,3 +1,4 @@
+import 'package:yoru/core/network/dns_setting.dart';
 import 'package:yoru/app/app_shortcuts.dart';
 import 'package:yoru/app/root_tabs.dart';
 import 'package:yoru/app/splash_screen.dart';
@@ -82,6 +83,11 @@ class _YoruAppState extends State<YoruApp> {
               context.read<CategoryCubit>().load();
               context.read<HistoryCubit>().load();
             },
+          ),
+          BlocListener<SettingsCubit, AppSettings>(
+            listenWhen: (previous, current) =>
+                previous.dnsOverHttps != current.dnsOverHttps,
+            listener: (_, settings) => applyDnsOverHttps(settings.dnsOverHttps),
           ),
           // Home and Explore follow the picked source; its filter groups
           // are its own.

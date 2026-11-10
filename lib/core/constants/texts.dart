@@ -443,6 +443,24 @@ class AppText {
   static const String migrateSource = 'Migrate source';
   static const String migrateSourceDescription =
       'Move bookmarks and reading history to another source';
+  static const String dnsOverHttps = 'DNS over HTTPS';
+  static const String dnsOverHttpsDescription =
+      'Reach sites your network’s DNS blocks';
+  static const String dnsOff = 'Off';
+  static const String dnsOffDescription = 'Use the network’s DNS';
+  static const String dnsCustom = 'Custom';
+  static const String dnsCustomHint = 'https://…/dns-query';
+  static const String dnsCustomInvalid = 'Enter an https:// address';
+  static const String dnsUseCustom = 'Use this server';
+  static const String dnsCoverageAndroid =
+      'On Android this covers Mihon extensions. JS extensions, images and '
+      'web views keep the network’s DNS.';
+  static const String dnsCoverageDesktop =
+      'Covers extensions, images and downloads. Web views keep the '
+      'network’s DNS.';
+  static const String dnsPrivateDnsHint =
+      'For the whole phone, including web views, set Private DNS in '
+      'Android’s network settings (e.g. one.one.one.one).';
   static const String importMihon = 'Import from Mihon / Tachiyomi';
   static const String importMihonDescription =
       'Bookmarks from a .tachibk backup';

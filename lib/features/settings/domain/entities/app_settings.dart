@@ -104,5 +104,9 @@ abstract class AppSettings with _$AppSettings {
     @Default(BookmarkGrouping.status) BookmarkGrouping bookmarkGrouping,
     @Default(BookmarkSort.updated) BookmarkSort bookmarkSort,
     @Default(SortDirection.descending) SortDirection bookmarkSortDirection,
+
+    /// DNS over HTTPS: '' (off, the system DNS), a preset id from
+    /// `dohPresets`, or a custom `https://…/dns-query` URL.
+    @Default('') String dnsOverHttps,
   }) = _AppSettings;
 }

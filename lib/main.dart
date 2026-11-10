@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:yoru/app/app.dart';
 import 'package:yoru/core/di/injection.dart';
 import 'package:yoru/core/network/cover_cache_migration.dart';
+import 'package:yoru/core/network/dns_setting.dart';
+import 'package:yoru/core/network/doh.dart';
 import 'package:yoru/core/network/image_cache.dart';
 import 'package:yoru/core/source/comic_key.dart';
 import 'package:yoru/core/source/extension_manager.dart';
@@ -11,6 +13,8 @@ import 'package:yoru/core/storage/box_recovery.dart';
 import 'package:yoru/core/storage/hive_boxes.dart';
 import 'package:yoru/core/storage/old_app_id_migration.dart';
 import 'package:yoru/core/utils/cover_url.dart';
+import 'package:yoru/core/usecase/usecase.dart';
+import 'package:yoru/features/settings/domain/usecases/settings_usecases.dart';
 import 'package:yoru/features/bookmark/data/models/bookmark_model.dart';
 import 'package:yoru/features/bookmark/data/datasources/bookmark_local_data_source.dart';
 import 'package:yoru/features/download/data/datasources/download_local_data_source.dart';
@@ -23,6 +27,8 @@ import 'package:path_provider/path_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Before any HttpClient exists, so all of them can use DNS over HTTPS.
+  HttpOverrides.global = DohHttpOverrides();
   await moveDataFromOldAppId();
   // Desktop documents folders belong to the user, not to app data.
   hiveDirectory =
@@ -32,6 +38,9 @@ Future<void> main() async {
           .path;
   Hive.init(hiveDirectory);
   await configureDependencies();
+  // Before the first request: bundled extensions and the catalog go online.
+  final settings = await getIt<GetSettings>()(const NoParams());
+  await applyDnsOverHttps(settings.fold((_) => '', (s) => s.dnsOverHttps));
   // Sources must exist before the first screen loads comics.
   final extensions = getIt<ExtensionManager>();
   await extensions.installBundled();

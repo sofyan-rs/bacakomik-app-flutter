@@ -65,6 +65,7 @@ SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
             unknownValue: SortDirection.descending,
           ) ??
           SortDirection.descending,
+      dnsOverHttps: json['dnsOverHttps'] as String? ?? '',
     );
 
 Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
@@ -85,6 +86,7 @@ Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
       'bookmarkSort': _$BookmarkSortEnumMap[instance.bookmarkSort]!,
       'bookmarkSortDirection':
           _$SortDirectionEnumMap[instance.bookmarkSortDirection]!,
+      'dnsOverHttps': instance.dnsOverHttps,
     };
 
 const _$AppThemeModeEnumMap = {

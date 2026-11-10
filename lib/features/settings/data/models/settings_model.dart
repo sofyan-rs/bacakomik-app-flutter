@@ -22,6 +22,7 @@ class SettingsModel {
     this.bookmarkGrouping = BookmarkGrouping.status,
     this.bookmarkSort = BookmarkSort.updated,
     this.bookmarkSortDirection = SortDirection.descending,
+    this.dnsOverHttps = '',
   });
 
   factory SettingsModel.fromEntity(AppSettings e) => SettingsModel(
@@ -40,6 +41,7 @@ class SettingsModel {
     bookmarkGrouping: e.bookmarkGrouping,
     bookmarkSort: e.bookmarkSort,
     bookmarkSortDirection: e.bookmarkSortDirection,
+    dnsOverHttps: e.dnsOverHttps,
   );
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) =>
@@ -76,6 +78,8 @@ class SettingsModel {
   @JsonKey(unknownEnumValue: SortDirection.descending)
   final SortDirection bookmarkSortDirection;
 
+  final String dnsOverHttps;
+
   Map<String, dynamic> toJson() => _$SettingsModelToJson(this);
 
   AppSettings toEntity() => AppSettings(
@@ -94,5 +98,6 @@ class SettingsModel {
     bookmarkGrouping: bookmarkGrouping,
     bookmarkSort: bookmarkSort,
     bookmarkSortDirection: bookmarkSortDirection,
+    dnsOverHttps: dnsOverHttps,
   );
 }

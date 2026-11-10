@@ -86,6 +86,8 @@ object MihonHost {
         HostNetwork.cookieJar = WebViewCookieJar(File(folder, "cookies.json"))
         HostNetwork.browserCheckSolver = WebViewBrowserCheck(app)
         HostNetwork.cacheDir = File(app.cacheDir, "mihon")
+        HostDns.restore(app)
+        HostNetwork.dns = HostDns
         Slugs.init(app)
         AppInfo.set(versionCode = 1, versionName = appVersion)
         Injekt.addSingleton<Application>(app)

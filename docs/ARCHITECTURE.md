@@ -398,6 +398,11 @@ Two caches share one downloader. `coverImageCache` (key `bacakomikCovers`, 5000 
 ### 8.8 Other HTTP
 `filesDio` (no base URL, 15 s connect, 2 min receive) fetches repos and scripts, calls Drive (§7.6), and backs `ApiClient` for GitHub releases.
 
+**DNS over HTTPS** (More → DNS over HTTPS; `AppSettings.dnsOverHttps`: `''` off, a preset id from `dohPresets`, or a custom `https://…/dns-query` URL), for networks whose DNS blocks sites. `applyDnsOverHttps` (from `main` before the first request, then on change) sets:
+- `Doh` (`core/network/doh.dart`) for every dart:io `HttpClient`: `DohHttpOverrides` is `HttpOverrides.global`, set first thing in `main`; its `connectionFactory` resolves the host over RFC 8484 GET (`?dns=`, HTTP/1.1, as dart:io has no HTTP/2), connects to the address and does TLS for the hostname. Presets are reached by IP (`bootstrap`). When the server fails, the system DNS is used. On desktop this covers extensions, images and downloads; on Android, `filesDio`.
+- `HostDns` (Kotlin) for Mihon extensions' OkHttp (`okhttp-dnsoverhttps`), kept in preferences for starts without Dart.
+- Not covered: Cronet on Android (JS extensions, images: it takes no resolver), `background_downloader`, and WebViews. The sheet points Android users to the system's Private DNS for those. Quad9 is not a preset: its endpoint only speaks HTTP/2.
+
 ### 8.9 Mihon extensions
 Android 9+ also runs **Mihon (Tachiyomi) extension APKs** as a second backend: a user adds a Mihon repo (e.g. Keiyoushi), installs an extension, and its sources work like any other (Home, Explore, comic page, reader, bookmarks, refresh, history, downloads, sync, migration). JS extensions keep working; on iOS and Android 8 and older, Mihon repos are skipped and can't be added. Aniyomi (anime), LNReader (novels) and desktop are not supported.
 
