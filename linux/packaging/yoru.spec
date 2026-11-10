@@ -4,7 +4,9 @@
 
 # Bundled libraries are private to Yoru; keep system library requirements.
 %global __provides_exclude_from ^/opt/yoru/.*$
-%global __requires_exclude ^lib(flutter_linux_gtk|app|quickjs_c_bridge_plugin).*\.so.*$
+# build-rpm.sh supplies the names from bundle/lib, including Flutter plugins.
+%{!?yoru_private_requires:%global yoru_private_requires ^$}
+%global __requires_exclude %{yoru_private_requires}
 
 Name:           yoru
 Version:        %{app_version}

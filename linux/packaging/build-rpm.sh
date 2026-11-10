@@ -20,6 +20,7 @@ if ! command -v rpmbuild >/dev/null; then
 fi
 
 dart "$ROOT/linux/packaging/check_bundle.dart" "$BUNDLE"
+PRIVATE_REQUIRES=$(dart "$ROOT/linux/packaging/check_bundle.dart" --private-library-requires "$BUNDLE")
 
 mkdir -p "$RPM_DIR"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS} "$ROOT/dist"
 STAGING=$(mktemp -d "$RPM_DIR/source.XXXXXX")
@@ -34,6 +35,13 @@ tar -czf "$RPM_DIR/SOURCES/yoru-$VERSION.tar.gz" -C "$STAGING" "yoru-$VERSION"
 rpmbuild -bb \
   --define "_topdir $RPM_DIR" \
   --define "app_version $VERSION" \
+  --define "yoru_private_requires $PRIVATE_REQUIRES" \
   "$ROOT/linux/packaging/yoru.spec"
-cp "$RPM_DIR/RPMS/x86_64/yoru-$VERSION-1.x86_64.rpm" \
+PACKAGE="$RPM_DIR/RPMS/x86_64/yoru-$VERSION-1.x86_64.rpm"
+PACKAGE_REQUIRES=$(rpm -qp --requires "$PACKAGE")
+if grep -E "$PRIVATE_REQUIRES" <<< "$PACKAGE_REQUIRES"; then
+  echo "RPM incorrectly requires a private bundled library." >&2
+  exit 1
+fi
+cp "$PACKAGE" \
   "$ROOT/dist/Yoru-$VERSION-linux-x86_64.rpm"
