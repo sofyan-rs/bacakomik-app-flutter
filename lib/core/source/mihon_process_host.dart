@@ -323,15 +323,15 @@ class MihonRuntime {
   /// runtime.
   static const _sha256 = <String, String>{
     'windows-x64':
-        'ecb2673bdd399ae8e596ac6470c1d4e1515d02844eea53bb74358af2b14ebfb9',
+        '549144e4d5f11563698810dc0bce80e7c9d2994e4244746c237cac81d1867701',
     'linux-x64':
-        '6294857a5797daa90091d196d7d17c5d50b67e191177cdc446c6c3c62f71f9d5',
+        '7e457ffa8cd3cc1569d38cfc740c7cb59102a189a6e9e8fd25f15baf56931399',
     'linux-arm64':
-        'ebd985c3a827effca35882808571626e6d642d04844b2569f8da985bc2b85fdd',
+        '18bde51b3f4e852f3b8519baac60d598ff24dc587426a364a6e6ce5d4b45df76',
     'macos-x64':
-        '81050124d7c2bedec235e73a847fcdd195c420eeecddb9f94ae1d3ea8a3236c7',
+        '1b43fee45b0ad665a83cae52bc79fb9948c363477e0cf30623b2aa7a41c6758a',
     'macos-arm64':
-        '69372616553d9363d3fc6cfd80b444bafdc042dbd49f2fc8bdf53bf9ffd4c9b4',
+        'f59c873d5de1dc8a411034b3fc1b23742f1036e7f5177b5cde8d8257b1797c4b',
   };
 
   /// `windows-x64`, `macos-arm64`, …; null where there is no runtime.
