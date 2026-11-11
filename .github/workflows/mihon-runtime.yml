@@ -1,0 +1,76 @@
+name: Mihon runtime
+
+# Builds the runtime the desktop apps download to run Mihon extensions
+# (desktop/mihon-host: a Java trimmed with jlink and the host's jars), one
+# zip per system, and publishes them as the release `mihon-runtime-v<N>`.
+#
+# Push a tag like mihon-runtime-v1 after changing the host; N must match
+# MihonRuntime.version in lib/core/source/mihon_process_host.dart. Then put
+# each zip's SHA-256 (the .sha256 files) in MihonRuntime._sha256: the app
+# refuses a runtime that does not match.
+#
+# Run it by hand (workflow_dispatch) to build without publishing.
+on:
+  push:
+    tags: ['mihon-runtime-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+          - os: ubuntu-24.04
+          - os: ubuntu-24.04-arm
+          - os: macos-latest
+          - os: macos-13
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: desktop/mihon-host
+    steps:
+      - uses: actions/checkout@v4
+
+      # The runtime is this Java, trimmed: the version the app's host runs.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the runtime
+        run: ./gradlew --no-daemon :host:runtimeZip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runtime-${{ matrix.os }}
+          path: |
+            desktop/mihon-host/host/build/distributions/*.zip
+            desktop/mihon-host/host/build/distributions/*.sha256
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cat dist/*.sha256 > SHA256SUMS
+          gh release create "$TAG" dist/*.zip dist/*.sha256 SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --title "$TAG" --prerelease \
+            --notes "Runtime for Mihon extensions on the desktop apps. Checksums: SHA256SUMS."

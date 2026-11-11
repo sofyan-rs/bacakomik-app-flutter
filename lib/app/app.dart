@@ -4,6 +4,7 @@ import 'package:yoru/app/root_tabs.dart';
 import 'package:yoru/app/splash_screen.dart';
 import 'package:yoru/core/theme/dotline_theme.dart';
 import 'package:yoru/core/constants/variables.dart';
+import 'package:yoru/core/presentation/widgets/mihon_download_pill.dart';
 import 'package:yoru/core/di/injection.dart';
 import 'package:yoru/features/backup/presentation/bloc/backup_cubit.dart';
 import 'package:yoru/features/bookmark/presentation/bloc/bookmark_cubit.dart';
@@ -114,7 +115,8 @@ class _YoruAppState extends State<YoruApp> {
                 builder: (context, child) => AppShortcuts(
                   navigator: _navigator,
                   tabs: _tabs,
-                  child: child!,
+                  // Over every screen: downloads for Mihon on the desktops.
+                  child: Stack(children: [child!, const MihonDownloadPill()]),
                 ),
                 scrollBehavior: const _DragScrollBehavior(),
                 theme: DotlineThemes.light,

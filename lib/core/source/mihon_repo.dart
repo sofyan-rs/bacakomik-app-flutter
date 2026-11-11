@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:yoru/core/source/extension_meta.dart';
 import 'package:yoru/core/source/mihon_store.dart';
@@ -101,6 +104,10 @@ abstract final class MihonRepo {
     return res.data ?? const [];
   }
 
+  /// Whether to install an extension's jar when its repo has one: on the
+  /// desktops, whose host runs jars ([ProcessMihonHost]).
+  static bool preferJar = !kIsWeb && !Platform.isAndroid;
+
   /// One extension of an `index_v2` store; null when it is not usable.
   static ExtensionMeta? fromStore(
     StoreExtension e, {
@@ -116,7 +123,7 @@ abstract final class MihonRepo {
       version: e.versionName,
       apiVersion: 1,
       baseUrl: e.sources.first.baseUrl,
-      file: e.apkUrl,
+      file: preferJar && e.jarUrl.isNotEmpty ? e.jarUrl : e.apkUrl,
       sha256: '',
       nsfw: e.nsfw,
       repoUrl: repoUrl,

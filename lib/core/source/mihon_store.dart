@@ -12,7 +12,8 @@ import 'package:yoru/core/source/extension_meta.dart';
 /// Store     { 1 name, 2 badge, 3 signingKey, 4 contact,
 ///             101 ExtensionList, 102 extensionListUrl }
 /// ExtensionList { repeated 1 Extension }
-/// Extension { 1 name, 2 packageName, 3 Resources {1 apkUrl, 2 iconUrl},
+/// Extension { 1 name, 2 packageName, 3 Resources {1 apkUrl, 2 iconUrl,
+///   501 jarUrl},
 ///             4 extensionLib, 5 versionCode, 6 versionName,
 ///             7 contentWarning (0 unset, 1 safe, 2 mixed, 3 NSFW),
 ///             8 repeated Source }
@@ -109,6 +110,9 @@ abstract final class MihonStore {
                 e.apkUrl = res.text();
               case 2:
                 e.iconUrl = res.text();
+              // Keiyoushi's: the extension as a signed jar, for computers.
+              case 501:
+                e.jarUrl = res.text();
               default:
                 res.skip();
             }
@@ -185,6 +189,10 @@ class StoreExtension {
   String pkg = '';
   String apkUrl = '';
   String iconUrl = '';
+
+  /// The extension as a jar (Keiyoushi publishes one beside each APK); the
+  /// desktops run it, since their dex2jar fails on minified lib 1.6 APKs.
+  String jarUrl = '';
   String lib = '';
   int versionCode = 0;
   String versionName = '';

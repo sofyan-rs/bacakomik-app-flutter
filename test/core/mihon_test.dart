@@ -35,6 +35,15 @@ class FakeMihonHost implements MihonHost {
 
   @override
   Future<String?> httpUrl(String url) async => null;
+
+  @override
+  Future<void> prepare({void Function(double progress)? onProgress}) async {}
+
+  final cookies = <(Uri, List<String>)>[];
+
+  @override
+  Future<void> setCookies(Uri url, List<String> cookies) async =>
+      this.cookies.add((url, cookies));
 }
 
 const _dexEntry = {
@@ -290,6 +299,35 @@ void main() {
         'https://cdn.test/kiryuu.apk',
       );
       expect(meta.iconUrl, 'https://cdn.test/kiryuu.png');
+    });
+
+    test('takes the jar on the desktops when the repo has one', () {
+      final withJar = [
+        ..._field(1, 'Kiryuu'),
+        ..._field(2, 'eu.kanade.tachiyomi.extension.id.kiryuu'),
+        ..._field(3, [
+          ..._field(1, 'https://cdn.test/kiryuu.apk'),
+          ..._field(501, 'https://cdn.test/kiryuu.jar'),
+        ]),
+        ..._field(4, '1.6'),
+        ..._field(5, 106060),
+        ..._field(8, source),
+      ];
+      final e = MihonStore.parseList(_field(1, withJar)).single;
+      expect(e.jarUrl, 'https://cdn.test/kiryuu.jar');
+      String file({required bool jar}) {
+        MihonRepo.preferJar = jar;
+        return MihonRepo.fromStore(
+          e,
+          repoUrl: 'https://r.test/',
+          signer: 'a',
+        )!.file;
+      }
+
+      final before = MihonRepo.preferJar;
+      addTearDown(() => MihonRepo.preferJar = before);
+      expect(file(jar: true), 'https://cdn.test/kiryuu.jar');
+      expect(file(jar: false), 'https://cdn.test/kiryuu.apk');
     });
 
     test('reads a bare extension list', () {

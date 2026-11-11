@@ -66,7 +66,7 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
     this._bridge, {
     @ignoreParam this._loader,
     @ignoreParam MihonHost? mihon,
-  }) : _mihon = mihon ?? ChannelMihonHost.instance;
+  }) : _mihon = mihon ?? MihonHost.platform;
 
   /// Added on first run: the built `dist/` of the private extension source
   /// repo, served from a Cloudflare Worker.

@@ -6,6 +6,8 @@ import 'package:yoru/core/di/injection.dart';
 import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/source/extension_bridge.dart';
 import 'package:yoru/core/source/extension_manager.dart';
+import 'package:yoru/core/source/extension_meta.dart';
+import 'package:yoru/core/source/mihon_host.dart';
 import 'package:yoru/core/source/headless_pages.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/utils/utils.dart';
@@ -95,6 +97,17 @@ class _WebViewScreenState extends State<WebViewScreen> {
     await _bridge.saveCookies(widget.sourceId, url, [
       for (final c in cookies) ?_cookie(c.name, '${c.value}'),
     ]);
+    // A Mihon source on the desktops: its host keeps cookies of its own (on
+    // Android it shares the WebView's).
+    if (widget.sourceId.startsWith(ExtensionMeta.mihonPrefix)) {
+      try {
+        await MihonHost.platform.setCookies(url, [
+          for (final c in cookies) '${c.name}=${c.value}',
+        ]);
+      } catch (_) {
+        // The host is not running: the next check asks again.
+      }
+    }
   }
 
   /// Null for a value `dart:io` rejects (e.g. with spaces or quotes).

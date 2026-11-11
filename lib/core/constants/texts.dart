@@ -360,6 +360,10 @@ class AppText {
   static const String clearCookies = 'Clear cookies';
   static const String cookiesCleared = 'Cookies cleared';
   static const String pageNotLoaded = "Page didn't load";
+  static const String downloadingMihonRuntime =
+      'Downloading what Mihon extensions need';
+  static const String downloadingMihonBrowser =
+      'Downloading the browser this extension needs';
   static const String avifNotSupported =
       "This page is an AVIF image, which this device can't show";
   static String connectionFailed(String host) =>

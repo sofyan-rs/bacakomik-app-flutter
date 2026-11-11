@@ -3,16 +3,35 @@ import 'dart:io';
 
 import 'package:yoru/core/error/exceptions.dart';
 import 'package:yoru/core/source/extension_bridge.dart';
+import 'package:yoru/core/source/mihon_process_host.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-/// The Kotlin side that runs Mihon extension APKs (Android 9+ only; see
-/// docs/ARCHITECTURE.md §8.9). Behind an interface so tests, and one day a
-/// desktop host, can stand in.
+/// The Kotlin side that runs Mihon extension APKs: in the app on Android 9+
+/// ([ChannelMihonHost]), a helper process on the desktops
+/// ([ProcessMihonHost]); see docs/ARCHITECTURE.md §8.9. Behind an interface
+/// so tests can stand in.
 abstract interface class MihonHost {
+  /// This platform's host: the app's own on Android, a helper process on
+  /// Windows, macOS and Linux. Not available elsewhere.
+  static MihonHost get platform =>
+      !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
+      ? ProcessMihonHost.instance
+      : ChannelMihonHost.instance;
+
   /// Whether this device can run Mihon extensions.
   Future<bool> get available;
+
+  /// Gets the host ready before its first use, which may take a while: on
+  /// the desktops it downloads the runtime the first time ([onProgress],
+  /// 0 to 1). Nothing to do on Android.
+  Future<void> prepare({void Function(double progress)? onProgress});
+
+  /// Hands the host the cookies the app's WebView got for [url] (a browser
+  /// check passed there), as `name=value` pairs. Android's host shares the
+  /// WebView's cookies already.
+  Future<void> setCookies(Uri url, List<String> cookies);
 
   /// Calls `MihonHost.handle` in Kotlin: [method] with [args], JSON result.
   /// Throws [ServerException] (a browser check as [Challenge.message]).
@@ -34,6 +53,12 @@ class ChannelMihonHost implements MihonHost {
   static final instance = ChannelMihonHost._();
 
   static const _channel = MethodChannel('yoru/mihon');
+
+  @override
+  Future<void> prepare({void Function(double progress)? onProgress}) async {}
+
+  @override
+  Future<void> setCookies(Uri url, List<String> cookies) async {}
 
   Future<bool>? _available;
   Future<void>? _started;

@@ -176,7 +176,7 @@ class _BrowserLikeFileService extends FileService {
 
   /// A Mihon source's image, through its own client in Kotlin.
   Future<FileServiceResponse> _getMihon(Uri url) async {
-    final image = await ChannelMihonHost.instance.image(url.toString());
+    final image = await MihonHost.platform.image(url.toString());
     return _BytesResponse(image.bytes, url, image.type);
   }
 

@@ -29,12 +29,16 @@ class MihonInstaller {
     if (!await _host.available) {
       throw const ServerException('Mihon extensions need Android 9 or newer');
     }
+    // On the desktops: the runtime, downloaded the first time.
+    await _host.prepare();
     final dir = await _dir();
     await dir.create(recursive: true);
     // A name of its own per install: reinstalling the same version (or two
     // installs at once) never touches the file a loaded extension runs from.
     final stamp = DateTime.now().microsecondsSinceEpoch;
-    final apk = File(_join(dir, '${meta.id}-${meta.versionCode}-$stamp.apk'));
+    // A jar on the desktops when the repo has one (MihonRepo.preferJar).
+    final type = meta.file.split('?').first.endsWith('.jar') ? 'jar' : 'apk';
+    final apk = File(_join(dir, '${meta.id}-${meta.versionCode}-$stamp.$type'));
     final part = File('${apk.path}.part');
     try {
       await _dio.download(
@@ -97,7 +101,7 @@ class MihonInstaller {
       if (f is File &&
           f.path != keep &&
           name.startsWith('$id-') &&
-          name.endsWith('.apk')) {
+          (name.endsWith('.apk') || name.endsWith('.jar'))) {
         await f.delete();
       }
     }

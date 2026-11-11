@@ -5,10 +5,6 @@ import android.content.Context
 import org.kurodev.yoru.mihon.host.ExtensionHost
 import org.kurodev.yoru.mihon.host.HostError
 import org.kurodev.yoru.mihon.host.MemoStore
-import org.kurodev.yoru.mihon.host.android.AndroidLoader
-import org.kurodev.yoru.mihon.host.android.AndroidSettings
-import org.kurodev.yoru.mihon.host.android.WebViewBrowserCheck
-import org.kurodev.yoru.mihon.host.android.WebViewCookieJar
 import org.kurodev.yoru.mihon.host.optString
 import org.kurodev.yoru.mihon.host.string
 import eu.kanade.tachiyomi.AppInfo
@@ -32,6 +28,8 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.addSingleton
 import uy.kohesive.injekt.api.addSingletonFactory
+import okhttp3.Cookie
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.io.File
 
 /**
@@ -48,11 +46,13 @@ import java.io.File
  * | `uninstall` | pkg | – (drops its sources' settings too) |
  * | `call` | source, method, args | the contract's result ([Contract]) |
  * | `preferences` / `setPreference` | source (, key, value) | the source's settings |
+ * | `setCookies` | url, cookies (name=value) | – (cookies a WebView got, for the url's host) |
  * | `userAgent` | source | the User-Agent the source sends |
  */
 object MihonHost {
     private lateinit var app: Application
-    private lateinit var loader: AndroidLoader
+    private lateinit var platform: MihonPlatform
+    private lateinit var memos: MemoStore
     private lateinit var host: ExtensionHost
     private lateinit var contract: Contract
     private lateinit var index: SourceIndex
@@ -60,32 +60,27 @@ object MihonHost {
     @Volatile
     private var started = false
 
-    /** Whether this phone can run Mihon extensions (Android 9+). */
-    val supported get() = android.os.Build.VERSION.SDK_INT >= 28
+    /** Whether [start] ran: Android's start checks it before building its platform. */
+    internal val isStarted get() = started
 
-    /** Sets up what extensions expect from Mihon. [userAgent]: the app's own, so WebView cookies stay valid. */
+    /**
+     * Sets up what extensions expect from Mihon on [platform]: Android's from
+     * `MihonHost.start(context, …)` (MihonHostAndroid.kt), a desktop JVM's from
+     * its helper process. Once per
+     * process; the User-Agent is set by the caller ([HostNetwork.userAgent]).
+     */
     @Synchronized
     fun start(
-        context: Context,
-        userAgent: String?,
+        platform: MihonPlatform,
         appVersion: String,
     ) {
-        if (userAgent != null) HostNetwork.userAgent = userAgent
-        // Kept for a start without Dart (background downloads, MihonProxy).
-        context.applicationContext
-            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .apply { if (userAgent != null) putString("userAgent", userAgent) }
-            .putString("appVersion", appVersion)
-            .apply()
         if (started) return
-        // Signing info (28) and DelegateLastClassLoader (27).
-        if (!supported) throw HostError("Mihon extensions need Android 9 or newer.", 501)
-        app = context.applicationContext as Application
-        val folder = File(app.filesDir, "mihon").apply { mkdirs() }
-        HostNetwork.cookieJar = WebViewCookieJar(File(folder, "cookies.json"))
-        HostNetwork.browserCheckSolver = WebViewBrowserCheck(app)
-        HostNetwork.cacheDir = File(app.cacheDir, "mihon")
+        this.platform = platform
+        app = platform.app
+        val folder = platform.folder.apply { mkdirs() }
+        HostNetwork.cookieJar = platform.cookieJar
+        HostNetwork.browserCheckSolver = platform.browserCheck
+        HostNetwork.cacheDir = platform.cacheDir
         HostDns.restore(app)
         HostNetwork.dns = HostDns
         Slugs.init(app)
@@ -101,20 +96,19 @@ object MihonHost {
             }
         }
         Injekt.addSingletonFactory<ProtoBuf> { ProtoBuf }
-        loader = AndroidLoader(app)
-        host = ExtensionHost(loader, MemoStore(File(folder, "memos.json")), AndroidSettings(app), File(folder, "chapters"))
+        memos = MemoStore(File(folder, "memos.json"))
+        host = ExtensionHost(platform.loader, memos, platform.settings, File(folder, "chapters"))
         contract = Contract(host, app.getSharedPreferences("bacakomik_mihon_scanlators", Context.MODE_PRIVATE))
         index = SourceIndex(app)
         started = true
     }
 
-    private const val PREFS = "bacakomik_mihon"
+    /** Extension lib versions this host runs. */
+    val libs: List<String> get() = platform.loader.libs
 
-    /** Starts with what the last [start] from Dart was given, when Dart isn't running. */
-    fun ensureStarted(context: Context) {
-        if (started) return
-        val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        start(context, prefs.getString("userAgent", null), prefs.getString("appVersion", null) ?: "")
+    /** Writes what extensions memoised now (a desktop host about to exit). */
+    fun saveMemos() {
+        if (started) memos.save()
     }
 
     private fun check() {
@@ -127,7 +121,7 @@ object MihonHost {
     ): JsonElement {
         check()
         return when (method) {
-            "libs" -> JsonArray(loader.libs.map(::JsonPrimitive))
+            "libs" -> JsonArray(platform.loader.libs.map(::JsonPrimitive))
             // Paths of comics an import adds whose slugs are hashed (Slugs).
             "remember" -> {
                 (args["urls"] as? JsonArray).orEmpty().forEach { Slugs.remember(it.jsonPrimitive.content) }
@@ -150,7 +144,11 @@ object MihonHost {
             "uninstall" -> {
                 val pkg = args.string("pkg")
                 host.unload(pkg)
-                for (id in index.remove(pkg)) app.deleteSharedPreferences("source_$id")
+                for (id in index.remove(pkg)) {
+                    // AndroidCompat (desktop) throws for settings never
+                    // opened; Android returns false. Either way none are left.
+                    runCatching { app.deleteSharedPreferences("source_$id") }
+                }
                 JsonNull
             }
             "call" -> {
@@ -167,6 +165,15 @@ object MihonHost {
                 host.unload(params.string("pkg"))
                 JsonNull
             }
+            // Cookies the app's WebView got for a site (a check the reader
+            // passed there): plain name=value pairs, kept for the url's host.
+            // On Android the WebView and the extensions already share them.
+            "setCookies" -> {
+                val url = args.string("url").toHttpUrlOrNull() ?: throw HostError("Not a web address.", 400)
+                val cookies = (args["cookies"] as? JsonArray).orEmpty().mapNotNull { Cookie.parse(url, it.jsonPrimitive.content) }
+                if (cookies.isNotEmpty()) HostNetwork.cookieJar.saveFromResponse(url, cookies)
+                JsonNull
+            }
             "userAgent" -> {
                 val source = host.source(index.params(args.string("source")))
                 JsonPrimitive((source as? HttpSource)?.headers?.get("User-Agent") ?: HostNetwork.userAgent)
@@ -179,23 +186,22 @@ object MihonHost {
         path: String,
         signer: String?,
     ): JsonElement {
-        val info = loader.inspect(path)
-        val signers = loader.signers(info)
+        val info = platform.inspect(path)
+        val signers = info.signers
         if (signer != null && signer.lowercase() !in signers) {
             throw HostError("The extension is signed with a key its repo does not name.", 403)
         }
-        val lib = loader.lib(info)
-        val supported = lib.toDoubleOrNull() in loader.libs.map { it.toDouble() }
-        val meta = info.applicationInfo?.metaData
-        val pkg = info.packageName
+        val lib = info.lib
+        val supported = lib.toDoubleOrNull() in platform.loader.libs.map { it.toDouble() }
+        val pkg = info.pkg
         return buildJsonObject {
             put("pkg", pkg)
-            put("name", info.applicationInfo?.loadLabel(app.packageManager)?.toString()?.removePrefix("Tachiyomi: "))
+            put("name", info.name?.removePrefix("Tachiyomi: "))
             put("versionName", info.versionName)
-            put("versionCode", info.longVersionCode)
+            put("versionCode", info.versionCode)
             put("lib", lib)
             put("supported", supported)
-            put("nsfw", (meta?.getInt("tachiyomi.extension.nsfw") ?: 0) == 1)
+            put("nsfw", info.nsfw)
             put("signers", buildJsonArray { signers.forEach { add(JsonPrimitive(it)) } })
             // Loading runs the extension's code: only once the signer is
             // the trusted one.

@@ -2,6 +2,7 @@ package org.kurodev.yoru
 
 import android.app.Application
 import org.kurodev.yoru.mihon.MihonHost
+import org.kurodev.yoru.mihon.supported
 import org.kurodev.yoru.mihon.MihonProxy
 
 class YoruApplication : Application() {

@@ -70,7 +70,7 @@ abstract interface class PageDownloadQueue {
 @LazySingleton(as: PageDownloadQueue)
 class BackgroundPageDownloadQueue implements PageDownloadQueue {
   BackgroundPageDownloadQueue(this._files, {@ignoreParam MihonHost? mihon})
-    : _mihon = mihon ?? ChannelMihonHost.instance {
+    : _mihon = mihon ?? MihonHost.platform {
     // Listening has to start before FileDownloader.start(), which replays
     // updates from while the app was suspended.
     _downloader.updates.listen(_onUpdate);
