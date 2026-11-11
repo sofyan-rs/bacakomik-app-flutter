@@ -360,6 +360,8 @@ class AppText {
   static const String clearCookies = 'Clear cookies';
   static const String cookiesCleared = 'Cookies cleared';
   static const String pageNotLoaded = "Page didn't load";
+  static const String avifNotSupported =
+      "This page is an AVIF image, which this device can't show";
   static String connectionFailed(String host) =>
       "Couldn't connect to $host. Your network may be blocking it; try "
       'again, or use a VPN or another network.';

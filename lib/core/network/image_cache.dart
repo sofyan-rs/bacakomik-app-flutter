@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:yoru/core/error/exceptions.dart';
 import 'package:yoru/core/network/image_host_support.dart';
+import 'package:yoru/core/utils/image_support.dart';
 import 'package:yoru/core/source/extension_bridge.dart';
 import 'package:yoru/core/source/headless_pages.dart';
 import 'package:yoru/core/source/mihon_host.dart';
@@ -111,9 +112,9 @@ class _BrowserLikeFileService extends FileService {
 
   final HttpFileService _inner;
 
-  /// What Chrome on Android sends with an `<img>` request.
+  /// What Chrome on Android sends with an `<img>` request, but `Accept`
+  /// ([_accept]).
   static const _imageHeaders = {
-    'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
     'sec-ch-ua': '"Chromium";v="141", "Not?A_Brand";v="8"',
     'sec-ch-ua-mobile': '?1',
@@ -122,6 +123,14 @@ class _BrowserLikeFileService extends FileService {
     'sec-fetch-mode': 'no-cors',
     'sec-fetch-site': 'same-origin',
   };
+
+  /// Chrome's `Accept`, without AVIF unless this device decodes it
+  /// ([avifSupported]; until that is known, without): a CDN that picks the
+  /// format by it (Cloudflare Polish) then sends WebP or JPEG to Android 11
+  /// and the desktops, which cannot show AVIF.
+  static String get _accept => avifSupportedNow ?? false
+      ? 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'
+      : 'image/webp,image/apng,image/*,*/*;q=0.8';
 
   final _cookies = ImageHostCookies(_readCookies);
 
@@ -259,6 +268,7 @@ class _BrowserLikeFileService extends FileService {
           url.toString(),
           headers: {
             ..._imageHeaders,
+            'Accept': _accept,
             if (_plainAgentHosts.contains(url.host))
               'User-Agent': _plainUserAgent,
             if (cookie.isNotEmpty) 'Cookie': cookie,

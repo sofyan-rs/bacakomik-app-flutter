@@ -3,11 +3,14 @@ import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
+import 'package:yoru/core/utils/image_support.dart';
 import 'package:yoru/core/utils/utils.dart';
 import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -33,8 +36,13 @@ class ChapterImg extends StatefulWidget {
     this.maxWidth = DotSize.readerMaxWidth,
     this.alignment = Alignment.center,
     this.headers = const {},
+    this.onOpenWeb,
     @visibleForTesting this.cacheManager,
   });
+
+  /// Opens the chapter on its site; offered on a page in a format this
+  /// device cannot show (AVIF before Android 12, on the desktops).
+  final VoidCallback? onOpenWeb;
 
   /// Defaults to [comicImageCache].
   final BaseCacheManager? cacheManager;
@@ -75,6 +83,34 @@ class _ChapterImgState extends State<ChapterImg> {
   int _attempt = 0;
 
   BaseCacheManager get _cache => widget.cacheManager ?? comicImageCache;
+
+  /// Set when the page failed because it is an AVIF this device cannot
+  /// decode: a retry would fail the same way.
+  bool _avifUnsupported = false;
+
+  /// The attempt whose failure [_checkFormat] looked at.
+  int? _checked;
+
+  /// After a failure: whether the page is an AVIF this device cannot show.
+  Future<void> _checkFormat() async {
+    if (_checked == _attempt) return;
+    _checked = _attempt;
+    if (await avifSupported()) return;
+    try {
+      final file = widget.isFile
+          ? File(widget.chapterImage)
+          : (await _cache.getFileFromCache(widget.chapterImage))?.file;
+      if (file == null) return;
+      final head = await file
+          .openRead(0, 12)
+          .fold<List<int>>([], (all, chunk) => all..addAll(chunk));
+      if (isAvif(Uint8List.fromList(head)) && mounted) {
+        setState(() => _avifUnsupported = true);
+      }
+    } catch (_) {
+      // Not stored: a download that failed, not a format.
+    }
+  }
 
   /// Drops the failed page from the memory cache (which keeps the failed
   /// stream under the same key, resized as in [build]) and from the disk
@@ -204,6 +240,46 @@ class _ChapterImgState extends State<ChapterImg> {
       ),
     );
 
+    // A page this device cannot decode: retrying would not help.
+    Widget unsupported() => SizedBox(
+      height: widget.fitHeight ?? 480,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const DotGridPlaceholder(),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DotSpace.s5),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  label,
+                  const SizedBox(height: DotSpace.s3),
+                  Icon(LucideIcons300.imageOff, color: c.inkFaint, size: 32),
+                  const SizedBox(height: DotSpace.s2),
+                  Text(
+                    AppText.avifNotSupported,
+                    textAlign: TextAlign.center,
+                    style: DotlineText.data.copyWith(color: c.inkFaint),
+                  ),
+                  if (widget.onOpenWeb case final open?) ...[
+                    const SizedBox(height: DotSpace.s4),
+                    DotButton.outline(
+                      label: AppText.openInBrowser,
+                      leading: LucideIcons300.globe,
+                      size: DotButtonSize.medium,
+                      expand: false,
+                      onTap: open,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
     // A failed network page: tap anywhere on it (or the button) to retry.
     Widget retry() => GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -258,7 +334,10 @@ class _ChapterImgState extends State<ChapterImg> {
             frameBuilder: (_, child, frame, sync) => frame == null && !sync
                 ? placeholder()
                 : _ReportSize(onSize: measured, child: child),
-            errorBuilder: (_, _, _) => error(),
+            errorBuilder: (_, _, _) {
+              unawaited(_checkFormat());
+              return _avifUnsupported ? unsupported() : error();
+            },
           )
         : CachedNetworkImage(
             key: ValueKey(_attempt),
@@ -285,7 +364,10 @@ class _ChapterImgState extends State<ChapterImg> {
             fadeInDuration: DotMotion.press,
             progressIndicatorBuilder: (_, _, p) =>
                 placeholder(progress: p.progress ?? -1),
-            errorWidget: (_, _, _) => retry(),
+            errorWidget: (_, _, _) {
+              unawaited(_checkFormat());
+              return _avifUnsupported ? unsupported() : retry();
+            },
           );
 
     return GestureDetector(

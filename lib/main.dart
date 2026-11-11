@@ -7,6 +7,7 @@ import 'package:yoru/core/network/cover_cache_migration.dart';
 import 'package:yoru/core/network/dns_setting.dart';
 import 'package:yoru/core/network/doh.dart';
 import 'package:yoru/core/network/image_cache.dart';
+import 'package:yoru/core/utils/image_support.dart';
 import 'package:yoru/core/source/comic_key.dart';
 import 'package:yoru/core/source/extension_manager.dart';
 import 'package:yoru/core/storage/box_recovery.dart';
@@ -49,6 +50,8 @@ Future<void> main() async {
   extensions.addListener(() => _syncImageHostHeaders(extensions));
   await _fixRelativeCovers(extensions);
   runApp(const YoruApp());
+  // Before the first images: whether to ask image hosts for AVIF.
+  unawaited(avifSupported());
   // In the background: finds extension updates for the badge in More.
   unawaited(extensions.catalog());
   unawaited(_moveCoversToCoverCache());
