@@ -4,11 +4,18 @@ import 'dart:ui' as ui;
 
 import 'package:yoru/core/constants/texts.dart';
 import 'package:yoru/core/network/image_cache.dart';
+import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
+
+/// The widest a toast gets on a wide window ([DotSize.splitMinWidth] and up).
+const _toastMaxWidth = 480.0;
+
+/// About one line of toast, for placing it from the top on a wide window.
+const _toastHeight = 52.0;
 
 void showSnackBar({
   required BuildContext context,
@@ -16,18 +23,50 @@ void showSnackBar({
   Icon? icon,
   Duration duration = const Duration(seconds: 1),
 }) {
-  ScaffoldMessenger.of(context).clearSnackBars();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          icon ?? const SizedBox(),
-          icon != null ? const SizedBox(width: 8) : const SizedBox(),
-          Flexible(child: Text(message)),
-        ],
+  ScaffoldMessenger.of(context)
+    ..clearSnackBars()
+    ..showSnackBar(
+      toast(
+        context,
+        content: Row(
+          children: [
+            icon ?? const SizedBox(),
+            icon != null ? const SizedBox(width: 8) : const SizedBox(),
+            Flexible(child: Text(message)),
+          ],
+        ),
+        duration: duration,
       ),
-      duration: duration,
-    ),
+    );
+}
+
+/// A floating toast. On phones it sits at the bottom, full width. On a wide
+/// window (tablets in landscape, desktops) it is at most [_toastMaxWidth]
+/// and sits at the top center, clear of the action bars at the bottom of
+/// the split layouts (a comic's Start reading bar, the reader's page bar).
+SnackBar toast(
+  BuildContext context, {
+  required Widget content,
+  Duration duration = const Duration(seconds: 4),
+  SnackBarAction? action,
+}) {
+  final media = MediaQuery.of(context);
+  final size = media.size;
+  if (size.width < DotSize.splitMinWidth) {
+    return SnackBar(content: content, duration: duration, action: action);
+  }
+  final side = (size.width - _toastMaxWidth) / 2;
+  final top = media.padding.top + DotSpace.s4;
+  // A floating SnackBar is laid out from the bottom: a margin that leaves
+  // one line of room under [top] puts it at the top.
+  final bottom = (size.height - media.viewInsets.bottom - top - _toastHeight)
+      .clamp(DotSpace.s4, double.infinity);
+  return SnackBar(
+    content: content,
+    duration: duration,
+    action: action,
+    margin: EdgeInsets.fromLTRB(side, 0, side, bottom),
+    dismissDirection: DismissDirection.up,
   );
 }
 

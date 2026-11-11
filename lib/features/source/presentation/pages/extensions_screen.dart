@@ -1,3 +1,4 @@
+import 'package:yoru/core/utils/utils.dart';
 import 'package:yoru/core/constants/texts.dart';
 import 'package:yoru/core/di/injection.dart';
 import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
@@ -97,7 +98,7 @@ class _ExtensionsViewState extends State<_ExtensionsView> {
   void _message(String text) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text(text)));
+      ..showSnackBar(toast(context, content: Text(text)));
   }
 
   Future<void> _install(ExtensionMeta meta, {bool update = false}) async {
