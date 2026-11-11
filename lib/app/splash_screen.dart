@@ -89,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             ),
                             const SizedBox(height: DotSpace.s3),
                             Text(
-                              'MANGA · MANHWA · MANHUA',
+                              'COMIC READER APP',
                               style: DotlineText.label.copyWith(
                                 color: c.inkFaint,
                               ),
