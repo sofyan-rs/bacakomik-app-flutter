@@ -219,7 +219,7 @@ function intentLink(url) {
 const GITHUB = 'https://github.com/sofyan-rs/yoru-comic-app';
 const KURODEV = 'https://kurodev.org';
 const SCREENSHOT = (name) =>
-  `https://raw.githubusercontent.com/sofyan-rs/yoru-comic-app/main/screenshot/${name}.png`;
+  `https://raw.githubusercontent.com/sofyan-rs/yoru-comic-app/main/screenshot/${name}.webp`;
 
 // Dotline, the design system of kurodev.org: monochrome, dark first, one red
 // signal colour, Doto dot-matrix display type, Geist Mono labels, pills and
@@ -344,6 +344,17 @@ function head(title, extra = '') {
 const ICONS = {
   'arrow-down': '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
   'arrow-up-right': '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+  blocks: '<rect width="7" height="7" x="14" y="3" rx="1"/><path d="M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  'book-open': '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  bookmark: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  'arrow-left-right': '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>',
+  cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  archive: '<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+  smartphone: '<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  'eye-off': '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
 };
 
 function icon(name) {
@@ -581,36 +592,99 @@ export function privacyPage() {
 </html>`;
 }
 
-// Home page features: a title and one line each.
+// Home page features: icon, title and one line each. The first two are the
+// large cards with a screenshot.
 const FEATURES = [
-  ['Several sources', 'Sources install as extensions, so new sites need no app update.'],
-  ['Browse and search', 'Latest and popular comics, title search, and filters by the source’s own genres, type and status.'],
-  ['A reader that remembers', 'Vertical strip or page by page, zoom and auto-scroll. Resumes at the page you stopped at.'],
-  ['Bookmarks and history', 'Your own categories, new chapter badges, and a reading history that keeps the last page.'],
-  ['Offline reading', 'Download chapters and read them without a connection.'],
-  ['Bring your library', 'Move it to another source, or import a Mihon / Tachiyomi backup or a Comix.to export.'],
-  ['Google Drive sync', 'Optional. Bookmarks and history go to a hidden app folder in your own Drive; the app cannot see your other files.'],
-  ['Backup and restore', 'Save your whole library to a file and bring it back later.'],
+  ['blocks', 'Several sources', 'Sources install as extensions, so new sites need no app update.', 'extensions'],
+  ['book-open', 'A reader that remembers', 'Vertical strip or page by page, zoom and auto-scroll. Resumes at the page you stopped at.', 'reader'],
+  ['search', 'Browse and search', 'Latest and popular comics, title search, and filters by the source’s own genres, type and status.'],
+  ['bookmark', 'Bookmarks and history', 'Your own categories, new chapter badges, and a reading history that keeps the last page.'],
+  ['download', 'Offline reading', 'Download chapters and read them without a connection.'],
+  ['arrow-left-right', 'Bring your library', 'Move it to another source, or import a Mihon / Tachiyomi backup or a Comix.to export.'],
+  ['cloud', 'Google Drive sync', 'Optional. Bookmarks and history go to a hidden app folder in your own Drive; the app cannot see your other files.'],
+  ['archive', 'Backup and restore', 'Save your whole library to a file and bring it back later.'],
 ];
 
-const SCREENS = [
-  ['home', 'Home: continue reading, new series, latest updates'],
+// Hero phones: back left, front, back right.
+const HERO_SCREENS = [
   ['detail', 'Comic details with source, stats and synopsis'],
+  ['home', 'Home: continue reading, new series, latest updates'],
   ['reader', 'Reader with chapter bar and page meter'],
 ];
+
+const DESKTOP_SCREENS = [
+  ['desktop-home', 'Home', 'Desktop home with the side navigation'],
+  ['desktop-explore', 'Explore', 'Desktop explore grid with filters'],
+  ['desktop-detail', 'Details', 'Desktop comic details'],
+  ['desktop-reader', 'Reader', 'Desktop reader'],
+];
+
+const GALLERY = [
+  ['home-light', 'Light theme'],
+  ['explore', 'Explore'],
+  ['filter', 'Filters'],
+  ['bookmark', 'Bookmarks'],
+  ['history', 'History'],
+  ['downloads', 'Downloads'],
+  ['sources', 'Sources'],
+];
+
+const STATS = [
+  ['0', 'Ads'],
+  ['0', 'Trackers'],
+  ['4', 'Platforms'],
+  ['GPL-3.0', 'Open source'],
+];
+
+const PRIVACY_POINTS = [
+  ['smartphone', 'On your device', 'Bookmarks, history, settings and downloads are kept in the app’s storage.'],
+  ['cloud', 'In your Drive', 'Sync is optional. Data goes straight between your device and a hidden folder in your Google Drive.'],
+  ['eye-off', 'Not with us', 'No account, no analytics, no trackers. We do not receive your library.'],
+];
+
+const phone = (name, alt, cls = '', lazy = true) =>
+  `<figure class="${`phone ${cls}`.trim()}"><img src="${SCREENSHOT(name)}" alt="${escape(alt)}" width="540" height="1200"${lazy ? ' loading="lazy"' : ''}></figure>`;
 
 export function homePage(origin) {
   const desc =
     'An app for reading manga, manhwa and manhua from several sources, on Android, Windows, macOS and Linux.';
-  const features = FEATURES.map(
-    ([title, text], i) => `<li>
-          <span class="data faint">${String(i + 1).padStart(2, '0')}</span>
-          <div><h3>${escape(title)}</h3><p>${escape(text)}</p></div>
-        </li>`,
+
+  const heroPhones = HERO_SCREENS.map(([name, alt], i) =>
+    phone(name, alt, ['back left', 'front', 'back right'][i], false),
+  ).join('\n          ');
+
+  const stats = STATS.map(
+    ([value, label]) => `<div><p class="value">${escape(value)}</p><p class="label faint">${escape(label)}</p></div>`,
   ).join('\n        ');
-  const screens = SCREENS.map(
-    ([name, alt]) =>
-      `<img src="${SCREENSHOT(name)}" alt="${escape(alt)}" width="540" height="1200" loading="lazy">`,
+
+  const features = FEATURES.map(([ic, title, text, shot], i) => {
+    const num = String(i + 1).padStart(2, '0');
+    const body = `<div class="feature-head"><span class="feature-icon">${icon(ic)}</span><span class="data faint">${num}</span></div>
+          <h3>${escape(title)}</h3><p>${escape(text)}</p>`;
+    return shot
+      ? `<li class="feature big"><div>${body}</div><div class="feature-shot">${phone(shot, title)}</div></li>`
+      : `<li class="feature">${body}</li>`;
+  }).join('\n        ');
+
+  const desktopTabs = DESKTOP_SCREENS.map(
+    ([name, label], i) =>
+      `<input type="radio" name="desk" id="desk-${name}"${i === 0 ? ' checked' : ''}><label for="desk-${name}" class="label">${escape(label)}</label>`,
+  ).join('\n          ');
+  const desktopShots = DESKTOP_SCREENS.map(
+    ([name, , alt]) =>
+      `<img class="shot-${name}" src="${SCREENSHOT(name)}" alt="${escape(alt)}" width="1594" height="992" loading="lazy">`,
+  ).join('\n            ');
+  const desktopRules = DESKTOP_SCREENS.map(
+    ([name]) =>
+      `.desk:has(#desk-${name}:checked) .shot-${name} { opacity: 1; visibility: visible; }`,
+  ).join('\n    ');
+
+  const gallery = GALLERY.map(
+    ([name, caption]) => `<li>${phone(name, caption)}<p class="label faint">${escape(caption)}</p></li>`,
+  ).join('\n        ');
+
+  const privacy = PRIVACY_POINTS.map(
+    ([ic, title, text]) => `<div><span class="feature-icon">${icon(ic)}</span><h3>${escape(title)}</h3><p>${escape(text)}</p></div>`,
   ).join('\n        ');
 
   return `<!doctype html>
@@ -624,97 +698,302 @@ export function homePage(origin) {
   <meta property="og:url" content="${escape(`${origin}/`)}">
   <meta property="og:title" content="${APP_NAME}">
   <meta property="og:description" content="${escape(desc)}">
+  <meta property="og:image" content="${SCREENSHOT('desktop-home')}">
+  <meta name="twitter:card" content="summary_large_image">
   <style>${STYLE}
+    html { scroll-behavior: smooth; }
+    section[id] { scroll-margin-top: 80px; }
+    nav .hide-sm { display: none; }
+    @media (min-width: 640px) { nav .hide-sm { display: inline-flex; } }
+
+    /* Hero */
     .hero { position: relative; overflow: hidden;
       border-bottom: 1px solid var(--line); }
-    .hero .wrap { position: relative; display: grid; gap: 48px;
-      padding-top: 64px; padding-bottom: 56px; }
-    .hero .kicker { display: flex; align-items: center; gap: 8px;
-      color: var(--muted); margin: 0; }
+    .hero::before { content: ""; position: absolute; pointer-events: none;
+      width: 720px; height: 720px; right: -200px; top: -160px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 62%);
+      filter: blur(20px); }
+    .hero .wrap { position: relative; display: grid; gap: 56px;
+      padding-top: 56px; padding-bottom: 64px; }
+    .kicker { display: inline-flex; align-items: center; gap: 8px; margin: 0;
+      padding: 6px 12px; border-radius: 999px; color: var(--muted);
+      border: 1px solid var(--line-strong);
+      background: color-mix(in srgb, var(--surface) 70%, transparent); }
     h1 { font-family: var(--dot); font-weight: 900;
-      font-size: clamp(72px, 16vw, 136px); line-height: 1;
+      font-size: clamp(80px, 18vw, 152px); line-height: 0.95;
       letter-spacing: -0.02em; margin: 24px 0 0; }
-    .lead { font-size: 20px; line-height: 28px; letter-spacing: -0.01em;
-      color: var(--muted); max-width: 30ch; margin: 24px 0 32px; }
-    .lead span { color: var(--ink); }
-    .platforms { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .hero h1 { animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 0.08s both; }
+    .lead { font-size: 20px; line-height: 30px; letter-spacing: -0.01em;
+      color: var(--muted); max-width: 32ch; margin: 20px 0 32px; }
+    .lead strong { color: var(--ink); font-weight: 500; }
+    .platforms { display: flex; flex-wrap: wrap; align-items: center;
+      gap: 8px; margin-top: 28px; color: var(--faint); }
     .chip { display: inline-flex; align-items: center; height: 28px;
       padding: 0 12px; border-radius: 999px; color: var(--muted);
       border: 1px solid var(--line-strong); }
-    .screens { display: flex; gap: 12px; overflow-x: auto;
-      scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px; }
-    .screens img { width: 180px; height: auto; flex: none;
-      scroll-snap-align: start; border-radius: 20px;
-      border: 1px solid var(--line); background: var(--surface); }
-    @media (min-width: 900px) {
-      .hero .wrap { grid-template-columns: 1fr auto; align-items: center;
-        padding-top: 96px; padding-bottom: 80px; }
-      .screens { margin: 0; padding: 0; overflow: visible; }
-      .screens img { width: 170px; }
-      .screens img:nth-child(2) { transform: translateY(-24px); }
-    }
-    section.block { padding-top: 64px; }
-    .features { list-style: none; margin: 32px 0 0; padding: 0;
-      display: grid; gap: 1px; background: var(--line);
-      border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
-    .features li { display: flex; gap: 16px; padding: 20px;
+
+    .phone { margin: 0; padding: 6px; border-radius: 30px;
+      background: linear-gradient(160deg, #3a3a3a, #0d0d0d);
+      box-shadow: 0 0 0 1px var(--line), 0 30px 60px -20px rgb(0 0 0 / 0.6); }
+    .phone img { width: 100%; height: auto; border-radius: 24px;
       background: var(--surface); }
-    .features li > span { padding-top: 3px; }
-    .features h3 { font-size: 17px; line-height: 24px; font-weight: 500;
-      margin: 0 0 4px; }
-    .features p { margin: 0; font-size: 13px; line-height: 20px;
-      color: var(--muted); }
-    @media (min-width: 640px) {
-      .features { grid-template-columns: 1fr 1fr; }
+    .stack { position: relative; height: 440px; max-width: 420px;
+      width: 100%; margin: 0 auto; }
+    .stack .phone { position: absolute; top: 0; left: 50%; width: 190px;
+      transition: transform 0.5s cubic-bezier(.2,.8,.2,1); }
+    .stack .front { z-index: 2; transform: translateX(-50%); }
+    .stack .left { transform: translateX(-118%) translateY(36px) rotate(-8deg) scale(0.9); }
+    .stack .right { transform: translateX(18%) translateY(36px) rotate(8deg) scale(0.9); }
+    .stack:hover .left { transform: translateX(-132%) translateY(28px) rotate(-11deg) scale(0.9); }
+    .stack:hover .right { transform: translateX(32%) translateY(28px) rotate(11deg) scale(0.9); }
+    .stack .back img { filter: brightness(0.75); }
+    @media (min-width: 900px) {
+      .hero .wrap { grid-template-columns: 1.1fr 1fr; align-items: center;
+        padding-top: 96px; padding-bottom: 96px; }
+      .stack { height: 520px; max-width: none; }
+      .stack .phone { width: 228px; }
     }
-    .privacy { display: grid; gap: 24px; margin-top: 32px; padding: 24px;
-      border: 1px dashed var(--line-strong); border-radius: 20px; }
-    .privacy p { margin: 0; color: var(--muted); max-width: 60ch; }
-    .privacy a { color: var(--ink); text-underline-offset: 3px; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--line); }
+    .stats > div { padding: 24px 16px; border-right: 1px solid var(--line);
+      border-top: 1px solid var(--line); }
+    .stats > div:nth-child(-n+2) { border-top: 0; }
+    .stats > div:nth-child(2n) { border-right: 0; }
+    .stats .value { font-family: var(--dot); font-weight: 900; font-size: 40px;
+      line-height: 44px; margin: 0 0 6px; }
+    .stats .label { margin: 0; }
+    @media (min-width: 640px) {
+      .stats { grid-template-columns: repeat(4, 1fr); }
+      .stats > div { border-top: 0; padding: 32px 24px; }
+      .stats > div:nth-child(2n) { border-right: 1px solid var(--line); }
+      .stats > div:last-child { border-right: 0; }
+    }
+
+    /* Sections */
+    section.block { padding-top: 96px; }
+    .section-head { display: grid; gap: 12px; }
+    .section-head p.sub { margin: 0; color: var(--muted); max-width: 52ch; }
+    .dot-title { font-size: 36px; line-height: 40px; }
+    @media (min-width: 640px) { .dot-title { font-size: 44px; line-height: 48px; } }
+
+    /* Features */
+    .features { list-style: none; margin: 40px 0 0; padding: 0;
+      display: grid; gap: 12px; }
+    .feature { position: relative; padding: 24px; border-radius: 20px;
+      background: var(--surface); border: 1px solid var(--line);
+      transition: border-color 0.2s, transform 0.2s; overflow: hidden; }
+    .feature:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+    .feature-head { display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 20px; }
+    .feature-icon { display: inline-grid; place-items: center; width: 40px;
+      height: 40px; border-radius: 12px; background: var(--raised);
+      color: var(--ink); font-size: 18px; }
+    .feature h3, .privacy-grid h3 { font-size: 17px; line-height: 24px;
+      font-weight: 500; margin: 0 0 6px; }
+    .feature p, .privacy-grid p { margin: 0; font-size: 14px; line-height: 21px;
+      color: var(--muted); }
+    .feature.big { display: grid; gap: 24px; padding-bottom: 0; }
+    .feature.big h3 { font-size: 22px; line-height: 28px; }
+    .feature-shot { height: 260px; overflow: hidden; display: flex;
+      justify-content: center; }
+    .feature-shot .phone { width: 220px; align-self: flex-start;
+      border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    @media (min-width: 640px) {
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .feature.big { grid-column: 1 / -1; }
+    }
+    /* 6 columns: the two large cards take half a row each, the six small
+       ones a third, so every row is full. */
+    @media (min-width: 900px) {
+      .features { grid-template-columns: repeat(6, 1fr); }
+      .feature { grid-column: span 2; }
+      .feature.big { grid-column: span 3; grid-template-columns: 1fr 220px;
+        padding: 28px 28px 0; }
+      .feature.big > div:first-child { padding-bottom: 28px; }
+      .feature-shot { height: 300px; }
+    }
+
+    /* Desktop */
+    .desk { margin-top: 40px; }
+    .desk input { position: absolute; opacity: 0; pointer-events: none; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .tabs label { display: inline-flex; align-items: center; height: 36px;
+      padding: 0 14px; border-radius: 999px; cursor: pointer;
+      color: var(--muted); border: 1px solid var(--line-strong);
+      transition: background-color 0.15s, color 0.15s; }
+    .tabs label:hover { color: var(--ink); }
+    .tabs input:checked + label { background: var(--ink); color: var(--on-ink);
+      border-color: var(--ink); }
+    .tabs input:focus-visible + label { outline: 2px solid var(--ink);
+      outline-offset: 2px; }
+    .window { border-radius: 16px; overflow: hidden;
+      border: 1px solid var(--line-strong); background: var(--surface);
+      box-shadow: 0 40px 80px -40px rgb(0 0 0 / 0.7); }
+    .window-bar { display: flex; align-items: center; gap: 8px; height: 36px;
+      padding: 0 14px; border-bottom: 1px solid var(--line); }
+    .window-bar i { width: 10px; height: 10px; border-radius: 50%;
+      background: var(--line-strong); }
+    .window-bar span { margin-left: auto; margin-right: auto; }
+    .screen { position: relative; aspect-ratio: 1594 / 992; }
+    .screen img { position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0; visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s; }
+    .screen img:first-child { opacity: 1; visibility: visible; }
+    .desk:has(input:checked) .screen img { opacity: 0; visibility: hidden; }
+    ${desktopRules}
+
+    /* Gallery */
+    .gallery { list-style: none; margin: 40px -16px 0; padding: 0 16px 8px;
+      display: flex; gap: 16px; overflow-x: auto;
+      scroll-snap-type: x mandatory; scrollbar-width: thin; }
+    .gallery li { flex: none; width: 168px; scroll-snap-align: start; }
+    .gallery .phone { padding: 5px; border-radius: 26px; }
+    .gallery .phone img { border-radius: 21px; }
+    .gallery p { margin: 12px 0 0; text-align: center; }
+    @media (min-width: 640px) {
+      .gallery { margin: 40px -24px 0; padding: 0 24px 8px; }
+      .gallery li { width: 196px; }
+    }
+
+    /* Privacy */
+    .privacy-grid { display: grid; gap: 1px; margin-top: 40px;
+      background: var(--line); border: 1px solid var(--line);
+      border-radius: 20px; overflow: hidden; }
+    .privacy-grid > div { padding: 28px 24px; background: var(--bg); }
+    .privacy-grid .feature-icon { margin-bottom: 20px; }
+    .privacy-more { margin: 20px 0 0; color: var(--muted); }
+    .privacy-more a { color: var(--ink); text-underline-offset: 3px; }
+    @media (min-width: 900px) {
+      .privacy-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* Closing call to action */
+    .cta { position: relative; overflow: hidden; margin-top: 96px;
+      padding: 64px 24px; border-radius: 28px; text-align: center;
+      background: var(--surface); border: 1px solid var(--line); }
+    .cta .dot-grid { -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 50%, #000, transparent);
+      mask-image: radial-gradient(ellipse 60% 70% at 50% 50%, #000, transparent); }
+    .cta h2 { position: relative; font-family: var(--dot); font-weight: 900;
+      font-size: clamp(44px, 9vw, 80px); line-height: 1; margin: 0;
+      text-transform: uppercase; }
+    .cta p { position: relative; color: var(--muted); margin: 16px auto 32px;
+      max-width: 40ch; }
+    .cta .actions { position: relative; justify-content: center; }
+    footer.site { margin-top: 96px; }
+
+    /* Entrance */
+    @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+    .rise { animation: rise 0.7s cubic-bezier(.2,.8,.2,1) both; }
+    .rise.d2 { animation-delay: 0.16s; }
+    .rise.d3 { animation-delay: 0.24s; } .rise.d4 { animation-delay: 0.32s; }
   </style>`,
   )}
 </head>
 <body>
-  ${topBar()}
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="${APP_NAME} home"><span class="status"></span>${APP_NAME}</a>
+      <nav class="label" aria-label="Main">
+        <a class="hide-sm" href="#features">Features</a>
+        <a class="hide-sm" href="#desktop">Desktop</a>
+        <a href="/privacy-policy">Privacy</a>
+        <a href="${GITHUB}">GitHub ${icon('arrow-up-right')}</a>
+      </nav>
+    </div>
+  </header>
   <main>
     <section class="hero">
       <div class="dot-grid" aria-hidden="true"></div>
       <div class="wrap">
         <div>
-          <p class="kicker label"><span class="status pulse"></span>Free · No ads · No trackers</p>
+          <p class="kicker label rise"><span class="status ok pulse"></span>Free · No ads · No trackers</p>
           <h1>${APP_NAME}</h1>
-          <p class="lead">Read manga, manhwa and manhua from several sources.
-          <span>Made by Kurodev.</span></p>
-          <div class="actions">
+          <p class="lead rise d2">Read manga, manhwa and manhua from several sources.
+          <strong>One library on your phone and your computer.</strong></p>
+          <div class="actions rise d3">
             <a class="btn primary label" href="${DOWNLOAD}">Download the app ${icon('arrow-down')}</a>
-            <a class="btn secondary label" href="${GITHUB}">GitHub ${icon('arrow-up-right')}</a>
+            <a class="btn secondary label" href="#features">See features</a>
           </div>
-          <div class="platforms label" aria-label="Platforms">
+          <div class="platforms label rise d4" aria-label="Platforms">
             <span class="chip">Android</span><span class="chip">Windows</span>
             <span class="chip">macOS</span><span class="chip">Linux</span>
           </div>
         </div>
-        <div class="screens">
-        ${screens}
+        <div class="stack rise d2">
+          ${heroPhones}
         </div>
       </div>
     </section>
 
+    <div class="wrap">
+      <div class="stats">
+        ${stats}
+      </div>
+    </div>
+
     <section class="block wrap" id="features">
-      <p class="section-label label"><b>01</b> Index</p>
-      <h2 class="dot-title">Features</h2>
+      <div class="section-head">
+        <p class="section-label label"><b>01</b> Index</p>
+        <h2 class="dot-title">Features</h2>
+        <p class="sub">Everything you need to follow your series, and nothing you do not.</p>
+      </div>
       <ul class="features">
         ${features}
       </ul>
     </section>
 
+    <section class="block wrap" id="desktop">
+      <div class="section-head">
+        <p class="section-label label"><b>02</b> Desktop</p>
+        <h2 class="dot-title">Big screen too</h2>
+        <p class="sub">The same app on Windows, macOS and Linux, with a layout made for wide windows, mouse and keyboard.</p>
+      </div>
+      <div class="desk">
+        <div class="tabs" role="group" aria-label="Desktop screens">
+          ${desktopTabs}
+        </div>
+        <div class="window">
+          <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span class="label faint">${APP_NAME}</span></div>
+          <div class="screen">
+            ${desktopShots}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block wrap" id="screens">
+      <div class="section-head">
+        <p class="section-label label"><b>03</b> Screens</p>
+        <h2 class="dot-title">A closer look</h2>
+      </div>
+      <ul class="gallery">
+        ${gallery}
+      </ul>
+    </section>
+
     <section class="block wrap" id="privacy">
-      <p class="section-label label"><b>02</b> Data</p>
-      <h2 class="dot-title">Privacy</h2>
-      <div class="privacy">
-        <p>Bookmarks, history and downloads stay on your device. When sync is
-        on, data is only sent between your device and Google Drive. Read more in
-        the <a href="/privacy-policy">Privacy Policy</a>.</p>
+      <div class="section-head">
+        <p class="section-label label"><b>04</b> Data</p>
+        <h2 class="dot-title">Privacy</h2>
+        <p class="sub">Your library is yours. Google Drive sync is the only place it goes, and only when you turn it on.</p>
+      </div>
+      <div class="privacy-grid">
+        ${privacy}
+      </div>
+      <p class="privacy-more">Read the details in the <a href="/privacy-policy">Privacy Policy</a>.</p>
+    </section>
+
+    <section class="wrap">
+      <div class="cta">
+        <div class="dot-grid" aria-hidden="true"></div>
+        <h2>Start reading</h2>
+        <p>Free on Android, Windows, macOS and Linux. No account needed.</p>
+        <div class="actions">
+          <a class="btn primary label" href="${DOWNLOAD}">Download the app ${icon('arrow-down')}</a>
+          <a class="btn secondary label" href="${GITHUB}">Source code ${icon('arrow-up-right')}</a>
+        </div>
       </div>
     </section>
   </main>
