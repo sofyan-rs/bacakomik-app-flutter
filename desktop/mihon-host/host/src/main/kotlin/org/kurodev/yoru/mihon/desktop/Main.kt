@@ -13,13 +13,17 @@ import eu.kanade.tachiyomi.network.HostNetwork
 import eu.kanade.tachiyomi.network.PersistentCookieJar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import org.kurodev.yoru.mihon.HostDns
 import org.kurodev.yoru.mihon.MihonHost
 import org.kurodev.yoru.mihon.MihonPlatform
 import org.kurodev.yoru.mihon.host.HostError
@@ -78,6 +82,14 @@ fun main(args: Array<String>) {
                             put("type", type)
                         }
                     }
+                    // DNS over HTTPS from the app's settings, as Android's
+                    // MihonChannel sets it; kept in the host's preferences.
+                    "setDns" -> {
+                        val url = params["url"]?.jsonPrimitive?.contentOrNull
+                        val bootstrap = (params["bootstrap"] as? JsonArray).orEmpty().map { it.jsonPrimitive.content }
+                        HostDns.set(application, url, bootstrap)
+                        JsonNull
+                    }
                     else -> throw HostError("The Mihon host does not know \"$method\".", 400)
                 }
             }
@@ -88,6 +100,9 @@ fun main(args: Array<String>) {
     MihonHost.saveMemos()
     exitProcess(0)
 }
+
+// The emulated app, for calls that need a Context (setDns).
+private lateinit var application: Application
 
 // Everything an extension expects of the app: Android stand-ins, the network
 // with the app's identity and cookies, then MihonHost as on Android.
@@ -118,6 +133,7 @@ private fun setUp(
     }
     android.webkit.WebView.setProviderFactory { view -> CefRuntime.providerFor(view) }
     val app = Application()
+    application = app
     AndroidCompat().startApp(app)
     val loader = ApkLoader(File(root, "jars"))
     MihonHost.start(

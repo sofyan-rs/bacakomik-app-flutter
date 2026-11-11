@@ -51,6 +51,33 @@ class ProcessMihonHost implements MihonHost {
 
   Future<_HostProcess>? _process;
 
+  /// The DNS over HTTPS server from settings ([setDns]), handed to every
+  /// host started; null url: the system DNS.
+  ({String? url, List<String> bootstrap})? _dns;
+
+  /// Makes extensions look up hostnames through [url] (null: the system
+  /// DNS), as Android's `HostDns` does. A host not started yet gets it when
+  /// it starts.
+  Future<void> setDns(String? url, List<String> bootstrap) async {
+    _dns = (url: url, bootstrap: bootstrap);
+    final running = _process;
+    if (running == null) return;
+    try {
+      await _sendDns(await running);
+    } catch (e) {
+      debugPrint('Mihon DNS not set: $e');
+    }
+  }
+
+  Future<void> _sendDns(_HostProcess process) async {
+    final dns = _dns;
+    if (dns == null) return;
+    await process.request('setDns', {
+      'url': dns.url,
+      'bootstrap': dns.bootstrap,
+    });
+  }
+
   @override
   Future<bool> get available async => MihonRuntime.platform != null;
 
@@ -73,6 +100,12 @@ class ProcessMihonHost implements MihonHost {
               userAgent: ExtensionBridge.userAgent,
               appVersion: info.version,
             );
+            try {
+              await _sendDns(process);
+            } catch (e) {
+              // A host from before setDns: extensions keep the system DNS.
+              debugPrint('Mihon DNS not set: $e');
+            }
             unawaited(
               process.exited.then((_) {
                 // Started again by the next call.
