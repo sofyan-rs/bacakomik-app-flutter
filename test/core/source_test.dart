@@ -72,7 +72,10 @@ void main() {
 
     test('rejects unusable groups', () {
       expect(FilterGroup.tryParse('status'), isNull);
-      expect(FilterGroup.tryParse({'label': 'No key', 'type': 'multi'}), isNull);
+      expect(
+        FilterGroup.tryParse({'label': 'No key', 'type': 'multi'}),
+        isNull,
+      );
       expect(
         FilterGroup.tryParse({'key': 'status', 'options': <Object>[]}),
         isNull,
@@ -165,6 +168,49 @@ void main() {
       expect(meta('1.10.0').isNewerThan(meta('1.9.0')), isTrue);
       expect(meta('1.0.0').isNewerThan(meta(1)), isFalse);
       expect(meta('1.0.1').isNewerThan(meta(1)), isTrue);
+    });
+  });
+
+  group('ExtensionMeta image headers', () {
+    ExtensionMeta meta(Map<String, dynamic> extra) => ExtensionMeta.fromJson({
+      'id': 'x',
+      'name': 'X',
+      'version': '1.0.0',
+      'file': 'x.js',
+      'sha256': '',
+      ...extra,
+    });
+
+    test('reads imageHosts and imageHeaders, and keeps them', () {
+      final m = meta({
+        'imageHosts': [' CDN.Voratoon.com ', ''],
+        'imageHeaders': {'Referer': 'https://voratoon.co/'},
+      });
+      expect(m.imageHosts, ['cdn.voratoon.com']);
+      expect(m.imageHeaders, {'Referer': 'https://voratoon.co/'});
+      final back = ExtensionMeta.fromJson(m.toJson());
+      expect(back.imageHosts, m.imageHosts);
+      expect(back.imageHeaders, m.imageHeaders);
+      expect(m.forLanguage('en').imageHeaders, m.imageHeaders);
+    });
+
+    test('drops headers other than Referer and Origin', () {
+      final m = meta({
+        'imageHeaders': {
+          'Cookie': 'session=1',
+          'Authorization': 'Bearer x',
+          'origin': 'https://voratoon.co',
+          'Referer': 42,
+        },
+      });
+      expect(m.imageHeaders, {'origin': 'https://voratoon.co'});
+    });
+
+    test('defaults to none', () {
+      final m = meta(const {});
+      expect(m.imageHosts, isEmpty);
+      expect(m.imageHeaders, isEmpty);
+      expect(m.toJson().containsKey('imageHosts'), isFalse);
     });
   });
 

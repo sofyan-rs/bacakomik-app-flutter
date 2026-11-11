@@ -45,6 +45,8 @@ class ExtensionMeta {
     this.repoUrl,
     this.languages = const [],
     this.urlPatterns = const [],
+    this.imageHosts = const [],
+    this.imageHeaders = const {},
     this.parentId,
     this.icon,
     this.pkg,
@@ -71,6 +73,14 @@ class ExtensionMeta {
     urlPatterns:
         (json['urlPatterns'] as List?)?.whereType<String>().toList() ??
         const [],
+    imageHosts:
+        (json['imageHosts'] as List?)
+            ?.whereType<String>()
+            .map((h) => h.trim().toLowerCase())
+            .where((h) => h.isNotEmpty)
+            .toList() ??
+        const [],
+    imageHeaders: _imageHeaders(json['imageHeaders']),
     icon: json['icon'] as String?,
     pkg: json['pkg'] as String?,
     signer: json['signer'] as String?,
@@ -137,6 +147,31 @@ class ExtensionMeta {
   /// group), e.g. `^/manga/([^/?#]+)`. Lets the app read links, such as a
   /// Mihon backup's, without running the script; see [slugFromUrl].
   final List<String> urlPatterns;
+
+  /// Image hosts that want [imageHeaders], e.g. `cdn.voratoon.com`; each
+  /// also covers its subdomains. Covers come from the source with no
+  /// headers, so a CDN that turns away images without the site as Referer
+  /// gets them this way, for covers and pages alike.
+  final List<String> imageHosts;
+
+  /// Headers sent with every image from [imageHosts]: only those in
+  /// [imageHeaderNames], so an extension cannot send cookies or credentials
+  /// to a host.
+  final Map<String, String> imageHeaders;
+
+  /// Headers [imageHeaders] may set, lowercase.
+  static const imageHeaderNames = {'referer', 'origin'};
+
+  static Map<String, String> _imageHeaders(Object? raw) {
+    if (raw is! Map) return const {};
+    return {
+      for (final MapEntry(:key, :value) in raw.entries)
+        if (key is String &&
+            value is String &&
+            imageHeaderNames.contains(key.toLowerCase()))
+          key: value,
+    };
+  }
 
   /// For a source made by [forLanguage] or [forMihonSource]: the
   /// extension's id.
@@ -210,6 +245,8 @@ class ExtensionMeta {
     nsfw: nsfw,
     repoUrl: repoUrl,
     urlPatterns: urlPatterns,
+    imageHosts: imageHosts,
+    imageHeaders: imageHeaders,
     parentId: id,
     icon: icon,
   );
@@ -299,6 +336,8 @@ class ExtensionMeta {
     if (repoUrl != null) 'repoUrl': repoUrl,
     if (languages.isNotEmpty) 'languages': languages,
     if (urlPatterns.isNotEmpty) 'urlPatterns': urlPatterns,
+    if (imageHosts.isNotEmpty) 'imageHosts': imageHosts,
+    if (imageHeaders.isNotEmpty) 'imageHeaders': imageHeaders,
     if (icon != null) 'icon': icon,
     if (pkg != null) 'pkg': pkg,
     if (signer != null) 'signer': signer,

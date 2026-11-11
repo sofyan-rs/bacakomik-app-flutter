@@ -2,6 +2,7 @@ import 'package:yoru/core/domain/entities/comic_details.dart';
 import 'package:yoru/core/error/failures.dart';
 import 'package:yoru/core/usecase/usecase.dart';
 import 'package:yoru/core/utils/clock.dart';
+import 'package:yoru/core/utils/cover_url.dart';
 import 'package:yoru/features/bookmark/domain/entities/bookmark.dart';
 import 'package:yoru/features/bookmark/domain/repositories/bookmark_repository.dart';
 import 'package:yoru/features/bookmark/domain/usecases/merge_sources.dart';
@@ -31,7 +32,9 @@ class RefreshCancelToken {
 /// placeholder. A changed chapter count saves the new details and moves
 /// the comic to the top ([Bookmark.updatedDate] = now). An imported
 /// placeholder always gets the loaded details; it moves up only when the
-/// source has more chapters than the imported list.
+/// source has more chapters than the imported list. A cover whose
+/// presigned URL expired ([presignedUrlExpired]) also gets the loaded
+/// details, without moving the comic.
 /// A comic that fails to load is left unchanged. Reading progress an import
 /// left for it is applied. The save goes through
 /// [BookmarkRepository.updateBookmark], so a bookmark removed while the
@@ -88,9 +91,15 @@ class RefreshBookmark implements UseCase<RefreshResult, String> {
     final fresh = chapters.getOrElse((_) => const []);
     final imported = bookmark.comicDetails.isPlaceholder;
     final grew = fresh.length != bookmark.comicDetails.chapters.length;
+    // A cover URL that expires (presigned) is fetched again with the details,
+    // though no chapter came.
+    final staleCover = presignedUrlExpired(
+      bookmark.comicDetails.coverImg,
+      _clock.now(),
+    );
 
     final ComicDetails details;
-    if (grew || imported) {
+    if (grew || imported || staleCover) {
       final loaded = await _comicDetails.getSeries(keys.first, fresh);
       if (loaded case Left(value: final failure)) {
         return right((saved: null, historyChanged: false, failure: failure));
@@ -113,7 +122,7 @@ class RefreshBookmark implements UseCase<RefreshResult, String> {
       if (aligned case Left(value: final failure)) return left(failure);
       historyChanged |= aligned.getOrElse((_) => false);
     }
-    if ((!grew && !imported) || cancelled()) {
+    if ((!grew && !imported && !staleCover) || cancelled()) {
       return right((
         saved: null,
         historyChanged: historyChanged,
@@ -128,7 +137,7 @@ class RefreshBookmark implements UseCase<RefreshResult, String> {
       // An imported comic may come with its chapter list already: it gets
       // the loaded details anyway, moving up only for new chapters.
       final moved = placeholder ? fresh.length > count : fresh.length != count;
-      if (!placeholder && fresh.length == count) return null;
+      if (!placeholder && fresh.length == count && !staleCover) return null;
       return current.copyWith(
         comicDetails: details,
         updatedDate: moved ? now : current.updatedDate,

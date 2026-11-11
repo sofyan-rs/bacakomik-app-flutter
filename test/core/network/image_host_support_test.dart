@@ -89,4 +89,40 @@ void main() {
       );
     });
   });
+
+  group('ImageHostHeaders', () {
+    const referer = {'Referer': 'https://voratoon.co/'};
+
+    test('sends the headers to the host and its subdomains only', () {
+      final headers = ImageHostHeaders()
+        ..update([
+          (hosts: ['cdn.voratoon.com'], headers: referer),
+        ]);
+      expect(headers.forHost('cdn.voratoon.com'), referer);
+      expect(headers.forHost('CDN.Voratoon.com'), referer);
+      expect(headers.forHost('img.cdn.voratoon.com'), referer);
+      expect(headers.forHost('voratoon.com'), isEmpty);
+      expect(headers.forHost('evilcdn.voratoon.com'), isEmpty);
+      expect(headers.forHost('cdn.voratoon.com.evil.io'), isEmpty);
+    });
+
+    test('the most specific host wins', () {
+      final headers = ImageHostHeaders()
+        ..update([
+          (hosts: ['example.com'], headers: {'Referer': 'https://a/'}),
+          (hosts: ['img.example.com'], headers: {'Referer': 'https://b/'}),
+        ]);
+      expect(headers.forHost('img.example.com'), {'Referer': 'https://b/'});
+      expect(headers.forHost('x.example.com'), {'Referer': 'https://a/'});
+    });
+
+    test('update replaces the rules', () {
+      final headers = ImageHostHeaders()
+        ..update([
+          (hosts: ['cdn.voratoon.com'], headers: referer),
+        ])
+        ..update(const []);
+      expect(headers.forHost('cdn.voratoon.com'), isEmpty);
+    });
+  });
 }

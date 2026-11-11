@@ -44,6 +44,9 @@ Future<void> main() async {
   // Sources must exist before the first screen loads comics.
   final extensions = getIt<ExtensionManager>();
   await extensions.installBundled();
+  // Image hosts' headers (e.g. a CDN's Referer) before the first cover.
+  _syncImageHostHeaders(extensions);
+  extensions.addListener(() => _syncImageHostHeaders(extensions));
   await _fixRelativeCovers(extensions);
   runApp(const YoruApp());
   // In the background: finds extension updates for the badge in More.
@@ -52,6 +55,14 @@ Future<void> main() async {
   // Starts Chromium while idle, so the first cookie read is not mid-scroll.
   unawaited(warmUpWebView());
 }
+
+/// Hands the installed extensions' `imageHosts` and `imageHeaders` to the
+/// image caches.
+void _syncImageHostHeaders(ExtensionManager extensions) =>
+    imageHostHeaders.update([
+      for (final e in extensions.extensions)
+        (hosts: e.imageHosts, headers: e.imageHeaders),
+    ]);
 
 /// Once, a little after start: library covers cached before the cover cache
 /// existed are copied into it (see [CoverCacheMigration]).

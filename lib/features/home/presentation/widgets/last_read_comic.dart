@@ -36,8 +36,11 @@ class LastReadComic extends StatelessWidget {
             bookmarked.chapters.length > latest.comicDetails.chapters.length
         ? bookmarked
         : latest.comicDetails;
+    // The bookmark's cover is the newer one: covers on presigned URLs
+    // expire, and a refresh only updates the bookmark.
+    final cover = bookmarked?.coverImg ?? details.coverImg;
     final progress = ReadProgress.of(details, latest.chapterNumber);
-    final heroTag = CoverHeroTag(context, details.coverImg);
+    final heroTag = CoverHeroTag(context, cover);
     final resume = ResumeChapter.of(latest, details.chapters);
 
     return Column(
@@ -52,7 +55,7 @@ class LastReadComic extends StatelessWidget {
               context,
               slug: latest.comicSlug,
               title: details.title,
-              cover: details.coverImg,
+              cover: cover,
               heroTag: heroTag,
             ),
             child: _HoverPanel(
@@ -62,7 +65,7 @@ class LastReadComic extends StatelessWidget {
                     width: 84,
                     child: CoverHero(
                       tag: heroTag,
-                      child: ComicCover(imageUrl: details.coverImg),
+                      child: ComicCover(imageUrl: cover),
                     ),
                   ),
                   const SizedBox(width: DotSpace.s4),

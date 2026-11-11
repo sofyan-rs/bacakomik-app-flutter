@@ -63,3 +63,41 @@ Future<Uint8List> decodeImageBody(String body) async {
   // The bytes come back without a copy (Isolate.exit).
   return Isolate.run(() => base64Decode(body));
 }
+
+/// Headers that image hosts want with every image, from the installed
+/// extensions' `imageHosts` and `imageHeaders`: e.g. VoraToon's
+/// cdn.voratoon.com answers 403 without `Referer: https://voratoon.co/`.
+///
+/// Looked up by the image's host, so every image of the host gets them
+/// (covers, chapter pages, downloads, saving) without the callers knowing
+/// the source. Headers a caller passes win.
+class ImageHostHeaders {
+  var _rules = <({String host, Map<String, String> headers})>[];
+
+  /// Replaces the rules: [hosts] and their [headers], one entry per
+  /// extension. A host also covers its subdomains; when two extensions
+  /// name the same host, the first wins.
+  void update(
+    Iterable<({List<String> hosts, Map<String, String> headers})> extensions,
+  ) {
+    _rules = [
+      for (final e in extensions)
+        if (e.headers.isNotEmpty)
+          for (final host in e.hosts) (host: host, headers: e.headers),
+    ];
+  }
+
+  /// Headers for an image from [host]; empty when no extension names it.
+  /// The most specific rule (longest host) wins.
+  Map<String, String> forHost(String host) {
+    final h = host.toLowerCase();
+    ({String host, Map<String, String> headers})? best;
+    for (final rule in _rules) {
+      final matches = h == rule.host || h.endsWith('.${rule.host}');
+      if (matches && (best == null || rule.host.length > best.host.length)) {
+        best = rule;
+      }
+    }
+    return best?.headers ?? const {};
+  }
+}

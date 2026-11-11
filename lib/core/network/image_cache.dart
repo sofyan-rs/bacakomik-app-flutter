@@ -52,6 +52,32 @@ const coverImageCacheKey = 'bacakomikCovers';
 
 final _fileService = _BrowserLikeFileService();
 
+/// Headers image hosts want, from the installed extensions; the image
+/// caches send them (see [ImageHostHeaders]). Kept up to date in `main`.
+final imageHostHeaders = ImageHostHeaders();
+
+/// [headers] over what [imageHostHeaders] has for [url]'s host: for
+/// downloaders outside the image caches (the native page downloader).
+Map<String, String> withImageHostHeaders(
+  String url,
+  Map<String, String> headers,
+) {
+  final uri = Uri.tryParse(url);
+  return uri == null ? headers : _withHostHeaders(uri, headers) ?? headers;
+}
+
+Map<String, String>? _withHostHeaders(Uri url, Map<String, String>? headers) {
+  final host = imageHostHeaders.forHost(url.host);
+  if (host.isEmpty) return headers;
+  return {
+    for (final MapEntry(:key, :value) in host.entries)
+      if (!(headers?.keys.any((k) => k.toLowerCase() == key.toLowerCase()) ??
+          false))
+        key: value,
+    ...?headers,
+  };
+}
+
 /// Whether [url] is a Mihon source's image (`mihon://…`, see `Images.kt`):
 /// only the image caches get it, through the extension in Kotlin.
 bool isMihonImage(String url) => url.startsWith('mihon://');
@@ -113,6 +139,7 @@ class _BrowserLikeFileService extends FileService {
   }) async {
     final uri = Uri.parse(url);
     if (isMihonImage(url)) return _getMihon(uri);
+    headers = _withHostHeaders(uri, headers);
     if (_inPage(uri.host)) return _getInPage(uri, headers);
     final response = await _direct(uri, headers);
     if (_isPage(uri, response)) {
@@ -149,7 +176,7 @@ class _BrowserLikeFileService extends FileService {
     // Only the image caches can fetch them.
     if (isMihonImage(url.toString())) return true;
     if (_inPage(url.host)) return true;
-    final response = await _direct(url, headers);
+    final response = await _direct(url, _withHostHeaders(url, headers));
     await response.content.drain<void>();
     return _isBlocked(url, response);
   }
@@ -161,10 +188,20 @@ class _BrowserLikeFileService extends FileService {
     Map<String, String>? headers,
   ) async {
     final hadCookies = _cookies.needs(url.host);
-    final response = await _getDirect(url, headers);
-    if (!_blocked.contains(response.statusCode) || !_pages.available) {
-      return response;
+    final hadSelfReferer = _selfRefererHosts.contains(url.host);
+    var response = await _getDirect(url, headers);
+    if (response.statusCode == 403 &&
+        _isBlockPage(response) &&
+        !hadSelfReferer &&
+        _triesSelfReferer(url, headers)) {
+      await response.content.drain<void>();
+      response = await _getDirect(url, headers);
+      if (response.statusCode == 403) {
+        _selfRefererHosts.remove(url.host);
+        _noSelfRefererHosts.add(url.host);
+      }
     }
+    if (!_isBlockPage(response) || !_pages.available) return response;
     if (hadCookies) {
       // Maybe stale: read them again next time.
       _cookies.invalidate(url.host);
@@ -174,6 +211,29 @@ class _BrowserLikeFileService extends FileService {
     if ((await _cookies.header(url)).isEmpty) return response;
     await response.content.drain<void>();
     return _getDirect(url, headers);
+  }
+
+  /// Hosts that turn away an image without a Referer but serve it with
+  /// their own origin as one (hotlink protection), when no extension names
+  /// them in [imageHostHeaders] (e.g. an extension from before
+  /// `imageHosts`). Without this their covers went through the hidden
+  /// WebView one at a time, and many stayed placeholders.
+  final _selfRefererHosts = <String>{};
+
+  /// Hosts that still answered 403 with their own origin as Referer.
+  final _noSelfRefererHosts = <String>{};
+
+  /// Whether a 403 from [url], asked without a Referer, should be asked
+  /// again with its own origin as one: the caller gave none and the host
+  /// has not failed with one. Starts sending it to the host.
+  bool _triesSelfReferer(Uri url, Map<String, String>? headers) {
+    if (headers != null &&
+        headers.keys.any((k) => k.toLowerCase() == 'referer')) {
+      return false;
+    }
+    if (_noSelfRefererHosts.contains(url.host)) return false;
+    _selfRefererHosts.add(url.host);
+    return true;
   }
 
   /// Longest wait for a direct request's response headers, and between two
@@ -202,6 +262,8 @@ class _BrowserLikeFileService extends FileService {
             if (_plainAgentHosts.contains(url.host))
               'User-Agent': _plainUserAgent,
             if (cookie.isNotEmpty) 'Cookie': cookie,
+            if (_selfRefererHosts.contains(url.host))
+              'Referer': '${url.origin}/',
             ...?headers,
           },
         )
@@ -212,15 +274,24 @@ class _BrowserLikeFileService extends FileService {
   /// Whether [response] is a block the WebView can get past; remembers
   /// [url]'s host when it is.
   bool _isBlocked(Uri url, FileServiceResponse response) {
-    if (!_pages.available || !_blocked.contains(response.statusCode)) {
-      return false;
-    }
+    if (!_pages.available || !_isBlockPage(response)) return false;
     _inPageSince[url.host] = DateTime.now();
     return true;
   }
 
   /// Statuses Cloudflare answers a blocked request with.
   static const _blocked = {403, 503};
+
+  /// Whether [response] is a [_blocked] status with a web page (or no
+  /// type), as a Cloudflare block or a hotlink check sends. An XML error is
+  /// a storage bucket's answer (S3's AccessDenied for a presigned URL that
+  /// expired, as VoraToon's covers on cvr.voratoon.id do after 6 days):
+  /// neither the WebView nor a Referer gets past it. Taking it for a block
+  /// sent every image of the host through the WebView for 30 minutes, the
+  /// covers whose URLs were still valid too, and they failed there.
+  static bool _isBlockPage(FileServiceResponse response) =>
+      _blocked.contains(response.statusCode) &&
+      const {'', '.html', '.htm', '.txt'}.contains(response.fileExtension);
 
   /// Hosts that answered [_blocked]: their images go through the WebView
   /// for a while without trying the direct request first.

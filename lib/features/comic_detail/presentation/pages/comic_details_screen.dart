@@ -362,7 +362,11 @@ class _ComicDetailsViewState extends State<_ComicDetailsView> {
   Future<void> _onLoaded(BuildContext context, ComicDetailsState state) async {
     if (state is! ComicDetailsLoaded) return;
     final history = context.read<HistoryCubit>();
-    final changed = await context.read<BookmarkCubit>().comicLoaded(
+    final bookmarks = context.read<BookmarkCubit>();
+    if (!state.stored) {
+      await history.coverLoaded(widget.slug, state.comicDetails.coverImg);
+    }
+    final changed = await bookmarks.comicLoaded(
       widget.slug,
       state.comicDetails,
       fresh: !state.stored,

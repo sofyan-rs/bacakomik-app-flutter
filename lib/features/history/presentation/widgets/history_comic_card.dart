@@ -10,6 +10,7 @@ import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
 import 'package:yoru/features/history/presentation/widgets/history_groups.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:yoru/features/bookmark/domain/entities/merged_chapters.dart';
+import 'package:yoru/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -42,7 +43,19 @@ class HistoryComicCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Dotline.of(context);
     final details = item.comicDetails;
-    final heroTag = CoverHeroTag(context, details.coverImg);
+    // History keeps the cover from when the chapter was read; a bookmark
+    // refresh only updates the bookmark, and covers on presigned URLs
+    // expire. No [BookmarkCubit] above in widget tests.
+    final cover =
+        context
+            .watch<BookmarkCubit?>()
+            ?.state
+            .where((b) => b.slug == item.comicSlug)
+            .firstOrNull
+            ?.comicDetails
+            .coverImg ??
+        details.coverImg;
+    final heroTag = CoverHeroTag(context, cover);
     final latest = item.latestHistory;
     final progress = ReadProgress.of(details, latest.chapterNumber);
 
@@ -80,7 +93,7 @@ class HistoryComicCard extends StatelessWidget {
             child: CoverHero(
               tag: heroTag,
               child: ComicCover(
-                imageUrl: details.coverImg,
+                imageUrl: cover,
                 radius: DotRadius.s,
                 aspectRatio: null,
               ),
@@ -120,7 +133,7 @@ class HistoryComicCard extends StatelessWidget {
             context,
             slug: item.comicSlug,
             title: details.title,
-            cover: details.coverImg,
+            cover: cover,
             heroTag: heroTag,
           ),
         ),

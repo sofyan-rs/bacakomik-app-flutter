@@ -92,6 +92,25 @@ class HistoryCubit extends Cubit<List<ReadHistory>> {
 
   /// Saves the last quiet [addHistory] of chapter [slug] again, unchanged,
   /// as a normal save so sync sends it. Nothing when there is none.
+  /// Gives [comicSlug]'s history the [cover] loaded from its source, when
+  /// it has another: history keeps the details from when a chapter was
+  /// read, and a cover on a presigned URL (VoraToon's) stops loading after
+  /// a few days. Saves only the latest entry, unchanged but for the cover;
+  /// quiet, so it does not start a sync.
+  Future<void> coverLoaded(String comicSlug, String cover) async {
+    final latest = index.latestOf(comicSlug);
+    if (cover.isEmpty ||
+        latest == null ||
+        latest.comicDetails.coverImg == cover) {
+      return;
+    }
+    await addHistoryList([
+      latest.copyWith(
+        comicDetails: latest.comicDetails.copyWith(coverImg: cover),
+      ),
+    ], quiet: true);
+  }
+
   Future<void> announce(String slug) async {
     if (_quiet.remove(slug) case final entry?) {
       await addHistoryList([entry]);

@@ -38,18 +38,85 @@
     }
   }
 
-  // Chapter pages live at /<site slug>-chapter-<n>/, but the site slug can differ
-  // from ours (`883432-eleceed` -> `eleceed-chapter-1`) and numbers can be padded
-  // (`00-1` = 0.1), so read the real link off the series page. Falls back to it.
-  /** @param {string} series @param {number} number */
-  async function chapterUrl(series, number) {
+  // A chapter is a WordPress post, and the API hands us its id. Its permalink
+  // and image list come straight from WordPress REST, so we never guess the
+  // site's slugs or link shapes (`eleceed-chapter-1`, `<slug>-2`, `179-end`).
+  /** @param {number} id @returns {Promise<{ link: string, categories: number[], images: string[] } | null>} */
+  async function post(id) {
     try {
-      const res = await http.fetch({ url: series })
-      const re = /href="(https:\/\/bacakomik\.my\/[^"]+-chapter-(\d+)(?:-(\d+))?\/?)"/g
+      const res = await http.fetch({ url: `${SITE}/wp-json/wp/v2/posts/${id}?_fields=link,categories,content` })
+      if (res.status !== 200) return null
+      const d = JSON.parse(res.body)
+      const images = []
+      const re = /<img[^>]+?src="(https?:\/\/[^"]+)"/g
       let m
-      while ((m = re.exec(res.body || ''))) {
-        if (Number(`${m[2]}.${m[3] || 0}`) === number) return m[1]
+      while ((m = re.exec((d.content && d.content.rendered) || ''))) images.push(m[1].replace(/ /g, '%20'))
+      return { link: String(d.link || ''), categories: d.categories || [], images }
+    } catch (_) {
+      return null
+    }
+  }
+
+  // Images in a chapter page's reader block, [] when the page has none.
+  /** @param {string} url @returns {Promise<string[]>} */
+  async function pageImages(url) {
+    if (!url) return []
+    try {
+      const res = await http.fetch({ url })
+      const body = res.body || ''
+      const start = body.indexOf('id="chimg')
+      if (res.status !== 200 || start < 0) return []
+      const end = body.indexOf('<script', start)
+      const reader = body.slice(start, end < 0 ? body.length : end)
+      const images = []
+      const re = /data-lazy-src="(https?:\/\/[^"]+)"/g
+      let m
+      // Folders can hold spaces (`179 End`).
+      while ((m = re.exec(reader))) images.push(m[1].replace(/ /g, '%20'))
+      return images
+    } catch (_) {
+      return []
+    }
+  }
+
+  /** @param {string} url */
+  const host = (url) => (url.match(/^https?:\/\/([^\/]+)/) || [])[1] || ''
+
+  // The post's own images name an origin host (`master.komikcdn.me`) that answers
+  // 403, and old series point at hosts that serve a "Baca Komik Ini Di
+  // BACAKOMIK.CO" placeholder. The chapter page swaps in the live hosts, so read
+  // the images there. When the permalink is broken (`<slug>/` can land on the
+  // series archive), keep the post's images but borrow the hosts a sibling
+  // chapter's page uses. [] = no luck.
+  /** @param {number} id @returns {Promise<string[]>} */
+  async function chapterImages(id) {
+    const p = await post(id)
+    if (!p) return []
+    const page = await pageImages(p.link)
+    if (page.length || !p.images.length || !p.categories.length) return page
+    try {
+      const res = await http.fetch({
+        url: `${SITE}/wp-json/wp/v2/posts?categories=${p.categories[0]}&exclude=${id}&per_page=3&_fields=link`,
+      })
+      for (const s of res.status === 200 ? JSON.parse(res.body) : []) {
+        const hosts = [...new Set((await pageImages(String(s.link || ''))).map(host))]
+        if (!hosts.length) continue
+        return p.images.map((u, i) =>
+          hosts.includes(host(u)) ? u : u.replace(/^(https?:\/\/)[^\/]+/, `$1${hosts[i % hosts.length]}`),
+        )
       }
+    } catch (_) {}
+    return []
+  }
+
+  // The chapter's page on the site, or the series page when it cannot be found.
+  /** @param {string} slug @param {number} number */
+  async function chapterUrl(slug, number) {
+    const series = `${SITE}/komik/${enc(slug)}/`
+    try {
+      const { data: d } = await get(`/series/${enc(slug)}/chapters/${enc(String(number))}`)
+      const p = d.id == null ? null : await post(d.id)
+      if (p && p.link) return p.link
     } catch (_) {}
     return series
   }
@@ -136,8 +203,7 @@
     },
 
     webUrl(slug, number) {
-      const series = `${SITE}/komik/${enc(slug)}/`
-      return number == null ? series : chapterUrl(series, Number(number))
+      return number == null ? `${SITE}/komik/${enc(slug)}/` : chapterUrl(slug, Number(number))
     },
 
     async series(slug) {
@@ -159,12 +225,13 @@
 
     async chapter(slug, number) {
       const { data: d } = await get(`/series/${enc(slug)}/chapters/${enc(String(number))}`)
+      const site = d.id == null ? [] : await chapterImages(Number(d.id))
       return {
         number: Number(d.number),
         title: str(d.title),
         prev: num(d.prev),
         next: num(d.next),
-        images: (d.images || []).map(String),
+        images: site.length ? site : (d.images || []).map(String),
       }
     },
   })

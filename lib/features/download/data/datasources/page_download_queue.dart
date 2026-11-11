@@ -171,7 +171,7 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
         DownloadTask(
           taskId: _taskId(job.chapterSlug, job.index),
           url: job.url,
-          headers: job.headers,
+          headers: withImageHostHeaders(job.url, job.headers),
           baseDirectory: BaseDirectory.root,
           directory: '$root/${_dirOf(job.path)}',
           filename: job.path.split('/').last,

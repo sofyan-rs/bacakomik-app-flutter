@@ -36,4 +36,29 @@ void main() {
       expect(absoluteCover('/a.jpg', 'comix.to'), '/a.jpg');
     });
   });
+
+  group('presignedUrlExpired', () {
+    // Signed 6 Nov 2026 20:16:59 UTC for 6 days: expires 12 Nov 20:16:59.
+    const url =
+        'https://cvr.voratoon.id/prod/series/x/cover/a.webp'
+        '?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20261106T201659Z'
+        '&X-Amz-Expires=518400&X-Amz-Signature=abc';
+
+    test('false while valid, true from 12 hours before it expires', () {
+      expect(presignedUrlExpired(url, DateTime.utc(2026, 11, 11, 8)), isFalse);
+      expect(presignedUrlExpired(url, DateTime.utc(2026, 11, 12, 9)), isTrue);
+      expect(presignedUrlExpired(url, DateTime.utc(2026, 11, 20)), isTrue);
+    });
+
+    test('false for URLs that are not presigned', () {
+      final now = DateTime.utc(2030);
+      expect(presignedUrlExpired('https://a.com/c.jpg', now), isFalse);
+      expect(
+        presignedUrlExpired('https://a.com/c.jpg?X-Amz-Date=x', now),
+        isFalse,
+      );
+      expect(presignedUrlExpired('', now), isFalse);
+      expect(presignedUrlExpired('mihon://1/cover/abc', now), isFalse);
+    });
+  });
 }

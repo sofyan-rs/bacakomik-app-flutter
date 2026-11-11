@@ -69,15 +69,15 @@ class $AssetsSoundsGen {
 class $AssetsExtensionsExtensionsGen {
   const $AssetsExtensionsExtensionsGen();
 
-  /// File path: assets/extensions/extensions/bacakomik.v1.3.1.js
-  String get bacakomikV131 =>
-      'assets/extensions/extensions/bacakomik.v1.3.1.js';
+  /// File path: assets/extensions/extensions/bacakomik.v1.3.5.js
+  String get bacakomikV135 =>
+      'assets/extensions/extensions/bacakomik.v1.3.5.js';
 
-  /// File path: assets/extensions/extensions/voratoon.v1.4.1.js
-  String get voratoonV141 => 'assets/extensions/extensions/voratoon.v1.4.1.js';
+  /// File path: assets/extensions/extensions/voratoon.v1.4.3.js
+  String get voratoonV143 => 'assets/extensions/extensions/voratoon.v1.4.3.js';
 
   /// List of all assets
-  List<String> get values => [bacakomikV131, voratoonV141];
+  List<String> get values => [bacakomikV135, voratoonV143];
 }
 
 abstract final class Assets {

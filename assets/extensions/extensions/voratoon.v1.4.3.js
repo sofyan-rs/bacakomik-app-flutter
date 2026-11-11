@@ -1,15 +1,13 @@
 // @ts-check
-// Voratoon: talks to the site's own /api/proxy, which is gated by a `vt_proxy`
-// cookie (set by the homepage) and a same-origin sec-fetch-site header.
+// Voratoon: the backend (api.voratoon.com) answers with encrypted bodies. The
+// site reads it through its Next.js server action `runApiCalls`, which takes a
+// batch of API calls and returns their decrypted results as an RSC stream.
 (() => {
   const BASE = 'https://voratoon.co'
-  const API = BASE + '/api/proxy'
-  const HEADERS = {
-    Accept: 'application/json',
-    'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
-    'sec-fetch-site': 'same-origin',
-    Referer: BASE + '/',
-  }
+  // Action ids change with each deploy; findAction() reads the current one
+  // from the site's scripts when this one stops working.
+  const DEFAULT_ACTION = '40bf0667ece0fafa286a16f59082816b0072398611'
+  const ACTION_KEY = 'runApiCalls'
 
   // Sort value -> API sort/sortOrder.
   const SORTS = {
@@ -24,26 +22,155 @@
   // Trailing promo pages: 998*, 999*, Marathon*. 000 is a real page.
   const PROMO = /\/(99[89](?!\d)|marath)[^/]*$/i
 
-  /** @param {string} path */
-  async function get(path) {
-    const req = { url: API + path, headers: HEADERS }
-    let res = await http.fetch(req)
-    if (res.status === 403) {
-      // Missing/expired vt_proxy cookie: the homepage sets it, the jar keeps it.
-      await http.fetch({ url: BASE + '/' })
-      res = await http.fetch(req)
+  // UTF-8 byte length of one code point: RSC text rows give their size in bytes.
+  const utf8Len = (cp) => (cp < 0x80 ? 1 : cp < 0x800 ? 2 : cp < 0x10000 ? 3 : 4)
+
+  // Parses a React Flight (RSC) stream and returns row 0 with `$<id>` refs
+  // resolved. Rows are `<id>:<json>\n`, or `<id>:T<hex bytes>,<text>` with no
+  // newline after the text.
+  /** @param {string} body */
+  function parseFlight(body) {
+    /** @type {Record<string, any>} */
+    const rows = {}
+    let i = 0
+    while (i < body.length) {
+      const colon = body.indexOf(':', i)
+      if (colon < 0) break
+      const id = body.slice(i, colon).trim()
+      if (body[colon + 1] === 'T') {
+        const comma = body.indexOf(',', colon)
+        let left = parseInt(body.slice(colon + 2, comma), 16)
+        let j = comma + 1
+        while (left > 0 && j < body.length) {
+          const cp = /** @type {number} */ (body.codePointAt(j))
+          left -= utf8Len(cp)
+          j += cp > 0xffff ? 2 : 1
+        }
+        rows[id] = body.slice(comma + 1, j)
+        i = j
+      } else {
+        let nl = body.indexOf('\n', colon)
+        if (nl < 0) nl = body.length
+        const line = body.slice(colon + 1, nl)
+        try {
+          rows[id] = JSON.parse(line)
+        } catch (_) {
+          rows[id] = line
+        }
+        i = nl + 1
+      }
     }
-    let json = null
-    try {
-      json = JSON.parse(res.body)
-    } catch (_) {}
-    if (res.status < 200 || res.status >= 300) {
-      const msg = json && (json.error || json.message || json.code)
-      throw new Error(`${res.status} ${msg || 'HTTP error'}: ${path}`)
+    const done = new Map()
+    const resolve = (v) => {
+      if (typeof v === 'string') {
+        if (v[0] !== '$') return v
+        if (v[1] === '$') return v.slice(1)
+        if (v === '$undefined') return undefined
+        const ref = /^\$@?([0-9a-f]+)$/.exec(v)
+        if (ref) return row(ref[1])
+        if (v[1] === 'D') return v.slice(2)
+        return v
+      }
+      if (Array.isArray(v)) return v.map(resolve)
+      if (v && typeof v === 'object') {
+        /** @type {Record<string, any>} */
+        const o = {}
+        for (const k of Object.keys(v)) o[k] = resolve(v[k])
+        return o
+      }
+      return v
     }
-    if (!json || typeof json !== 'object') throw new Error(`Invalid JSON: ${path}`)
-    return json
+    const row = (id) => {
+      if (!done.has(id)) {
+        done.set(id, null)
+        done.set(id, resolve(rows[id]))
+      }
+      return done.get(id)
+    }
+    return row('0')
   }
+
+  // Reads the current runApiCalls id from the site's scripts.
+  async function findAction() {
+    const home = await http.fetch({ url: BASE + '/' })
+    const found = home.body.match(/\/_next\/static\/chunks\/[^"'\s<>]+?\.js[^"'\s<>]*/g) || []
+    const srcs = [...new Set(found.map((s) => s.replace(/&amp;/g, '&')))]
+    // The client API module has been in chunk 6951; look there first.
+    srcs.sort((a, b) => Number(/\/6951-/.test(b)) - Number(/\/6951-/.test(a)))
+    for (const src of srcs) {
+      const js = await http.fetch({ url: BASE + src })
+      const m = /"([0-9a-f]{40,})",[^"]{0,160}"runApiCalls"/.exec(js.body)
+      if (m) {
+        await storage.set(ACTION_KEY, m[1])
+        return m[1]
+      }
+    }
+    throw new Error('runApiCalls action not found on ' + BASE)
+  }
+
+  /** @type {string | null} */
+  let action = null
+
+  /** @param {string} id @param {unknown[]} calls */
+  function postAction(id, calls) {
+    return http.fetch({
+      url: BASE + '/',
+      method: 'POST',
+      headers: {
+        Accept: 'text/x-component',
+        'Content-Type': 'text/plain;charset=UTF-8',
+        'Next-Action': id,
+        Origin: BASE,
+        Referer: BASE + '/',
+      },
+      body: JSON.stringify([calls]),
+    })
+  }
+
+  // Cleans a query object: drops null/''/empty arrays, as the site does.
+  function cleanQuery(q) {
+    if (!q) return undefined
+    /** @type {Record<string, any>} */
+    const out = {}
+    for (const k of Object.keys(q)) {
+      const v = Array.isArray(q[k]) ? q[k].filter((x) => x != null && x !== '').map(String) : q[k]
+      if (v == null || v === '' || (Array.isArray(v) && !v.length)) continue
+      out[k] = Array.isArray(v) ? v : String(v)
+    }
+    return out
+  }
+
+  /**
+   * Runs API calls in one server action request; returns each `data` envelope.
+   * @param {{ path: string, query?: Record<string, any> }[]} list
+   */
+  async function api(list) {
+    const calls = list.map((c) => ({ path: c.path, method: 'GET', query: cleanQuery(c.query), token: null }))
+    if (!action) action = (await storage.get(ACTION_KEY)) || DEFAULT_ACTION
+    let res = await postAction(action, calls)
+    if (res.status === 404 && res.headers['x-nextjs-action-not-found']) {
+      action = await findAction()
+      res = await postAction(action, calls)
+    }
+    if (res.status < 200 || res.status >= 300) throw new Error(`${res.status} HTTP error: ${list[0].path}`)
+    const root = parseFlight(res.body)
+    const results = root && root.a
+    if (!Array.isArray(results)) throw new Error(`Invalid response: ${list[0].path}`)
+    return results.map((r, i) => {
+      const path = list[i].path
+      if (!r || !r.ok) {
+        const p = (r && r.payload) || {}
+        const msg = p.error || p.message || (r && r.message) || 'API error'
+        throw new Error(`${(r && r.status) || 'ERR'} ${msg}: ${path}`)
+      }
+      const env = r.envelope
+      if (!env || typeof env !== 'object') throw new Error(`Invalid JSON: ${path}`)
+      return env
+    })
+  }
+
+  /** @param {string} path @param {Record<string, any>} [query] */
+  const get = async (path, query) => (await api([{ path, query }]))[0]
 
   const str = (v) => (v == null || String(v).trim() === '' ? null : String(v).trim())
   // Alternative titles: trimmed, without placeholders, the main title or repeats.
@@ -87,16 +214,22 @@
     }
   }
 
-  /** @param {string} slug @returns {Promise<Chapter[]>} */
-  async function chapterList(slug) {
-    const { data } = await get(`/series/${enc(slug)}/chapters`)
-    return data
+  const chaptersPath = (slug) => `/series/${enc(slug)}/chapters`
+
+  /** @returns {Chapter[]} */
+  function toChapters(data) {
+    return (data || [])
       .map((c) => ({
         number: Number(c.data && c.data.index != null ? c.data.index : c.chapterIndex),
         createdAt: str(c.createdAt),
       }))
       .filter((c) => isFinite(c.number))
       .sort((a, b) => b.number - a.number)
+  }
+
+  /** @param {string} slug @returns {Promise<Chapter[]>} */
+  async function chapterList(slug) {
+    return toChapters((await get(chaptersPath(slug))).data)
   }
 
   const ALL = { value: '', label: 'All' }
@@ -172,7 +305,7 @@
         .map((k) => pick(filters, k) && `${k}==${pick(filters, k)}`)
         .filter(Boolean)
         .join(';')
-      const q = qs({
+      const { data, meta } = await get('/series', {
         page: page || 1,
         take: Math.min(Math.max(Number(limit) || 30, 1), 100),
         includeMeta: true,
@@ -183,7 +316,6 @@
         genreIds: ((filters && filters.genre) || []).filter(Boolean),
         takeChapter: 1,
       })
-      const { data, meta } = await get('/series?' + q)
       return {
         items: data.map(toSeries),
         hasNext: !!meta && Number(meta.page) < Number(meta.lastPage),
@@ -214,10 +346,11 @@
 
     async chapter(slug, number) {
       const n = Number(number)
-      const [{ data: c }, list] = await Promise.all([
-        get(`/series/${enc(slug)}/chapters/${enc(String(n))}`),
-        chapterList(slug),
+      const [{ data: c }, all] = await api([
+        { path: `${chaptersPath(slug)}/${enc(String(n))}` },
+        { path: chaptersPath(slug) },
       ])
+      const list = toChapters(all.data)
       // List is newest first: the next chapter sits one position earlier.
       const i = list.findIndex((x) => x.number === n)
       const d = c.data || {}
@@ -227,6 +360,8 @@
         prev: i >= 0 && i + 1 < list.length ? list[i + 1].number : null,
         next: i > 0 ? list[i - 1].number : null,
         images: (d.images || []).map(String).filter((u) => !PROMO.test(u.split('?')[0])),
+        // cdn.voratoon.com answers 403 without the site as Referer.
+        headers: { Referer: BASE + '/' },
       }
     },
   })

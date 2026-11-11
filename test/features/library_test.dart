@@ -487,6 +487,42 @@ void main() {
       verifyNever(() => comicDetails.getSeries('b', any()));
     });
 
+    test(
+      'refresh gives an expired presigned cover a new one in place',
+      () async {
+        String signed(String date) =>
+            'https://cvr.voratoon.id/c.webp?X-Amz-Date=${date}T000000Z'
+            '&X-Amz-Expires=518400&X-Amz-Signature=x';
+        final old = signed('20200101');
+        final fresh = signed('20200201');
+        await repo.saveBookmarks([
+          Bookmark(
+            slug: 'a',
+            comicDetails: details.copyWith(title: 'Alpha', coverImg: old),
+            updatedDate: at(100),
+          ),
+        ]);
+        await cubit.load();
+        // Same chapters as stored: only the cover changed at the source.
+        when(() => comicDetails.getComicDetails('a')).thenAnswer(
+          (_) async => right(details.copyWith(title: 'Alpha', coverImg: fresh)),
+        );
+        clock.value = DateTime.utc(2020, 2, 1, 12);
+
+        await cubit.updateBookmarkList(['a']);
+
+        final a = cubit.state.firstWhere((b) => b.slug == 'a');
+        expect(a.comicDetails.coverImg, fresh);
+        // No new chapter: it keeps its place.
+        expect(a.updatedDate, at(100));
+        verify(() => comicDetails.getSeries('a', any())).called(1);
+
+        // Valid now: the next refresh fetches no details.
+        await cubit.updateBookmarkList(['a']);
+        verifyNever(() => comicDetails.getSeries('a', any()));
+      },
+    );
+
     test('refresh does not bring back a comic deleted meanwhile', () async {
       final source = Completer<Either<Failure, ComicDetails>>();
       when(() => comicDetails.getComicDetails('a'))
