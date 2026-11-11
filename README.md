@@ -37,6 +37,18 @@ Fedora RPM installs can update from inside the app: approve the system's adminis
 
 Screenshots were taken on a real device (iQOO I2218, Android 16) running v2.0.0.
 
+### Desktop
+
+| Home | Explore |
+|---|---|
+| <img src="screenshot/desktop-home.png" width="420" alt="Desktop home with the side navigation rail"> | <img src="screenshot/desktop-explore.png" width="420" alt="Desktop explore: format tabs and a wide cover grid"> |
+
+| Detail | Reader |
+|---|---|
+| <img src="screenshot/desktop-detail.png" width="420" alt="Desktop comic details beside the chapter list"> | <img src="screenshot/desktop-reader.png" width="420" alt="Desktop reader showing two pages side by side"> |
+
+Desktop screenshots were taken on Windows 11 running v2.21.0.
+
 ## Features
 
 - **Sources:** pick the source in the header of Home or Explore. Two sources come bundled; more install from More → Extensions. A multi-language source becomes one source per enabled language (for example EN and ID), each with its own bookmarks and history. Installed extensions show an update badge when the repo has a newer version. On Android 9+, Mihon / Tachiyomi extensions install too (see [Extensions](#extensions)).
