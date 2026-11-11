@@ -27,9 +27,9 @@ Fedora RPM installs can update from inside the app: approve the system's adminis
 |---|---|---|---|
 | <img src="screenshot/filter.png" width="200" alt="Filter sheet: sort, format, status and genres"> | <img src="screenshot/detail.png" width="200" alt="Comic details with source, stats and synopsis"> | <img src="screenshot/reader.png" width="200" alt="Reader with chapter bar and page meter"> | <img src="screenshot/bookmark.png" width="200" alt="Bookmarks with language and new chapter badges and read meter"> |
 
-| History | Extensions | Import from Mihon | More |
-|---|---|---|---|
-| <img src="screenshot/history.png" width="200" alt="Reading history grouped by day, with the source"> | <img src="screenshot/extensions.png" width="200" alt="Installed extensions"> | <img src="screenshot/mihon-import.png" width="200" alt="Import from a Mihon backup, per source"> | <img src="screenshot/more.png" width="200" alt="Stats, extensions, library, backup and sync"> |
+| History | Extensions | More |
+|---|---|---|
+| <img src="screenshot/history.png" width="200" alt="Reading history grouped by day, with the source"> | <img src="screenshot/extensions.png" width="200" alt="Installed extensions"> | <img src="screenshot/more.png" width="200" alt="Stats, incognito mode, extensions, source migration, DNS over HTTPS and library"> |
 
 | Download chapters | Downloads | Light theme |
 |---|---|---|
