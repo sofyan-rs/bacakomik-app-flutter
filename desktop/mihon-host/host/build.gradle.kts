@@ -97,7 +97,7 @@ val runtimeModules =
     )
 
 // Raised when the protocol or the runtime's layout changes.
-val hostVersion = "1"
+val hostVersion = "2"
 
 fun platformName(): String {
     val os = System.getProperty("os.name").lowercase()

@@ -20,7 +20,7 @@ import 'package:yoru/core/source/mihon_host.dart';
 /// downloads on first use ([MihonRuntime]). It speaks JSON lines over
 /// stdin/stdout (docs/ARCHITECTURE.md §8.9):
 ///
-/// - host, once started: `{"ready":true,"version":"1","libs":[…]}`
+/// - host, once started: `{"ready":true,"version":"2","libs":[…]}`
 /// - app: `{"id":1,"method":"handle","params":{"method":"…","args":{…}}}`,
 ///   `{"id":2,"method":"image","params":{"url":"mihon://…"}}`
 /// - host: `{"id":1,"result":…}` or `{"id":1,"error":{"message","status",
@@ -283,7 +283,7 @@ class MihonRuntime {
   static final instance = MihonRuntime._();
 
   /// Bumped with every host change the app needs; one folder per version.
-  static const version = '1';
+  static const version = '2';
 
   /// SHA-256 of each platform's runtime zip, from the release that built
   /// it (its SHA256SUMS). A platform without one cannot download the
