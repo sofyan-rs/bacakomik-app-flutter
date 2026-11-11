@@ -830,23 +830,23 @@ class KcefWebViewProvider(
     ): Unit = throw RuntimeException("Stub!")
 
     override fun stopLoading() {
-        browser!!.stopLoad()
+        browser?.stopLoad()
     }
 
     override fun reload() {
-        browser!!.reload()
+        browser?.reload()
     }
 
-    override fun canGoBack(): Boolean = browser!!.canGoBack()
+    override fun canGoBack(): Boolean = browser?.canGoBack() == true
 
     override fun goBack() {
-        browser!!.goBack()
+        browser?.goBack()
     }
 
-    override fun canGoForward(): Boolean = browser!!.canGoForward()
+    override fun canGoForward(): Boolean = browser?.canGoForward() == true
 
     override fun goForward() {
-        browser!!.goForward()
+        browser?.goForward()
     }
 
     override fun canGoBackOrForward(steps: Int): Boolean = throw RuntimeException("Stub!")

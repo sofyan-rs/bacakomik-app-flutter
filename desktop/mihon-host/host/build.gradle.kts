@@ -33,7 +33,15 @@ sourceSets {
 // StdoutGuard calls C (Java 17's incubating foreign API) to keep native
 // code's output (Chromium's) off the protocol. The runtime has these options
 // built in (runtimeImage), so the app's plain `java -cp … MainKt` gets them.
-val nativeAccess = listOf("--add-modules=jdk.incubator.foreign", "--enable-native-access=ALL-UNNAMED")
+// On macOS, JCEF's off-screen browser reads its window handle through AWT's
+// internals (CefBrowserWindowMac), which java.desktop does not export.
+val nativeAccess =
+    listOf("--add-modules=jdk.incubator.foreign", "--enable-native-access=ALL-UNNAMED") +
+        if (System.getProperty("os.name").lowercase().startsWith("mac")) {
+            listOf("sun.awt", "sun.lwawt", "sun.lwawt.macosx").map { "--add-exports=java.desktop/$it=ALL-UNNAMED" }
+        } else {
+            emptyList()
+        }
 
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.addAll(listOf("--add-modules", "jdk.incubator.foreign"))

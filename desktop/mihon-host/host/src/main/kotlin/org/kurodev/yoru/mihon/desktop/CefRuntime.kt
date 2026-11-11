@@ -277,6 +277,21 @@ object CefRuntime {
             CefApp.getInstanceIfAny() ?: run {
                 val config =
                     JCefAppConfig.getInstance(dir.absolutePath, false).apply {
+                        // getInstance(path) points macOS at Frameworks/jcef
+                        // Helper.app, but JetBrains Runtime keeps the helper
+                        // inside cef_server.app (as its getInstance() does):
+                        // CEF would stop the process at start.
+                        if (System.getProperty("os.name").lowercase().startsWith("mac")) {
+                            val helper = File(dir, "Frameworks/cef_server.app/Contents/Frameworks/jcef Helper.app")
+                            appArgsAsList.replaceAll {
+                                when {
+                                    it.startsWith("--main-bundle-path=") -> "--main-bundle-path=${helper.path}"
+                                    it.startsWith("--browser-subprocess-path=") ->
+                                        "--browser-subprocess-path=${File(helper, "Contents/MacOS/jcef Helper").path}"
+                                    else -> it
+                                }
+                            }
+                        }
                         appArgsAsList.addAll(
                             listOf(
                                 "--disable-gpu",
