@@ -1,0 +1,80 @@
+name: Feature request
+description: Suggest a new feature or an improvement to the app.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Search the [existing issues](https://github.com/sofyan-rs/yoru-comic-app/issues) first, the feature may be requested already.
+
+        To request a new source or site, use the extension repo instead: [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source/issues).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this feature solve? What is hard or not possible now?
+      placeholder: I read on two devices and lose my place in the chapter when I switch.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should the feature work? Describe what you see and do in the app.
+      placeholder: Sync the last page read along with the reading history.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other ways to solve the problem, or workarounds you use now.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Reader
+        - Library and categories
+        - Browse and search
+        - Downloads
+        - Extensions and sources
+        - Backup, sync and migration
+        - Settings and appearance
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Platforms
+      description: Where should the feature be available?
+      multiple: true
+      options:
+        - All
+        - Android
+        - Windows
+        - macOS
+        - Linux
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, mockups, or examples from other apps.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the existing issues and this feature is not requested yet.
+          required: true
+        - label: This request is for the app, not for a new source or extension.
+          required: true

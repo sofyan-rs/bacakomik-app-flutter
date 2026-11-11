@@ -1,0 +1,102 @@
+name: Bug report
+description: Something in the app does not work as it should.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Search the [existing issues](https://github.com/sofyan-rs/yoru-comic-app/issues) first, and update to the [latest release](https://github.com/sofyan-rs/yoru-comic-app/releases/latest) to check the bug is still there.
+
+        A problem with one source only (a site that does not load, missing chapters, broken images) is usually an extension problem. Report it in the extension repo instead: [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source/issues).
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: A clear description of the bug.
+      placeholder: The reader closes when I swipe to the next chapter.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact steps that cause the bug.
+      placeholder: |
+        1. Open a comic from the library
+        2. Read to the end of a chapter
+        3. Swipe to the next chapter
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      placeholder: The next chapter opens.
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: Yoru version
+      description: Shown in More → About.
+      placeholder: "2.21.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Android
+        - Windows
+        - macOS
+        - Linux (AppImage)
+        - Linux (RPM)
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: Device and OS version
+      placeholder: Pixel 7, Android 14 / Windows 11 / Fedora 41
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source and extension version
+      description: If the bug happens in a specific source, name it and its extension version (More → Extensions). Say if it is a Mihon / Tachiyomi extension.
+      placeholder: "ExampleSource (EN) 1.4.0"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error message
+      description: Paste any error text or crash log. It is formatted as code automatically.
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or video
+      description: Drag files here if they help show the bug.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the existing issues and this bug is not reported yet.
+          required: true
+        - label: I use the latest version of Yoru.
+          required: true
+        - label: This is a bug in the app, not in one source's extension.
+          required: true
