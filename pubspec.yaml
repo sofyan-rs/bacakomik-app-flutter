@@ -2,7 +2,7 @@ name: yoru
 description: "Yoru, a manga, manhwa and manhua reader."
 publish_to: "none"
 
-version: 2.20.0+42
+version: 2.21.0+43
 
 environment:
   sdk: ^3.13.0
