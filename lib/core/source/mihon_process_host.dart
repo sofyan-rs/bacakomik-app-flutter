@@ -342,7 +342,10 @@ class MihonRuntime {
     final sep = Platform.pathSeparator;
     final dir = Directory('${support.path}${sep}mihon-runtime$sep$version');
     final marker = File('${dir.path}$sep.complete');
-    if (await marker.exists()) return dir;
+    if (await marker.exists()) {
+      unawaited(_deleteOtherVersions(dir));
+      return dir;
+    }
 
     final expected = _sha256[platform];
     if (expected == null) {
@@ -389,6 +392,7 @@ class MihonRuntime {
         await Process.run('chmod', ['-R', 'u+x', '${dir.path}${sep}bin']);
       }
       await marker.writeAsString(version);
+      unawaited(_deleteOtherVersions(dir));
       return dir;
     } finally {
       ProcessMihonHost.downloads.value = null;
@@ -396,6 +400,20 @@ class MihonRuntime {
         if (await file.exists()) await file.delete();
       }
     }
+  }
+}
+
+/// Runtimes of other versions beside [current] (about 110 MB each), left
+/// by an update of the app. Best effort: a folder in use stays.
+Future<void> _deleteOtherVersions(Directory current) async {
+  try {
+    await for (final entry in current.parent.list()) {
+      if (entry is Directory && entry.path != current.path) {
+        await entry.delete(recursive: true);
+      }
+    }
+  } catch (e) {
+    debugPrint('Old Mihon runtimes not deleted: $e');
   }
 }
 
