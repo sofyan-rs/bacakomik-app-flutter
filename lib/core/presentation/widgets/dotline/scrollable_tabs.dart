@@ -38,6 +38,11 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
 
   final _keys = <T, GlobalKey>{};
   final _rowKey = GlobalKey();
+  final _scroll = ScrollController();
+
+  /// Whether the tabs are wider than the bar, so dragging scrolls them.
+  /// Known after layout ([_placePill]).
+  var _overflows = false;
 
   /// The selected tab's box within the row; null until first laid out.
   Rect? _pill;
@@ -87,6 +92,12 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
   void _cancelDrag() => setState(() => _drag = null);
 
   @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(ScrollableTabs<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.selected != widget.selected) _reveal();
@@ -96,6 +107,16 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
   /// after every build, since labels and counts change the tab widths.
   void _placePill() => WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!mounted) return;
+    final overflows =
+        _scroll.hasClients &&
+        _scroll.position.hasContentDimensions &&
+        _scroll.position.maxScrollExtent > 0;
+    if (overflows != _overflows) {
+      setState(() {
+        _overflows = overflows;
+        _drag = null;
+      });
+    }
     final tab = _keys[_shown]?.currentContext?.findRenderObject();
     final row = _rowKey.currentContext?.findRenderObject();
     if (tab is! RenderBox || row is! RenderBox) return;
@@ -141,15 +162,21 @@ class _ScrollableTabsState<T> extends State<ScrollableTabs<T>> {
             child: SizedBox(
               height: _tabHeight,
               child: SingleChildScrollView(
+                controller: _scroll,
                 scrollDirection: Axis.horizontal,
                 // Inside the scroll view, so drag positions are in the row's
-                // coordinates. The scroll view only takes drags when the tabs
-                // overflow; otherwise these handlers get them.
+                // coordinates. Only when the tabs fit: a drag recognizer
+                // here wins every sideways drag over the scroll view's own,
+                // so tabs that overflow could not be scrolled.
                 child: GestureDetector(
-                  onHorizontalDragStart: (d) => _dragTo(d.localPosition.dx),
-                  onHorizontalDragUpdate: (d) => _dragTo(d.localPosition.dx),
-                  onHorizontalDragEnd: (_) => _endDrag(),
-                  onHorizontalDragCancel: _cancelDrag,
+                  onHorizontalDragStart: _overflows
+                      ? null
+                      : (d) => _dragTo(d.localPosition.dx),
+                  onHorizontalDragUpdate: _overflows
+                      ? null
+                      : (d) => _dragTo(d.localPosition.dx),
+                  onHorizontalDragEnd: _overflows ? null : (_) => _endDrag(),
+                  onHorizontalDragCancel: _overflows ? null : _cancelDrag,
                   child: Stack(
                     children: [
                       if (pill != null)

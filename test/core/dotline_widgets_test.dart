@@ -228,6 +228,36 @@ void main() {
     expect(changed, ['c']);
   });
 
+  testWidgets('ScrollableTabs that overflow scroll on a drag', (tester) async {
+    final changed = <String>[];
+    await tester.pumpWidget(
+      _wrap(
+        ScrollableTabs<String>(
+          selected: 's0',
+          onChanged: changed.add,
+          segments: [
+            for (var i = 0; i < 12; i++)
+              Segment(value: 's$i', label: 'Source number $i'),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+    final scrollable = tester.state<ScrollableState>(
+      find.descendant(
+        of: find.byType(ScrollableTabs<String>),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(scrollable.position.maxScrollExtent, greaterThan(0));
+
+    await tester.drag(find.text('SOURCE NUMBER 1'), const Offset(-300, 0));
+    await tester.pumpAndSettle();
+    expect(scrollable.position.pixels, greaterThan(0));
+    // Scrolling picks no tab.
+    expect(changed, isEmpty);
+  });
+
   testWidgets('DotSwitch toggles and ignores taps when disabled', (
     tester,
   ) async {
