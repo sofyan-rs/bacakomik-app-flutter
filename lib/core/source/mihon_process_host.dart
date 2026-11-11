@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' show Abi;
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart';
@@ -271,7 +272,7 @@ class _HostProcess {
 }
 
 /// The Java runtime and host jars the desktop [ProcessMihonHost] runs on,
-/// downloaded once from the app's GitHub releases (about 40 MB) so the app
+/// downloaded once from the app's GitHub releases (about 100 MB) so the app
 /// stays small for everyone who does not use Mihon extensions.
 ///
 /// For development, `YORU_MIHON_RUNTIME` names a runtime folder to use
@@ -285,8 +286,20 @@ class MihonRuntime {
   static const version = '1';
 
   /// SHA-256 of each platform's runtime zip, from the release that built
-  /// it. A platform without one cannot download the runtime yet.
-  static const _sha256 = <String, String>{};
+  /// it (its SHA256SUMS). A platform without one cannot download the
+  /// runtime.
+  static const _sha256 = <String, String>{
+    'windows-x64':
+        'b96eb30141b8e5bee73498f0997ab490434b3f686a0aa334e648b418d0db0665',
+    'linux-x64':
+        '2a7c023936cd42b3fafc125a1be74e345839df2b2382385f10c22a8d425a45ea',
+    'linux-arm64':
+        'd473ae64ac668f435a786620b2081436a8ffa35a28f277b00cd571f53593f4f1',
+    'macos-x64':
+        '0a77d6d00cbaecf09bab887eb2177e562821d937a5e14d6ed158ec833bb19fa1',
+    'macos-arm64':
+        'a3217000b4e2965fdf7e993c4cc2fd5dbcb79de3c0e455ea933d3424a138d6c5',
+  };
 
   /// `windows-x64`, `macos-arm64`, …; null where there is no runtime.
   static String? get platform {
@@ -337,11 +350,15 @@ class MihonRuntime {
         'The Mihon runtime for this system is not available yet',
       );
     }
-    final zip = File('${support.path}$sep$_zipName.part');
+    final part = File('${support.path}$sep$_zipName.part');
+    // The unpacker goes by the name's extension: the checked file is
+    // renamed to `.zip` first.
+    final zip = File('${support.path}$sep$_zipName');
+    final unpacked = Directory('${dir.parent.path}${sep}yoru-mihon-runtime');
     try {
       await Dio().download(
         _url,
-        zip.path,
+        part.path,
         onReceiveProgress: (got, total) {
           if (total <= 0) return;
           onProgress?.call(got / total);
@@ -351,19 +368,23 @@ class MihonRuntime {
           );
         },
       );
-      final digest = await sha256.bind(zip.openRead()).first;
+      final digest = await sha256.bind(part.openRead()).first;
       if ('$digest' != expected) {
         throw const ServerException('The Mihon runtime download is damaged');
       }
-      if (await dir.exists()) await dir.delete(recursive: true);
-      await dir.create(recursive: true);
-      await extractFileToDisk(zip.path, dir.parent.path);
-      // The zip holds one folder, `yoru-mihon-runtime`: it becomes [dir].
-      final unpacked = Directory('${dir.parent.path}${sep}yoru-mihon-runtime');
-      if (await unpacked.exists()) {
-        await dir.delete(recursive: true);
-        await unpacked.rename(dir.path);
+      await part.rename(zip.path);
+      for (final old in [dir, unpacked]) {
+        if (await old.exists()) await old.delete(recursive: true);
       }
+      // About 100 MB to inflate: off the UI isolate.
+      final from = zip.path;
+      final to = dir.parent.path;
+      await Isolate.run(() => extractFileToDisk(from, to));
+      // The zip holds one folder, `yoru-mihon-runtime`: it becomes [dir].
+      if (!await unpacked.exists()) {
+        throw const ServerException('The Mihon runtime download is damaged');
+      }
+      await unpacked.rename(dir.path);
       if (!Platform.isWindows) {
         await Process.run('chmod', ['-R', 'u+x', '${dir.path}${sep}bin']);
       }
@@ -371,7 +392,9 @@ class MihonRuntime {
       return dir;
     } finally {
       ProcessMihonHost.downloads.value = null;
-      if (await zip.exists()) await zip.delete();
+      for (final file in [part, zip]) {
+        if (await file.exists()) await file.delete();
+      }
     }
   }
 }

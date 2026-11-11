@@ -8,8 +8,10 @@ import 'package:yoru/core/source/mihon_process_host.dart';
 /// [ProcessMihonHost] starts it, inspects and installs the extension, lists
 /// comics, opens one and fetches a cover and a page.
 ///
-/// Needs a runtime (`desktop/mihon-host/gradlew :host:runtimeImage`) and an
-/// extension jar, e.g. Keiyoushi's MangaPill:
+/// Needs an extension jar, e.g. Keiyoushi's MangaPill. Without
+/// YORU_MIHON_RUNTIME it downloads the released runtime, as the app does;
+/// with it, it runs a local one (`desktop/mihon-host/gradlew
+/// :host:runtimeImage`):
 ///
 /// ```
 /// YORU_MIHON_RUNTIME=desktop/mihon-host/host/build/runtime/yoru-mihon-runtime
@@ -19,7 +21,6 @@ import 'package:yoru/core/source/mihon_process_host.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final extension = Platform.environment['YORU_MIHON_TEST_EXT'];
-  final runtime = Platform.environment['YORU_MIHON_RUNTIME'];
 
   testWidgets(
     'a Mihon extension lists, opens and reads a comic',
@@ -72,7 +73,7 @@ void main() {
         await host.handle('uninstall', {'pkg': pkg});
       });
     },
-    skip: extension == null || runtime == null,
+    skip: extension == null,
     timeout: const Timeout(Duration(minutes: 3)),
   );
 }
