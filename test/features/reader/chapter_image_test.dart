@@ -6,7 +6,7 @@ import 'package:yoru/core/constants/texts.dart';
 import 'package:yoru/core/theme/dotline_theme.dart';
 import 'package:yoru/core/utils/image_support.dart';
 import 'package:yoru/features/reader/presentation/widgets/chapter_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';

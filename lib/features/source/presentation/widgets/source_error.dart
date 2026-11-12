@@ -4,7 +4,7 @@ import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/source/extension_manager.dart';
 import 'package:yoru/features/source/presentation/pages/extensions_screen.dart';
 import 'package:yoru/features/source/presentation/pages/web_view_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Error state for a failed source call. A bot check ([Challenge]) offers

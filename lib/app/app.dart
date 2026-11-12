@@ -20,7 +20,7 @@ import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:yoru/features/sync/presentation/bloc/sync_cubit.dart';
 import 'package:yoru/features/update/presentation/bloc/update_cubit.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// App-wide blocs: the bottom-navigation tabs and the user's library.

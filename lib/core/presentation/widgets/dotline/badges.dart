@@ -1,7 +1,7 @@
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// 6px `accent` dot, optionally followed by an `accentText` label ("BARU").
 class NewBadge extends StatelessWidget {

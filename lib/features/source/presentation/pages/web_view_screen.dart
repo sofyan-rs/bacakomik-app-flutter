@@ -12,7 +12,7 @@ import 'package:yoru/core/source/headless_pages.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/utils/utils.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:share_plus/share_plus.dart';

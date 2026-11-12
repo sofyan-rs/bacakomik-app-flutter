@@ -1,5 +1,5 @@
 import 'package:yoru/core/theme/dotline_colors.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Fades scrolled content into `bg` at the bottom of the screen, behind the
 /// floating nav. A deliberate exception to Dotline's no-gradient rule

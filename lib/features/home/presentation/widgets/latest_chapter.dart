@@ -5,7 +5,7 @@ import 'package:yoru/features/home/presentation/bloc/home_bloc.dart';
 import 'package:yoru/features/home/presentation/widgets/latest_chapter_card.dart';
 import 'package:yoru/features/latest/presentation/pages/latest_chapter_screen.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// "LATEST CHAPTERS" section of the home tab: one list on phones, up to

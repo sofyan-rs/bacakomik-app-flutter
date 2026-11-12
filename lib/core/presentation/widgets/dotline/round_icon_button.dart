@@ -1,7 +1,7 @@
 import 'package:yoru/core/presentation/widgets/dotline/pressable.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// 48px round action button on `surface`, used in screen headers and bars.
 /// Under a mouse, [semanticLabel] shows as a tooltip.

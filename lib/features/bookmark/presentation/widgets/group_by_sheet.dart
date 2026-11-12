@@ -7,7 +7,7 @@ import 'package:yoru/features/bookmark/presentation/widgets/bookmark_sort.dart';
 import 'package:yoru/features/category/presentation/pages/categories_screen.dart';
 import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 

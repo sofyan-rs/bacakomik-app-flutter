@@ -3,7 +3,7 @@ import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Grid cell for Explore and search: 2:3 cover with type label, two-line
 /// title, latest chapter.

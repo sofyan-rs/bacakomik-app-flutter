@@ -22,7 +22,7 @@ import 'package:yoru/features/download/data/datasources/download_local_data_sour
 import 'package:yoru/features/download/data/models/downloaded_chapter_model.dart';
 import 'package:yoru/features/history/data/datasources/history_local_data_source.dart';
 import 'package:yoru/features/history/data/models/read_history_model.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:path_provider/path_provider.dart';
 

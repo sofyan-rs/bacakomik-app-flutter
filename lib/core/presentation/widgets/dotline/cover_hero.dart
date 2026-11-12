@@ -2,7 +2,7 @@ import 'package:yoru/core/network/image_cache.dart';
 import 'package:yoru/core/presentation/widgets/dotline/comic_cover.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Hero tag of one cover on screen, for the flight to the comic's details.
 ///

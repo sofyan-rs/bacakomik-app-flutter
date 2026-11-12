@@ -2,7 +2,7 @@ import 'package:yoru/core/presentation/widgets/dotline/pressable.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Outline pill chip. Selected chips are filled `ink` with a check icon.

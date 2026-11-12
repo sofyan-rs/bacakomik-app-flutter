@@ -8,7 +8,7 @@ import 'package:yoru/features/comic_detail/presentation/pages/comic_details_scre
 import 'package:yoru/features/history/domain/entities/read_progress.dart';
 import 'package:yoru/features/history/domain/entities/resume_chapter.dart';
 import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// "LANJUT BACA" card for the most recently read comic. Hidden when the

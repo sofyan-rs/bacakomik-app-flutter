@@ -3,7 +3,7 @@ import 'package:yoru/core/di/injection.dart';
 import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/features/latest/presentation/bloc/latest_bloc.dart';
 import 'package:yoru/features/latest/presentation/widgets/latest_chapter_more.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LatestChapterScreen extends StatelessWidget {

@@ -13,12 +13,12 @@ abstract interface class SettingsLocalDataSource {
 @LazySingleton(as: SettingsLocalDataSource)
 class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   SettingsLocalDataSourceImpl(@Named(HiveBoxes.settings) Box<String> box)
-      : _box = JsonBox(
-          box,
-          fromJson: SettingsModel.fromJson,
-          toJson: (s) => s.toJson(),
-          keyOf: (_) => key,
-        );
+    : _box = JsonBox(
+        box,
+        fromJson: SettingsModel.fromJson,
+        toJson: (s) => s.toJson(),
+        keyOf: (_) => key,
+      );
 
   /// Settings are a single record.
   static const key = 'settings';

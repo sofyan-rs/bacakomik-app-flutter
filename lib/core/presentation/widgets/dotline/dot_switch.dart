@@ -1,6 +1,6 @@
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// 52×32 switch. On: `ink` track, `onInk` thumb right. Off: `surfaceRaised`
 /// track with `lineStrong` border, `inkMuted` thumb left.

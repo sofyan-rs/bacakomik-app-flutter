@@ -4,7 +4,7 @@ import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/source/extension_manager.dart';
 import 'package:yoru/core/source/extension_meta.dart';
 import 'package:yoru/features/source/presentation/pages/extensions_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Shown instead of a comic whose source extension is not installed (an

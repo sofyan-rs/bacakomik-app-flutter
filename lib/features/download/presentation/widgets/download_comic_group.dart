@@ -12,7 +12,7 @@ import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:yoru/features/download/presentation/bloc/download_cubit.dart';
 import 'package:yoru/features/download/presentation/widgets/confirm_delete_sheet.dart';
 import 'package:yoru/features/reader/presentation/pages/read_chapter_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';

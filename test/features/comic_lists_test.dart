@@ -30,7 +30,9 @@ void main() {
 
   setUp(() {
     backend = FakeSourceBackend(
-      responses: {'browse': browseResponse([seriesListItem], hasNext: true)},
+      responses: {
+        'browse': browseResponse([seriesListItem], hasNext: true),
+      },
       sourceFeatures: const SourceFeatures(
         latest: {
           'sort': ['latest'],
@@ -176,10 +178,10 @@ void main() {
     });
 
     test('blank search is no search', () async {
-      await ExploreRepositoryImpl(remote, network).explore(
-        const ExploreFilter(source: 'bacakomik', query: '   '),
-        1,
-      );
+      await ExploreRepositoryImpl(
+        remote,
+        network,
+      ).explore(const ExploreFilter(source: 'bacakomik', query: '   '), 1);
 
       expect(browseRequest()['query'], isNull);
     });

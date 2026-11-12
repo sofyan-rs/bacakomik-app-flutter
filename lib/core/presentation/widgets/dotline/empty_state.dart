@@ -2,7 +2,7 @@ import 'package:yoru/core/presentation/widgets/dotline/dot_button.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Centered icon + title + message, with an optional action. Used for empty

@@ -14,7 +14,7 @@ import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:yoru/features/download/presentation/bloc/download_cubit.dart';
 import 'package:yoru/features/history/domain/entities/resume_chapter.dart';
 import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:yoru/features/category/presentation/bloc/category_cubit.dart';

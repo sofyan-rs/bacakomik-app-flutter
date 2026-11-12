@@ -14,7 +14,7 @@ import 'package:yoru/features/comic_detail/presentation/widgets/chapter_tile.dar
 import 'package:yoru/features/home/presentation/widgets/comic_slider_card.dart';
 import 'package:yoru/features/reader/presentation/widgets/chapter_image.dart';
 import 'package:yoru/main.dart' as app;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

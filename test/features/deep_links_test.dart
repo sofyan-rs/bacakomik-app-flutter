@@ -5,10 +5,7 @@ void main() {
   test('comic links round-trip', () {
     final link = DeepLinks.comic('magic-emperor');
 
-    expect(
-      link.toString(),
-      'https://yoru.kurodev.org/series/magic-emperor',
-    );
+    expect(link.toString(), 'https://yoru.kurodev.org/series/magic-emperor');
     expect(DeepLinks.comicSlug(link), 'magic-emperor');
   });
 

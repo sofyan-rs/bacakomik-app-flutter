@@ -1,7 +1,7 @@
 import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:yoru/features/comic_detail/presentation/pages/comic_details_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Latest-chapter row inside a [ListGroup]. Shared by the home section and
 /// the "see all" screen.

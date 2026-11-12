@@ -23,9 +23,10 @@ abstract final class DeepLinks {
 
   /// Placeholder title from a comic key while the details load:
   /// `magic-emperor` and `voratoon:magic-emperor` → `Magic Emperor`.
-  static String titleFromSlug(String key) => ComicKey.slugOf(key)
-      .split('-')
-      .where((w) => w.isNotEmpty)
-      .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
-      .join(' ');
+  static String titleFromSlug(String key) =>
+      ComicKey.slugOf(key)
+          .split('-')
+          .where((w) => w.isNotEmpty)
+          .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
+          .join(' ');
 }

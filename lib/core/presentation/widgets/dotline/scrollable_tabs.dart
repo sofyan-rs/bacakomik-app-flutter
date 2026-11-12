@@ -2,7 +2,7 @@ import 'package:yoru/core/presentation/widgets/dotline/segmented_control.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 /// [SegmentedControl] look for any number of tabs: few tabs share the width,

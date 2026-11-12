@@ -17,7 +17,7 @@ import 'package:yoru/features/sync/presentation/widgets/sync_section.dart';
 import 'package:yoru/features/update/presentation/bloc/update_cubit.dart';
 import 'package:yoru/features/migration/presentation/pages/import_screen.dart';
 import 'package:yoru/features/migration/presentation/pages/source_migration_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:url_launcher/url_launcher.dart';

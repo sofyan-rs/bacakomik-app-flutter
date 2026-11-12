@@ -39,9 +39,8 @@ abstract interface class ProgressNotifier {
 @pragma('vm:entry-point')
 void progressActionInBackground(NotificationResponse response) {
   if (response.actionId != LocalProgressNotifier.cancelAction) return;
-  IsolateNameServer.lookupPortByName(
-    LocalProgressNotifier.portName,
-  )?.send(response.id);
+  IsolateNameServer.lookupPortByName(LocalProgressNotifier.portName)
+      ?.send(response.id);
 }
 
 /// Android only; a no-op on other platforms. Asks for the notification

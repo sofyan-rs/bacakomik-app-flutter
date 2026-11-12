@@ -40,7 +40,15 @@ void main() {
           path(['C:', 'Users', 'u', 'AppData', 'Roaming', 'kurodev', 'Yoru']),
           windows: true,
         ),
-        path(['C:', 'Users', 'u', 'AppData', 'Roaming', 'kurodev', 'BacaKomik']),
+        path([
+          'C:',
+          'Users',
+          'u',
+          'AppData',
+          'Roaming',
+          'kurodev',
+          'BacaKomik',
+        ]),
       );
       expect(
         oldDataFolder(path(['C:', 'kurodev', 'Other']), windows: true),

@@ -1,5 +1,5 @@
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// [header] above a scrolling [body] (Explore, Bookmarks): it slides away
 /// while the body scrolls down and comes back as soon as it scrolls up or
