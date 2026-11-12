@@ -29,7 +29,7 @@ import 'package:yoru/features/migration/presentation/pages/source_migration_scre
 import 'package:yoru/features/reader/presentation/pages/read_chapter_screen.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:yoru/features/source/presentation/pages/web_view_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 import 'package:share_plus/share_plus.dart';

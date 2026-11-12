@@ -4,7 +4,7 @@ import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:yoru/features/home/presentation/bloc/home_bloc.dart';
 import 'package:yoru/features/home/presentation/widgets/comic_slider_card.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// "NEW SERIES" horizontal strip.

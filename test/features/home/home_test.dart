@@ -129,8 +129,8 @@ void main() {
 
     blocTest<HomeBloc, HomeState>(
       'started emits loading then loaded',
-      setUp: () => when(() => getHome(any()))
-          .thenAnswer((_) async => right(home)),
+      setUp: () =>
+          when(() => getHome(any())).thenAnswer((_) async => right(home)),
       build: () => HomeBloc(getHome),
       act: (bloc) => bloc.add(HomeStarted()),
       expect: () => [
@@ -141,20 +141,18 @@ void main() {
 
     blocTest<HomeBloc, HomeState>(
       'network failure emits noInternet',
-      setUp: () => when(() => getHome(any()))
-          .thenAnswer((_) async => left(const NetworkFailure())),
+      setUp: () =>
+          when(() => getHome(any()))
+              .thenAnswer((_) async => left(const NetworkFailure())),
       build: () => HomeBloc(getHome),
       act: (bloc) => bloc.add(HomeStarted()),
-      expect: () => [
-        const HomeState.loading(),
-        const HomeState.noInternet(),
-      ],
+      expect: () => [const HomeState.loading(), const HomeState.noInternet()],
     );
 
     blocTest<HomeBloc, HomeState>(
       'refresh keeps data visible while reloading',
-      setUp: () => when(() => getHome(any()))
-          .thenAnswer((_) async => right(home)),
+      setUp: () =>
+          when(() => getHome(any())).thenAnswer((_) async => right(home)),
       build: () => HomeBloc(getHome),
       seed: () => const HomeState.loaded(home: home),
       act: (bloc) => bloc.add(HomeRefreshed()),
@@ -166,8 +164,9 @@ void main() {
 
     blocTest<HomeBloc, HomeState>(
       'refresh before first load behaves like start',
-      setUp: () => when(() => getHome(any()))
-          .thenAnswer((_) async => left(const ServerFailure('x'))),
+      setUp: () =>
+          when(() => getHome(any()))
+              .thenAnswer((_) async => left(const ServerFailure('x'))),
       build: () => HomeBloc(getHome),
       act: (bloc) => bloc.add(HomeRefreshed()),
       expect: () => [

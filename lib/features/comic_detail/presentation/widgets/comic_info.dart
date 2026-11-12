@@ -6,7 +6,7 @@ import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:yoru/core/utils/alt_titles.dart';
 import 'package:yoru/features/comic_detail/presentation/widgets/comic_title.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Meta line, title, author, source, three stat tiles, synopsis and genres.
 class ComicInfo extends StatefulWidget {

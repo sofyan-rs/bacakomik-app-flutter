@@ -2,7 +2,7 @@ import 'package:yoru/core/domain/entities/comic.dart';
 import 'package:yoru/core/presentation/widgets/comic_card.dart';
 import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Cover grid used by Explore, search and bookmarks: 3 columns on phones,
 /// more on wide screens (cells stay about 150 wide, 190 on tablets and

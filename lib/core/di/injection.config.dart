@@ -15,8 +15,7 @@ import 'package:yoru/core/data/datasources/series_remote_data_source.dart'
 import 'package:yoru/core/di/register_module.dart' as _i600;
 import 'package:yoru/core/network/api_client.dart' as _i430;
 import 'package:yoru/core/network/network_info.dart' as _i764;
-import 'package:yoru/core/notifications/progress_notifier.dart'
-    as _i231;
+import 'package:yoru/core/notifications/progress_notifier.dart' as _i231;
 import 'package:yoru/core/source/extension_bridge.dart' as _i58;
 import 'package:yoru/core/source/extension_manager.dart' as _i21;
 import 'package:yoru/core/storage/hive_boxes.dart' as _i446;
@@ -104,10 +103,8 @@ import 'package:yoru/features/home/data/repositories/home_repository_impl.dart'
     as _i899;
 import 'package:yoru/features/home/domain/repositories/home_repository.dart'
     as _i15;
-import 'package:yoru/features/home/domain/usecases/get_home.dart'
-    as _i611;
-import 'package:yoru/features/home/presentation/bloc/home_bloc.dart'
-    as _i568;
+import 'package:yoru/features/home/domain/usecases/get_home.dart' as _i611;
+import 'package:yoru/features/home/presentation/bloc/home_bloc.dart' as _i568;
 import 'package:yoru/features/latest/data/repositories/latest_repository_impl.dart'
     as _i968;
 import 'package:yoru/features/latest/domain/repositories/latest_repository.dart'
@@ -170,10 +167,8 @@ import 'package:yoru/features/sync/domain/repositories/sync_repository.dart'
     as _i441;
 import 'package:yoru/features/sync/domain/usecases/migrate_library.dart'
     as _i660;
-import 'package:yoru/features/sync/domain/usecases/sync_usecases.dart'
-    as _i629;
-import 'package:yoru/features/sync/presentation/bloc/sync_cubit.dart'
-    as _i256;
+import 'package:yoru/features/sync/domain/usecases/sync_usecases.dart' as _i629;
+import 'package:yoru/features/sync/presentation/bloc/sync_cubit.dart' as _i256;
 import 'package:yoru/features/update/data/datasources/app_installer.dart'
     as _i864;
 import 'package:yoru/features/update/data/datasources/update_remote_data_source.dart'

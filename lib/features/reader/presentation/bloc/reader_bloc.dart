@@ -37,12 +37,14 @@ class ReaderBloc extends Bloc<ChapterRequested, ReaderState> {
   ) async {
     emit(const ReaderState.loading());
     final result = await _getChapter(event.slug);
-    emit(result.fold(
-      (failure) => switch (failure) {
-        NetworkFailure() => const ReaderState.noInternet(),
-        _ => ReaderState.error(message: failure.message),
-      },
-      (chapter) => ReaderState.loaded(chapter: chapter),
-    ));
+    emit(
+      result.fold(
+        (failure) => switch (failure) {
+          NetworkFailure() => const ReaderState.noInternet(),
+          _ => ReaderState.error(message: failure.message),
+        },
+        (chapter) => ReaderState.loaded(chapter: chapter),
+      ),
+    );
   }
 }

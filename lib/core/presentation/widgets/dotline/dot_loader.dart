@@ -1,6 +1,6 @@
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Five dots with a light that moves across them. Replaces spinners.
 class DotLoader extends StatefulWidget {

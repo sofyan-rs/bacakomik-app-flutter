@@ -38,7 +38,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   HomeState _failureState(Failure failure) => switch (failure) {
-        NetworkFailure() => const HomeState.noInternet(),
-        _ => HomeState.error(message: failure.message),
-      };
+    NetworkFailure() => const HomeState.noInternet(),
+    _ => HomeState.error(message: failure.message),
+  };
 }

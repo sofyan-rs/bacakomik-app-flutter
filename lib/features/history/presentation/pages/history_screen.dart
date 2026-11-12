@@ -6,7 +6,7 @@ import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
 import 'package:yoru/features/history/presentation/widgets/history_comic_card.dart';
 import 'package:yoru/features/history/presentation/widgets/history_groups.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';

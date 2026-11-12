@@ -2,7 +2,7 @@ import 'package:yoru/core/constants/texts.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/utils/utils.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 /// Comic title on the details screen. A long press copies it to the

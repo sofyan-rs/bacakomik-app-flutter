@@ -1,5 +1,5 @@
 import 'package:yoru/app/lazy_indexed_stack.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Counts how often each tab's state is created.

@@ -1,5 +1,5 @@
 import 'package:yoru/core/theme/dotline_tokens.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Tap target that shrinks to [DotMotion.pressScale] while pressed.
 /// Dotline uses this instead of Material ink ripples. A right click runs

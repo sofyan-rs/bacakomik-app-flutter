@@ -17,7 +17,9 @@ final class LatestNextPageRequested extends LatestEvent {
 class LatestBloc extends Bloc<LatestEvent, ComicListState>
     with ComicListLoader<LatestEvent> {
   LatestBloc(this._getLatest) : super(const ComicListState.initial()) {
-    on<LatestRequested>((event, emit) => loadFirstPage(emit, () => _getLatest(1)));
+    on<LatestRequested>(
+      (event, emit) => loadFirstPage(emit, () => _getLatest(1)),
+    );
     on<LatestNextPageRequested>(
       (event, emit) => loadNextPage(emit, () => _getLatest(event.page)),
     );

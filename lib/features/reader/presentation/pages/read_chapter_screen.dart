@@ -22,7 +22,7 @@ import 'package:yoru/features/settings/domain/entities/app_settings.dart';
 import 'package:yoru/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yoru/features/source/presentation/pages/web_view_screen.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:yoru/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

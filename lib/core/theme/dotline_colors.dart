@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Dotline color tokens. Dark is the primary theme (pure black for OLED),
 /// light mirrors it on `#F2F2F2`. See `docs/ARCHITECTURE.md` §5.

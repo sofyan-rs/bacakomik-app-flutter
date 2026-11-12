@@ -15,7 +15,7 @@ import 'package:yoru/features/explore/presentation/bloc/filter_cubit.dart';
 import 'package:yoru/features/explore/presentation/widgets/filter_comic.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:yoru/features/source/presentation/widgets/source_picker_sheet.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';

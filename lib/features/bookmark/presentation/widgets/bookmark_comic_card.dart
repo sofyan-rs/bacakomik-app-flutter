@@ -4,7 +4,7 @@ import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:yoru/features/bookmark/presentation/widgets/bookmark_progress.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// Bookmark grid cell: cover with the source language and new-chapter count

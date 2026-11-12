@@ -12,7 +12,7 @@ import 'package:yoru/features/migration/presentation/bloc/match_cubit.dart';
 import 'package:yoru/features/migration/presentation/widgets/match_search_sheet.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:yoru/features/source/presentation/widgets/missing_source.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Looks up [items] by title in [targets], in order, lets the user fix the

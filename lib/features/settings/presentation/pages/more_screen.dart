@@ -7,7 +7,7 @@ import 'package:yoru/features/bookmark/presentation/bloc/bookmark_cubit.dart';
 import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
 import 'package:yoru/features/settings/presentation/widgets/settings.dart';
 import 'package:yoru/features/sync/presentation/bloc/sync_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 

@@ -73,9 +73,8 @@ Map<String, String> salvageHiveFrames(Uint8List bytes) {
     // Intact frame: key, then a string value `[type u8][length u32][utf8]`.
     final valueAt = 2 + keyLength;
     if (valueAt + 5 <= body.length) {
-      final valueLength = ByteData.sublistView(
-        body,
-      ).getUint32(valueAt + 1, Endian.little);
+      final valueLength = ByteData.sublistView(body)
+          .getUint32(valueAt + 1, Endian.little);
       if (valueAt + 5 + valueLength == body.length) {
         entries[_text(body.sublist(2, valueAt))] = _text(
           body.sublist(valueAt + 5),

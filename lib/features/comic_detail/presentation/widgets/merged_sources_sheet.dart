@@ -9,7 +9,7 @@ import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:yoru/features/migration/domain/usecases/source_migration.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 

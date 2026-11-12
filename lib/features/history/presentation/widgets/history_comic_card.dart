@@ -11,7 +11,7 @@ import 'package:yoru/features/history/presentation/widgets/history_groups.dart';
 import 'package:yoru/features/source/presentation/bloc/sources_cubit.dart';
 import 'package:yoru/features/bookmark/domain/entities/merged_chapters.dart';
 import 'package:yoru/features/bookmark/presentation/bloc/bookmark_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';

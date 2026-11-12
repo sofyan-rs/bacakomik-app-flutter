@@ -21,7 +21,7 @@ sealed class BackupState with _$BackupState {
 @injectable
 class BackupCubit extends Cubit<BackupState> {
   BackupCubit(this._backupLibrary, this._restoreLibrary)
-      : super(const BackupState.idle());
+    : super(const BackupState.idle());
 
   final BackupLibrary _backupLibrary;
   final RestoreLibrary _restoreLibrary;
@@ -30,33 +30,36 @@ class BackupCubit extends Cubit<BackupState> {
     if (state is BackupBusy) return;
     emit(const BackupState.busy());
     final result = await _backupLibrary(const NoParams());
-    emit(result.fold(
-      (failure) {
-        debugPrint('Backup failed: $failure');
-        return const BackupState.backupFailed();
-      },
-      (outcome) => switch (outcome) {
-        BackupResult.saved => const BackupState.backupSaved(),
-        BackupResult.cancelled ||
-        BackupResult.nothingToSave =>
-          const BackupState.idle(),
-      },
-    ));
+    emit(
+      result.fold(
+        (failure) {
+          debugPrint('Backup failed: $failure');
+          return const BackupState.backupFailed();
+        },
+        (outcome) => switch (outcome) {
+          BackupResult.saved => const BackupState.backupSaved(),
+          BackupResult.cancelled ||
+          BackupResult.nothingToSave => const BackupState.idle(),
+        },
+      ),
+    );
   }
 
   Future<void> restore() async {
     if (state is BackupBusy) return;
     emit(const BackupState.busy());
     final result = await _restoreLibrary(const NoParams());
-    emit(result.fold(
-      (failure) {
-        debugPrint('Restore failed: $failure');
-        return const BackupState.restoreFailed();
-      },
-      (outcome) => switch (outcome) {
-        RestoreResult.restored => const BackupState.restored(),
-        RestoreResult.cancelled => const BackupState.idle(),
-      },
-    ));
+    emit(
+      result.fold(
+        (failure) {
+          debugPrint('Restore failed: $failure');
+          return const BackupState.restoreFailed();
+        },
+        (outcome) => switch (outcome) {
+          RestoreResult.restored => const BackupState.restored(),
+          RestoreResult.cancelled => const BackupState.idle(),
+        },
+      ),
+    );
   }
 }

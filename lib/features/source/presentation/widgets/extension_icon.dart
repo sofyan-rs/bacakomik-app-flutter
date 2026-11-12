@@ -5,7 +5,7 @@ import 'package:yoru/core/theme/dotline_colors.dart';
 import 'package:yoru/core/theme/dotline_text.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// An extension's icon from its repo, kept with the covers so it shows
 /// offline. Without one (or while it loads, or when it fails) the first

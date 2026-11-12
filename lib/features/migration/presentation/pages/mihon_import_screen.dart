@@ -10,7 +10,7 @@ import 'package:yoru/features/category/presentation/bloc/category_cubit.dart';
 import 'package:yoru/features/history/presentation/bloc/history_cubit.dart';
 import 'package:yoru/features/migration/domain/entities/mihon_import_plan.dart';
 import 'package:yoru/features/migration/presentation/bloc/mihon_import_cubit.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 

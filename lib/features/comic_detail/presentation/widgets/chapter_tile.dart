@@ -8,7 +8,7 @@ import 'package:yoru/features/comic_detail/presentation/widgets/chapter_date.dar
 import 'package:yoru/features/download/domain/entities/downloaded_chapter.dart';
 import 'package:yoru/features/download/presentation/widgets/download_badge.dart';
 import 'package:yoru/features/history/domain/entities/read_history.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons_300.dart';
 
 /// One chapter row. Rows are laid out one by one in a sliver, so each row
