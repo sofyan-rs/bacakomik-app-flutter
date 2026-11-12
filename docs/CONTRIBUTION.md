@@ -8,7 +8,7 @@ Recipes for working on Yoru. Read [ARCHITECTURE.md](ARCHITECTURE.md) once first.
 
 ## 1. One-time setup
 
-1. Install **Flutter** stable with **Dart 3.13+**, the Android SDK (platform 37) and **JDK 17**. Run `flutter doctor` until it is clean.
+1. Install **Flutter 3.50+** stable with **Dart 3.14+**, the Android SDK (platform 37) and **JDK 17**; for iOS and macOS builds, **Xcode**. Run `flutter doctor` until it is clean.
 2. Use a device or emulator on Android 7.0+ (API 24); test on a recent one (API 34+) too. Mihon extensions need Android 9+ (API 28). Cloudflare sources and Cronet need Google Play services.
 3. For extension work: [Bun](https://bun.sh) and access to the private `yoru-ext-source` repo. To write your own extension without that access, use the public extension source, [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source), served at `https://sofyan-rs.github.io/yoru-ext-public-source/index.json`.
 

@@ -50,7 +50,7 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 
 | Concern | Choice | Notes |
 |---|---|---|
-| UI | Dart 3.13, Flutter stable | Material 3 themed as Dotline (§5); Geist, Geist Mono, Doto fonts; Lucide icons |
+| UI | Dart 3.14, Flutter 3.50 stable | Material 3 themed as Dotline (§5); Geist, Geist Mono, Doto fonts; Lucide icons |
 | State / DI / errors | `flutter_bloc`, `get_it` + `injectable`, `fpdart` | `Either<Failure, T>` from repositories (§9) |
 | Models | `freezed`, `json_serializable` | Stored models use `@JsonSerializable` (§7.2) |
 | Sources | `flutter_js` | One QuickJS engine per source (§8.3); `crypto` checks script `sha256` |

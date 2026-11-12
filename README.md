@@ -94,7 +94,7 @@ Some extensions are reimplemented from the Tachiyomi / Mihon extensions in [keiy
 - Android 7.0+ (API 24); Mihon extensions need Android 9+ (API 28)
 - iOS 15+ (sideloaded); DNS over HTTPS for WebViews and extensions needs iOS 17+
 - Windows 10+ (x64), macOS 12+, Linux x64; Mihon extensions run there too
-- To build: Flutter (stable, Dart 3.13), JDK 17, Android SDK 37
+- To build: Flutter 3.50+ (stable, Dart 3.14), JDK 17, Android SDK 37; Xcode for iOS and macOS
 
 ### iOS limits
 
