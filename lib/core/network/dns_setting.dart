@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:yoru/core/network/doh.dart';
+import 'package:yoru/core/network/webview_dns_proxy.dart';
 import 'package:yoru/core/source/mihon_process_host.dart';
 
 /// Applies the DNS over HTTPS setting ('' off, a preset id or a custom URL)
@@ -13,6 +14,7 @@ Future<void> applyDnsOverHttps(String setting) async {
   final server = DohServer.fromSetting(setting);
   Doh.use(server);
   if (kIsWeb) return;
+  await WebViewDns.apply(on: server != null);
   if (!Platform.isAndroid) {
     if (MihonRuntime.platform == null) return;
     return ProcessMihonHost.instance.setDns(

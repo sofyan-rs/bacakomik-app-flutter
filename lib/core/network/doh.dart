@@ -216,6 +216,18 @@ class DohHttpOverrides extends HttpOverrides {
   }
 }
 
+/// A plain TCP connection to [host]:[port], its name looked up through
+/// [Doh] when it is on (the system DNS when off or when DoH fails).
+Future<Socket> connectViaDoh(String host, int port) async {
+  final task = await _connect(
+    Uri(scheme: 'http', host: host, port: port),
+    null,
+    null,
+    null,
+  );
+  return task.socket;
+}
+
 Future<ConnectionTask<Socket>> _connect(
   Uri uri,
   String? proxyHost,
