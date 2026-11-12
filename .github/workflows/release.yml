@@ -314,11 +314,11 @@ jobs:
 
           Requires Android 7.0 or newer. Installed apps check for this update on start.
 
-          ## iOS
+          ## iPhone and iPad
 
-          \`Yoru-$VERSION-ios.ipa\` is unsigned: install it with AltStore, SideStore or
+          \`Yoru-$VERSION-ios.ipa\` is one file for iPhone and iPad, unsigned: install it with AltStore, SideStore or
           Sideloadly, which sign it with your Apple ID (a free one must refresh the app
-          every 7 days). Requires iOS 15 or newer; DNS over HTTPS reaches WebViews and
+          every 7 days). Requires iOS / iPadOS 15 or newer; DNS over HTTPS reaches WebViews and
           extensions on iOS 17 or newer. Mihon extensions don't run on iOS.
 
           ## Desktop
