@@ -20,7 +20,9 @@ class AppVariables {
 
   /// OAuth client of type "Web application" in the Google Cloud project;
   /// Android sign-in needs it as the server client id. The Android clients
-  /// are matched by package name and signing SHA-1.
+  /// are matched by package name and signing SHA-1. iOS uses its own client
+  /// (bundle id `org.kurodev.yoru`): `GIDClientID` and its reversed id as a
+  /// URL scheme in ios/Runner/Info.plist.
   static const String googleServerClientId =
       '805931733064-tmhv2feicbtujdn9snfbp0e30liidr91.apps.googleusercontent.com';
 
