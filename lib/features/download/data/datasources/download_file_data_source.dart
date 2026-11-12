@@ -53,6 +53,9 @@ class DownloadFileDataSourceImpl implements DownloadFileDataSource {
 
   Future<String>? _root;
 
+  /// The downloads folder's name inside its base directory.
+  static const folderName = 'downloads';
+
   /// App-specific external storage on Android (no permission needed,
   /// removed on uninstall), else the application support directory.
   @override
@@ -60,7 +63,7 @@ class DownloadFileDataSourceImpl implements DownloadFileDataSource {
     Directory? base;
     if (Platform.isAndroid) base = await getExternalStorageDirectory();
     base ??= await getApplicationSupportDirectory();
-    return '${base.path}/downloads';
+    return '${base.path}/$folderName';
   }();
 
   @override

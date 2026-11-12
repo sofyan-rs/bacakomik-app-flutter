@@ -172,8 +172,15 @@ class BackgroundPageDownloadQueue implements PageDownloadQueue {
           taskId: _taskId(job.chapterSlug, job.index),
           url: job.url,
           headers: withImageHostHeaders(job.url, job.headers),
-          baseDirectory: BaseDirectory.root,
-          directory: '$root/${_dirOf(job.path)}',
+          // iOS moves the app's container on updates, so a page still
+          // queued then is stored relative to Application Support (the
+          // downloads root there) and resolved when it runs.
+          baseDirectory: Platform.isIOS
+              ? BaseDirectory.applicationSupport
+              : BaseDirectory.root,
+          directory: Platform.isIOS
+              ? '${DownloadFileDataSourceImpl.folderName}/${_dirOf(job.path)}'
+              : '$root/${_dirOf(job.path)}',
           filename: job.path.split('/').last,
           group: _group,
           metaData: job.chapterSlug,
