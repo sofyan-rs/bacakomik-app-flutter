@@ -71,9 +71,9 @@ bun scripts/bundle.ts ../bacakomik-app-flutter/assets/extensions bacakomik vorat
 2. Optionally write `.github/release-notes/v1.6.0.md` (otherwise notes come from commits).
 3. Commit, then `git tag v1.6.0 && git push origin v1.6.0`.
 
-`.github/workflows/release.yml` checks the tag against the pubspec, runs analyze and tests, and publishes signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs as `Yoru-<version>-<abi>.apk` with a "Which APK?" table. **Keep the asset suffixes (`-<abi>.apk`, `-windows-setup.exe`, `-macos.zip`, `-linux-x86_64.AppImage`) and that heading**: installed apps find updates through them. The prefix can change (it was `BacaKomik-` before 2.17.0).
+`.github/workflows/release.yml` checks the tag against the pubspec, runs analyze and tests, and publishes signed `arm64-v8a`, `armeabi-v7a`, `x86_64` and universal APKs as `Yoru-<version>-<abi>.apk` with a "Which APK?" table. **Keep the asset suffixes (`-<abi>.apk`, `-ios.ipa`, `-windows-setup.exe`, `-macos.zip`, `-linux-x86_64.AppImage`) and that heading**: installed apps find updates through them. The prefix can change (it was `BacaKomik-` before 2.17.0).
 
-Desktop builds are published in the same release, including Linux AppImage and Fedora RPM (`Yoru-<version>-linux-x86_64.rpm`). A manual workflow run builds them as workflow artifacts without publishing a release.
+An unsigned iOS IPA (`Yoru-<version>-ios.ipa`, `flutter build ios --release --no-codesign` zipped as `Payload/Runner.app`) is published in the same release; it needs no Apple account or secret. The worker's `/altstore.json` (hosting/README) lists it for AltStore and SideStore, so publishing the release is all an iOS update needs. Desktop builds are published in the same release, including Linux AppImage and Fedora RPM (`Yoru-<version>-linux-x86_64.rpm`). A manual workflow run builds them as workflow artifacts without publishing a release.
 
 To build the RPM locally on x86_64 Linux, install the Flutter Linux build dependencies and `rpm-build` (Fedora) or `rpm` (Ubuntu), then run:
 

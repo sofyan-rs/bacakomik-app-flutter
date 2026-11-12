@@ -11,11 +11,12 @@ A reader for manga, manhwa and manhua from several sources. Each source is a sma
 Get it from the [Releases](https://github.com/sofyan-rs/yoru-comic-app/releases) page:
 
 - **Android:** the APK; `arm64-v8a` fits almost every phone. Android 7.0 or newer.
+- **iOS:** the `.ipa` (iOS 15 or newer), unsigned: sideload it with AltStore, SideStore or Sideloadly. For updates, add the source `https://yoru.kurodev.org/altstore.json` in AltStore or SideStore. See [iOS limits](#ios-limits).
 - **Windows:** `windows-setup.exe` (Windows 10 and 11, 64-bit).
 - **macOS:** the `.dmg` (macOS 12 or newer). Not signed yet: open it the first time with right click → Open.
 - **Linux:** the `.AppImage` (64-bit), or `.rpm` for Fedora (`sudo dnf install ./Yoru-<version>-linux-x86_64.rpm`). The in-app WebView needs WebKitGTK 4.1, which most desktops already have (`libwebkit2gtk-4.1-0` on Debian and Ubuntu, `webkit2gtk4.1` on Fedora); without it "Open in WebView" opens the browser and sources that need a WebView do not load.
 
-The app checks for new releases and updates itself (on Linux when run from the AppImage). More on the [website](https://yoru.kurodev.org).
+The app checks for new releases and updates itself (on Linux when run from the AppImage; on iOS it hands the IPA to AltStore or SideStore). More on the [website](https://yoru.kurodev.org).
 
 Fedora RPM installs can update from inside the app: approve the system's administrator prompt, then the app restarts after installation. You can also download and install the new RPM with the same `sudo dnf install` command.
 
@@ -82,7 +83,7 @@ https://sofyan-rs.github.io/yoru-ext-public-source/index.json
 
 Add a repo in More → Extensions → Extension repos. Extensions run code and access the internet, so only add repos you trust.
 
-**Mihon extensions (Android 9+).** A Mihon / Tachiyomi extension repo works too: paste its `index.min.json`, `repo.json` or base URL. Its extensions install inside the app (no separate APK install) and work like the app's own: browse, search, filters, the reader, downloads (in the background too), a scanlator picker when a comic has several, and their own settings. They update from the same repo, and an APK is only loaded when it is signed with the key the repo publishes. Bookmarks from a Mihon backup map straight to these sources.
+**Mihon extensions (Android 9+ and desktop, not iOS).** A Mihon / Tachiyomi extension repo works too: paste its `index.min.json`, `repo.json` or base URL. Its extensions install inside the app (no separate APK install) and work like the app's own: browse, search, filters, the reader, downloads (in the background too), a scanlator picker when a comic has several, and their own settings. They update from the same repo, and an APK is only loaded when it is signed with the key the repo publishes. Bookmarks from a Mihon backup map straight to these sources.
 
 **Want to make your own extension?** Start from [sofyan-rs/yoru-ext-public-source](https://github.com/sofyan-rs/yoru-ext-public-source): it has example extensions, the extension contract, and guides to write, test and publish one. Host the built `index.json` anywhere and add its URL as a repo in the app.
 
@@ -90,9 +91,21 @@ Some extensions are reimplemented from the Tachiyomi / Mihon extensions in [keiy
 
 ## Requirements
 
-- Android 7.0+ (API 24); Mihon extensions need Android 9+ (API 28) and are Android only
-- Windows 10+ (x64), macOS 12+, Linux x64
+- Android 7.0+ (API 24); Mihon extensions need Android 9+ (API 28)
+- iOS 15+ (sideloaded); DNS over HTTPS for WebViews and extensions needs iOS 17+
+- Windows 10+ (x64), macOS 12+, Linux x64; Mihon extensions run there too
 - To build: Flutter (stable, Dart 3.13), JDK 17, Android SDK 37
+
+### iOS limits
+
+The iOS app is the same app, with what iOS allows:
+
+- **Sideload only.** The IPA is unsigned and not on the App Store. AltStore, SideStore and Sideloadly sign it with your Apple ID; with a free Apple ID the app must be refreshed every 7 days.
+- **No Mihon extensions.** They are Android code (APKs), which iOS cannot run. Only Yoru extensions (`…/index.json` repos) work.
+- **Updates go through the sideloading app.** The app tells you about a new version and opens it in AltStore or SideStore (or the IPA in Safari); it cannot install itself.
+- **Work stops in the background.** iOS suspends the app a few seconds after you leave it, so a bookmark refresh or download pauses until you come back. Refresh progress is a plain `done / total` notification, without a progress bar.
+- **DNS over HTTPS** covers WebViews and extensions only on iOS 17 or newer; on iOS 15 and 16 they use the system DNS.
+- **Less tested** than Android: background downloads and extensions that render pages in a hidden WebView.
 
 ## Build
 

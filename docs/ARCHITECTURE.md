@@ -35,8 +35,14 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 **Non-goals**
 - An account or server-side library. Sync only uses the user's Drive (`drive.appdata`).
 - Hosting comics. Extensions read the sites; the app only gives them host functions (§8.4).
-- iOS. The code mostly runs there (JS extensions only, §8.9), but background downloads, hidden-WebView rendering (§8.5) and notifications are Android-only or untested, and download paths are absolute (§7.5).
-- An app store. Releases are APKs on GitHub Releases; the app checks for a newer one on start and in More, downloads the APK for its ABI and opens the installer (`features/update`, `ota_update`). Asset names and the `## Which APK?` heading come from the release workflow (CONTRIBUTION §2).
+- iOS parity. iOS 15+ ships as an unsigned, sideloaded IPA and runs the same code, within iOS's limits:
+  - JS extensions only: Mihon APKs cannot run (§8.9); the repos sheet says so and asks for `…/index.json`.
+  - Updates go through AltStore / SideStore (below); the app cannot install itself.
+  - iOS suspends the app soon after it leaves the foreground, so bookmark refresh and downloads pause; refresh progress is a `done / total` notification without a bar (§6.1).
+  - DNS over HTTPS reaches WebViews and NSURLSession on iOS 17+ only (§8.8).
+  - Untested: background downloads and hidden-WebView rendering (§8.5). iOS moves the app container on updates: download records are relative to the root (§7.5) and queued pages to Application Support, so both survive it.
+  - Google sign-in uses the iOS OAuth client (`GIDClientID` in `Info.plist`); it also works when a sideloading app changes the bundle id.
+- An app store. Releases are APKs on GitHub Releases; the app checks for a newer one on start and in More, downloads the APK for its ABI and opens the installer (`features/update`, `ota_update`). iOS gets an unsigned `…-ios.ipa` for sideloading: `IosAppInstaller` opens it in AltStore or SideStore (`altstore://install?url=…`), else in Safari, and the worker's `/altstore.json` (hosting) is a source those stores check for updates. Asset names and the `## Which APK?` heading come from the release workflow (CONTRIBUTION §2).
 
 ---
 
@@ -55,7 +61,7 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 | Other HTTP | `dio` (`filesDio`) | Repos, scripts, Drive, GitHub releases (§8.8) |
 | Storage | `hive_ce` | JSON strings, no adapters (§7) |
 | Downloads | `background_downloader` | Outside the Dart isolate (§7.5) |
-| Notifications | `flutter_local_notifications` | Bookmark refresh progress with Cancel (§6.1); needs `ActionBroadcastReceiver` in the manifest |
+| Notifications | `flutter_local_notifications` | Bookmark refresh progress with Cancel (§6.1); needs `ActionBroadcastReceiver` in the manifest; on iOS, the notification center delegate and `setPluginRegistrantCallback` in `AppDelegate.swift` |
 | Sync / backup | `google_sign_in` + Drive REST; `file_picker` | §7.6, §7.4 |
 | Links, share, gallery | `app_links`, `share_plus`, `gal` | Links `https://yoru.kurodev.org/series/<slug>` (and the old host `bacakomik.kurodev.org`) open the app (`DeepLinks`, host in `hosting/worker`) |
 | Tests | `flutter_test`, `bloc_test`, `mocktail` | CONTRIBUTION §5 |
@@ -194,7 +200,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 ### 6.1 Checking bookmarks for new chapters
 1. Pull-to-refresh calls `BookmarkCubit.updateBookmarkList` with the comics **on screen** (open group, narrowed by search). Pulling in another group during a run adds to the queue.
 2. `BookmarkRefreshQueue` checks up to 3 comics at once, at most 1 per source (a site may block a burst). `RefreshBookmark` fetches the chapter list first, and the series details only when the count changed or the bookmark is an imported placeholder. A changed count saves the new details with `updatedDate = now` (moves it to the top). A failure leaves it unchanged and logs `Refresh <key>: <failure>`.
-3. `ProgressNotifier` (Android) shows `done / total`, then "Bookmarks updated" with the count, or nothing.
+3. `ProgressNotifier` (Android, iOS) shows `done / total`, then "Bookmarks updated" with the count, or nothing. iOS has no progress bar: the count sits in Notification Center (no banner, no sound) and a swipe there is not reported; the finish shows as a banner.
 4. **Comic page:** a bookmarked comic opens from its bookmark's details with no request (`ComicDetailsRequested.stored`); an imported placeholder is always fetched. Pull-to-refresh on the page fetches, and `BookmarkCubit.comicLoaded(fresh: true)` → `CompleteImportedComic` saves the loaded details (cover, chapter count) to the bookmark when they differ; a changed chapter count moves it to the top, like step 2. A stored copy (offline fallback) never overwrites a bookmark.
 
 | Stop | How |
@@ -307,7 +313,7 @@ Boxes have no order. Repositories sort on read: bookmarks by `updatedDate` and h
 - Not backed up: downloads, extensions, source settings, pending reads.
 
 ### 7.5 Downloads
-- **Files:** `<root>/<comicKey>/<chapter>/000.<ext>` and `<root>/<comicKey>/cover.<ext>`; unsafe characters become `_` (`voratoon:slug` → `voratoon_slug`). Root: `getExternalStorageDirectory()/downloads` on Android (app-specific, removed on uninstall), else `getApplicationSupportDirectory()/downloads`. Records store relative paths.
+- **Files:** `<root>/<comicKey>/<chapter>/000.<ext>` and `<root>/<comicKey>/cover.<ext>`; unsafe characters become `_` (`voratoon:slug` → `voratoon_slug`). Root: `getExternalStorageDirectory()/downloads` on Android (app-specific, removed on uninstall), else `getApplicationSupportDirectory()/downloads`. Records store relative paths; so do pages queued on iOS (`BaseDirectory.applicationSupport`), whose app container moves on updates. Android queues absolute paths (external storage does not move).
 - **Background:** `background_downloader` (`PageDownloadQueue`) runs outside Dart, three pages at a time, through lock and process death, with `imageHeaders`, 10 retries with backoff, one grouped notification. `POST_NOTIFICATIONS` is asked on the first download.
 - **Blocked hosts:** on a page's first retry, `imageHostBlocks` (§8.6) checks the host once; a blocking host's pages are saved through `comicImageCache` instead (only while the app runs). Mihon pages go through the local server (§8.9), or that way when there is none.
 - **Preparing:** `DownloadRepositoryImpl` takes one chapter at a time, gets fresh page URLs from `ReaderRepository`, records planned paths and queues missing pages. Covers come from `coverImageCache` via a `.part` file; a missing cover doesn't fail the chapter.
@@ -401,7 +407,9 @@ Two caches share one downloader. `coverImageCache` (key `bacakomikCovers`, 5000 
 **DNS over HTTPS** (More → DNS over HTTPS; `AppSettings.dnsOverHttps`: `''` off, a preset id from `dohPresets`, or a custom `https://…/dns-query` URL), for networks whose DNS blocks sites. `applyDnsOverHttps` (from `main` before the first request, then on change) sets:
 - `Doh` (`core/network/doh.dart`) for every dart:io `HttpClient`: `DohHttpOverrides` is `HttpOverrides.global`, set first thing in `main`; its `connectionFactory` resolves the host over RFC 8484 GET (`?dns=`, HTTP/1.1, as dart:io has no HTTP/2), connects to the address and does TLS for the hostname. Presets are reached by IP (`bootstrap`). When the server fails, the system DNS is used. On desktop this covers extensions, images and downloads; on Android, `filesDio`.
 - `HostDns` (Kotlin) for Mihon extensions' OkHttp (`okhttp-dnsoverhttps`), kept in preferences for starts without Dart.
-- Not covered: Cronet on Android (JS extensions, images: it takes no resolver), `background_downloader`, and WebViews. The sheet points Android users to the system's Private DNS for those. Quad9 is not a preset: its endpoint only speaks HTTP/2.
+- Not covered: Cronet on Android (JS extensions, images: it takes no resolver), `background_downloader`, and WebViews (except on iOS, below). The sheet points Android users to the system's Private DNS for those.
+- iOS 17+: `WebViewDns` (`core/network/webview_dns_proxy.dart`) runs `WebViewDnsProxy`, an HTTP proxy on 127.0.0.1 that connects through `Doh` (`connectViaDoh`); TLS stays end to end. WebViews use it through `ProxyController` (`WKWebsiteDataStore.proxyConfigurations`), NSURLSession (extensions' `NativeAdapter`) through `SessionProxy` in `AppDelegate.swift`, which wraps `+default`/`+ephemeralSessionConfiguration` once DoH is on: sessions made earlier stay direct. On resume a proxy that stopped answering is reopened on its port. iOS 16 and older keep the system DNS.
+- Quad9 is not a preset: its endpoint only speaks HTTP/2.
 
 ### 8.9 Mihon extensions
 Android 9+, Windows, macOS and Linux also run **Mihon (Tachiyomi) extensions** as a second backend: a user adds a Mihon repo (e.g. Keiyoushi), installs an extension, and its sources work like any other (Home, Explore, comic page, reader, bookmarks, refresh, history, downloads, sync, migration). JS extensions keep working; on iOS and Android 8 and older, Mihon repos are skipped and can't be added. Aniyomi (anime) and LNReader (novels) are not supported. The desktops run the same Kotlin code in a helper process (Desktop, below).
