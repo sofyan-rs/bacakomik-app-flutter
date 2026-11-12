@@ -1,4 +1,5 @@
 import 'package:yoru/core/constants/texts.dart';
+import 'package:yoru/core/error/exceptions.dart';
 import 'package:yoru/core/source/extension_manager.dart';
 import 'package:yoru/core/source/extension_meta.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -122,11 +123,14 @@ class ExtensionsCubit extends Cubit<ExtensionsState> {
       _busy(id, () => _manager.uninstall(id));
 
   /// Returns an error message, or null when the repo was added.
+  /// Null when added; otherwise the message to show under the field.
   Future<String?> addRepo(String url) async {
     try {
       await _manager.addRepo(url);
-    } catch (e) {
-      return '$e';
+    } on ServerException catch (e) {
+      return e.message;
+    } catch (_) {
+      return AppText.repoInvalid;
     }
     await refresh();
     return null;

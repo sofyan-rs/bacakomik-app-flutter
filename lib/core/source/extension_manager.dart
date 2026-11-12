@@ -15,6 +15,7 @@ import 'package:yoru/core/storage/hive_boxes.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:yoru/core/constants/texts.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:injectable/injectable.dart';
@@ -431,7 +432,11 @@ class ExtensionManager extends ChangeNotifier implements SourceRegistry {
       final mihon = MihonRepo.normalize(clean);
       if (mihon != null) {
         if (!await _mihon.available) {
-          throw const ServerException('Mihon repos need Android 9 or newer');
+          throw ServerException(
+            Platform.isIOS
+                ? AppText.mihonRepoUnsupportedIos
+                : AppText.mihonRepoUnsupported,
+          );
         }
         clean = mihon;
       }

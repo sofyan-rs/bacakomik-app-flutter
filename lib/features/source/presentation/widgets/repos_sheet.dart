@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:yoru/core/constants/texts.dart';
 import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/theme/dotline_colors.dart';
@@ -48,7 +49,7 @@ class _ReposSheetState extends State<ReposSheet> {
     if (!mounted) return;
     setState(() {
       _adding = false;
-      _error = error == null ? null : AppText.repoInvalid;
+      _error = error;
     });
     if (error == null) _url.clear();
   }
@@ -104,8 +105,12 @@ class _ReposSheetState extends State<ReposSheet> {
           autocorrect: false,
           style: DotlineText.body.copyWith(color: c.ink),
           decoration: InputDecoration(
-            hintText: 'https://…/index.json · index.min.json · index.pb',
+            // iOS runs no Mihon extensions: only Yoru repos.
+            hintText: defaultTargetPlatform == TargetPlatform.iOS
+                ? AppText.repoHintIos
+                : AppText.repoHint,
             errorText: _error,
+            errorMaxLines: 3,
           ),
           onSubmitted: (_) => _add(),
         ),

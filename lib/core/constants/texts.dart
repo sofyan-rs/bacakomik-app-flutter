@@ -412,6 +412,14 @@ class AppText {
   static const String repoAdding = 'Checking repo…';
   static const String repoInvalid = 'Not a valid extension repo URL';
   static const String repoFailed = 'Repo unavailable';
+  static const String repoHint =
+      'https://…/index.json · index.min.json · index.pb';
+  static const String repoHintIos = 'https://…/index.json';
+  static const String mihonRepoUnsupported =
+      'Mihon repos need Android 9+, Windows, macOS or Linux';
+  static const String mihonRepoUnsupportedIos =
+      'Mihon repos (index.min.json, index.pb) don\'t work on iOS. '
+      'Add a Yoru repo (…/index.json).';
   static const String repoWarning =
       'Extensions run code and access the internet. Only add repos you trust.';
   static const String noFilters = 'This source has no filters.';
