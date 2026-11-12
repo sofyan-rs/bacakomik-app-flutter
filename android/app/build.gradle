@@ -51,14 +51,25 @@ android {
         }
         // Debug and profile builds install next to the released app, so
         // trying one on a phone never replaces it (a different signature
-        // would make Flutter uninstall it, data and all).
+        // would make Flutter uninstall it, data and all). Their ".dev"
+        // application ID is set below.
         debug {
-            applicationIdSuffix ".dev"
             manifestPlaceholders = [appLabel: "Yoru Dev"]
         }
         profile {
-            applicationIdSuffix ".dev"
             manifestPlaceholders = [appLabel: "Yoru Dev"]
+        }
+    }
+}
+
+// The ".dev" suffix is set on the variants rather than with
+// applicationIdSuffix in buildTypes. The Flutter Gradle plugin copies the
+// app's build types onto plugin library projects, and AGP fails the build
+// when a library build type sets applicationIdSuffix.
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        if (variant.buildType in ["debug", "profile"]) {
+            variant.applicationId.set("${android.defaultConfig.applicationId}.dev")
         }
     }
 }
