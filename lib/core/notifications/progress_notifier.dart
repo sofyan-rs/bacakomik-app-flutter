@@ -43,8 +43,10 @@ void progressActionInBackground(NotificationResponse response) {
       ?.send(response.id);
 }
 
-/// Android only; a no-op on other platforms. Asks for the notification
-/// permission on first use.
+/// Android and iOS; a no-op on other platforms. Asks for the notification
+/// permission on first use. iOS has no progress bar: the count is the
+/// body, kept in Notification Center without a banner or sound, and a
+/// swipe there is not reported (an update brings it back).
 @LazySingleton(as: ProgressNotifier)
 class LocalProgressNotifier implements ProgressNotifier {
   static const cancelAction = 'cancel';
@@ -73,8 +75,13 @@ class LocalProgressNotifier implements ProgressNotifier {
 
   static const _channelId = 'progress';
 
+  /// iOS category whose notifications have a Cancel button.
+  static const _cancelCategory = 'progress_cancelable';
+
   static bool get _supported =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
 
   Future<bool> _init() => _ready ??= () async {
     try {
@@ -85,9 +92,27 @@ class LocalProgressNotifier implements ProgressNotifier {
       IsolateNameServer.removePortNameMapping(portName);
       IsolateNameServer.registerPortWithName(port.sendPort, portName);
       await _plugin.initialize(
-        settings: const InitializationSettings(
-          android: AndroidInitializationSettings(
+        settings: InitializationSettings(
+          android: const AndroidInitializationSettings(
             '@mipmap/ic_launcher_monochrome',
+          ),
+          // Asked below, on first use, not at start.
+          iOS: DarwinInitializationSettings(
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+            notificationCategories: [
+              DarwinNotificationCategory(
+                _cancelCategory,
+                actions: [
+                  DarwinNotificationAction.plain(
+                    cancelAction,
+                    AppText.cancel,
+                    options: {DarwinNotificationActionOption.destructive},
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         onDidReceiveNotificationResponse: _onResponse,
@@ -98,6 +123,11 @@ class LocalProgressNotifier implements ProgressNotifier {
             AndroidFlutterLocalNotificationsPlugin
           >()
           ?.requestNotificationsPermission();
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true);
       return true;
     } catch (e) {
       debugPrint('ProgressNotifier: $e');
@@ -148,6 +178,15 @@ class LocalProgressNotifier implements ProgressNotifier {
               const AndroidNotificationAction(cancelAction, AppText.cancel),
           ],
         ),
+        iOS: DarwinNotificationDetails(
+          presentBanner: false,
+          presentList: true,
+          presentSound: false,
+          presentBadge: false,
+          interruptionLevel: InterruptionLevel.passive,
+          threadIdentifier: _channelId,
+          categoryIdentifier: cancelable ? _cancelCategory : null,
+        ),
       ),
     );
   });
@@ -167,6 +206,13 @@ class LocalProgressNotifier implements ProgressNotifier {
               AppText.progressChannel,
               importance: Importance.low,
               priority: Priority.low,
+            ),
+            iOS: DarwinNotificationDetails(
+              presentBanner: true,
+              presentList: true,
+              presentSound: false,
+              presentBadge: false,
+              threadIdentifier: _channelId,
             ),
           ),
         );
