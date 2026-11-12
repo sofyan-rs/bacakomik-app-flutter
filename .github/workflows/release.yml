@@ -1,7 +1,7 @@
 name: Release
 
-# Push a tag like v1.2.0 to build signed APKs and the desktop apps, and
-# publish a GitHub release. The tag must match `version:` in pubspec.yaml
+# Push a tag like v1.2.0 to build signed APKs, an unsigned iOS IPA and the
+# desktop apps, and publish a GitHub release. The tag must match `version:` in pubspec.yaml
 # (without the build number). Notes come from .github/release-notes/<tag>.md,
 # else GitHub's generated notes.
 #
@@ -138,6 +138,39 @@ jobs:
           name: macos
           path: dist/
 
+  # Unsigned: users sideload it (AltStore, SideStore, Sideloadly), which
+  # signs it with their own Apple ID.
+  ios:
+    needs: version
+    runs-on: macos-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.x
+          cache: true
+
+      - name: Build
+        run: |
+          flutter pub get
+          flutter build ios --release --no-codesign
+
+      - name: Package
+        run: |
+          mkdir -p dist ipa/Payload
+          cp -R build/ios/iphoneos/Runner.app ipa/Payload/
+          cd ipa
+          zip -qry "$GITHUB_WORKSPACE/dist/Yoru-$VERSION-ios.ipa" Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios
+          path: dist/
+
   windows:
     needs: version
     runs-on: windows-latest
@@ -244,7 +277,7 @@ jobs:
 
   publish:
     if: github.ref_type == 'tag'
-    needs: [version, android, macos, windows, linux]
+    needs: [version, android, ios, macos, windows, linux]
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.ref_name }}
@@ -280,6 +313,13 @@ jobs:
           | \`Yoru-$VERSION-universal.apk\` | Any device, if you're unsure (bigger download) |
 
           Requires Android 7.0 or newer. Installed apps check for this update on start.
+
+          ## iOS
+
+          \`Yoru-$VERSION-ios.ipa\` is unsigned: install it with AltStore, SideStore or
+          Sideloadly, which sign it with your Apple ID (a free one must refresh the app
+          every 7 days). Requires iOS 15 or newer; DNS over HTTPS reaches WebViews and
+          extensions on iOS 17 or newer. Mihon extensions don't run on iOS.
 
           ## Desktop
 

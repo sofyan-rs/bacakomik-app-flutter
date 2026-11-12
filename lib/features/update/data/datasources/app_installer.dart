@@ -11,6 +11,7 @@ import 'package:injectable/injectable.dart';
 import 'package:ota_update/ota_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// The installed app, and what installs a release over it.
 abstract interface class AppInstaller {
@@ -25,8 +26,11 @@ abstract interface class AppInstaller {
 @module
 abstract class AppInstallerModule {
   @lazySingleton
-  AppInstaller installer(@Named(filesDio) Dio dio) =>
-      Platform.isAndroid ? OtaAppInstaller() : DesktopAppInstaller(dio);
+  AppInstaller installer(@Named(filesDio) Dio dio) => Platform.isAndroid
+      ? OtaAppInstaller()
+      : Platform.isIOS
+      ? IosAppInstaller()
+      : DesktopAppInstaller(dio);
 }
 
 Future<String> _installedVersion() async =>
@@ -70,6 +74,52 @@ class OtaAppInstaller implements AppInstaller {
           yield UpdateInstallFailed('${event.status.name}: ${event.value}');
           return;
       }
+    }
+  }
+}
+
+/// iOS: the IPA is sideloaded, so the app that signed it installs the
+/// update. Opens AltStore or SideStore on `…-ios.ipa` when one is there
+/// (`LSApplicationQueriesSchemes` in Info.plist), else the IPA in Safari
+/// for Sideloadly and the like. The stream ends after the hand-off.
+class IosAppInstaller implements AppInstaller {
+  IosAppInstaller({
+    Future<bool> Function(Uri)? canLaunch,
+    Future<bool> Function(Uri)? launch,
+  }) : _canLaunch = canLaunch ?? canLaunchUrl,
+       _launch =
+           launch ??
+           ((uri) => launchUrl(uri, mode: LaunchMode.externalApplication));
+
+  final Future<bool> Function(Uri) _canLaunch;
+  final Future<bool> Function(Uri) _launch;
+
+  /// URL schemes of the sideloading stores, in the order tried.
+  static const stores = ['altstore', 'sidestore'];
+
+  @override
+  Future<String> installedVersion() => _installedVersion();
+
+  @override
+  Future<List<String>> assetSuffixes() async => ['ios.ipa'];
+
+  @override
+  Stream<UpdateProgress> install(ReleaseAsset asset) async* {
+    for (final scheme in stores) {
+      final uri = Uri(
+        scheme: scheme,
+        host: 'install',
+        queryParameters: {'url': asset.url},
+      );
+      if (await _canLaunch(uri) && await _launch(uri)) {
+        yield const UpdateInstalling();
+        return;
+      }
+    }
+    if (await _launch(Uri.parse(asset.url))) {
+      yield const UpdateInstalling();
+    } else {
+      yield const UpdateInstallFailed('No app could open the IPA');
     }
   }
 }

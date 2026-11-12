@@ -16,6 +16,10 @@ serves `bacakomik.kurodev.org`, the host from before the rename to Yoru.
   cached at the edge for an hour.
 - `/` is the app's home page: what the app does, the APK download and a
   privacy link. It is the homepage URL of the Google OAuth consent screen.
+- `/altstore.json` is an AltStore / SideStore source: the iOS IPA
+  (`…-ios.ipa`) of each GitHub release, newest first, with its notes up to
+  `## Which APK?`. Cached 15 minutes; a GitHub failure is not cached. Users
+  add `https://yoru.kurodev.org/altstore.json` once and get updates there.
 - `/privacy-policy` is the privacy policy (`/privacy` works too). It is the
   privacy policy URL of the Google OAuth consent screen used by Drive
   sync; update `privacyPage()` and `PRIVACY_UPDATED` when the app starts

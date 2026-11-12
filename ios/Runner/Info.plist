@@ -37,6 +37,11 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>805931733064-ilav9vsl6l4qr1bfrtt3027pf892akmr.apps.googleusercontent.com</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>altstore</string>
+		<string>sidestore</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

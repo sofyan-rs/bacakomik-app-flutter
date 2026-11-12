@@ -13,6 +13,8 @@
 //   also the homepage URL of the Google sign-in consent screen.
 // - /privacy-policy is the privacy policy, linked from the Google sign-in consent
 //   screen used by Drive sync.
+// - /altstore.json is an AltStore / SideStore source listing the iOS IPAs of
+//   the GitHub releases, so sideloaded installs get updates there.
 
 import { appleTouch, favicon32, favicon64 } from './icons.js';
 
@@ -35,7 +37,7 @@ const ISSUES =
   'https://github.com/sofyan-rs/yoru-comic-app/issues/new';
 
 // Shown on the privacy page. Bump when the policy text changes.
-const PRIVACY_UPDATED = '10 November 2026';
+const PRIVACY_UPDATED = '12 November 2026';
 
 // Display names of the extension sources the app ships; others show their id.
 const SOURCE_NAMES = { voratoon: 'VoraToon' };
@@ -69,6 +71,9 @@ export default {
 
     if (/^\/privacy(-policy)?\/?$/.test(url.pathname)) {
       return html(privacyPage());
+    }
+    if (url.pathname === '/altstore.json') {
+      return cached(request, ctx, () => altStoreSource(url.origin));
     }
     if (url.pathname === '/') return html(homePage(url.origin));
     return html(page({ url: url.href, missing: true }), 404);
@@ -107,6 +112,90 @@ function assetLinks() {
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'public, max-age=3600',
+    },
+  });
+}
+
+const RELEASES_API =
+  'https://api.github.com/repos/sofyan-rs/yoru-comic-app/releases?per_page=20';
+// The source and its JSON are cached at the edge for this long, in seconds.
+const SOURCE_TTL = 15 * 60;
+// Release notes end here; the rest is the download tables
+// (AppRelease.apkTableHeading in the app).
+const NOTES_END = '## Which APK?';
+const MIN_IOS = '15.0';
+
+// AltStore source format (https://faq.altstore.io/developers/make-a-source).
+// Versions are the releases with an `…-ios.ipa` asset, newest first.
+async function altStoreSource(origin) {
+  let releases;
+  try {
+    const res = await fetch(RELEASES_API, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'yoru-links-worker',
+      },
+    });
+    if (!res.ok) throw new Error(`GitHub answered ${res.status}`);
+    releases = await res.json();
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e.message ?? e) }), {
+      status: 502,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+  const versions = releases
+    .filter((r) => !r.draft && !r.prerelease)
+    .flatMap((r) => {
+      const ipa = r.assets?.find((a) => a.name.endsWith('-ios.ipa'));
+      if (!ipa) return [];
+      return [
+        {
+          version: r.tag_name.replace(/^v/, ''),
+          date: r.published_at,
+          localizedDescription:
+            (r.body ?? '').split(NOTES_END)[0].trim() || r.tag_name,
+          downloadURL: ipa.browser_download_url,
+          size: ipa.size,
+          minOSVersion: MIN_IOS,
+        },
+      ];
+    });
+  const description =
+    'Read manga, manhwa and manhua from extension sources, with bookmarks, ' +
+    'history, downloads and Google Drive sync.';
+  const body = {
+    name: APP_NAME,
+    identifier: `${PACKAGE}.source`,
+    subtitle: 'Manga, manhwa and manhua reader',
+    description,
+    iconURL: `${origin}/apple-touch-icon.png`,
+    website: `${origin}/`,
+    sourceURL: `${origin}/altstore.json`,
+    tintColor: '#E5211C',
+    apps: [
+      {
+        name: APP_NAME,
+        bundleIdentifier: PACKAGE,
+        developerName: 'kurodev',
+        subtitle: 'Manga, manhwa and manhua reader',
+        localizedDescription: description,
+        iconURL: `${origin}/apple-touch-icon.png`,
+        tintColor: '#E5211C',
+        category: 'entertainment',
+        versions,
+        appPermissions: { entitlements: [], privacy: {} },
+      },
+    ],
+    news: [],
+  };
+  return new Response(JSON.stringify(body, null, 2), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': `public, max-age=${SOURCE_TTL}`,
     },
   });
 }
@@ -511,7 +600,7 @@ export function privacyPage() {
     <div class="layout">
     <article>
 
-    <p>${APP_NAME} is an app for reading comics on Android and desktop, made by Kurodev.
+    <p>${APP_NAME} is an app for reading comics on Android, iOS and desktop, made by Kurodev.
     It was called BacaKomik before. This page explains what data the app
     uses and where that data is sent.</p>
 
@@ -647,7 +736,7 @@ const phone = (name, alt, cls = '', lazy = true) =>
 
 export function homePage(origin) {
   const desc =
-    'An app for reading manga, manhwa and manhua from several sources, on Android, Windows, macOS and Linux.';
+    'An app for reading manga, manhwa and manhua from several sources, on Android, iOS, Windows, macOS and Linux.';
 
   const heroPhones = HERO_SCREENS.map(([name, alt], i) =>
     phone(name, alt, ['back left', 'front', 'back right'][i], false),
@@ -917,8 +1006,9 @@ export function homePage(origin) {
             <a class="btn secondary label" href="#features">See features</a>
           </div>
           <div class="platforms label rise d4" aria-label="Platforms">
-            <span class="chip">Android</span><span class="chip">Windows</span>
-            <span class="chip">macOS</span><span class="chip">Linux</span>
+            <span class="chip">Android</span><span class="chip">iOS</span>
+            <span class="chip">Windows</span><span class="chip">macOS</span>
+            <span class="chip">Linux</span>
           </div>
         </div>
         <div class="stack rise d2">
@@ -989,7 +1079,9 @@ export function homePage(origin) {
       <div class="cta">
         <div class="dot-grid" aria-hidden="true"></div>
         <h2>Start reading</h2>
-        <p>Free on Android, Windows, macOS and Linux. No account needed.</p>
+        <p>Free on Android, iOS, Windows, macOS and Linux. No account needed.</p>
+        <p class="sub">iOS: sideload the IPA with AltStore, SideStore or Sideloadly, or add
+        the source <code>${origin}/altstore.json</code> to AltStore or SideStore for updates.</p>
         <div class="actions">
           <a class="btn primary label" href="${DOWNLOAD}">Download the app ${icon('arrow-down')}</a>
           <a class="btn secondary label" href="${GITHUB}">Source code ${icon('arrow-up-right')}</a>

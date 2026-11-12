@@ -146,3 +146,50 @@ test('comics from other sources get a page without an API call', async () => {
     assert.match(body, /series\/voratoon:solo-leveling/);
   }
 });
+
+test('altstore.json lists the iOS IPA of each release, newest first', async () => {
+  globalThis.fetch = async (url, init) => {
+    assert.match(String(url), /api\.github\.com\/repos\/sofyan-rs\/yoru-comic-app\/releases/);
+    assert.ok(init.headers['User-Agent']);
+    return new Response(
+      JSON.stringify([
+        {
+          tag_name: 'v2.22.0',
+          published_at: '2026-11-20T10:00:00Z',
+          body: 'Fixes.\n\n## Which APK?\n\n| File | For |',
+          assets: [
+            { name: 'Yoru-2.22.0-universal.apk', browser_download_url: 'https://x/apk', size: 9 },
+            { name: 'Yoru-2.22.0-ios.ipa', browser_download_url: 'https://x/ipa', size: 15725511 },
+          ],
+        },
+        { tag_name: 'v2.21.3-beta', prerelease: true, assets: [{ name: 'Yoru-2.21.3-ios.ipa' }] },
+        { tag_name: 'v2.21.2', published_at: '2026-11-01T10:00:00Z', body: '', assets: [] },
+      ]),
+      { status: 200 },
+    );
+  };
+  const res = await get('/altstore.json');
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('Content-Type'), 'application/json');
+  const source = await res.json();
+  assert.equal(source.sourceURL, 'https://yoru.kurodev.org/altstore.json');
+  const [app] = source.apps;
+  assert.equal(app.bundleIdentifier, 'org.kurodev.yoru');
+  assert.deepEqual(app.versions, [
+    {
+      version: '2.22.0',
+      date: '2026-11-20T10:00:00Z',
+      localizedDescription: 'Fixes.',
+      downloadURL: 'https://x/ipa',
+      size: 15725511,
+      minOSVersion: '15.0',
+    },
+  ]);
+});
+
+test('altstore.json is not cached when GitHub fails', async () => {
+  globalThis.fetch = async () => new Response('rate limited', { status: 403 });
+  const res = await get('/altstore.json');
+  assert.equal(res.status, 502);
+  assert.equal(res.headers.get('Cache-Control'), 'no-store');
+});
