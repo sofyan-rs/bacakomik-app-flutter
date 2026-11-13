@@ -4,6 +4,7 @@
   <p><em>Formerly BacaKomik.</em></p>
   <p>
     <a href="https://github.com/sofyan-rs/yoru-comic-app/releases/latest"><img src="https://img.shields.io/github/v/release/sofyan-rs/yoru-comic-app?label=latest&color=e5211c&style=for-the-badge&logo=github" alt="Latest release"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/sofyan-rs/yoru-comic-app?color=e5211c&style=for-the-badge" alt="License: GPL-3.0"></a>
   </p>
 </div>
 
