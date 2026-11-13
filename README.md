@@ -3,7 +3,7 @@
   <h1>Yoru</h1>
   <p><em>Formerly BacaKomik.</em></p>
   <p>
-    <a href="https://github.com/sofyan-rs/yoru-comic-app/releases/latest"><img src="https://img.shields.io/github/v/release/sofyan-rs/yoru-comic-app?label=latest&color=e5211c" alt="Latest release"></a>
+    <a href="https://github.com/sofyan-rs/yoru-comic-app/releases/latest"><img src="https://img.shields.io/github/v/release/sofyan-rs/yoru-comic-app?label=latest&color=e5211c&style=for-the-badge&logo=github" alt="Latest release"></a>
   </p>
 </div>
 
