@@ -3,6 +3,7 @@ import 'dart:io' as io;
 
 import 'package:yoru/core/constants/texts.dart';
 import 'package:yoru/core/di/injection.dart';
+import 'package:yoru/core/network/webview_dns_proxy.dart';
 import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/source/extension_bridge.dart';
 import 'package:yoru/core/source/extension_manager.dart';
@@ -82,6 +83,26 @@ class _WebViewScreenState extends State<WebViewScreen> {
   /// start: Android may report the load only once it is past it.
   late String? _loadingHost = _url.host;
 
+  /// WebView2's environment on Windows, which sends the page through DNS
+  /// over HTTPS ([WebViewDns.environment]); the page waits for it there.
+  WebViewEnvironment? _environment;
+  var _environmentReady = !io.Platform.isWindows;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_environmentReady) return;
+    unawaited(
+      WebViewDns.environment().then((environment) {
+        if (!mounted) return;
+        setState(() {
+          _environment = environment;
+          _environmentReady = true;
+        });
+      }),
+    );
+  }
+
   @override
   void dispose() {
     unawaited(_saveCookies(_url));
@@ -90,7 +111,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   Future<void> _saveCookies(Uri url) async {
     if (!url.hasScheme || !url.scheme.startsWith('http')) return;
-    final cookies = await CookieManager.instance().getCookies(
+    final cookies = await (await WebViewDns.cookies()).getCookies(
       url: WebUri.uri(url),
     );
     // The WebView reports name and value only; scope them to the whole site.
@@ -121,7 +142,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   Future<void> _clearCookies() async {
     final root = Uri(scheme: _url.scheme, host: _url.host);
-    await CookieManager.instance().deleteCookies(
+    await (await WebViewDns.cookies()).deleteCookies(
       url: WebUri.uri(root),
       domain: _url.host,
     );
@@ -203,63 +224,72 @@ class _WebViewScreenState extends State<WebViewScreen> {
                           !io.Platform.isLinux ||
                           (!_menuOpen && _error == null),
                       maintainState: true,
-                      child: InAppWebView(
-                        initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-                        initialSettings: InAppWebViewSettings(
-                          userAgent: ExtensionBridge.userAgent,
-                          javaScriptEnabled: true,
-                          domStorageEnabled: true,
-                          // chrome://inspect in debug builds.
-                          isInspectable: kDebugMode,
-                        ),
-                        onWebViewCreated: (controller) =>
-                            _controller = controller,
-                        onProgressChanged: (_, progress) =>
-                            setState(() => _progress = progress / 100),
-                        onTitleChanged: (_, title) =>
-                            setState(() => _title = title),
-                        onUpdateVisitedHistory: (controller, url, _) async {
-                          final canGoBack = await controller.canGoBack();
-                          if (!mounted) return;
-                          setState(() {
-                            if (url != null) _url = url.uriValue;
-                            _canGoBack = canGoBack;
-                          });
-                        },
-                        onLoadStart: (_, url) => setState(() {
-                          _error = null;
-                          _loadingHost = url?.host;
-                        }),
-                        onReceivedServerTrustAuthRequest: !hearsOfCertificates
-                            ? null
-                            : (_, challenge) {
-                                if (challenge.protectionSpace.sslError ==
-                                    null) {
-                                  return null;
+                      child: !_environmentReady
+                          ? const SizedBox.expand()
+                          : InAppWebView(
+                              webViewEnvironment: _environment,
+                              initialUrlRequest: URLRequest(
+                                url: WebUri(widget.url),
+                              ),
+                              initialSettings: InAppWebViewSettings(
+                                userAgent: ExtensionBridge.userAgent,
+                                javaScriptEnabled: true,
+                                domStorageEnabled: true,
+                                // chrome://inspect in debug builds.
+                                isInspectable: kDebugMode,
+                              ),
+                              onWebViewCreated: (controller) =>
+                                  _controller = controller,
+                              onProgressChanged: (_, progress) =>
+                                  setState(() => _progress = progress / 100),
+                              onTitleChanged: (_, title) =>
+                                  setState(() => _title = title),
+                              onUpdateVisitedHistory:
+                                  (controller, url, _) async {
+                                    final canGoBack = await controller
+                                        .canGoBack();
+                                    if (!mounted) return;
+                                    setState(() {
+                                      if (url != null) _url = url.uriValue;
+                                      _canGoBack = canGoBack;
+                                    });
+                                  },
+                              onLoadStart: (_, url) => setState(() {
+                                _error = null;
+                                _loadingHost = url?.host;
+                              }),
+                              onReceivedServerTrustAuthRequest:
+                                  !hearsOfCertificates
+                                  ? null
+                                  : (_, challenge) {
+                                      if (challenge.protectionSpace.sslError ==
+                                          null) {
+                                        return null;
+                                      }
+                                      final space = challenge.protectionSpace;
+                                      if (space.host == _loadingHost) {
+                                        setState(
+                                          () => _error = certificateRefused(
+                                            space.sslError?.code,
+                                          ),
+                                        );
+                                      }
+                                      return ServerTrustAuthResponse(
+                                        action: ServerTrustAuthResponseAction
+                                            .CANCEL,
+                                      );
+                                    },
+                              onReceivedError: (_, request, error) {
+                                if (request.isForMainFrame ?? true) {
+                                  setState(() => _error = error.description);
                                 }
-                                final space = challenge.protectionSpace;
-                                if (space.host == _loadingHost) {
-                                  setState(
-                                    () => _error = certificateRefused(
-                                      space.sslError?.code,
-                                    ),
-                                  );
-                                }
-                                return ServerTrustAuthResponse(
-                                  action: ServerTrustAuthResponseAction.CANCEL,
-                                );
                               },
-                        onReceivedError: (_, request, error) {
-                          if (request.isForMainFrame ?? true) {
-                            setState(() => _error = error.description);
-                          }
-                        },
-                        onLoadStop: (_, url) {
-                          if (url != null) {
-                            unawaited(_saveCookies(url.uriValue));
-                          }
-                        },
-                      ),
+                              onLoadStop: (_, url) {
+                                if (url != null) {
+                                  unawaited(_saveCookies(url.uriValue));
+                                }
+                              },
+                            ),
                     ),
                     if (_error case final error?)
                       ColoredBox(

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/network/doh.dart';
 import 'package:yoru/core/network/image_host_support.dart';
 import 'package:yoru/core/utils/image_support.dart';
 import 'package:yoru/core/source/extension_bridge.dart';
@@ -111,6 +112,10 @@ class _BrowserLikeFileService extends FileService {
   _BrowserLikeFileService() : _inner = _httpFileService();
 
   final HttpFileService _inner;
+
+  /// dart:io, with DNS over HTTPS, for hosts Cronet cannot reach while DoH
+  /// is on ([DohFallback]).
+  final _io = HttpFileService();
 
   /// What Chrome on Android sends with an `<img>` request, but `Accept`
   /// ([_accept]).
@@ -263,21 +268,27 @@ class _BrowserLikeFileService extends FileService {
     Map<String, String>? headers,
   ) async {
     final cookie = await _cookies.header(url);
-    final response = await _inner
-        .get(
-          url.toString(),
-          headers: {
-            ..._imageHeaders,
-            'Accept': _accept,
-            if (_plainAgentHosts.contains(url.host))
-              'User-Agent': _plainUserAgent,
-            if (cookie.isNotEmpty) 'Cookie': cookie,
-            if (_selfRefererHosts.contains(url.host))
-              'Referer': '${url.origin}/',
-            ...?headers,
-          },
-        )
-        .timeout(_directTimeout);
+    final all = {
+      ..._imageHeaders,
+      'Accept': _accept,
+      if (_plainAgentHosts.contains(url.host)) 'User-Agent': _plainUserAgent,
+      if (cookie.isNotEmpty) 'Cookie': cookie,
+      if (_selfRefererHosts.contains(url.host)) 'Referer': '${url.origin}/',
+      ...?headers,
+    };
+    Future<FileServiceResponse> get(HttpFileService client) =>
+        client.get(url.toString(), headers: all).timeout(_directTimeout);
+    FileServiceResponse response;
+    if (DohFallback.skipsNative(url.host)) {
+      response = await get(_io);
+    } else {
+      try {
+        response = await get(_inner);
+      } catch (e) {
+        if (!DohFallback.takes(url.host, e)) rethrow;
+        response = await get(_io);
+      }
+    }
     return _IdleTimeoutResponse(response, _directTimeout);
   }
 

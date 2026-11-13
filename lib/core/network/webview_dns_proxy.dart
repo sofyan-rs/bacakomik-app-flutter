@@ -9,23 +9,28 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:yoru/core/network/doh.dart';
 
-/// DNS over HTTPS on iOS 17+ for WebViews and NSURLSession (extensions'
-/// requests), which dart:io's [DohHttpOverrides] does not reach (Android
-/// and the desktops are covered there). Neither takes a resolver, but both
-/// take a proxy: while DoH is on, they go through [WebViewDnsProxy], a
-/// local HTTP proxy that looks hosts up with [Doh]. TLS still runs between
-/// the app and the site.
+/// DNS over HTTPS for WebViews on every platform, and for NSURLSession
+/// (extensions' requests) on iOS: dart:io's [DohHttpOverrides] reaches
+/// neither. Neither takes a resolver, but both take a proxy: while DoH is
+/// on, they go through [WebViewDnsProxy], a local HTTP proxy that looks
+/// hosts up with [Doh]. TLS still runs between the app and the site.
+///
+/// Android, iOS 17+, macOS 14+ and Linux switch the proxy on and off with
+/// [ProxyController]. WebView2 (Windows) takes a proxy only when its
+/// [environment] is created, so there the proxy always runs and follows
+/// [Doh] itself: the system DNS while DoH is off.
 abstract final class WebViewDns {
-  static bool get supported => !kIsWeb && Platform.isIOS;
+  static bool get supported => !kIsWeb;
 
   static WebViewDnsProxy? _proxy;
   static AppLifecycleListener? _lifecycle;
 
   /// Routes WebViews through the proxy when [on], directly otherwise.
-  /// Fails quietly where the system has no proxy setting (iOS 16 and
-  /// older), leaving WebViews on the system DNS.
+  /// Fails quietly where the system has no proxy setting (iOS 16, macOS 13
+  /// and older, Android WebViews without proxy override), leaving WebViews
+  /// on the system DNS.
   static Future<void> apply({required bool on}) async {
-    if (!supported) return;
+    if (!supported || Platform.isWindows) return;
     if (!on) return _stop();
     if (_proxy != null) return;
     try {
@@ -53,6 +58,7 @@ abstract final class WebViewDns {
   }
 
   static Future<void> _setSessionPort(int? port) async {
+    if (!Platform.isIOS) return;
     try {
       await _sessions.invokeMethod<bool>('setPort', port);
     } catch (e) {
@@ -74,6 +80,39 @@ abstract final class WebViewDns {
       debugPrint('WebView proxy not cleared: $e');
     }
   }
+
+  static Future<WebViewEnvironment?>? _environment;
+
+  /// The WebView2 environment every WebView and [CookieManager] on Windows
+  /// must use (two environments on one data folder with other arguments
+  /// fail): it sends requests through the proxy. Null elsewhere, and when
+  /// it cannot be made (the default environment, on the system DNS).
+  static Future<WebViewEnvironment?> environment() =>
+      _environment ??= _createEnvironment();
+
+  static Future<WebViewEnvironment?> _createEnvironment() async {
+    if (kIsWeb || !Platform.isWindows) return null;
+    WebViewDnsProxy? proxy;
+    try {
+      proxy = await WebViewDnsProxy.start();
+      final environment = await WebViewEnvironment.create(
+        settings: WebViewEnvironmentSettings(
+          additionalBrowserArguments:
+              '--proxy-server=http://127.0.0.1:${proxy.port}',
+        ),
+      );
+      _proxy = proxy;
+      return environment;
+    } catch (e) {
+      debugPrint('WebView2 environment not made: $e');
+      await proxy?.close();
+      return null;
+    }
+  }
+
+  /// The cookie manager of the WebViews (of [environment] on Windows).
+  static Future<CookieManager> cookies() async =>
+      CookieManager.instance(webViewEnvironment: await environment());
 
   /// iOS may take a suspended app's listening socket away: a new proxy
   /// replaces it when it no longer answers, on the same port when free

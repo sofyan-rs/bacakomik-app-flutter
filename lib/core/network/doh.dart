@@ -85,8 +85,10 @@ const dohPresets = [
 ];
 
 /// Where the app's own HTTP requests (dart:io) look up hostnames. Set from
-/// settings; null uses the system DNS. Android's Cronet and WebViews are not
-/// covered (see docs/ARCHITECTURE.md), Mihon extensions are, on their side.
+/// settings; null uses the system DNS. Android's Cronet is not covered, but
+/// hosts it cannot reach go through dart:io ([DohFallback]); WebViews are,
+/// through `WebViewDnsProxy`, and Mihon extensions on their side (see
+/// docs/ARCHITECTURE.md).
 abstract final class Doh {
   static DohResolver? _resolver;
 
@@ -203,6 +205,41 @@ HttpClient _rawClient(DohServer server) {
 }
 
 class _PlainOverrides extends HttpOverrides {}
+
+/// Hosts Cronet (Android) could not reach while DoH was on. Cronet takes
+/// no resolver, so the image cache and extensions' requests send those
+/// again through dart:io, which [Doh] covers: a network whose DNS blocks
+/// the site answers with no address or a block page's certificate. Other
+/// hosts stay on Cronet, whose TLS Cloudflare lets through.
+abstract final class DohFallback {
+  /// How long a host skips Cronet after it failed.
+  static const keep = Duration(minutes: 30);
+
+  static final _since = <String, DateTime>{};
+
+  /// Whether requests to [host] go through dart:io straight away: DoH is
+  /// on and Cronet failed to reach the host in the last [keep].
+  static bool skipsNative(String host) {
+    if (Doh.resolver == null) return false;
+    final since = _since[host];
+    if (since == null) return false;
+    if (DateTime.now().difference(since) < keep) return true;
+    _since.remove(host);
+    return false;
+  }
+
+  /// Whether [error] is Cronet failing to reach [host] (a `net::ERR_*`)
+  /// while DoH is on, so the request should go again through dart:io;
+  /// remembers the host when it is.
+  static bool takes(String host, Object error) {
+    if (Doh.resolver == null || !'$error'.contains('net::ERR_')) return false;
+    _since[host] = DateTime.now();
+    return true;
+  }
+
+  @visibleForTesting
+  static void reset() => _since.clear();
+}
 
 /// Routes every dart:io [HttpClient] of the app through [Doh] when it is
 /// on. Set once in main(); clients made before keep the system DNS.

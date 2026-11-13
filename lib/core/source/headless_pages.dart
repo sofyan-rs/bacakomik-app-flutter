@@ -6,6 +6,7 @@ import 'package:yoru/core/error/exceptions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:yoru/core/network/webview_dns_proxy.dart';
 
 /// Whether this platform has a WebView. On Linux that is WebKitGTK 4.1
 /// (`third_party/flutter_inappwebview_linux`), which most desktops have but
@@ -162,7 +163,9 @@ class HeadlessPages {
     if (controller != null) {
       await controller.loadUrl(urlRequest: URLRequest(url: WebUri.uri(url)));
     } else {
+      final environment = await WebViewDns.environment();
       final view = page.view = HeadlessInAppWebView(
+        webViewEnvironment: environment,
         initialSize: viewport,
         initialUrlRequest: URLRequest(url: WebUri.uri(url)),
         initialSettings: InAppWebViewSettings(
@@ -266,7 +269,7 @@ class HeadlessPages {
   Future<void> _saveCookies(String extensionId, Uri url) async {
     final onCookies = this.onCookies;
     if (onCookies == null) return;
-    final cookies = await CookieManager.instance().getCookies(
+    final cookies = await (await WebViewDns.cookies()).getCookies(
       url: WebUri.uri(url),
     );
     await onCookies(extensionId, url, [

@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:yoru/core/constants/texts.dart';
 import 'package:yoru/core/error/exceptions.dart';
+import 'package:yoru/core/network/doh.dart';
 import 'package:yoru/core/source/headless_pages.dart';
 import 'package:yoru/core/storage/box_recovery.dart';
 import 'package:yoru/core/storage/hive_boxes.dart';
@@ -167,13 +169,18 @@ class ExtensionBridge {
       )
       // Cronet (Android) / NSURLSession (iOS) instead of dart:io: Cloudflare
       // turns away dart:io's TLS fingerprint even with a valid cf_clearance.
-      ..httpClientAdapter = Platform.isAndroid || Platform.isIOS
-          ? NativeAdapter(
-              createFallbackAdapter: (_, _) => IOHttpClientAdapter(),
-            )
+      // On Android, hosts Cronet cannot reach while DoH is on go through
+      // dart:io ([DohFallback]); iOS sends NSURLSession through DoH itself.
+      ..httpClientAdapter = Platform.isAndroid
+          ? DohFallbackAdapter(_nativeAdapter(), IOHttpClientAdapter())
+          : Platform.isIOS
+          ? _nativeAdapter()
           : IOHttpClientAdapter()
       ..interceptors.add(CookieManager(jar));
   }
+
+  static HttpClientAdapter _nativeAdapter() =>
+      NativeAdapter(createFallbackAdapter: (_, _) => IOHttpClientAdapter());
 
   /// Clears an extension's cookies and stored values, e.g. on uninstall.
   Future<void> reset(String extensionId) async {
@@ -226,4 +233,49 @@ class ExtensionBridge {
         'attrs': {for (final a in e.attributes.entries) '${a.key}': a.value},
       },
   ];
+}
+
+/// Sends requests through [native] (Cronet), and again through [io]
+/// (dart:io, with DNS over HTTPS) when Cronet cannot reach the host while
+/// DoH is on; such hosts skip Cronet for a while ([DohFallback]).
+@visibleForTesting
+class DohFallbackAdapter implements HttpClientAdapter {
+  DohFallbackAdapter(this.native, this.io);
+
+  final HttpClientAdapter native;
+  final HttpClientAdapter io;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final host = options.uri.host;
+    if (DohFallback.skipsNative(host)) {
+      return io.fetch(options, requestStream, cancelFuture);
+    }
+    // Kept to be sent a second time.
+    final body = requestStream == null
+        ? null
+        : await requestStream
+              .fold(BytesBuilder(copy: false), (b, chunk) {
+                b.add(chunk);
+                return b;
+              })
+              .then((b) => b.takeBytes());
+    Stream<Uint8List>? stream() => body == null ? null : Stream.value(body);
+    try {
+      return await native.fetch(options, stream(), cancelFuture);
+    } catch (e) {
+      if (!DohFallback.takes(host, e)) rethrow;
+      return io.fetch(options, stream(), cancelFuture);
+    }
+  }
+
+  @override
+  void close({bool force = false}) {
+    native.close(force: force);
+    io.close(force: force);
+  }
 }

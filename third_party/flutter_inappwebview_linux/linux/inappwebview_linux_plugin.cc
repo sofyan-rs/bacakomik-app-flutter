@@ -19,6 +19,7 @@
 #include <cstring>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -32,6 +33,9 @@ constexpr int kNewWindowAction = 1;
 constexpr int kResponse = 2;
 // WebKitCookiePersistentStorage
 constexpr int kCookieStorageSqlite = 1;
+// WebKitNetworkProxyMode
+constexpr int kProxyDefault = 0;
+constexpr int kProxyCustom = 2;
 
 struct WebKit {
   bool tried = false;
@@ -79,6 +83,15 @@ struct WebKit {
   gboolean (*cookie_manager_delete_cookie_finish)(gpointer, GAsyncResult*,
                                                   GError**);
   void (*cookie_manager_delete_all_cookies)(gpointer);
+  // Optional: without them the views keep the system's proxy settings.
+  gpointer (*network_proxy_settings_new)(const char*, const char* const*) =
+      nullptr;
+  void (*network_proxy_settings_free)(gpointer) = nullptr;
+  // WebKitGTK 2.32 and newer; older ones set it on the web context.
+  void (*website_data_manager_set_network_proxy_settings)(gpointer, int,
+                                                          gpointer) = nullptr;
+  void (*web_context_set_network_proxy_settings)(gpointer, int, gpointer) =
+      nullptr;
 
   char* (*jsc_value_to_json)(gpointer, guint);
   gboolean (*jsc_value_is_undefined)(gpointer);
@@ -93,6 +106,8 @@ struct WebKit {
   void (*soup_cookie_free)(gpointer);
 
   gpointer cookie_manager = nullptr;
+  gpointer context = nullptr;
+  gpointer data_manager = nullptr;
 };
 
 WebKit wk;
@@ -153,10 +168,22 @@ bool LoadWebKit() {
   wk.response_policy_decision_is_main_frame_main_resource =
       reinterpret_cast<gboolean (*)(gpointer)>(dlsym(
           webkit, "webkit_response_policy_decision_is_main_frame_main_resource"));
+  wk.network_proxy_settings_new =
+      reinterpret_cast<gpointer (*)(const char*, const char* const*)>(
+          dlsym(webkit, "webkit_network_proxy_settings_new"));
+  wk.network_proxy_settings_free = reinterpret_cast<void (*)(gpointer)>(
+      dlsym(webkit, "webkit_network_proxy_settings_free"));
+  wk.website_data_manager_set_network_proxy_settings =
+      reinterpret_cast<void (*)(gpointer, int, gpointer)>(dlsym(
+          webkit, "webkit_website_data_manager_set_network_proxy_settings"));
+  wk.web_context_set_network_proxy_settings =
+      reinterpret_cast<void (*)(gpointer, int, gpointer)>(
+          dlsym(webkit, "webkit_web_context_set_network_proxy_settings"));
 
   // Cookies outlive the app, as they do in the WebViews of other platforms.
-  gpointer context = wk.web_context_get_default();
-  gpointer data = wk.web_context_get_website_data_manager(context);
+  gpointer context = wk.context = wk.web_context_get_default();
+  gpointer data = wk.data_manager =
+      wk.web_context_get_website_data_manager(context);
   wk.cookie_manager = wk.website_data_manager_get_cookie_manager(data);
   g_autofree char* dir =
       g_build_filename(g_get_user_data_dir(), g_get_prgname(), "webview",
@@ -412,6 +439,46 @@ FlMethodResponse* Ok(FlValue* value = nullptr) {
   return FL_METHOD_RESPONSE(fl_method_success_response_new(owned));
 }
 
+// Sends every view's requests through the proxy at "url", except to the
+// hosts in "bypass"; back to the system's settings when "url" is null.
+FlMethodResponse* SetProxy(FlValue* args) {
+  if (!LoadWebKit()) return Ok();
+  auto set = [](int mode, gpointer settings) {
+    if (wk.website_data_manager_set_network_proxy_settings != nullptr) {
+      wk.website_data_manager_set_network_proxy_settings(wk.data_manager, mode,
+                                                         settings);
+    } else {
+      wk.web_context_set_network_proxy_settings(wk.context, mode, settings);
+    }
+  };
+  if (wk.network_proxy_settings_new == nullptr ||
+      wk.network_proxy_settings_free == nullptr ||
+      (wk.website_data_manager_set_network_proxy_settings == nullptr &&
+       wk.web_context_set_network_proxy_settings == nullptr)) {
+    return Error("unsupported", "This WebKitGTK cannot set a proxy");
+  }
+  const char* url = ArgString(args, "url");
+  if (url == nullptr) {
+    set(kProxyDefault, nullptr);
+    return Ok();
+  }
+  std::vector<const char*> hosts;
+  FlValue* bypass = fl_value_lookup_string(args, "bypass");
+  if (bypass != nullptr && fl_value_get_type(bypass) == FL_VALUE_TYPE_LIST) {
+    for (size_t i = 0; i < fl_value_get_length(bypass); i++) {
+      FlValue* host = fl_value_get_list_value(bypass, i);
+      if (fl_value_get_type(host) == FL_VALUE_TYPE_STRING) {
+        hosts.push_back(fl_value_get_string(host));
+      }
+    }
+  }
+  hosts.push_back(nullptr);
+  gpointer settings = wk.network_proxy_settings_new(url, hosts.data());
+  set(kProxyCustom, settings);
+  wk.network_proxy_settings_free(settings);
+  return Ok();
+}
+
 void DisposeView(View* view) {
   plugin->views.erase(view->id);
   g_signal_handlers_disconnect_by_data(view->web_view, view);
@@ -605,6 +672,8 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     response = Error("bad_args", "Arguments must be a map");
   } else if (strcmp(method, "create") == 0) {
     response = Create(args);
+  } else if (strcmp(method, "setProxy") == 0) {
+    response = SetProxy(args);
   } else if (strcmp(method, "getCookies") == 0 ||
              strcmp(method, "deleteCookies") == 0) {
     const char* url = ArgString(args, "url");

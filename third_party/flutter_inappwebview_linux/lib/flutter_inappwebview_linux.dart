@@ -1,5 +1,5 @@
 /// flutter_inappwebview on WebKitGTK: the parts of its platform interface the
-/// app uses (headless pages, an in-app page, cookies). See
+/// app uses (headless pages, an in-app page, cookies, a proxy). See
 /// `linux/inappwebview_linux_plugin.cc`.
 library;
 
@@ -77,6 +77,35 @@ class LinuxInAppWebViewPlatform extends InAppWebViewPlatform {
   @override
   LinuxHeadlessInAppWebView createPlatformHeadlessInAppWebViewStatic() =>
       LinuxHeadlessInAppWebView(PlatformHeadlessInAppWebViewCreationParams());
+
+  @override
+  LinuxProxyController createPlatformProxyController(
+    PlatformProxyControllerCreationParams params,
+  ) => LinuxProxyController(params);
+
+  @override
+  LinuxProxyController createPlatformProxyControllerStatic() =>
+      LinuxProxyController(const PlatformProxyControllerCreationParams());
+}
+
+/// Sends every view's requests through the first rule's proxy (WebKit's
+/// network proxy settings), except to the bypass rules' hosts.
+class LinuxProxyController extends PlatformProxyController {
+  LinuxProxyController(super.params) : super.implementation();
+
+  @override
+  Future<void> setProxyOverride({required ProxySettings settings}) async {
+    final url = settings.proxyRules.firstOrNull?.url;
+    if (url == null) return clearProxyOverride();
+    await _channel.invokeMethod<void>('setProxy', {
+      'url': url,
+      'bypass': settings.bypassRules,
+    });
+  }
+
+  @override
+  Future<void> clearProxyOverride() =>
+      _channel.invokeMethod<void>('setProxy', {'url': null});
 }
 
 /// The creation arguments the plugin takes from [params].
@@ -150,10 +179,7 @@ class LinuxInAppWebViewController extends PlatformInAppWebViewController {
         if (decide == null || url == null) return true;
         final policy = await decide(
           _facing,
-          NavigationAction(
-            request: URLRequest(url: url),
-            isForMainFrame: true,
-          ),
+          NavigationAction(request: URLRequest(url: url), isForMainFrame: true),
         );
         return policy != NavigationActionPolicy.CANCEL;
     }

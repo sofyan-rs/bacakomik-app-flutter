@@ -474,13 +474,12 @@ class AppText {
       'Enter a server address (https only, not http)';
   static const String dnsUseCustom = 'Use this server';
   static const String dnsCoverageAndroid =
-      'On Android this covers Mihon extensions. JS extensions, images and '
-      'web views keep the network’s DNS.';
+      'On Android this covers Mihon extensions and web views. JS extensions '
+      'and images use it for sites the network’s DNS blocks.';
   static const String dnsCoverageDesktop =
-      'Covers extensions, images and downloads. Web views keep the '
-      'network’s DNS.';
+      'Covers extensions, images, downloads and web views.';
   static const String dnsPrivateDnsHint =
-      'For the whole phone, including web views, set Private DNS in '
+      'For the whole phone, set Private DNS in '
       'Android’s network settings (e.g. one.one.one.one).';
   static const String importMihon = 'Import from Mihon / Tachiyomi';
   static const String importMihonDescription =
