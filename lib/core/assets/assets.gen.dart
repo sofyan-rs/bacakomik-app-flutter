@@ -41,9 +41,8 @@ class $AssetsIconsGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
-  /// File path: assets/images/kuru-kururin.gif
-  AssetGenImage get kuruKururin =>
-      const AssetGenImage('assets/images/kuru-kururin.gif');
+  /// File path: assets/images/lalala.webp
+  AssetGenImage get lalala => const AssetGenImage('assets/images/lalala.webp');
 
   /// File path: assets/images/splash-art.webp
   AssetGenImage get splashArt =>
@@ -53,17 +52,17 @@ class $AssetsImagesGen {
   AssetGenImage get splash => const AssetGenImage('assets/images/splash.png');
 
   /// List of all assets
-  List<AssetGenImage> get values => [kuruKururin, splashArt, splash];
+  List<AssetGenImage> get values => [lalala, splashArt, splash];
 }
 
 class $AssetsSoundsGen {
   const $AssetsSoundsGen();
 
-  /// File path: assets/sounds/kuru-kururin.mp3
-  String get kuruKururin => 'assets/sounds/kuru-kururin.mp3';
+  /// File path: assets/sounds/lalala-pipipi.mp3
+  String get lalalaPipipi => 'assets/sounds/lalala-pipipi.mp3';
 
   /// List of all assets
-  List<String> get values => [kuruKururin];
+  List<String> get values => [lalalaPipipi];
 }
 
 class $AssetsExtensionsExtensionsGen {

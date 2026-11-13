@@ -106,6 +106,12 @@ class _SettingsState extends State<Settings> {
     void setKururinSound(bool on) => context.read<SettingsCubit>().update(
       (s) => s.copyWith(kururinSound: on),
     );
+    final lalalaUntilFinish = context.select<SettingsCubit, bool>(
+      (s) => s.state.lalalaUntilFinish,
+    );
+    void setLalalaUntilFinish(bool on) => context.read<SettingsCubit>().update(
+      (s) => s.copyWith(lalalaUntilFinish: on),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -259,6 +265,18 @@ class _SettingsState extends State<Settings> {
                 ),
                 onTap: () => setKururinSound(!kururinSound),
               ),
+              if (kururinSound)
+                ListRow(
+                  icon: LucideIcons300.hourglass,
+                  title: AppText.lalalaUntilFinish,
+                  subtitle: AppText.lalalaUntilFinishDescription,
+                  trailing: DotSwitch(
+                    value: lalalaUntilFinish,
+                    semanticLabel: AppText.lalalaUntilFinish,
+                    onChanged: setLalalaUntilFinish,
+                  ),
+                  onTap: () => setLalalaUntilFinish(!lalalaUntilFinish),
+                ),
             ],
           ),
         ),

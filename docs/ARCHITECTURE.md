@@ -161,7 +161,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 - Events are `final class`es named after what happened (`HomeStarted`, `ChapterRequested`).
 
 ### 4.4 Settings
-`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `progressBar`, `infiniteScroll`, `autoScrollSpeed`), `incognito` (the reader saves no history while on; marking chapters read still does), `kururinSound` (Home's pull-to-refresh sound; the spin shows either way), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
+`AppSettings`: `themeMode` (`system | light | dark`), reader settings (`readingDirection`, `pageFit`, `keepScreenOn`, `pageGap`, `progressBar`, `infiniteScroll`, `autoScrollSpeed`), `incognito` (the reader saves no history while on; marking chapters read still does), `kururinSound` (Home's pull-to-refresh sound; the animation shows either way), `lalalaUntilFinish` (keep that animation and sound going until the song ends instead of stopping when the refresh finishes), `bookmarkGrouping` (`status | source | category`), `bookmarkSort` (`updated | title | chapters | latestChapter | added | lastRead`) and `bookmarkSortDirection` (`ascending | descending`; default `updated` descending = repository order). `SettingsModel` defaults every field and tolerates unknown enum values, so new fields never break loading. Source settings live in the `source_settings` box, not here.
 
 ---
 
@@ -177,7 +177,7 @@ Bloc/Cubit ─▶ UseCase ─▶ Repository ─▶ RepositoryImpl
 - Tokens in `core/theme/` (`Dotline.of(context)`, `DotlineText`, `DotSpace`/`DotRadius`/`DotSize`/`DotMotion`). Build screens from `core/presentation/widgets/dotline/` (`ScreenHeader`, `ListGroup`/`ListRow`, `DotButton`, `showDotSheet`, `ComicCover`, `EmptyState`…); taps scale through `Pressable`.
 - Icons: `LucideIcons300` only, no Material `Icons`.
 - Text: English, in `AppText`. The library is **"Bookmarks"**, never "Favorites". Home's second list (and its "See all" screen) is **"Latest updates"**. Source text is shown as sent.
-- Tabs get the nav height as bottom padding; scrollables add `MediaQuery.paddingOf(context).bottom`. Cover grids: 3 columns on phones, more on wide screens (~150 dp cells). Home's pull-to-refresh plays "kuru kururin".
+- Tabs get the nav height as bottom padding; scrollables add `MediaQuery.paddingOf(context).bottom`. Cover grids: 3 columns on phones, more on wide screens (~150 dp cells). Home's pull-to-refresh plays "lalala pipipi".
 
 ---
 
@@ -286,7 +286,7 @@ Fourteen `Box<String>` boxes, JSON or plain strings, no type adapters (so backup
 { "slug": "voratoon:solo-leveling", "categoryIds": ["…"], "updatedDate": "2026-10-20T10:00:00.000" }
 // settings
 { "themeMode": "system", "readingDirection": "vertical", "pageFit": "width",
-  "keepScreenOn": true, "pageGap": false, "progressBar": true, "infiniteScroll": false, "autoScrollSpeed": 3, "incognito": false, "kururinSound": true,
+  "keepScreenOn": true, "pageGap": false, "progressBar": true, "infiniteScroll": false, "autoScrollSpeed": 3, "incognito": false, "kururinSound": true, "lalalaUntilFinish": false,
   "bookmarkGrouping": "status",
   "bookmarkSort": "updated", "bookmarkSortDirection": "descending" }
 ```

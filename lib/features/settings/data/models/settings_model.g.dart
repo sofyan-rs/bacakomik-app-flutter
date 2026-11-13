@@ -44,6 +44,7 @@ SettingsModel _$SettingsModelFromJson(Map<String, dynamic> json) =>
       autoScrollSpeed: (json['autoScrollSpeed'] as num?)?.toInt() ?? 3,
       incognito: json['incognito'] as bool? ?? false,
       kururinSound: json['kururinSound'] as bool? ?? true,
+      lalalaUntilFinish: json['lalalaUntilFinish'] as bool? ?? false,
       bookmarkGrouping:
           $enumDecodeNullable(
             _$BookmarkGroupingEnumMap,
@@ -82,6 +83,7 @@ Map<String, dynamic> _$SettingsModelToJson(SettingsModel instance) =>
       'autoScrollSpeed': instance.autoScrollSpeed,
       'incognito': instance.incognito,
       'kururinSound': instance.kururinSound,
+      'lalalaUntilFinish': instance.lalalaUntilFinish,
       'bookmarkGrouping': _$BookmarkGroupingEnumMap[instance.bookmarkGrouping]!,
       'bookmarkSort': _$BookmarkSortEnumMap[instance.bookmarkSort]!,
       'bookmarkSortDirection':

@@ -180,9 +180,12 @@ class AppText {
   static const String themeSystem = 'System';
   static const String themeLight = 'Light';
   static const String themeDark = 'Dark';
-  static const String kururinSound = 'Kuru-kuru sound';
+  static const String kururinSound = 'Lalala pipipi sound';
   static const String kururinSoundDescription =
       'Plays while pulling to refresh Home';
+  static const String lalalaUntilFinish = 'Play until finish';
+  static const String lalalaUntilFinishDescription =
+      'Keeps the refresh animation going until the song ends';
   static const String version = 'Version';
 
   // Download Text

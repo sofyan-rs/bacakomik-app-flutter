@@ -8,6 +8,7 @@ import 'package:yoru/core/constants/variables.dart';
 import 'package:yoru/core/presentation/widgets/dotline/dotline.dart';
 import 'package:yoru/core/theme/dotline_tokens.dart';
 import 'package:yoru/features/home/presentation/bloc/home_bloc.dart';
+import 'package:yoru/features/home/presentation/widgets/clocked_animation.dart';
 import 'package:yoru/features/home/presentation/widgets/comic_slider.dart';
 import 'package:yoru/features/home/presentation/widgets/last_read_comic.dart';
 import 'package:yoru/features/home/presentation/widgets/latest_chapter.dart';
@@ -38,12 +39,34 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _player = AudioPlayer();
 
-  /// Kuru-kuru stays up at least this long, even when the refresh is fast,
+  /// Lalala stays up at least this long, even when the refresh is fast,
   /// so the easter egg is actually seen.
-  static const _minSpin = Duration(milliseconds: 2500);
+  static const _minSpin = Duration(seconds: 5);
+
+  /// Length of the "lalala pipipi" song (and its animation), used when the
+  /// "play until finish" setting is on.
+  static const _songLength = Duration(milliseconds: 19670);
   var _spinning = false;
+
+  /// Bumped on every spin so the animation restarts from its first frame,
+  /// together with the sound.
+  var _spinRun = 0;
   var _minSpinDone = true;
   Timer? _spinTimer;
+
+  /// Loads the song ahead of time so it starts together with the animation.
+  late final Future<void> _soundReady = _prepareSound();
+
+  Future<void> _prepareSound() async {
+    await _player.setReleaseMode(ReleaseMode.loop);
+    await _player.setSource(AssetSource('sounds/lalala-pipipi.mp3'));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _soundReady.ignore();
+  }
 
   @override
   void dispose() {
@@ -53,34 +76,43 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refreshData(HomeState state) async {
-    if (state is HomeLoaded) _startKururin();
+    if (state is HomeLoaded) _startLalala();
     context.read<HomeBloc>().add(
       state is HomeLoaded ? HomeRefreshed() : HomeStarted(),
     );
   }
 
-  Future<void> _startKururin() async {
+  Future<void> _startLalala() async {
     _spinTimer?.cancel();
+    final settings = context.read<SettingsCubit>().state;
+    if (settings.kururinSound) {
+      await _soundReady;
+      if (!mounted) return;
+      await _player.seek(Duration.zero);
+      await _player.resume();
+      if (!mounted) return;
+    }
     setState(() {
+      _spinRun++;
       _spinning = true;
       _minSpinDone = false;
     });
-    _spinTimer = Timer(_minSpin, () {
+    // "Play until finish" only applies while the sound is on; its toggle is
+    // hidden otherwise.
+    final untilFinish = settings.kururinSound && settings.lalalaUntilFinish;
+    _spinTimer = Timer(untilFinish ? _songLength : _minSpin, () {
       _minSpinDone = true;
-      _stopKururinIfDone();
+      _stopLalalaIfDone();
     });
-    if (!context.read<SettingsCubit>().state.kururinSound) return;
-    await _player.setSource(AssetSource('sounds/kuru-kururin.mp3'));
-    await _player.resume();
   }
 
   /// Stops once the refresh has finished and the minimum time has passed.
-  void _stopKururinIfDone() {
+  void _stopLalalaIfDone() {
     if (!mounted || !_spinning || !_minSpinDone) return;
     final state = context.read<HomeBloc>().state;
     if (state is HomeLoaded && state.isRefetch) return;
     setState(() => _spinning = false);
-    _player.stop();
+    _player.pause();
   }
 
   void _openSearch() => RootTabsScope.read(context).openExploreSearch();
@@ -93,12 +125,12 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         bottom: false,
         child: BlocConsumer<HomeBloc, HomeState>(
-          listener: (context, state) => _stopKururinIfDone(),
+          listener: (context, state) => _stopLalalaIfDone(),
           builder: (context, state) {
             return CustomRefreshIndicator(
               onRefresh: () async => _refreshData(state),
               builder: (context, child, controller) =>
-                  _kururin(state, child, controller),
+                  _lalala(state, child, controller),
               child: LayoutBuilder(
                 builder: (context, constraints) => ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -184,36 +216,38 @@ class _HomeScreenState extends State<HomeScreen> {
     ],
   };
 
-  /// Kuru-kuru easter egg: Herta spins (and plays her sound) while the home
-  /// tab refreshes.
-  Widget _kururin(
+  /// Lalala easter egg: the animation plays (with its "lalala pipipi" song)
+  /// while the home tab refreshes.
+  Widget _lalala(
     HomeState state,
     Widget child,
     IndicatorController controller,
   ) {
-    final showKururin = _spinning;
+    final showLalala = _spinning;
     return Stack(
       alignment: Alignment.topCenter,
       children: [
-        if (showKururin || !controller.isIdle)
+        if (showLalala || !controller.isIdle)
           Positioned(
-            top: showKururin ? 35 : 35 * controller.value,
+            top: showLalala ? 25 : 25 * controller.value,
             child: SizedBox(
-              height: 60,
-              width: 60,
+              height: 90,
+              width: 90,
               child: Opacity(
-                opacity: showKururin ? 1 : controller.value.clamp(0, 1),
-                child: ClipOval(
-                  child: Image.asset(
-                    Assets.images.kuruKururin.path,
-                    fit: BoxFit.cover,
+                opacity: showLalala ? 1 : controller.value.clamp(0, 1),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(DotRadius.tile),
+                  child: ClockedAnimation(
+                    key: ValueKey(_spinRun),
+                    asset: Assets.images.lalala.path,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
             ),
           ),
         Transform.translate(
-          offset: Offset(0, showKururin ? 130.0 : 130.0 * controller.value),
+          offset: Offset(0, showLalala ? 130.0 : 130.0 * controller.value),
           child: child,
         ),
       ],

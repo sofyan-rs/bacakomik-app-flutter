@@ -134,6 +134,6 @@ Yoru is free software under the [GNU General Public License v3.0](LICENSE): you 
 
 `android/mihon` contains Mihon's source API and chapter recognition (Apache License 2.0) and code from SCANCORE (MIT, `android/mihon/LICENSE-SCANCORE`), each file keeping its notice.
 
-Extensions are a separate project under the Apache License 2.0 ([public source](https://github.com/sofyan-rs/yoru-ext-public-source)). Third-party assets keep their own licenses: the Geist, Geist Mono and Doto fonts (SIL Open Font License 1.1), Lucide icons (ISC). The splash artwork and the "kuru kururin" animation and sound belong to their respective owners and are not covered by this license. Comics shown in the app and the screenshots belong to their publishers.
+Extensions are a separate project under the Apache License 2.0 ([public source](https://github.com/sofyan-rs/yoru-ext-public-source)). Third-party assets keep their own licenses: the Geist, Geist Mono and Doto fonts (SIL Open Font License 1.1), Lucide icons (ISC). The splash artwork and the "lalala pipipi" animation and sound belong to their respective owners and are not covered by this license. Comics shown in the app and the screenshots belong to their publishers.
 
 Found a bug or have an idea? [Open an issue](https://github.com/sofyan-rs/yoru-comic-app/issues/new).
