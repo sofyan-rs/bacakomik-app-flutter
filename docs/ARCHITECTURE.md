@@ -35,7 +35,7 @@ How the app is built. Read it once before a non-trivial change. For step-by-step
 **Non-goals**
 - An account or server-side library. Sync only uses the user's Drive (`drive.appdata`).
 - Hosting comics. Extensions read the sites; the app only gives them host functions (§8.4).
-- iOS parity. iOS / iPadOS 15+ ships as one unsigned, sideloaded IPA for iPhone and iPad (`TARGETED_DEVICE_FAMILY = 1,2`; iPad gets the wide layout) and runs the same code, within iOS's limits:
+- iOS parity. iOS 15+ ships as an unsigned, sideloaded IPA and runs the same code, within iOS's limits:
   - JS extensions only: Mihon APKs cannot run (§8.9); the repos sheet says so and asks for `…/index.json`.
   - Updates go through AltStore / SideStore (below); the app cannot install itself.
   - iOS suspends the app soon after it leaves the foreground, so bookmark refresh and downloads pause; refresh progress is a `done / total` notification without a bar (§6.1).

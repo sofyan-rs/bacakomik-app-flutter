@@ -736,7 +736,7 @@ const phone = (name, alt, cls = '', lazy = true) =>
 
 export function homePage(origin) {
   const desc =
-    'An app for reading manga, manhwa and manhua from several sources, on Android, iPhone, iPad, Windows, macOS and Linux.';
+    'An app for reading manga, manhwa and manhua from several sources, on Android, iOS, Windows, macOS and Linux.';
 
   const heroPhones = HERO_SCREENS.map(([name, alt], i) =>
     phone(name, alt, ['back left', 'front', 'back right'][i], false),
@@ -1006,7 +1006,7 @@ export function homePage(origin) {
             <a class="btn secondary label" href="#features">See features</a>
           </div>
           <div class="platforms label rise d4" aria-label="Platforms">
-            <span class="chip">Android</span><span class="chip">iPhone &amp; iPad</span>
+            <span class="chip">Android</span><span class="chip">iOS</span>
             <span class="chip">Windows</span><span class="chip">macOS</span>
             <span class="chip">Linux</span>
           </div>
@@ -1079,8 +1079,8 @@ export function homePage(origin) {
       <div class="cta">
         <div class="dot-grid" aria-hidden="true"></div>
         <h2>Start reading</h2>
-        <p>Free on Android, iPhone, iPad, Windows, macOS and Linux. No account needed.</p>
-        <p class="sub">iPhone and iPad: sideload the IPA with AltStore, SideStore or Sideloadly, or add
+        <p>Free on Android, iOS, Windows, macOS and Linux. No account needed.</p>
+        <p class="sub">iOS: sideload the IPA with AltStore, SideStore or Sideloadly, or add
         the source <code>${origin}/altstore.json</code> to AltStore or SideStore for updates.</p>
         <div class="actions">
           <a class="btn primary label" href="${DOWNLOAD}">Download the app ${icon('arrow-down')}</a>

@@ -11,7 +11,7 @@ A reader for manga, manhwa and manhua from several sources. Each source is a sma
 Get it from the [Releases](https://github.com/sofyan-rs/yoru-comic-app/releases) page:
 
 - **Android:** the APK; `arm64-v8a` fits almost every phone. Android 7.0 or newer.
-- **iPhone and iPad:** the `.ipa` (iOS / iPadOS 15 or newer), one file for both, unsigned: sideload it with AltStore, SideStore or Sideloadly. For updates, add the source `https://yoru.kurodev.org/altstore.json` in AltStore or SideStore. See [iOS limits](#ios-limits).
+- **iOS:** the `.ipa` (iOS 15 or newer), unsigned: sideload it with AltStore, SideStore or Sideloadly. For updates, add the source `https://yoru.kurodev.org/altstore.json` in AltStore or SideStore. See [iOS limits](#ios-limits).
 - **Windows:** `windows-setup.exe` (Windows 10 and 11, 64-bit).
 - **macOS:** the `.dmg` (macOS 12 or newer). Not signed yet: open it the first time with right click → Open.
 - **Linux:** the `.AppImage` (64-bit), or `.rpm` for Fedora (`sudo dnf install ./Yoru-<version>-linux-x86_64.rpm`). The in-app WebView needs WebKitGTK 4.1, which most desktops already have (`libwebkit2gtk-4.1-0` on Debian and Ubuntu, `webkit2gtk4.1` on Fedora); without it "Open in WebView" opens the browser and sources that need a WebView do not load.
@@ -92,13 +92,13 @@ Some extensions are reimplemented from the Tachiyomi / Mihon extensions in [keiy
 ## Requirements
 
 - Android 7.0+ (API 24); Mihon extensions need Android 9+ (API 28)
-- iPhone and iPad, iOS / iPadOS 15+ (sideloaded); DNS over HTTPS for WebViews and extensions needs iOS 17+
+- iOS 15+ (sideloaded); DNS over HTTPS for WebViews and extensions needs iOS 17+
 - Windows 10+ (x64), macOS 12+, Linux x64; Mihon extensions run there too
 - To build: Flutter 3.50+ (stable, Dart 3.14), JDK 17, Android SDK 37; Xcode for iOS and macOS
 
 ### iOS limits
 
-The iPhone and iPad app is the same app (on iPad with the wide layout: side navigation, more columns), with what iOS allows:
+The iOS app is the same app, with what iOS allows:
 
 - **Sideload only.** The IPA is unsigned and not on the App Store. AltStore, SideStore and Sideloadly sign it with your Apple ID; with a free Apple ID the app must be refreshed every 7 days.
 - **No Mihon extensions.** They are Android code (APKs), which iOS cannot run. Only Yoru extensions (`…/index.json` repos) work.
