@@ -2,6 +2,9 @@
   <img src="linux/packaging/yoru.png" width="120" alt="Yoru logo">
   <h1>Yoru</h1>
   <p><em>Formerly BacaKomik.</em></p>
+  <p>
+    <a href="https://github.com/sofyan-rs/yoru-comic-app/releases/latest"><img src="https://img.shields.io/github/v/release/sofyan-rs/yoru-comic-app?label=latest&color=e5211c" alt="Latest release"></a>
+  </p>
 </div>
 
 A reader for manga, manhwa and manhua from several sources. Each source is a small JavaScript extension the app installs from an extension repo, so new sites can be added without an app update. Browse and search comics, read chapters online or download them to read offline, and keep a personal library of bookmarks, categories and reading history. The library lives on the device; you can export it to a backup file or, optionally, sync it across devices through your own Google Drive.
