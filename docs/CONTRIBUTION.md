@@ -22,11 +22,16 @@ There is no server to configure. Content comes from the bundled extensions and t
 flutter pub get
 dart run build_runner build -d   # after changing @freezed, @JsonSerializable, injectable annotations or assets
 flutter run                      # emulator or test device only, see Recipe G
+flutter run -d macos --dart-define-from-file=dart_defines.local.json   # desktop (windows / linux too)
 flutter analyze                  # must say "No issues found!"
 flutter test
 ```
 
 Generated files are committed: **commit them with the change that caused them.**
+
+Google Drive sync on desktop needs an OAuth client of type "Desktop app": put `GOOGLE_DESKTOP_CLIENT_ID` and `GOOGLE_DESKTOP_CLIENT_SECRET` in `dart_defines.local.json` (git-ignored); without them the desktop build hides sync. iOS sign-in uses the iOS client in `ios/Runner/Info.plist` and needs nothing local.
+
+`integration_test/` holds a desktop smoke test against live sources: `flutter test integration_test/desktop_smoke_test.dart -d macos`.
 
 ### Recipe A: Add a screen or feature
 1. Create `lib/features/<name>/` with the layers it needs (ARCHITECTURE §3).

@@ -98,7 +98,8 @@ Some extensions are reimplemented from the Tachiyomi / Mihon extensions in [keiy
 - Android 7.0+ (API 24); Mihon extensions need Android 9+ (API 28)
 - iOS 15+ (sideloaded); DNS over HTTPS for WebViews and extensions needs iOS 17+
 - Windows 10+ (x64), macOS 12+, Linux x64; Mihon extensions run there too
-- To build: Flutter 3.50+ (stable, Dart 3.14), JDK 17, Android SDK 37; Xcode for iOS and macOS
+
+To build from source, see [Contributing](docs/CONTRIBUTION.md).
 
 ### iOS limits
 
@@ -110,21 +111,6 @@ The iOS app is the same app, with what iOS allows:
 - **Work stops in the background.** iOS suspends the app a few seconds after you leave it, so a bookmark refresh or download pauses until you come back. Refresh progress is a plain `done / total` notification, without a progress bar.
 - **DNS over HTTPS** covers WebViews and extensions only on iOS 17 or newer; on iOS 15 and 16 they use the system DNS.
 - **Less tested** than Android: background downloads and extensions that render pages in a hidden WebView.
-
-## Build
-
-```bash
-flutter pub get
-dart run build_runner build -d   # regenerate freezed / json / injectable / assets code
-flutter run                      # debug build on a connected device
-flutter run -d macos --dart-define-from-file=dart_defines.local.json   # desktop (windows / linux too)
-flutter analyze
-flutter test
-```
-
-Google Drive sync on desktop needs an OAuth client of type "Desktop app": put `GOOGLE_DESKTOP_CLIENT_ID` and `GOOGLE_DESKTOP_CLIENT_SECRET` in `dart_defines.local.json` (git-ignored); without them the desktop build hides sync. `integration_test/` holds a desktop smoke test against live sources (`flutter test integration_test/desktop_smoke_test.dart -d macos`).
-
-Release signing and testing extensions locally are described in [Contributing](docs/CONTRIBUTION.md).
 
 ## Docs
 
