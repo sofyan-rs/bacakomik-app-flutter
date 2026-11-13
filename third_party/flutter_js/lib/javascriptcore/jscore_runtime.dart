@@ -32,7 +32,7 @@ class JavascriptCoreRuntime extends JavascriptRuntime {
 
     context = JSContext(_globalContext);
 
-    // BacaKomik patch: every runtime shares one static callback; route it
+    // Yoru patch: every runtime shares one static callback; route it
     // by the calling context instead of to the runtime created last.
     _runtimes[_globalContext.address] = this;
 
