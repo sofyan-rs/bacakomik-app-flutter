@@ -780,7 +780,7 @@ export function homePage(origin) {
 <html lang="en">
 <head>
   ${head(
-    `${APP_NAME} — Read comics on Android and desktop`,
+    `${APP_NAME} — Comic reader for mobile & desktop`,
     `<meta name="description" content="${escape(desc)}">
   <meta property="og:site_name" content="${APP_NAME}">
   <meta property="og:type" content="website">
